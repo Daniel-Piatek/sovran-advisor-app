@@ -36,7 +36,7 @@ export async function ensureServer({ url, start, timeout = 20000 }) {
 // The two Dock launchers: the personal app (your data) and the Demo (made-up data).
 export const launchers = {
   personal: { url: 'http://127.0.0.1:3300', port: '3300', dataDir: 'data' },
-  demo: { url: 'http://127.0.0.1:3100', port: '3100', dataDir: 'demo-data' },
+  demo: { url: 'http://127.0.0.1:3310', port: '3310', dataDir: 'demo-data' },
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -44,7 +44,7 @@ test('Dock launcher leaves an unrelated service alone', async () => {
 test('the two Dock launchers use different ports and folders, and the personal one is on 3300 with data/', () => {
   assert.equal(launchers.personal.port, '3300');
   assert.equal(launchers.personal.dataDir, 'data');
-  assert.equal(launchers.demo.port, '3100');
+  assert.equal(launchers.demo.port, '3310');
   assert.equal(launchers.demo.dataDir, 'demo-data');
   assert.notEqual(launchers.demo.port, launchers.personal.port);
 });

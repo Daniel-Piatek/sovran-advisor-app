@@ -1,6 +1,6 @@
 // Makes made-up test notes, to see how the app behaves with a few thousand of them:
 //   npm run seed -- 5000 /path/to/a/test-folder
-// then run the app on that folder: PORT=3100 DATA_DIR=/path/to/a/test-folder npm start
+// then run the app on that folder: PORT=3310 DATA_DIR=/path/to/a/test-folder npm start
 // It never writes into the real data/ folder.
 
 import path from 'node:path';

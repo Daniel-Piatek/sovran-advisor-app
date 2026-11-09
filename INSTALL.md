@@ -13,6 +13,11 @@ Work through the steps for the person's computer. Explain each step in a sentenc
 run it, in plain words (the person is not a programmer). When a step needs the person (a
 password, an installer window, a sign-in), say exactly what they will see and what to press.
 
+Two steps run code that was just downloaded (`npm install`, which prepares the editor's files,
+and building the Mac app icon). If your permission settings stop you there, tell the person
+in one sentence what the step does and ask them to approve it; or give them the exact command
+to paste into Terminal (Mac) or PowerShell (Windows) themselves.
+
 ### On a Mac
 
 1. **Node.js 22.13 or newer.** Run `node -v`. If it is missing or older: with Homebrew
@@ -25,8 +30,8 @@ password, an installer window, a sign-in), say exactly what they will see and wh
    https://github.com/Daniel-Piatek/sovran-advisor-app/archive/refs/heads/main.zip and unzip it
    to `~/Sovran Advisor`; updates then work the same way, by downloading again.)
 3. **Install what it needs:** `cd "$HOME/Sovran Advisor" && npm install --omit=dev`.
-4. **The app icon:** `npm run desktop:build`, then
-   `mkdir -p ~/Applications && cp -R "build/Sovran Advisor.app" ~/Applications/`.
+4. **The app icon**, from the app's folder:
+   `cd "$HOME/Sovran Advisor" && npm run desktop:build && mkdir -p ~/Applications && cp -R "build/Sovran Advisor.app" ~/Applications/`.
    This needs the command line developer tools (`xcode-select --install` if `xcrun` is
    missing). Then `open "$HOME/Applications/Sovran Advisor.app"`. The person can drag the icon
    to the Dock.
@@ -68,8 +73,9 @@ else works the same.
 
 1. Stop the app if it runs (Mac: quit Sovran Advisor; Windows: close its black window).
 2. In the app's folder: `git pull`, then `npm install --omit=dev`.
-3. On a Mac, rebuild the icon if the update notes say so (`npm run desktop:build` and copy it
-   again).
+3. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
+   was upgraded or moved (for example by `brew upgrade node`): the icon remembers where Node.js
+   was when it was built, and does not start without it.
 4. Start it again. A database from an older version is upgraded by the app itself, after it
    keeps a whole copy next to it; there is also a daily copy in `data/backups/`.
 

@@ -12,7 +12,7 @@
     "desktop:build:demo": "PLAYWRIGHT_BROWSERS_PATH=0 node scripts/build-desktop.js --demo",
     "seed": "node scripts/seed.js",
     "demo": "node scripts/demo.js",
-    "demo:start": "PORT=3100 DATA_DIR=demo-data READ_CALENDARS=off node server.js",
+    "demo:start": "PORT=3310 DATA_DIR=demo-data READ_CALENDARS=off node server.js",
     "vendor": "node scripts/vendor.js",
     "postinstall": "node scripts/vendor.js",
     "icons": "PLAYWRIGHT_BROWSERS_PATH=0 node scripts/build-icons.js",

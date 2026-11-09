@@ -1,7 +1,7 @@
 // Fills a demo copy of the app with made-up data of every kind, around today, so the app
 // can be tried out full without touching the real one:
 //   npm run demo                      fills demo-data/ (made again from nothing each time)
-//   npm run demo:start                runs it at http://127.0.0.1:3100
+//   npm run demo:start                runs it at http://127.0.0.1:3310
 // It never writes into the real data/ folder. Everything goes in through the app's own code.
 
 import fs from 'node:fs';

@@ -21,7 +21,7 @@ fs.writeFileSync(path.join(bundle, 'Contents/Info.plist'), `<?xml version="1.0" 
 <key>CFBundleIconFile</key><string>app.icns</string>
 <key>CFBundleVersion</key><string>1</string>
 <key>AppMode</key><string>${demo ? 'demo' : 'personal'}</string>
-<key>AppPort</key><string>${demo ? '3100' : '3300'}</string>
+<key>AppPort</key><string>${demo ? '3310' : '3300'}</string>
 <key>AppProjectPath</key><string>${xml(root.replace(/\/$/, ''))}</string>
 <key>AppNodePath</key><string>${xml(process.execPath)}</string>
 </dict></plist>`);
