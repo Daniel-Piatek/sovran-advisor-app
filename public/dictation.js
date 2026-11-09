@@ -40,8 +40,10 @@ function draw() {
   const on = moduleOn('voice');
   idleButton.hidden = !on || state !== 'idle';
   live.hidden = !on || state === 'idle';
-  idleButton.replaceChildren(icon('mic'), el('span', {}, `Hold ${KEY_WORDS[holdKey]} to dictate`));
-  idleButton.setAttribute('aria-label', `Dictate hands-free. Or hold ${KEY_WORDS[holdKey]} in a field`);
+  // A phone or tablet has no key to hold: the pill itself is the way in (tap, speak, tap Done).
+  const touch = window.matchMedia?.('(pointer: coarse)').matches && !window.matchMedia('(pointer: fine)').matches;
+  idleButton.replaceChildren(icon('mic'), el('span', {}, touch ? 'Tap to dictate' : `Hold ${KEY_WORDS[holdKey]} to dictate`));
+  idleButton.setAttribute('aria-label', touch ? 'Dictate: tap, speak, then tap Done' : `Dictate hands-free. Or hold ${KEY_WORDS[holdKey]} in a field`);
   live.dataset.state = state;
   const stop = state === 'listening' && handsFree ? [el('button', { type: 'button', class: 'button button-quiet mic-stop', onmousedown: (event) => event.preventDefault(), onclick: () => finish() }, 'Done')] : [];
   live.replaceChildren(icon('mic'), ...(state === 'listening' ? [el('span', { class: 'mic-level', 'aria-hidden': 'true' }, el('span', { class: 'mic-level-bar', style: `width: ${Math.round(Math.min(1, level) * 100)}%` }))] : []),

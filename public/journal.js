@@ -13,6 +13,7 @@ import {
 } from './ui.js';
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
 import { eventsApi, noteAbout, eventLine } from './calendar.js';
+import { moduleOn } from './modules.js';
 
 // A just-added entry comes back whole (body); listed ones bring only their start (preview).
 const firstLine = (entry) => plainText(entry.preview ?? entry.body).split('\n').map((line) => line.trim()).find(Boolean) ?? '';
@@ -293,9 +294,10 @@ export async function showJournalDay(dayInAddress) {
             })]
             : []),
           list),
-        el('section', { class: 'journal-section', 'aria-label': isToday ? 'Today’s calendar' : 'The day’s calendar' },
+        // With the Calendar section switched off (Settings › Modules), the day shows no calendar.
+        ...(moduleOn('calendar') ? [el('section', { class: 'journal-section', 'aria-label': isToday ? 'Today’s calendar' : 'The day’s calendar' },
           el('h2', { class: 'journal-section-title' }, isToday ? 'Today’s calendar' : 'The day’s calendar'),
-          dayEvents(day)),
+          dayEvents(day))] : []),
         el('div', { class: 'journal-section' }, linkedFromSection('day', day))),
       monthPlace),
   );

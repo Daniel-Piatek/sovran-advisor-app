@@ -3,6 +3,9 @@
 // WebSocket, so no test uses a real service or a real key.
 import { test, expect } from './fixtures.js';
 
+// A phone has no key to hold: its pill says Tap to dictate (the phone project is a touch screen).
+const touch = () => test.info().project.name === 'phone';
+
 const send = (app, method, url, body) => fetch(app.url + url, {
   method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body),
 }).then((r) => r.json());
@@ -33,7 +36,7 @@ test('hold Right Option in a note, speak, let go: the words land at the cursor, 
   const seen = await standIn(page);
   await page.goto(`${app.url}/notes/${note.id}`);
   const text = page.getByRole('textbox', { name: 'Text', exact: true });
-  await expect(page.getByRole('button', { name: /Dictate hands-free/ })).toContainText('Hold Right ⌥ to dictate');
+  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : 'Hold Right ⌥ to dictate');
   await text.click();
   await page.keyboard.press('Control+End');
   await hold(page);
@@ -96,7 +99,7 @@ test('the mic in the pill listens hands-free until Done; a tap on the key, or th
   await page.goto(`${app.url}/tasks`);
   const bar = page.getByLabel('Add a task');
   await bar.click();
-  await page.getByRole('button', { name: /Dictate hands-free/ }).click(); // the pill does not take the focus
+  await page.getByRole('button', { name: /^Dictate/ }).click(); // the pill does not take the focus
   await expect(pill(page)).toHaveAttribute('data-state', 'listening');
   await expect(pill(page)).toContainText('hello wor');
   await pill(page).getByRole('button', { name: 'Done' }).click();
@@ -171,7 +174,7 @@ test('the hold key is a setting; with Dictation switched off there is no pill, n
   const section = page.getByRole('region', { name: 'Dictation' });
   await expect(section.getByRole('group', { name: 'Hold key' }).getByRole('button')).toHaveText(['Right Option (⌥)', 'Right Command (⌘)', 'Right Control (^)']);
   await section.getByRole('button', { name: 'Right Control (^)' }).click();
-  await expect(page.getByRole('button', { name: /Dictate hands-free/ })).toContainText('Hold Right ^ to dictate');
+  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : 'Hold Right ^ to dictate');
   await page.goto(`${app.url}/tasks`);
   const bar = page.getByLabel('Add a task');
   await bar.click();
@@ -184,7 +187,7 @@ test('the hold key is a setting; with Dictation switched off there is no pill, n
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="voice"]').getByRole('button', { name: 'Off' }).click();
   await expect(page.getByRole('region', { name: 'Dictation' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Dictate hands-free/ })).toBeHidden();
+  await expect(page.getByRole('button', { name: /^Dictate/ })).toBeHidden();
   await page.goto(`${app.url}/tasks`);
   await page.getByLabel('Add a task').click();
   seen.url = null;

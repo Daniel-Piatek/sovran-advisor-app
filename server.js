@@ -6,6 +6,7 @@
 //   HOSTS     other names the app may be opened by, comma-separated: the private
 //             Tailscale address (my-mac.tail1234.ts.net) that brings it to the owner's
 //             own devices. The server itself still listens only on this computer.
+//             The same names may sit in data/hosts.txt, one a line (hostsFile).
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -1601,6 +1602,14 @@ function readJson(req) {
   });
 }
 
+// data/hosts.txt: the private Tailscale name(s) the owner's phone opens the app by (INSTALL.md, "Use it on your phone").
+// Kept in the data folder, so an update never removes it. Lines starting with # are notes.
+export function hostsFile(dataDir) {
+  try {
+    return fs.readFileSync(path.join(dataDir, 'hosts.txt'), 'utf8').split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith('#'));
+  } catch { return []; }
+}
+
 function sendJson(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(data));
@@ -1611,7 +1620,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const { url, close } = await startServer({
     port: Number(process.env.PORT ?? 3300), // 3300: never the same address as APP Daniel (3000) on one Mac
     dataDir: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : undefined,
-    hosts: (process.env.HOSTS ?? '').split(',').map((host) => host.trim()).filter(Boolean),
+    // HOSTS, and the names in data/hosts.txt (one a line), which also reach the Mac icon and the Windows shortcut.
+    hosts: [...(process.env.HOSTS ?? '').split(','), ...hostsFile(process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(path.dirname(fileURLToPath(import.meta.url)), 'data'))]
+      .map((host) => host.trim()).filter(Boolean),
     // The command the assistant runs (tests give a stand-in): a JSON list, or the default claude.
     // Tests never go out to the web: a stand-in gives every page the title "A page on <its host>".
     ...(process.env.FAKE_LINK_TITLES ? { linkFetcher: async (url) => `A page on ${new URL(url).hostname}` } : {}),

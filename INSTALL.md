@@ -69,6 +69,43 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
 Google Calendar's sign-in needs the macOS keychain, so on Windows it stays off. Everything
 else works the same.
 
+## For Claude: using it on a phone (optional: "set up Sovran Advisor on my phone")
+
+Only when the person asks. The app stays on their computer; their phone reaches it through
+**Tailscale**, a free private link between their own devices (nobody else can get in). It works
+while the computer is switched on and awake.
+
+1. **Tailscale on the computer.** Mac: `brew install --cask tailscale`, or the installer from
+   https://tailscale.com/download. Windows: `winget install --id tailscale.tailscale -e`. Open it
+   and have the person sign in (Google, Apple or Microsoft account are all fine).
+2. **Tailscale on the phone.** The person installs "Tailscale" from the App Store or Google Play
+   and signs in with the **same** account. Wait until `tailscale status` lists the phone.
+3. **Look first.** Run `tailscale serve status`. If something is already served there, it is
+   another app of the person's: never change or reset it, and use port 8443 below.
+4. **Pass the app on, privately, with https** (the phone's microphone needs https):
+   `tailscale serve --bg 3300`, or `tailscale serve --bg --https=8443 3300` when step 3 found
+   something. If it answers with a link to switch on HTTPS (or MagicDNS), the person opens it,
+   presses the button, and you run the command again. On a Mac the command may be at
+   `/Applications/Tailscale.app/Contents/MacOS/Tailscale` instead of `tailscale`.
+5. **Tell the app its private name.** The name is `Self.DNSName` in `tailscale status --json`,
+   without the dot at the end (for example `annes-mac.tail1234.ts.net`). Write it as one line in
+   `data/hosts.txt` in the app's folder; with port 8443 write `annes-mac.tail1234.ts.net:8443`.
+   This is the only thing ever written into `data/`; the app refuses any name not listed there.
+6. **Restart the app** (`npm run stop`, then open it from its icon; on Windows close the black
+   window and double-click the shortcut). Check: `curl -s https://<the name>/api/health` (add
+   `:8443` if used) answers from this computer.
+7. **On the phone:** open `https://<the name>` (with `:8443` if used) in Safari or Chrome, then
+   Share › **Add to Home Screen**. From then on it opens like an app.
+8. Tell the person: the computer must be on and awake. On a Mac, System Settings › Energy (or
+   Battery › Options) › "Prevent automatic sleeping when the display is off" keeps it reachable.
+
+**Speaking instead of typing.** Two ways, both optional:
+- Free, nothing to set up: the microphone key on the phone's own keyboard works in every field.
+- The app's **Dictation** (Settings › Modules): on a computer, hold a key and speak; on a phone,
+  tap "Tap to dictate" at the foot of the page, speak, tap Done. It uses ElevenLabs speech to
+  text, so the person needs their own ElevenLabs account and key (paste it into Settings ›
+  Dictation). The key stays on their computer.
+
 ## For Claude: updating it ("update Sovran Advisor")
 
 1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the

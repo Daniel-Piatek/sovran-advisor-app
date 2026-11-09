@@ -13,7 +13,7 @@ import {
   createNote, getNote, listNotes, listDeletedNotes, searchNotes, searchQuery, updateNote, deleteNote, restoreNote,
   checkNoteInput, PREVIEW_LENGTH,
 } from '../../notes.js';
-import { startServer } from '../../server.js';
+import { startServer, hostsFile } from '../../server.js';
 
 function emptyDb() {
   return prepareDatabase(new DatabaseSync(':memory:'));
@@ -255,4 +255,13 @@ test('the app answers only its own names: this computer, and the names it is giv
   assert.equal(await ask(`127.0.0.1:${port}`), 200);
   assert.equal(await ask('my-mac.tail1234.ts.net'), 200);
   assert.equal(await ask('evil.example'), 403);
+});
+
+test('data/hosts.txt gives the names the phone opens the app by, one a line; # is a note', () => {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hosts-file-'));
+  try {
+    assert.deepEqual(hostsFile(dataDir), [], 'no file, no names');
+    fs.writeFileSync(path.join(dataDir, 'hosts.txt'), '# my phone, through Tailscale\r\nmy-mac.tail1234.ts.net\n\n  other.tail1234.ts.net  \n');
+    assert.deepEqual(hostsFile(dataDir), ['my-mac.tail1234.ts.net', 'other.tail1234.ts.net']);
+  } finally { fs.rmSync(dataDir, { recursive: true, force: true }); }
 });
