@@ -54,7 +54,8 @@
   --kind-notes: #224cff;    --kind-notes-ink: #fbfbfb;    /* Cobalt */
   --kind-journal: #d9c14b;  --kind-journal-ink: #302d2d;  /* Gold */
   --kind-tasks: #f07a21;    --kind-tasks-ink: #302d2d;    /* Orange */
-  --kind-time: #2fc5c9;     --kind-time-ink: #302d2d;     /* Turquoise: the Planner, the Calendar, events */
+  --kind-time: #2fc5c9;     --kind-time-ink: #302d2d;     /* Turquoise: the Calendar, events */
+  --kind-planner: #97e2e4;  --kind-planner-ink: #302d2d;  /* a lighter Turquoise: the Planner (2026-11-09, the owner's wish) */
   --kind-people: #733bc4;   --kind-people-ink: #fbfbfb;   /* Violet: people, companies, the Timeline */
   --kind-life: #059e30;     --kind-life-ink: #fbfbfb;     /* Green: My Life (Key Elements, goals, projects, topics) */
   --kind-assistant: #ffe500; --kind-assistant-ink: #302d2d; /* Yellow */

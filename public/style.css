@@ -3800,7 +3800,8 @@ button.mic-pill:hover { color: var(--color-text); }
 .icon[data-icon="notes"] { --kind: var(--kind-notes); --kind-ink: var(--kind-notes-ink); }
 .icon[data-icon="journal"] { --kind: var(--kind-journal); --kind-ink: var(--kind-journal-ink); }
 .icon[data-icon="task"] { --kind: var(--kind-tasks); --kind-ink: var(--kind-tasks-ink); }
-.icon[data-icon="planner"], .icon[data-icon="calendar"] { --kind: var(--kind-time); --kind-ink: var(--kind-time-ink); }
+.icon[data-icon="calendar"] { --kind: var(--kind-time); --kind-ink: var(--kind-time-ink); }
+.icon[data-icon="planner"] { --kind: var(--kind-planner); --kind-ink: var(--kind-planner-ink); }
 .icon[data-icon="person"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); }
 .icon[data-icon="timeline"] { --kind: var(--kind-timeline); --kind-ink: var(--kind-timeline-ink); }
 .icon[data-icon="key_element"] { --kind: var(--kind-life); --kind-ink: var(--kind-life-ink); }
@@ -3819,7 +3820,10 @@ button.mic-pill:hover { color: var(--color-text); }
 html[data-section="notes"] { --section: var(--kind-notes); }
 html[data-section="journal"] { --section: var(--kind-journal); }
 html[data-section="task"] { --section: var(--kind-tasks); }
-html[data-section="planner"], html[data-section="calendar"] { --section: var(--kind-time); }
+html[data-section="calendar"] { --section: var(--kind-time); }
+/* The Planner's line is its lighter Turquoise; its headings keep the full Turquoise, which reads better as words. */
+html[data-section="planner"] { --section: var(--kind-planner); }
+html[data-section="planner"] :is(.tray-title, .journal-section-title, .contact-heading, .life-list-title, .life-section-title, .chat-list-title, .task-group-title, .timeline-day-title) { color: var(--kind-time); }
 html[data-section="person"] { --section: var(--kind-people); }
 html[data-section="timeline"] { --section: var(--kind-timeline); }
 html[data-section="key_element"] { --section: var(--kind-life); }
@@ -3850,7 +3854,8 @@ html[data-section] .journal-main, html[data-section] .journal-aside, html[data-s
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="notes"]) { --kind: var(--kind-notes); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="journal"]) { --kind: var(--kind-journal); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="task"]) { --kind: var(--kind-tasks); }
-:is(.tab, .chip, .words-chip):has(> .icon[data-icon="calendar"]), :is(.tab, .chip, .words-chip):has(> .icon[data-icon="planner"]) { --kind: var(--kind-time); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="calendar"]) { --kind: var(--kind-time); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="planner"]) { --kind: var(--kind-planner); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="person"]) { --kind: var(--kind-people); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="timeline"]) { --kind: var(--kind-timeline); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="key_element"]) { --kind: var(--kind-life); }
