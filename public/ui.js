@@ -196,9 +196,28 @@ export function giveCursorBack(place = document) {
   input.setSelectionRange(input.value.length, input.value.length);
 }
 
+// A kind's icon (2026-11-09, the owner's wish): a bold white (or charcoal) drawing on a disc of the kind's colour,
+// like the brand's white-on-colour Quest icons. The disc fills the icon's square; the drawing sits well inside it.
+// The colours come from style.css (--kind, --kind-ink, set by data-icon), never from here.
+const disc = (inner) => `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class="kind-disc"><circle cx="12" cy="12" r="12" style="fill: var(--kind)"/><g fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--kind-ink)">${inner}</g></svg>`;
+const discs = {
+  notes: disc('<path d="M8.5 6.5h5l2.5 2.5v8.5h-7.5z"/><path d="M13.5 6.5V9H16"/>'),
+  journal: disc('<path d="M12 8.6c-1.4-1.1-3.2-1.5-5-1.3v8.8c1.8-.2 3.6.2 5 1.3 1.4-1.1 3.2-1.5 5-1.3V7.3c-1.8-.2-3.6.2-5 1.3z"/><path d="M12 8.6v8.8"/>'),
+  task: disc('<path d="M7.6 12.4l3 3 5.8-6.4"/>'),
+  planner: disc('<circle cx="12" cy="12" r="5.3"/><path d="M12 9.2V12l2 1.4"/>'),
+  calendar: disc('<rect x="7" y="7.8" width="10" height="9" rx="1.6"/><path d="M7 11h10M9.6 6.3v2.6M14.4 6.3v2.6"/>'),
+  person: disc('<circle cx="12" cy="9.6" r="2.6"/><path d="M7.4 17.2c.7-2.5 2.4-3.7 4.6-3.7s3.9 1.2 4.6 3.7"/>'),
+  timeline: disc('<path d="M9 7v10"/><path d="M12 8.5h4M12 12h3M12 15.5h4"/>'),
+  key_element: disc('<path d="M6.8 10.2L12 7l5.2 3.2M7.2 17h9.6M9 11.6v3.8M12 11.6v3.8M15 11.6v3.8"/>'),
+  goal: disc('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'),
+  project: disc('<path d="M9 17.5V6.8M9 7.2h7l-1.6 2.4L16 12H9"/>'),
+  topic: disc('<path d="M10.6 7l-1.2 10M14.6 7l-1.2 10M7.6 10h9M7.2 14h9"/>'),
+  assistant: disc('<path d="M7 8.2h10v6.4h-5.4L9 17v-2.4H7z"/>'),
+};
+
 export function icon(name) {
-  const span = el('span', { class: 'icon' });
-  span.innerHTML = icons[name];
+  const span = el('span', { class: 'icon', 'data-icon': name }); // style.css colours a kind's icon (Kinds, tokens.css)
+  span.innerHTML = discs[name] ?? icons[name];
   return span;
 }
 

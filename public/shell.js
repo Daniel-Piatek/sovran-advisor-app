@@ -156,6 +156,8 @@ whenCaptured(() => { refreshInboxCount(); afterCapture(); });
 setInterval(refreshInboxCount, 60_000); // a snoozed capture comes back by itself
 
 function showSection(path) {
+  // The section's kind colour, as a thin line on top of its screen (style.css, Kinds).
+  document.documentElement.dataset.section = sections.find((section) => section.owns(path))?.icon ?? '';
   sections.forEach((section, i) => {
     if (section.owns(path)) sectionLinks[i].setAttribute('aria-current', 'page');
     else sectionLinks[i].removeAttribute('aria-current');

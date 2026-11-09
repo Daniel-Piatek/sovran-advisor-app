@@ -3792,3 +3792,82 @@ button.mic-pill:hover { color: var(--color-text); }
 /* The Sovran Library key (public/settings.js) */
 .library-key { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .library-key .detail-input { flex: 1 1 240px; }
+
+/* ---- Kinds (2026-11-09, the owner's wish; colours in tokens.css) ----
+   A kind's icon is a disc of its colour with a bold drawing inside (ui.js, discs), the same on every screen:
+   in the sidebar, in a list, on a chip. A section's screen has a thin
+   line of its colour along its top. Inbox, Settings and Library have no kind and stay grey. */
+.icon[data-icon="notes"] { --kind: var(--kind-notes); --kind-ink: var(--kind-notes-ink); }
+.icon[data-icon="journal"] { --kind: var(--kind-journal); --kind-ink: var(--kind-journal-ink); }
+.icon[data-icon="task"] { --kind: var(--kind-tasks); --kind-ink: var(--kind-tasks-ink); }
+.icon[data-icon="planner"], .icon[data-icon="calendar"] { --kind: var(--kind-time); --kind-ink: var(--kind-time-ink); }
+.icon[data-icon="person"], .icon[data-icon="timeline"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); }
+.icon[data-icon="key_element"] { --kind: var(--kind-life); --kind-ink: var(--kind-life-ink); }
+/* My Life's three levels (2026-11-09, the owner's wish: not all green). A Goal is Gold, the crown you reach for;
+   a Project is Orange, the Tasks' colour, since a project is where its tasks live; a Topic is Cobalt, the Notes'
+   colour, since a topic is knowledge you keep, not an outcome. */
+.icon[data-icon="goal"] { --kind: var(--kind-journal); --kind-ink: var(--kind-journal-ink); }
+.icon[data-icon="project"] { --kind: var(--kind-tasks); --kind-ink: var(--kind-tasks-ink); }
+.icon[data-icon="topic"] { --kind: var(--kind-notes); --kind-ink: var(--kind-notes-ink); }
+.icon[data-icon="assistant"] { --kind: var(--kind-assistant); --kind-ink: var(--kind-assistant-ink); }
+.icon svg.kind-disc { flex: none; }
+/* In the sidebar the discs are a little larger; every icon there sits in the same square, so the names line up. */
+.sidebar-link .icon, .sidebar-more .icon { width: calc(var(--space-1) * 5); justify-content: center; }
+.sidebar-link .icon svg.kind-disc { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); }
+
+html[data-section="notes"] { --section: var(--kind-notes); }
+html[data-section="journal"] { --section: var(--kind-journal); }
+html[data-section="task"] { --section: var(--kind-tasks); }
+html[data-section="planner"], html[data-section="calendar"] { --section: var(--kind-time); }
+html[data-section="person"], html[data-section="timeline"] { --section: var(--kind-people); }
+html[data-section="key_element"] { --section: var(--kind-life); }
+html[data-section="assistant"] { --section: var(--kind-assistant); }
+html[data-section] .page { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
+html[data-section] .page.planner-page, html[data-section] .page.page-journal { border-top: 0; }
+html[data-section] .page.planner-page .tray, html[data-section] .page.planner-page .plan-board,
+html[data-section] .journal-main, html[data-section] .journal-aside, html[data-section] .life-list, html[data-section] .life-main { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
+/* A person's or a company's face is the People colour too: its ring. */
+.face { border-color: var(--kind-people); }
+
+/* Section headings (2026-11-09, the owner's wish): the names of a screen's parts are Crimson, so the eye
+   finds them at once. The main parts are larger; a part that only points elsewhere (Linked from) is quiet. */
+.journal-section-title, .contact-heading, .tray-title, .tray-group, .task-group-title, .life-section-title,
+.life-subheading, .life-list-title, .settings-title, .plan-part-title, .planning-title, .week-goals-title,
+.quarter-title, .timeline-day-title, .chat-list-title, .inbox-pile, .lib-group, .review-title, .shutdown-title,
+.routine-title, .plan-suggestions-title, .earlier-title {
+  color: var(--color-heading);
+  font-weight: var(--weight-bold);
+}
+.journal-section-title { font-size: var(--text-lg); }
+.contact-heading { font-size: var(--text-base); }
+.tray-group, .review-title, .shutdown-title, .routine-title { font-size: var(--text-sm); }
+.linked-from-title { color: var(--color-text-muted); font-size: var(--text-xs); font-weight: var(--weight-regular); }
+
+/* A kind's tab or chip (the Timeline's Notes, Journal, Tasks, Events…) wears the kind's colour: a line
+   underneath when it is on (2026-11-09, the owner's choice: no wash behind it). */
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="notes"]) { --kind: var(--kind-notes); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="journal"]) { --kind: var(--kind-journal); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="task"]) { --kind: var(--kind-tasks); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="calendar"]), :is(.tab, .chip, .words-chip):has(> .icon[data-icon="planner"]) { --kind: var(--kind-time); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="person"]), :is(.tab, .chip, .words-chip):has(> .icon[data-icon="timeline"]) { --kind: var(--kind-people); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="key_element"]) { --kind: var(--kind-life); }
+:is(.tab, .chip):has(> .icon[data-icon="notes"], > .icon[data-icon="journal"], > .icon[data-icon="task"], > .icon[data-icon="calendar"],
+  > .icon[data-icon="planner"], > .icon[data-icon="person"], > .icon[data-icon="key_element"]) {
+  border-bottom: calc(var(--border-width) * 3) solid var(--kind);
+}
+:is(.tab, .chip)[aria-pressed="true"]:has(> .icon[data-icon="notes"], > .icon[data-icon="journal"], > .icon[data-icon="task"],
+  > .icon[data-icon="calendar"], > .icon[data-icon="planner"], > .icon[data-icon="person"], > .icon[data-icon="key_element"]) {
+  background: transparent;
+}
+/* Switched off, a kind's tab has no line and its disc is pale. */
+:is(.tab, .chip)[aria-pressed="false"]:has(> .icon[data-icon]) { border-bottom-color: var(--color-border); }
+:is(.tab, .chip)[aria-pressed="false"] > .icon[data-icon] { opacity: 0.4; }
+
+/* A screen's main parts (2026-11-09, the owner's wish, first on the Planner's TASKS TO PLACE): capitals in the
+   section's own colour, above the Crimson headings of the smaller parts inside them. */
+.tray-title, .journal-section-title, .contact-heading, .life-list-title, .life-section-title, .chat-list-title,
+.task-group-title, .timeline-day-title {
+  color: var(--section);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

@@ -47,6 +47,21 @@
   --cal-5-fill: #f1e3e7;
   --cal-6-fill: #e5ebdd;
 
+  /* Kinds (2026-11-09, the owner's wish): each kind of information has one brand colour, the same on every
+     screen, so a note, a journal entry or a person is known by its colour wherever it shows. It is a disc
+     behind the kind's icon (the brand's white-on-colour Quest discs), and a thin line on top of that
+     section's screen. Never text, never a fill behind words. Crimson stays the one action colour. */
+  --kind-notes: #224cff;    --kind-notes-ink: #fbfbfb;    /* Cobalt */
+  --kind-journal: #d9c14b;  --kind-journal-ink: #302d2d;  /* Gold */
+  --kind-tasks: #f07a21;    --kind-tasks-ink: #302d2d;    /* Orange */
+  --kind-time: #2fc5c9;     --kind-time-ink: #302d2d;     /* Turquoise: the Planner, the Calendar, events */
+  --kind-people: #733bc4;   --kind-people-ink: #fbfbfb;   /* Violet: people, companies, the Timeline */
+  --kind-life: #059e30;     --kind-life-ink: #fbfbfb;     /* Green: My Life (Key Elements, goals, projects, topics) */
+  --kind-assistant: #ffe500; --kind-assistant-ink: #302d2d; /* Yellow */
+  --color-heading: var(--color-accent); /* a screen's section headings (2026-11-09, the owner's wish): Crimson, so the eye finds the parts of a page */
+  --kind: var(--color-surface); --kind-ink: var(--color-text); /* style.css sets these per icon */
+  --section: var(--color-border); /* the screen's kind (style.css, by the section) */
+
   /* Colours: the app icon (design/icon.svg), the same in both themes.
      Only the icon uses them. Change them, then run `npm run icons`. */
   --icon-ring: #c71f42;         /* crimson ring and the crown's three dots */

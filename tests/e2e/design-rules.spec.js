@@ -102,7 +102,8 @@ async function accentElements(page) {
     const found = [];
     for (const el of document.body.querySelectorAll('*')) {
       const style = getComputedStyle(el);
-      const ownText = style.color === accent && getComputedStyle(el.parentElement).color !== accent;
+      // Section headings are Crimson too (2026-11-09, the owner's wish): they name parts, they are not actions.
+      const ownText = style.color === accent && getComputedStyle(el.parentElement).color !== accent && !el.matches('h1, h2, h3, h4, h5, h6');
       const borders = ['Top', 'Right', 'Bottom', 'Left']
         .some((side) => style[`border${side}Style`] !== 'none' && style[`border${side}Color`] === accent);
       const outline = style.outlineStyle !== 'none' && style.outlineColor === accent;
