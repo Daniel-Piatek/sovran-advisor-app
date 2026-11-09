@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { startServer } from '../../server.js';
-import { ensureServer, launchers } from '../../scripts/desktop-server.js';
+import { ensureServer, launchers, launchPath } from '../../scripts/desktop-server.js';
 
 test('Dock launcher waits for a cold app to start, using a scratch database', async () => {
   const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dock-app-test-'));
@@ -47,4 +47,10 @@ test('the two Dock launchers use different ports and folders, and the personal o
   assert.equal(launchers.demo.port, '3310');
   assert.equal(launchers.demo.dataDir, 'demo-data');
   assert.notEqual(launchers.demo.port, launchers.personal.port);
+});
+
+test('started from the Dock, the app finds the claude command where Claude Code and Homebrew install it', () => {
+  const folders = launchPath('/Users/ana', '/opt/homebrew/bin/node').split(':');
+  assert.equal(folders[0], '/opt/homebrew/bin');
+  for (const where of ['/Users/ana/.local/bin', '/Users/ana/.claude/local', '/opt/homebrew/bin', '/usr/local/bin', '/usr/bin']) assert.ok(folders.includes(where), where);
 });

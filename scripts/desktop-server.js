@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
+import os from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { SCHEMA_VERSION } from '../db.js';
 
@@ -33,6 +34,14 @@ export async function ensureServer({ url, start, timeout = 20000 }) {
   throw new Error('The app did not finish starting. Please ask for help checking its startup.');
 }
 
+// Where the app looks for programs when the Dock starts it (no Terminal, so no login shell's PATH):
+// this Node's own folder, then where Claude Code's installer and Homebrew put the claude command
+// (the assistant runs it), then the system's folders.
+export const launchPath = (home = os.homedir(), node = process.execPath) => [
+  path.dirname(node), path.join(home, '.local', 'bin'), path.join(home, '.claude', 'local'), '/opt/homebrew/bin', '/usr/local/bin',
+  '/usr/bin', '/bin', '/usr/sbin', '/sbin',
+].join(':');
+
 // The two Dock launchers: the personal app (your data) and the Demo (made-up data).
 export const launchers = {
   personal: { url: 'http://127.0.0.1:3300', port: '3300', dataDir: 'data' },
@@ -55,7 +64,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         db.close();
         if (version > SCHEMA_VERSION) throw new Error('Your data was made by a newer Sovran Advisor. Ask Claude to update Sovran Advisor, then open it again.');
       }
-      const env = { ...process.env, PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin:/usr/sbin:/sbin`, PORT: port, DATA_DIR: path.join(root, dataDir) };
+      const env = { ...process.env, PATH: launchPath(), PORT: port, DATA_DIR: path.join(root, dataDir) };
       delete env.ASSISTANT_COMMAND;
       delete env.HOSTS;
       if (demo) env.READ_CALENDARS = 'off'; else delete env.READ_CALENDARS;
