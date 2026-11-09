@@ -58,6 +58,7 @@
   --kind-people: #733bc4;   --kind-people-ink: #fbfbfb;   /* Violet: people, companies, the Timeline */
   --kind-life: #059e30;     --kind-life-ink: #fbfbfb;     /* Green: My Life (Key Elements, goals, projects, topics) */
   --kind-assistant: #ffe500; --kind-assistant-ink: #302d2d; /* Yellow */
+  --kind-timeline: #302d2d;  --kind-timeline-ink: #fbfbfb; /* Charcoal: the Timeline holds every kind, so it has the neutral (2026-11-09) */
   --color-heading: var(--color-accent); /* a screen's section headings (2026-11-09, the owner's wish): Crimson, so the eye finds the parts of a page */
   --kind: var(--color-surface); --kind-ink: var(--color-text); /* style.css sets these per icon */
   --section: var(--color-border); /* the screen's kind (style.css, by the section) */
@@ -162,6 +163,7 @@
   --color-accent-text: #1f1d1d;
   --color-warning: #e8a33d;
   --color-warning-surface: #2b2215;
+  --kind-timeline: #d4d1d1;  --kind-timeline-ink: #1f1d1d; /* Charcoal would vanish on the dark page: a light stone instead */
   --cal-1: #4fc49c;
   --cal-2: #ec8f6e;
   --cal-3: #a39cf0;

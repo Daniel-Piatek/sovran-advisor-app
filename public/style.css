@@ -3801,7 +3801,8 @@ button.mic-pill:hover { color: var(--color-text); }
 .icon[data-icon="journal"] { --kind: var(--kind-journal); --kind-ink: var(--kind-journal-ink); }
 .icon[data-icon="task"] { --kind: var(--kind-tasks); --kind-ink: var(--kind-tasks-ink); }
 .icon[data-icon="planner"], .icon[data-icon="calendar"] { --kind: var(--kind-time); --kind-ink: var(--kind-time-ink); }
-.icon[data-icon="person"], .icon[data-icon="timeline"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); }
+.icon[data-icon="person"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); }
+.icon[data-icon="timeline"] { --kind: var(--kind-timeline); --kind-ink: var(--kind-timeline-ink); }
 .icon[data-icon="key_element"] { --kind: var(--kind-life); --kind-ink: var(--kind-life-ink); }
 /* My Life's three levels (2026-11-09, the owner's wish: not all green). A Goal is Gold, the crown you reach for;
    a Project is Orange, the Tasks' colour, since a project is where its tasks live; a Topic is Cobalt, the Notes'
@@ -3819,7 +3820,8 @@ html[data-section="notes"] { --section: var(--kind-notes); }
 html[data-section="journal"] { --section: var(--kind-journal); }
 html[data-section="task"] { --section: var(--kind-tasks); }
 html[data-section="planner"], html[data-section="calendar"] { --section: var(--kind-time); }
-html[data-section="person"], html[data-section="timeline"] { --section: var(--kind-people); }
+html[data-section="person"] { --section: var(--kind-people); }
+html[data-section="timeline"] { --section: var(--kind-timeline); }
 html[data-section="key_element"] { --section: var(--kind-life); }
 html[data-section="assistant"] { --section: var(--kind-assistant); }
 html[data-section] .page { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
@@ -3849,7 +3851,8 @@ html[data-section] .journal-main, html[data-section] .journal-aside, html[data-s
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="journal"]) { --kind: var(--kind-journal); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="task"]) { --kind: var(--kind-tasks); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="calendar"]), :is(.tab, .chip, .words-chip):has(> .icon[data-icon="planner"]) { --kind: var(--kind-time); }
-:is(.tab, .chip, .words-chip):has(> .icon[data-icon="person"]), :is(.tab, .chip, .words-chip):has(> .icon[data-icon="timeline"]) { --kind: var(--kind-people); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="person"]) { --kind: var(--kind-people); }
+:is(.tab, .chip, .words-chip):has(> .icon[data-icon="timeline"]) { --kind: var(--kind-timeline); }
 :is(.tab, .chip, .words-chip):has(> .icon[data-icon="key_element"]) { --kind: var(--kind-life); }
 :is(.tab, .chip):has(> .icon[data-icon="notes"], > .icon[data-icon="journal"], > .icon[data-icon="task"], > .icon[data-icon="calendar"],
   > .icon[data-icon="planner"], > .icon[data-icon="person"], > .icon[data-icon="key_element"]) {
