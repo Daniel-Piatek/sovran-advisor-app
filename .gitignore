@@ -1,0 +1,53 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Data the app keeps, and exports from it
+data/
+demo-data/
+*.db
+*.sqlite
+*.sqlite3
+exports/
+export/
+backups/
+
+# Reference screenshots (they show other people's names and links)
+references/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.vercel/
+.turbo/
+.cache/
+
+# Tests
+coverage/
+test-results/
+playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# What the tests' stand-in claude leaves behind
+.fake-claude-*.json

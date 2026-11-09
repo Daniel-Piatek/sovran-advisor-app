@@ -1,0 +1,162 @@
+/* Design tokens: every colour, font, size and spacing of the app, in one place.
+   Brand: Live Sovran (handoff v3, 2026-11-03). Fonts: Gloock for headings, Plus Jakarta Sans
+   for menus, labels and buttons, Inter for reading. Neutrals and Crimson from its palette.
+   The font files and their licences are in public/fonts/ (all SIL Open Font License). The
+   brand's Copperplate accent font is not used: its exact font is not licensed to us yet.
+   This is the only file allowed to hold a raw colour (tests/unit/design-rules.test.js checks).
+   The design rules are in AGENTS.md. A new colour needs the owner's approval first.
+   The light theme is the default. The dark theme applies with <html data-theme="dark">.
+   Neither theme uses pure black or pure white. */
+
+@font-face { font-family: "Gloock"; font-weight: 400; font-style: normal; font-display: swap; src: url("/fonts/gloock-400.ttf") format("truetype"); }
+@font-face { font-family: "Inter"; font-weight: 400; font-style: normal; font-display: swap; src: url("/fonts/inter-400.ttf") format("truetype"); }
+@font-face { font-family: "Inter"; font-weight: 600; font-style: normal; font-display: swap; src: url("/fonts/inter-600.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 400; font-style: normal; font-display: swap; src: url("/fonts/plus-jakarta-sans-400.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 500; font-style: normal; font-display: swap; src: url("/fonts/plus-jakarta-sans-500.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 600; font-style: normal; font-display: swap; src: url("/fonts/plus-jakarta-sans-600.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 700; font-style: normal; font-display: swap; src: url("/fonts/plus-jakarta-sans-700.ttf") format("truetype"); }
+
+:root {
+  color-scheme: light;          /* the browser's own parts (scroll bars, text fields) follow */
+
+  /* Colours: light theme */
+  --color-bg: #fbfbfb;          /* the page: brand White */
+  --color-surface: #eceaea;     /* cards, panels, anything raised from the page */
+  --color-text: #302d2d;        /* main text: brand Charcoal */
+  --color-text-muted: #555151;  /* secondary text, empty states */
+  --color-text-faint: #7b7777;  /* hints and placeholders only, never your own words (2026-10-26) */
+  --color-border: #d4d1d1;      /* lines and outlines */
+  --color-accent: #c71f42;      /* the one accent: brand Crimson, only on the action that matters most on a screen (2026-11-08) */
+  --color-accent-text: #fbfbfb; /* text on the accent */
+  /* A warning (time/2): the Planner's day when it holds too much. Always with words. */
+  --color-warning: #8f5400;
+  --color-warning-surface: #fbf1de;
+  /* Calendars (time/1): each subscribed calendar's line and dot, never anything else. */
+  --cal-1: #1d8a68;  /* teal */
+  --cal-2: #c5532c;  /* coral */
+  --cal-3: #6b62c9;  /* violet */
+  --cal-4: #a36a14;  /* amber */
+  --cal-5: #b8476e;  /* rose */
+  --cal-6: #5a8a1e;  /* green */
+  /* Their pale fills (2026-10-26): behind an event's title on the Planner's day and the
+     Calendar, under its line. Never anything else. */
+  --cal-1-fill: #ddebe6;
+  --cal-2-fill: #f3e4de;
+  --cal-3-fill: #e7e6f3;
+  --cal-4-fill: #efe7db;
+  --cal-5-fill: #f1e3e7;
+  --cal-6-fill: #e5ebdd;
+
+  /* Colours: the app icon (design/icon.svg), the same in both themes.
+     Only the icon uses them. Change them, then run `npm run icons`. */
+  --icon-ring: #c71f42;         /* crimson ring and the crown's three dots */
+  --icon-crown: #e2be50;        /* gold crown */
+  --icon-base: #302d2d;         /* the crown's dark base */
+  --icon-inner: var(--color-bg); /* the disc inside the ring */
+
+  /* Fonts */
+  --font-heading: "Gloock", Georgia, serif;                       /* headings and page titles, Regular only */
+  --font-ui: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* menus, labels, buttons */
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;           /* reading and writing */
+  --font-sans: var(--font-ui);
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type sizes */
+  --text-xs: 0.75rem;   /* 12px */
+  --text-sm: 0.875rem;  /* 14px */
+  --text-base: 1rem;    /* 16px */
+  --text-lg: 1.25rem;   /* 20px */
+  --text-xl: 1.5rem;    /* 24px */
+  --text-2xl: 2rem;     /* 32px */
+
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+
+  --weight-regular: 400;
+  --weight-medium: 500;         /* menus */
+  --weight-bold: 600;           /* labels, sub-headings, the chosen one */
+  --weight-button: 700;         /* buttons */
+
+  /* Spacing: steps of 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;  /* also the side gutter on a phone */
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Lines: surfaces are flat and separated by a thin line, never by a shadow */
+  --border-width: 1px;
+  --line: var(--border-width) solid var(--color-border);
+
+  /* Sizes */
+  --page-max-width: 720px;      /* reading and writing: a note */
+  --page-wide-max-width: 1200px; /* browsing: the notes list */
+  --page-width: var(--page-max-width); /* what is on the screen; a wider page sets it to one above */
+  --card-min-width: 220px;      /* a note card never gets narrower (except on a phone) */
+  --card-min-height: 140px;
+  --card-preview-lines: 5;
+  --task-place-width: 200px;    /* the Tasks page's Home and Written in columns */
+  --task-schedule-width: 220px; /* … and its Schedule column */
+  --sidebar-width: 168px;       /* Notes, Journal on the left */
+  --bottom-bar-height: 56px;    /* the same on a phone, along the bottom */
+  --entry-when-width: 64px;     /* the time (or day) in front of a journal entry */
+  --mini-month-width: 216px;    /* the small month beside a journal day */
+  --mini-day-size: 28px;
+  --picture-max-height: 360px;  /* a picture in a note or entry */
+  --file-card-max-width: 440px;
+  --file-kind-width: 36px;      /* the page-shaped icon on a file card */
+  --file-kind-height: 44px;
+  --capture-width: 560px;       /* the quick capture box */
+  --capture-top: 18vh;          /* how far down the screen it opens */
+  --inbox-list-width: 260px;    /* what waits in the Inbox, on the left */
+  --face-small: 28px;           /* a person's or company's initials, in a list */
+  --face-large: 56px;           /* on their page */
+  --life-list-width: 280px;     /* the My Life list, on the left */
+  --life-icon-large: 24px;      /* an item's shape beside its name, on its page */
+  --task-box-size: 16px;        /* a task's checkbox */
+  --planning-width: 300px;      /* the planning panel beside the board */
+  --week-column-min: 110px;     /* a day on the week board, before they wrap */
+  --chat-bubble-max: 85%;       /* a chat bubble, of the chat's width */
+  --chat-thread-height: 62vh;   /* the conversation, before it scrolls */
+  --hour-height: 48px;          /* an hour in the Calendar */
+  --plan-hour-height: 64px;     /* an hour in the Planner's day: room for a task's words */
+  --grid-hour-height: 40px;     /* an hour in the Hour grid (several days side by side) */
+  --grid-gutter: 56px;          /* the hours' labels on the left of the Hour grid */
+  --plan-gutter: 64px;          /* the hours' labels on the left of the Planner's day */
+  --cal-max-height: 70vh;       /* the Calendar's hours, before they scroll */
+  --menu-width: 240px;          /* the slash menu */
+  --menu-max-height: 320px;
+  --menu-icon-size: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Colours: dark theme */
+  --color-bg: #1f1d1d;
+  --color-surface: #2b2828;
+  --color-text: #eceaea;
+  --color-text-muted: #aaa6a6;
+  --color-text-faint: #8c8888;
+  --color-border: #413d3d;
+  --color-accent: #ea5575;      /* Crimson, lightened to read on the dark page */
+  --color-accent-text: #1f1d1d;
+  --color-warning: #e8a33d;
+  --color-warning-surface: #2b2215;
+  --cal-1: #4fc49c;
+  --cal-2: #ec8f6e;
+  --cal-3: #a39cf0;
+  --cal-4: #e3a547;
+  --cal-5: #e98ab0;
+  --cal-6: #93c55a;
+  --cal-1-fill: #213932;
+  --cal-2-fill: #412e29;
+  --cal-3-fill: #323143;
+  --cal-4-fill: #3f3321;
+  --cal-5-fill: #402d36;
+  --cal-6-fill: #2f3925;
+}

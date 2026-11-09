@@ -1,0 +1,40 @@
+{
+  "name": "sovran-advisor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "desktop:build": "node scripts/build-desktop.js",
+    "desktop:build:demo": "PLAYWRIGHT_BROWSERS_PATH=0 node scripts/build-desktop.js --demo",
+    "seed": "node scripts/seed.js",
+    "demo": "node scripts/demo.js",
+    "demo:start": "PORT=3100 DATA_DIR=demo-data READ_CALENDARS=off node server.js",
+    "vendor": "node scripts/vendor.js",
+    "postinstall": "node scripts/vendor.js",
+    "icons": "PLAYWRIGHT_BROWSERS_PATH=0 node scripts/build-icons.js",
+    "test:setup": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium --only-shell",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"tests/unit/**/*.test.js\"",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  },
+  "dependencies": {
+    "ical.js": "2.2.1",
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-history": "1.5.1",
+    "prosemirror-inputrules": "1.5.1",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-markdown": "1.13.9",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-schema-list": "1.5.1",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-transform": "1.12.4",
+    "prosemirror-view": "1.42.8"
+  }
+}

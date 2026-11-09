@@ -1,0 +1,3794 @@
+/* Layout and components. Every colour, font, size and spacing comes from tokens.css.
+   Design rules (AGENTS.md): one accent per screen, flat surfaces split by a thin line. */
+
+* { box-sizing: border-box; }
+
+/* The frame (2026-10-26, from the owner's reference): the sidebar and the space around the
+   screen in the grey of the surface; what is on the screen in panels of the page colour,
+   each with a thin line, the grey between them keeping them apart. */
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-base);
+}
+
+/* ---- The frame: the sidebar on the left, the screen beside it ---- */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  height: 100vh;
+  padding: var(--space-6) var(--space-3);
+}
+
+.sidebar-link {
+  font-weight: var(--weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.sidebar-link:hover { color: var(--color-text); }
+
+/* Settings and Library sit at the foot of the column. Sections can be dragged into your own order:
+   a thin line in the text colour shows where one will land, the one being moved is paler. */
+.sidebar .more-menu + .sidebar-pinned { margin-top: auto; }
+.sidebar-link.drop-before { border-top-color: var(--color-text); }
+.sidebar-link.drop-after { border-bottom-color: var(--color-text); }
+.sidebar-link.is-dragged { opacity: 0.5; }
+
+/* More, and its menu, are for a phone only. */
+.sidebar-more, .more-menu { display: none; }
+
+.more-link { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); color: var(--color-text); text-decoration: none; font-size: var(--text-sm); }
+
+.more-link:hover { background: var(--color-surface); }
+
+/* Where you are: a panel of the page colour on the grey, with its thin line. */
+.sidebar-more[aria-current="page"] { border-color: var(--color-border); background: var(--color-bg); color: var(--color-text); font-weight: var(--weight-bold); }
+
+.sidebar-link[aria-current="page"] {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: var(--weight-bold);
+}
+
+/* The screen: one panel filling the space beside the sidebar; what is in it keeps the
+   page's width (--page-width), in the middle. */
+.page {
+  min-width: 0;
+  min-height: calc(100vh - var(--space-3) * 2);
+  margin: var(--space-3) var(--space-3) var(--space-3) 0;
+  padding: var(--space-12) var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.page > * { max-width: var(--page-width); margin-left: auto; margin-right: auto; }
+
+.page-wide { --page-width: var(--page-wide-max-width); }
+
+/* The Planner and the Journal: each column is a panel of its own, on the grey. */
+/* The grey around the panels is their gap, so the page needs no sides of its own. */
+.page.planner-page, .page.page-journal { padding: var(--space-8) 0 var(--space-12); border: 0; background: transparent; }
+
+/* The Planner, My Life, the Journal and Tasks fill the whole width beside the sidebar,
+   however large the screen (2026-10-27, the owner's wish): no empty grey on both sides. */
+.page.planner-page, .page.page-journal, .page.tasks-page { --page-width: none; }
+
+.tray, .plan-board, .journal-main, .journal-aside, .life-list, .life-main, .inbox-list-panel, .inbox-current {
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+h1 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-tight);
+}
+
+.empty { color: var(--color-text-muted); }
+
+.icon { display: inline-flex; }
+
+:focus-visible {
+  outline: calc(var(--border-width) * 2) solid var(--color-text);
+  outline-offset: var(--space-1);
+}
+
+/* ---- Buttons ---- */
+
+.button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-button);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* The one accent on a screen: its most important action. */
+.button-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.button:disabled { cursor: default; }
+
+.button { display: inline-flex; align-items: center; gap: var(--space-1); text-decoration: none; }
+
+.button[hidden] { display: none; }
+
+/* A quiet button: an action that is there when needed (Delete), not the main one. */
+.button-quiet {
+  font-weight: var(--weight-regular);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.button-quiet:hover { color: var(--color-text); }
+
+/* ---- Search box ---- */
+
+.search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(var(--card-min-width) * 2);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  cursor: text;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.search-input::placeholder { color: var(--color-text-muted); }
+
+.search-input:focus-visible { outline: none; }
+
+.search:focus-within { border-color: var(--color-text-muted); }
+
+/* ---- "… deleted. Undo" after deleting ---- */
+
+.undo-bar {
+  position: sticky;
+  bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+/* ---- Recently deleted ---- */
+
+.deleted-list { margin-top: var(--space-6); }
+
+.deleted-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-1);
+  border-top: var(--line);
+  font-size: var(--text-sm);
+}
+
+.deleted-row:last-child { border-bottom: var(--line); }
+
+.deleted-row-title { font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+
+.deleted-row-when { font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.footer-link:hover { color: var(--color-text); }
+
+/* ---- Top bar: title, the grid/rows switch, the main action ---- */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.top-bar-title { flex: 1; margin: 0; }
+
+.switch {
+  display: flex;
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.switch-button {
+  display: flex;
+  padding: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.switch-button + .switch-button { border-left: var(--line); }
+
+.switch-button-text {
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.switch-button[aria-pressed="true"] {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* ---- The notes list as a grid of cards ---- */
+
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min-width), calc(50% - var(--space-2))), 1fr));
+  gap: var(--space-3);
+}
+
+.note-card {
+  display: block;
+  min-height: var(--card-min-height);
+  padding: var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.note-card:hover { border-color: var(--color-text-muted); }
+
+.note-card-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+
+.note-card-preview {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--card-preview-lines);
+  line-clamp: var(--card-preview-lines);
+  overflow: hidden;
+}
+
+/* ---- The notes list as rows ---- */
+
+.note-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-1);
+  border-top: var(--line);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.note-row:last-child { border-bottom: var(--line); }
+
+.note-row:hover { background: var(--color-surface); }
+
+.note-row-title {
+  font-weight: var(--weight-bold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-row-preview {
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.untitled { color: var(--color-text-muted); }
+
+/* ---- One note ---- */
+
+.note-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.note-bar-actions { display: flex; align-items: center; gap: var(--space-3); }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.back-link:hover { color: var(--color-text); }
+
+.note-title,
+.note-body {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  resize: none;
+  overflow: hidden;
+}
+
+.note-title {
+  margin-bottom: var(--space-4);
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-tight);
+}
+
+.note-body {
+  min-height: calc(var(--space-12) * 4);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--line-height-base);
+}
+
+.note-title::placeholder { color: var(--color-text-muted); }
+
+/* ---- The note editor (public/editor.js): formatting as you type ---- */
+
+.note-body {
+  position: relative;
+  outline: none;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: break-spaces;
+  font-variant-ligatures: none;
+}
+
+/* "Start writing" while the note has no text. The hint is drawn by the editor itself,
+   which holds it in data-placeholder (attr() only reads the element it is drawn on). */
+.note-body.is-empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.note-body > :first-child { margin-top: 0; }
+
+.note-body p { margin: 0 0 var(--space-2); }
+
+.note-body h1,
+.note-body h2,
+.note-body h3 {
+  margin: var(--space-6) 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-tight);
+}
+
+.note-body h1 { font-size: var(--text-xl); }
+.note-body h2 { font-size: var(--text-lg); }
+.note-body h3 { font-size: var(--text-base); }
+
+.note-body ul,
+.note-body ol { margin: 0 0 var(--space-2); padding-left: var(--space-6); }
+
+.note-body li { position: relative; }
+.note-body li > p { margin: 0; }
+
+/* A task in the text (tasks/1): a checkbox in front of its words. A ticked box is filled
+   in the text colour; its words are struck through in grey. */
+.note-body ul:has(> .task-line) { padding-left: 0; }
+
+.note-body li.task-line { display: flex; align-items: flex-start; gap: var(--space-2); list-style: none; }
+
+.task-words { flex: 1; min-width: 0; }
+
+.task-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--task-box-size);
+  height: var(--task-box-size);
+  margin-top: calc((1em * var(--line-height-base) - var(--task-box-size)) / 2);
+  padding: 0;
+  border: calc(var(--border-width) * 1.5) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: transparent;
+  cursor: pointer;
+}
+
+.task-box svg { width: 100%; height: 100%; }
+
+.task-line[data-checked="true"] > .task-box { background: var(--color-text); color: var(--color-bg); }
+
+.task-line[data-checked="true"] > .task-words { color: var(--color-text-muted); text-decoration: line-through; }
+
+/* A task's due date: a small chip with the day. */
+.due-chip {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: var(--line-height-base);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.note-body blockquote {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+  border-left: calc(var(--border-width) * 3) solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.note-body code,
+.note-body pre {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.note-body code { padding: 0 var(--space-1); }
+.note-body pre { padding: var(--space-3); white-space: pre-wrap; }
+
+.note-body a { color: inherit; }
+
+.note-body hr { border: 0; border-top: var(--line); margin: var(--space-4) 0; }
+
+.note-body .ProseMirror-selectednode { outline: calc(var(--border-width) * 2) solid var(--color-text-muted); }
+
+.ProseMirror-hideselection *::selection { background: transparent; }
+.ProseMirror-hideselection { caret-color: transparent; }
+
+img.ProseMirror-separator { display: inline !important; border: none !important; margin: 0 !important; }
+
+/* ---- The slash menu (public/slash-menu.js): flat, a thin line, no shadow ---- */
+
+.slash-menu {
+  position: absolute;
+  z-index: 10;
+  width: min(var(--menu-width), calc(100vw - var(--space-4) * 2));
+  max-height: var(--menu-max-height);
+  overflow-y: auto;
+  padding: var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.slash-menu[hidden] { display: none; }
+
+.slash-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.slash-menu-item[aria-selected="true"] { background: var(--color-surface); }
+
+.slash-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--menu-icon-size);
+  height: var(--menu-icon-size);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.slash-menu-label { flex: 1; }
+
+.slash-menu-item.is-later { color: var(--color-text-muted); cursor: default; }
+
+.slash-menu-later { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.slash-menu-empty { padding: var(--space-2); color: var(--color-text-muted); }
+
+.note-title:focus-visible,
+.note-body:focus-visible { outline: none; }
+
+.note-info {
+  margin-top: var(--space-8);
+  padding-top: var(--space-3);
+  border-top: var(--line);
+  font-size: var(--text-sm);
+}
+
+.note-info dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-8);
+  margin: 0;
+}
+
+.note-info dt { color: var(--color-text-muted); }
+
+.note-info dd { margin: 0; }
+
+/* ---- Bottom of every screen: the Light/Dark switch ---- */
+
+.page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-12);
+  padding-top: var(--space-3);
+  border-top: var(--line);
+}
+
+/* A phone: rows put the title above the start of the text.
+   (A media query can't read a variable, so the phone width is written here.) */
+@media (max-width: 600px) {
+  .page { min-height: 0; margin: 0; padding-top: var(--space-6); border: 0; border-radius: 0; }
+  .page.planner-page, .page.page-journal { padding: var(--space-3) var(--space-2) var(--space-6); }
+  .journal-main { padding: var(--space-4); }
+  .note-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .top-bar { flex-wrap: wrap; }
+  .search { order: 1; flex-basis: 100%; max-width: none; }
+
+  /* The sidebar becomes a bar along the bottom, always in reach of a thumb. */
+  .layout { display: block; padding-bottom: var(--bottom-bar-height); }
+  .sidebar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 5;
+    top: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    height: var(--bottom-bar-height);
+    gap: 0;
+    padding: var(--space-1);
+    border-right: 0;
+    border-top: var(--line);
+    background: var(--color-bg);
+  }
+  /* Every section gets an equal share of the bar, its name on one line. */
+  .sidebar-link { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 0; padding: var(--space-1) 0; font-size: calc(var(--text-xs) * 0.875); white-space: nowrap; }
+}
+
+/* ---- The journal (public/journal.js) ---- */
+
+.day-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-6); }
+
+.day-heading .button { flex: none; display: inline-flex; align-items: center; gap: var(--space-1); text-decoration: none; }
+
+.day-weekday {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.day-heading h1 { margin: 0; }
+
+.entry-list { margin-bottom: var(--space-4); }
+
+/* One entry: its time on the left, then its title and first line. */
+.entry-row {
+  display: grid;
+  grid-template-columns: var(--entry-when-width) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-1);
+  border-top: var(--line);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.entry-row:last-child { border-bottom: var(--line); }
+
+.entry-row:hover { background: var(--color-surface); }
+
+.entry-row-when { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
+.entry-row-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); min-width: 0; }
+
+.entry-row-title { font-weight: var(--weight-bold); }
+
+.entry-row-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.entry-meta {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Journals: the filter above the entries, and a journal's name as a tag on an entry. */
+.journal-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+.chip {
+  padding: var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] { background: var(--color-surface); color: var(--color-text); font-weight: var(--weight-bold); }
+
+.chip-quiet { border-style: dashed; }
+
+.journal-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.journal-tools:empty { display: none; }
+
+.journal-tools .search { flex: 0 1 calc(var(--card-min-width) * 1.2); }
+
+.journal-tools-message { color: var(--color-text-muted); }
+
+.tag {
+  padding: 0 var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.journal-picker {
+  max-width: calc(var(--card-min-width) * 0.75);
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+/* A journal day: the page on the left, the small month on the right. */
+
+.journal-main { padding: var(--space-6); }
+
+.journal-aside .mini-month { padding: 0; border: 0; }
+
+.journal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--mini-month-width) + var(--space-8));
+  gap: var(--space-3);
+  align-items: stretch;
+  /* Both panels the full height, like My Life's: the screen less the page's top and bottom space. */
+  min-height: calc(100vh - var(--space-3) * 2 - var(--space-8) - var(--space-12));
+}
+
+.journal-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-6); }
+
+.week-strip-place { flex: 1; min-width: 0; }
+
+.month-toggle { display: none; }
+
+/* Heptabase's week strip. */
+.week-strip { display: flex; align-items: center; gap: var(--space-1); }
+
+.week-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.week-arrow:hover { color: var(--color-text); }
+
+.week-day {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.week-day:hover { color: var(--color-text); }
+
+.week-day[data-today] { color: var(--color-text); font-weight: var(--weight-bold); }
+
+.week-day[aria-current="date"] {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--weight-bold);
+}
+
+/* The small month: a dot under every day with entries. */
+.mini-month {
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+}
+
+.mini-month-head { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-2); }
+
+.mini-month-name { flex: 1; font-size: var(--text-sm); font-weight: var(--weight-bold); }
+
+.mini-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1) 0; text-align: center; }
+
+.mini-weekday { color: var(--color-text-muted); }
+
+.mini-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--mini-day-size);
+  height: var(--mini-day-size);
+  margin: 0 auto;
+  border: var(--border-width) solid transparent;
+  border-radius: 50%;
+  color: var(--color-text);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.mini-day.is-outside { color: var(--color-text-muted); }
+
+.mini-day:hover { background: var(--color-surface); }
+
+.mini-day[aria-current="date"] { border-color: var(--color-text-muted); font-weight: var(--weight-bold); }
+
+/* Today: filled, in the text colour (the accent stays for the one main action). */
+.mini-day[data-today] { background: var(--color-text); color: var(--color-bg); font-weight: var(--weight-bold); }
+
+.mini-dot {
+  position: absolute;
+  bottom: calc(var(--space-1) / 2);
+  width: var(--space-1);
+  height: var(--space-1);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mini-month-count { margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+
+/* Earlier: the days before, newest first. */
+
+
+@media (max-width: 600px) {
+  .journal-layout { grid-template-columns: minmax(0, 1fr); gap: 0; min-height: 0; }
+  .journal-aside { display: none; position: static; order: -1; margin-bottom: var(--space-4); }
+  .journal-aside.is-open { display: block; }
+  .month-toggle { display: inline-flex; }
+  .week-strip { gap: 0; }
+  .week-day { flex-direction: column; align-items: center; gap: 0; padding: var(--space-1) 0; font-size: var(--text-xs); }
+}
+
+.search-journal { margin-top: var(--space-8); }
+.search-journal:empty { display: none; }
+
+/* A picture in a note or entry: as wide as the text allows, at most a set height, a thin
+   line around it and its name under it. Clicking opens it full size. */
+.note-picture { display: inline-flex; flex-direction: column; max-width: 100%; margin: var(--space-2) 0; vertical-align: top; }
+
+.note-picture img {
+  display: block;
+  max-width: 100%;
+  max-height: var(--picture-max-height);
+  width: auto;
+  height: auto;
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  cursor: zoom-in;
+}
+
+.note-picture-name { margin-top: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.note-body .ProseMirror-selectednode.note-picture img { outline: calc(var(--border-width) * 2) solid var(--color-text-muted); }
+
+/* A file card: a page-shaped icon with the kind, the name, kind and size, and Open. */
+.file-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: var(--file-card-max-width);
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+.file-card-kind {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: var(--file-kind-width);
+  height: var(--file-kind-height);
+  padding-bottom: var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  border-top-right-radius: var(--space-3);
+  background: var(--color-bg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.file-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.file-card-name { font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.file-card-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.file-card-open { flex: none; }
+
+.note-body .ProseMirror-selectednode.file-card { outline: calc(var(--border-width) * 2) solid var(--color-text-muted); }
+
+/* While a file is dragged over the page: where it will go. */
+.note-body.is-drop-target {
+  outline: calc(var(--border-width) * 2) dashed var(--color-text-muted);
+  outline-offset: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Quick capture (public/capture.js) ---- */
+
+.sidebar-capture {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+.sidebar-capture span:not(.icon) { flex: 1; text-align: left; }
+
+.sidebar-key, .key-hint {
+  padding: 0 var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-muted);
+}
+
+/* How many captures wait in the Inbox: a number in a grey pill. */
+.sidebar-count {
+  margin-left: auto;
+  min-width: calc(var(--space-4) + var(--space-1));
+  padding: 0 var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-align: center;
+  color: var(--color-text);
+}
+
+.sidebar-count[hidden] { display: none; }
+
+/* The capture box: over the page, flat, a thin line, no dimming behind it. */
+.capture-box {
+  width: min(var(--capture-width), calc(100vw - var(--space-4) * 2));
+  margin: var(--capture-top) auto auto;
+  padding: var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.capture-box::backdrop { background: transparent; }
+
+.capture-body.note-body { min-height: calc(var(--space-12) * 1.5); }
+
+.capture-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-3); }
+
+.capture-hint { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.capture-problem { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.capture-problem:empty { display: none; }
+
+/* A section of a module that is switched off is not there. */
+.sidebar .sidebar-link[hidden], .more-menu .more-link[hidden] { display: none; }
+
+/* The Timeline (advanced/people/2): a day heading, rows of shape · time · words · where, and a
+   thin line at now. */
+.page.timeline-page { --page-width: 48rem; }
+
+.timeline-day { margin-top: var(--space-6); }
+
+.timeline-day-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); font-weight: var(--weight-bold); }
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-top: var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.timeline-row:hover { background: var(--color-surface); }
+
+.timeline-shape { display: inline-flex; align-self: center; color: var(--color-text-muted); }
+
+.timeline-time { font-size: var(--text-sm); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
+.timeline-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.timeline-where { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* In a company's Timeline, a row that is a person's is marked with the person. */
+.timeline-via { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+/* The Timeline tab of a person or company: its search sits above the chips. */
+.contact-timeline-search { max-width: none; margin-bottom: var(--space-3); }
+
+.contact-timeline[hidden], .contact-page[hidden] { display: none; }
+
+/* The line at now: a thin line with its word, above what has happened and below what is ahead today. */
+.timeline-now {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: var(--text-xs);
+  color: var(--color-text);
+}
+
+.timeline-now::after { content: ''; flex: 1; border-top: var(--line); border-color: var(--color-text); }
+
+.timeline-now-label { font-weight: var(--weight-bold); }
+
+.timeline-earlier { margin-top: var(--space-4); }
+
+@media (max-width: 600px) {
+  .timeline-row { grid-template-columns: auto auto minmax(0, 1fr); row-gap: var(--space-1); }
+  .timeline-where { grid-column: 3; }
+  .sidebar-capture { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 0; margin: 0; padding: var(--space-1) 0; border: 0; background: transparent; font-size: calc(var(--text-xs) * 0.875); font-weight: var(--weight-regular); color: var(--color-text-muted); }
+  .sidebar-key { display: none; }
+  .sidebar-link.in-more { display: none; }
+  .sidebar .sidebar-more { display: flex; border: 0; background: none; font: inherit; font-size: calc(var(--text-xs) * 0.875); color: var(--color-text-muted); cursor: pointer; }
+  .more-menu:not([hidden]) {
+    position: fixed;
+    right: var(--space-2);
+    bottom: calc(var(--bottom-bar-height) + var(--space-2));
+    display: flex;
+    flex-direction: column;
+    min-width: calc(var(--card-min-width) * 0.7);
+    padding: var(--space-1);
+    border: var(--line);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+  }
+  .sidebar-link { position: relative; }
+  .sidebar-count { position: absolute; top: 0; right: var(--space-2); margin: 0; }
+  .capture-box { margin-top: var(--space-6); }
+}
+
+/* ---- The Inbox (public/inbox.js) ---- */
+
+/* The frame is the Planner's and My Life's (2026-10-27): no outer panel, two panels on the
+   grey, filling the width beside the sidebar. */
+.inbox-layout {
+  display: grid;
+  grid-template-columns: var(--inbox-list-width) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-height: calc(100vh - var(--space-3) * 2 - var(--space-8) - var(--space-12));
+}
+
+.inbox-list-panel { display: flex; flex-direction: column; min-width: 0; }
+
+.inbox-list-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+.inbox-list-title { flex: 1; margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--line-height-tight); }
+
+.inbox-list-top .button { flex: none; padding: var(--space-1) var(--space-3); }
+
+.inbox-list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.inbox-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.inbox-item:hover { background: var(--color-surface); }
+
+.inbox-item[aria-current="true"] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+/* Its words, one or two lines. */
+.inbox-item-line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.inbox-item-when { font-size: var(--text-xs); font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+/* The capture's page: a top bar across the panel, then the reading width in the middle. */
+.inbox-current { min-width: 0; }
+
+.inbox-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--line);
+}
+
+.inbox-bar .home { margin-bottom: 0; }
+
+.inbox-home-open {
+  display: inline-flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.inbox-home-open[hidden] { display: none; }
+
+.inbox-home-open:hover { background: var(--color-surface); color: var(--color-text); }
+
+.inbox-when { flex: 1 1 auto; min-width: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.inbox-bar-actions { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+
+.inbox-bar-actions .button { padding: var(--space-1) var(--space-2); }
+
+.inbox-edit[aria-pressed="true"] { color: var(--color-text); background: var(--color-surface); }
+
+.inbox-back { display: none; }
+
+/* The Home dropdown: a bordered box with a house, the name and a chevron, a little taller than the buttons beside it. */
+.home-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.home-dropdown:hover { border-color: var(--color-text-muted); }
+
+.home-dropdown.is-none { color: var(--color-text-muted); }
+
+.home-dropdown-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(var(--card-min-width) * 1.2); }
+
+.inbox-detail { max-width: var(--page-max-width); margin: var(--space-6) auto 0; }
+
+.inbox-kind { display: flex; align-items: center; gap: var(--space-1); margin: 0 0 var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* The words are the page's title: the first block large, the rest at reading size. */
+.inbox-words { min-height: var(--space-8); }
+
+.inbox-words > :first-child { font-size: var(--text-xl); font-weight: var(--weight-regular); line-height: var(--line-height-tight); }
+
+/* Your assistant's suggestion: one bar on the surface colour, Accept inside it at the right
+   (the reference's); under it the line "Or make it" with the quiet choices. */
+.suggestion-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-6) 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+.suggestion-bar > .icon { flex: none; }
+
+.suggestion-bar.is-reading { color: var(--color-text-muted); }
+
+.suggestion-text { flex: 1; min-width: min(var(--card-min-width), calc(100% - var(--space-6))); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.suggestion-text b { color: var(--color-text); }
+
+/* The Home box inside the bar: the top bar's, a little smaller to fit the sentence. */
+.suggestion-text .home { display: inline-flex; margin: 0; vertical-align: middle; }
+
+.suggestion-text .home-dropdown { min-width: 0; max-width: 100%; padding: var(--space-1) var(--space-2); gap: var(--space-1); font-size: var(--text-xs); }
+
+/* Keep the whole suggestion readable when its Home needs another line. */
+.suggestion-text .home-dropdown-name { white-space: normal; overflow-wrap: anywhere; text-align: left; }
+
+.suggestion-why[hidden] { display: none; }
+
+.suggestion-accept {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.suggestion-accept:hover { background: var(--color-bg); border-color: var(--color-text-muted); }
+
+.inbox-choices { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+
+.inbox-choices-label { color: var(--color-text-muted); }
+
+.inbox-choices-end { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); margin-left: auto; }
+
+.inbox-decision {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Done and Let it go, at the right end: as quiet as the reference's Drop. */
+.inbox-decision.is-plain { padding-inline: var(--space-2); border-color: transparent; background: transparent; color: var(--color-text-muted); }
+
+.inbox-decision.is-plain:hover { color: var(--color-text); }
+
+.inbox-decision:hover { background: var(--color-surface); }
+
+.inbox-decision.is-later { color: var(--color-text-muted); cursor: default; }
+
+.inbox-decision.is-later:hover { background: var(--color-bg); }
+
+.inbox-picker-place { margin-top: var(--space-4); }
+
+.inbox-picker-place .search { max-width: none; }
+
+.inbox-picker-results { margin-top: var(--space-2); }
+
+.inbox-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.inbox-picker-item[aria-selected="true"] { background: var(--color-surface); }
+
+.inbox-zero { margin: 0 0 var(--space-2); font-size: var(--text-xl); font-weight: var(--weight-bold); }
+
+@media (max-width: 600px) {
+  /* On a phone no panels: the list first; a capture opens full width, with a back arrow. */
+  .page.inbox-page { background: var(--color-bg); }
+  .inbox-list-panel, .inbox-current { padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .inbox-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); min-height: 0; }
+  .inbox-layout:not(.is-open):not(.is-empty) .inbox-current { display: none; }
+  .inbox-layout.is-open .inbox-list-panel { display: none; }
+  .inbox-back { display: inline-flex; padding: var(--space-1); border: 0; border-radius: var(--radius-sm); background: none; color: var(--color-text-muted); cursor: pointer; }
+  .inbox-bar-actions { flex-basis: 100%; margin-left: 0; }
+  .inbox-detail { margin-top: var(--space-4); }
+}
+
+/* ---- Links between pages (pkm/1) ---- */
+
+/* A link: a small shape for what it points at, and the page's name, underlined. Never the
+   accent colour. */
+.page-link {
+  display: inline;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.page-link-kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(var(--space-4) - var(--border-width));
+  height: calc(var(--space-4) - var(--border-width));
+  margin-right: calc(var(--space-1) - var(--border-width));
+  padding: 0 calc(var(--space-1) / 2);
+  border: var(--line);
+  border-radius: calc(var(--radius-sm) - var(--border-width) * 2);
+  font-size: calc(var(--text-xs) * 0.75);
+  font-weight: var(--weight-bold);
+  vertical-align: calc(var(--border-width) * 1.5);
+  color: var(--color-text-muted);
+}
+
+.page-link-words {
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-muted);
+  text-underline-offset: calc(var(--space-1) - var(--border-width));
+}
+
+.page-link:hover .page-link-words { text-decoration-color: var(--color-text); }
+
+.page-link.is-missing .page-link-words { color: var(--color-text-muted); text-decoration-style: dashed; }
+
+.ProseMirror-selectednode.page-link .page-link-words { background: var(--color-surface); }
+
+/* "Linked from": below a page, every page that links to it. */
+.linked-from { margin-top: var(--space-8); padding-top: var(--space-3); border-top: var(--line); }
+
+/* On a journal day its section already draws the line above it. */
+.journal-section > .linked-from { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.linked-from-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
+
+.linked-from-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-1);
+  border-top: var(--line);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.linked-from-row:hover { background: var(--color-surface); }
+
+.linked-from-source { font-weight: var(--weight-bold); }
+
+.linked-from-context { color: var(--color-text-muted); }
+
+.linked-from-context strong { color: var(--color-text); }
+
+/* ---- People and companies (public/people.js) ---- */
+
+/* The face: initials in a circle for a person, a letter in a square for a company. */
+.face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--face-small);
+  height: var(--face-small);
+  border: var(--line);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.face-person { border-radius: 50%; }
+
+.face-company { border-radius: var(--radius-sm); }
+
+.face-large { width: var(--face-large); height: var(--face-large); font-size: var(--text-lg); }
+
+.face-company.face-large { border-radius: var(--radius-md); }
+
+.people-list { border-top: var(--line); margin-top: var(--space-2); }
+
+.people-adding:not(:empty) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: var(--space-2) 0 var(--space-3); }
+
+.people-adding .search { flex: 0 1 calc(var(--card-min-width) * 1.6); max-width: none; }
+
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: var(--line);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.person-row:hover { background: var(--color-surface); }
+
+.person-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.person-row-name { font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.person-row-sub, .person-row-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* The person card on their page. */
+.contact-card { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-6); }
+
+.contact-card-text { flex: 1; min-width: 0; }
+
+.contact-name {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.contact-name:focus-visible { outline: none; }
+
+.contact-sub { margin: var(--space-1) 0 0; color: var(--color-text-muted); }
+
+.contact-sub a { color: inherit; }
+
+.contact-details {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-6);
+  align-items: baseline;
+  margin-bottom: var(--space-6);
+  font-size: var(--text-sm);
+}
+
+.detail-label { color: var(--color-text-muted); }
+
+.detail-input {
+  width: 100%;
+  padding: var(--space-1) 0;
+  border: 0;
+  border-bottom: var(--line);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.detail-input:focus-visible { outline: none; border-bottom-color: var(--color-text-muted); }
+
+.contact-heading { margin: var(--space-6) 0 var(--space-2); font-size: var(--text-sm); }
+
+.contact-heading + .note-body-place .note-body { min-height: calc(var(--space-12) * 2); }
+
+@media (max-width: 600px) {
+  .contact-details { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .detail-label { margin-top: var(--space-2); }
+}
+
+.detail-new:not(:empty) { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-1); }
+
+/* A person's and a company's shape in a link and in the link list. */
+.page-link-kind.page-link-person, .link-menu-person { border-radius: 50%; }
+
+/* People in depth switched off (Settings › Modules): a mention is its name again, without the face. */
+html[data-people-plus="off"] .page-link-kind.page-link-person,
+html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; }
+
+/* A My Life item's link shows its kind's shape, without a frame. */
+.page-link-kind.page-link-life, .link-menu-life { border: 0; }
+
+.page-link-kind.page-link-life { padding: 0; }
+
+.page-link-life .icon svg { width: var(--space-4); height: var(--space-4); }
+
+.linked-from-source > .icon { margin-right: var(--space-1); vertical-align: calc(var(--border-width) * -2); }
+
+.page-link-kind.page-link-person, .page-link-kind.page-link-company { font-size: calc(var(--text-xs) * 0.7); }
+
+/* ---- My Life (public/life.js) ---- */
+
+.life-layout {
+  display: grid;
+  grid-template-columns: var(--life-list-width) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  /* The list is a panel of its full height: the screen less the page's top and bottom space. */
+  min-height: calc(100vh - var(--space-3) * 2 - var(--space-8) - var(--space-12));
+}
+
+/* The panels (2026-10-27, like the Planner's): the list on the left, the page on the right. */
+.life-main { padding: var(--space-6); min-width: 0; }
+
+/* An item's page keeps the reading width, in the middle of its panel. */
+.life-layout-item .life-main > * { max-width: var(--page-max-width); margin-left: auto; margin-right: auto; }
+
+.life-list { display: flex; flex-direction: column; }
+
+.life-list-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+.life-list-title { flex: 1; margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold); }
+
+.life-overview { padding: var(--space-1) var(--space-3); text-decoration: none; }
+
+.life-overview[aria-current="page"] { background: var(--color-surface); color: var(--color-text); font-weight: var(--weight-bold); }
+
+/* The overview's top line: the title, a muted line, and the page's one accent on the right. */
+.life-overview-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); margin-bottom: var(--space-6); }
+
+.life-overview-title { flex: none; margin: 0; white-space: nowrap; }
+
+.life-overview-line { flex: 1; min-width: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* Where the page is narrow the muted line goes under the title and the button. */
+@media (max-width: 1100px) {
+  .life-overview-title { flex: 1; }
+  .life-overview-line { flex-basis: 100%; order: 1; }
+}
+
+.life-list > .search { flex: none; max-width: none; margin-bottom: var(--space-2); }
+
+.life-group-top { display: flex; align-items: center; }
+
+.life-group-header {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-1) var(--space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.life-group-header:hover { color: var(--color-text); }
+
+.life-group-header[aria-expanded="false"] .icon { transform: rotate(-90deg); }
+
+.life-group-count { font-weight: var(--weight-regular); }
+
+.life-group-add {
+  display: inline-flex;
+  margin-top: var(--space-2);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.life-group-add:hover { color: var(--color-text); background: var(--color-surface); }
+
+.life-adding:not(:empty) { display: flex; flex-direction: column; gap: var(--space-1); margin: var(--space-1) 0 var(--space-2); }
+
+.life-adding .search { max-width: none; }
+
+.life-rows, .life-card-rows { display: flex; flex-direction: column; }
+
+.life-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.life-row:hover { background: var(--color-surface); }
+
+.life-row[aria-current="page"] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+.life-row-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The list reads through the Key Elements: what sits under one is indented, its kind on
+   the right; then + Key Element, as quiet as a row. */
+.life-tree { margin-bottom: var(--space-1); }
+
+.life-tree .life-row-child { padding-left: calc(var(--space-2) + var(--space-6)); }
+
+
+.life-add { border: 0; background: none; font: inherit; font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; text-align: left; }
+
+.life-add:hover { color: var(--color-text); }
+
+.life-add[hidden] { display: none; }
+
+/* The Life cards of the overview. */
+.life-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min-width), 100%), 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.life-card {
+  padding: var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.life-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.life-card-name { flex: 1; min-width: 0; }
+
+.life-card-title .icon:last-child { flex-shrink: 0; color: var(--color-text-muted); }
+
+.life-card-title:hover .life-card-name { text-decoration: underline; }
+
+.life-card-description { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.life-card-heading {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+}
+
+.life-row-count { flex-shrink: 0; margin-left: auto; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.life-card .life-row { padding-left: 0; }
+
+.life-card .life-row:hover { background: none; }
+
+.life-card .life-row:hover .life-row-title { text-decoration: underline; }
+
+.life-card-none { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.life-title { display: flex; align-items: center; gap: var(--space-3); }
+
+.life-title .icon svg { width: var(--life-icon-large); height: var(--life-icon-large); }
+
+.life-description {
+  display: block;
+  width: 100%;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+}
+
+.life-description:focus-visible { outline: none; color: var(--color-text); }
+
+.life-step { display: inline-flex; align-items: center; gap: var(--space-1); color: inherit; }
+
+.life-step:hover { color: var(--color-text); }
+
+.life-serves { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.life-serves-goal {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 0 0 var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.life-serves-goal .life-step { text-decoration: none; }
+
+.life-serves-goal .life-group-add { margin: 0; }
+
+.life-serves select { flex: 1; min-width: calc(var(--card-min-width) * 0.8); }
+
+.life-more:not(:empty) { margin-top: var(--space-3); }
+
+/* A Key Element's page (2026-10-27, from the owner's reference): a top line, the name and
+   its line, then sections with a heading and its count, each a framed list of rows. */
+.life-top { margin-bottom: var(--space-6); flex-wrap: wrap; }
+
+.life-top-start { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); }
+
+.life-top-kind { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.life-top-home { color: var(--color-text); text-decoration: underline; }
+
+.life-top-home:hover { color: var(--color-text-muted); }
+
+.life-description + .life-section { margin-top: var(--space-6); }
+
+.life-section { margin-top: var(--space-8); }
+
+.life-section-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-bottom: var(--space-2); }
+
+.life-section-top .life-section-title { flex: 1; margin: 0; }
+
+.life-section-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
+
+.life-subheading { margin: var(--space-6) 0 var(--space-2); font-size: var(--text-sm); }
+
+.life-details .contact-details { margin-top: 0; }
+
+.life-frame { border: var(--line); border-radius: var(--radius-md); overflow: hidden; }
+
+.life-frame > * + * { border-top: var(--line); }
+
+.life-frame-none { margin: 0; padding: var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.life-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: inherit;
+  text-decoration: none;
+}
+
+.life-item-row:hover { background: var(--color-surface); }
+
+.life-item-row > .icon { margin-top: var(--space-1); flex-shrink: 0; }
+
+.life-item-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+.life-item-title { display: flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+
+.life-item-sub { font-size: var(--text-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.life-section .task-rows { border: var(--line); border-radius: var(--radius-md); overflow: hidden; }
+
+.life-section .task-rows:empty { display: none; }
+
+/* In the column beside the list the rows stay readable at every width: the words keep a
+   minimum width, and where the page and the home do not fit beside them they go under. */
+.life-section .task-row { flex-wrap: wrap; row-gap: var(--space-1); padding-left: var(--space-3); padding-right: var(--space-3); }
+
+.life-section .task-row:last-child { border-bottom: 0; }
+
+.life-section .task-row > .task-words { flex: 1 1 calc(var(--card-min-width) * 0.8); }
+
+.life-section .task-row > .task-source { max-width: 100%; margin-left: calc(var(--task-box-size) + var(--space-3)); }
+
+@media (max-width: 600px) {
+  /* On a phone no panels: the screen is the page colour edge to edge, the list under the page. */
+  .page.life-page { background: var(--color-bg); }
+  .life-list, .life-main { padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .life-layout, .life-layout-item { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); min-height: 0; }
+  .life-list { order: 1; }
+  .life-list > .search { order: 0; }
+}
+
+/* ---- The Home chip (public/home.js): a note's one home in My Life ---- */
+
+.home {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.home-label { color: var(--color-text-muted); }
+
+.home-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: 0 0 0 var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.home-chip-none {
+  padding: var(--space-1) var(--space-2);
+  border-style: dashed;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.home-chip-none:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+
+.home-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-1) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-name span:not(.icon) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.home-name:hover span:not(.icon) { text-decoration: underline; }
+
+.home-change {
+  display: inline-flex;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.home-change:hover { color: var(--color-text); background: var(--color-surface); }
+
+.home-picker {
+  top: 100%;
+  left: 0;
+  width: min(calc(var(--menu-width) * 1.4), calc(100vw - var(--space-4) * 2));
+  margin-top: var(--space-1);
+}
+
+.home-picker .search { max-width: none; margin-bottom: var(--space-1); }
+
+/* On a phone, scrolling a menu into view stops above the bar along the bottom. */
+@media (max-width: 600px) {
+  .home-picker, .slash-menu-item { scroll-margin-bottom: calc(var(--bottom-bar-height) + var(--space-2)); }
+}
+
+.home-option-shape { border: 0; }
+
+/* ---- The Tasks page (public/tasks.js) ---- */
+
+/* Tabs: a few ways to look at one list, each with its count. */
+.tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-3); }
+
+/* Each tab is a bordered chip, as People / Companies; the chosen one on the surface colour. */
+.tab {
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tab:hover { color: var(--color-text); }
+
+.tab[aria-selected="true"], .tab[aria-pressed="true"] { background: var(--color-surface); color: var(--color-text); font-weight: var(--weight-bold); }
+
+/* A tab that switches a kind on and off (the Timeline) shows its shape. */
+.tab .icon { vertical-align: calc(var(--border-width) * -2); margin-right: var(--space-1); }
+
+/* The flag in a task row: Must, Like, or a faint flag to set one. */
+.task-flag {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.task-flag-none { visibility: hidden; }
+
+.task-row:hover .task-flag-none, .task-row:focus .task-flag-none, .task-row[data-selected="true"] .task-flag-none { visibility: visible; }
+
+.task-flag-none .icon svg { width: var(--text-sm); height: var(--text-sm); }
+
+@media (hover: none) { .task-flag-none { visibility: visible; } }
+
+.task-words { cursor: text; }
+
+.task-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1) var(--space-2) calc(var(--task-box-size) + var(--space-4));
+  border-bottom: var(--line);
+  background: var(--color-surface);
+}
+
+.task-capture { flex-basis: 100%; display: flex; flex-direction: column; gap: var(--space-1); margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); white-space: pre-wrap; }
+
+.task-capture-when { font-weight: var(--weight-bold); }
+
+.task-edit .task-edit-words { flex: 1; min-width: calc(var(--card-min-width) * 0.8); }
+
+.life-tasks .quick-add { margin: var(--space-3) 0 0; }
+
+.tab-count { margin-left: var(--space-1); font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+.task-group + .task-group { margin-top: var(--space-6); }
+
+.task-group-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.task-rows { border-top: var(--line); }
+
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: var(--line);
+  font-size: var(--text-sm);
+}
+
+.task-row > .task-words { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+
+/* The words open the task; the rest of the row selects it. */
+.task-row > .task-source { margin-left: auto; }
+
+.task-row[data-checked="true"] > .task-words { color: var(--color-text-muted); text-decoration: line-through; }
+
+.task-row[data-checked="true"] > .task-box { background: var(--color-text); color: var(--color-bg); }
+
+.task-source, .task-home {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 0 1 auto;
+  max-width: 40%;
+  min-width: 0;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--text-xs);
+}
+
+.task-source span:not(.page-link-kind), .task-home span:not(.page-link-kind) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.task-source:hover, .task-home:hover { color: var(--color-text); }
+
+.task-row[data-selected="true"] { background: var(--color-surface); }
+
+.task-row:focus-visible { outline-offset: calc(var(--border-width) * -2); }
+
+.task-keys { margin: calc(var(--space-4) * -1) 0 var(--space-4); color: var(--color-text-faint); }
+
+/* Room between the add line and the first group (Missed, Today…). */
+.tasks-page .task-groups { margin-top: var(--space-8); }
+
+/* Schedule: Today, Other day and Someday, quiet chips; the one the task is at is chosen. */
+.task-schedule { flex-wrap: wrap; gap: var(--space-1); }
+
+.task-schedule .chip { padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+.task-schedule .detail-input { width: auto; font-size: var(--text-xs); }
+
+.task-source:hover span:not(.page-link-kind), .task-home:hover span:not(.page-link-kind) { text-decoration: underline; }
+
+/* A task opened from the Tasks page is marked for a moment. */
+.task-line.is-found { background: var(--color-surface); border-radius: var(--radius-sm); }
+
+@media (max-width: 600px) {
+  .task-row { flex-wrap: wrap; row-gap: var(--space-1); }
+  .task-source { flex-basis: 100%; max-width: none; padding-left: calc(var(--task-box-size) + var(--space-3)); }
+  .task-keys { display: none; }
+}
+
+/* The right of a Tasks page row: Schedule, then Home, then Written in. On a large screen they
+   are three columns, each of one width on every row (so they line up, empty where there is
+   nothing), named once above the list. In a narrower window they are one small line under
+   the words, Schedule first. */
+.task-places { display: flex; flex: none; gap: var(--space-3); margin-left: auto; }
+
+.task-place { display: flex; align-items: center; min-width: 0; }
+
+.task-place > a { max-width: 100%; }
+
+.task-columns-head { display: none; }
+
+@media (min-width: 1360px) {
+  .task-place { width: var(--task-place-width); }
+  .task-place.task-schedule { width: var(--task-schedule-width); }
+  .task-columns-head { display: flex; padding: 0 var(--space-1) var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+}
+
+@media (max-width: 1359px) {
+  /* The line goes under the words themselves, in the column they start in. */
+  .tasks-page .task-row { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr); column-gap: var(--space-3); row-gap: var(--space-1); }
+  .tasks-page .task-row > .task-words { justify-self: start; max-width: 100%; }
+  .tasks-page .task-row > .task-places { grid-column: 4; margin-left: 0; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+  .task-place:empty { display: none; }
+  .task-place > a { max-width: none; }
+}
+
+/* ---- The Tasks app's add bar (public/quick-add.js) and the Must or Like flag ---- */
+
+.quick-add { margin-bottom: var(--space-4); }
+
+/* One line in a frame: the words take the room, then the day, the flag, the home and Add.
+   When it is narrow, the boxes go on a line of their own under the words. */
+.quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.quick-row:focus-within { border-color: var(--color-text-muted); }
+
+.quick-words, .quick-words .search-input::placeholder { color: var(--color-text-faint); }
+
+.quick-words { flex: 1 1 var(--card-min-width); display: flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-text-muted); cursor: text; }
+
+.quick-day, .quick-flag {
+  width: auto;
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.quick-row .button { flex: none; }
+
+/* A phone: the words and Add on the first line, the day, flag and home under them. */
+@media (max-width: 600px) {
+  .quick-row .button { order: 1; }
+  .quick-day, .quick-flag, .quick-row .home-compact { order: 2; }
+  .quick-day { flex: 1 1 auto; min-width: 0; }
+}
+
+.quick-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-top: var(--space-1); }
+
+.quick-line:has(.quick-chips:empty) { display: none; }
+
+.quick-chips { display: contents; }
+
+.quick-chips .icon svg, .due-chip .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+.home-compact { margin: 0; flex: 0 1 auto; min-width: 0; max-width: 100%; } /* a long home name shortens, never pushes the page wider */
+
+.home-compact .home-chip, .home-compact .home-chip-none { font-size: var(--text-xs); }
+
+.quick-hint, .quick-message { margin: var(--space-1) 0 0; }
+
+.quick-hint:empty, .quick-message:empty { display: none; }
+
+.quick-box .quick-add { margin: 0; }
+
+/* Must: it has to happen today (filled in the text colour). Like: it would be nice (outlined). */
+.flag-chip {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border: var(--border-width) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.flag-must { background: var(--color-text); color: var(--color-bg); }
+
+.flag-like { background: none; color: var(--color-text); }
+
+
+/* ---- Reminder notices (public/reminders.js), in the Undo bar's look ---- */
+
+.notices {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(var(--capture-width), calc(100vw - var(--space-4) * 2));
+}
+
+.notices:empty { display: none; }
+
+.notice { position: static; margin: 0; flex-wrap: wrap; }
+
+.notice-text { flex: 1; min-width: 0; }
+
+.notice-text .icon svg { width: var(--text-sm); height: var(--text-sm); vertical-align: calc(var(--border-width) * -2); }
+
+.notice-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+
+.notice-snooze { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+
+.notice-snooze-word { margin-right: var(--space-1); font-size: var(--text-sm); }
+
+@media (max-width: 600px) {
+  .notices { bottom: calc(var(--bottom-bar-height) + var(--space-2)); }
+}
+
+/* ---- The Calendar (public/calendar.js) ---- */
+
+/* The day's events on its journal page. */
+.day-events:not(:empty) { margin: 0 0 var(--space-4); border-top: var(--line); }
+
+.day-event { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: var(--line); font-size: var(--text-sm); }
+
+.day-event-when { flex: none; width: var(--entry-when-width); color: var(--color-text-muted); font-size: var(--text-xs); }
+
+.day-event-title {
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--space-2);
+  border-left: calc(var(--border-width) * 3) solid var(--color-text);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-event-title:hover { text-decoration: underline; }
+
+.day-event-calendar { color: var(--color-text-muted); }
+
+.day-event .button { flex: none; padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+
+.event-notes { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-3); }
+
+.event-notes .linked-from { align-self: stretch; margin-top: var(--space-3); }
+
+.event-dialog .linked-from { margin-top: var(--space-3); }
+
+.cal-bar { flex-wrap: wrap; }
+
+.cal-nav { display: flex; align-items: center; gap: var(--space-2); }
+
+.cal-nav .button { display: inline-flex; padding: var(--space-1) var(--space-2); }
+
+.cal-range { min-width: calc(var(--card-min-width) * 0.75); text-align: center; font-size: var(--text-sm); font-weight: var(--weight-bold); }
+
+.cal { border: var(--line); border-radius: var(--radius-md); overflow: hidden; }
+
+.cal-head, .cal-body { display: grid; }
+
+.cal-head { border-bottom: var(--line); }
+
+.cal-day-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border: 0;
+  border-left: var(--line);
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.cal-day-name[aria-current="date"] { color: var(--color-text); font-weight: var(--weight-bold); }
+
+.cal-day-number { font-size: var(--text-base); }
+
+.cal-body { max-height: var(--cal-max-height); overflow-y: auto; }
+
+.cal-hours { display: flex; flex-direction: column; }
+
+.cal-hour {
+  height: var(--hour-height);
+  padding-right: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: right;
+  transform: translateY(calc(var(--text-xs) * -0.7));
+}
+
+.cal-column {
+  position: relative;
+  height: calc(var(--hour-height) * 24);
+  border-left: var(--line);
+  cursor: copy;
+}
+
+.cal-slot { height: var(--hour-height); border-top: var(--line); pointer-events: none; }
+
+.cal-slot:first-child { border-top: 0; }
+
+/* An event: a block whose height is its length, its calendar's colour as a line on its left. */
+.cal-event {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-left: calc(var(--border-width) * 3) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-xs);
+  line-height: var(--line-height-tight);
+  cursor: grab;
+  touch-action: none;
+}
+
+.cal-event:hover { border-top-color: var(--color-text-muted); border-right-color: var(--color-text-muted); border-bottom-color: var(--color-text-muted); }
+
+.cal-event.is-short { flex-direction: row; gap: var(--space-1); padding-top: 0; padding-bottom: 0; align-items: center; }
+
+/* In a short one the name comes first; the time gives way. */
+.cal-event.is-short .cal-event-title { flex: 0 1 auto; min-width: 0; }
+
+.cal-event.is-short .cal-event-time { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.cal-event.is-short { border-radius: calc(var(--radius-sm) / 2); }
+
+.cal-event.is-dragging { z-index: 3; cursor: grabbing; }
+
+.cal-event-title { font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cal-event-time { color: var(--color-text-muted); white-space: nowrap; }
+
+.cal-now { position: absolute; left: 0; right: 0; z-index: 2; border-top: calc(var(--border-width) * 2) solid var(--color-text); pointer-events: none; }
+
+.cal-event.is-read-only { cursor: pointer; }
+
+.cal-allday { display: grid; border-bottom: var(--line); }
+
+.cal-allday-label { padding: var(--space-1) var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); text-align: right; }
+
+.cal-allday-day { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1); border-left: var(--line); min-width: 0; }
+
+.cal-allday-event {
+  overflow: hidden;
+  padding: 0 var(--space-1);
+  border: var(--line);
+  border-left: calc(var(--border-width) * 3) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* Your calendars, under the week. */
+.cal-calendars { margin-top: var(--space-6); padding-top: var(--space-3); border-top: var(--line); }
+
+.cal-calendar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+
+.cal-calendar-name { font-weight: var(--weight-bold); }
+
+.cal-calendar-state { margin-right: auto; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.cal-dot {
+  display: inline-block;
+  flex: none;
+  width: calc(var(--space-2) + var(--space-1));
+  height: calc(var(--space-2) + var(--space-1));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.cal-dot-own { background: var(--color-text); cursor: default; }
+
+.cal-add { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+.cal-add .search { flex: 1 1 calc(var(--card-min-width) * 1.2); max-width: none; }
+
+.event-read-title { margin: 0 0 var(--space-3); font-size: var(--text-lg); }
+
+.event-read-note { white-space: pre-wrap; }
+
+.event-dialog .event-title { margin-bottom: var(--space-3); font-size: var(--text-lg); }
+
+.event-fields { margin-bottom: var(--space-2); }
+
+.event-times { display: flex; align-items: center; gap: var(--space-2); }
+
+.event-times .detail-input { flex: 1; }
+
+.event-actions { display: flex; gap: var(--space-2); }
+
+@media (max-width: 600px) {
+  .cal-nav { order: 1; flex-basis: 100%; justify-content: space-between; }
+  .cal-range { flex: 1; min-width: 0; }
+}
+
+/* ---- The Planner (public/planner.js) ---- */
+
+.planner-layout {
+  display: grid;
+  grid-template-columns: var(--inbox-list-width) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.tray { padding: var(--space-3); }
+
+.tray.is-drop-target, .plan-part.is-drop-target { border-style: dashed; border-color: var(--color-text-muted); background: var(--color-surface); }
+
+.tray-title { margin: 0 0 var(--space-1); font-size: var(--text-base); }
+
+.tray-group { margin: var(--space-3) 0 var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.tray-rows { border-top: var(--line); }
+
+.tray-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: var(--line);
+  font-size: var(--text-sm);
+  cursor: grab;
+}
+
+/* A task's words keep a readable width; when the row is short of room, its chips go to the
+   next line instead of squeezing the words (they once ran one letter a line). */
+.tray-text { display: flex; flex: 1 1 calc(var(--card-min-width) * 0.6); flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+
+.tray-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.tray-place { flex: none; padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+.is-dragging { opacity: 0.5; }
+
+.plan-day { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.plan-part { padding: var(--space-2) var(--space-3) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.plan-part-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--text-base); }
+
+.plan-free { font-size: var(--text-xs); font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+.plan-empty { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* An event, solid and locked: its time is fixed in the calendar. */
+.plan-event {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--line);
+  border-left: calc(var(--border-width) * 3) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+.plan-time { flex: none; width: var(--entry-when-width); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.plan-event-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.plan-locked { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* A Planner slot: a task placed in the day, dashed because it can move. */
+.plan-slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) dashed var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: grab;
+}
+
+.plan-slot[data-checked="true"] .plan-slot-text { color: var(--color-text-muted); text-decoration: line-through; }
+
+.plan-slot[data-checked="true"] .task-box, .tray-row .task-box[aria-checked="true"] { background: var(--color-text); color: var(--color-bg); }
+
+.plan-slot-text { flex: 1 1 calc(var(--card-min-width) * 0.6); min-width: 0; overflow-wrap: anywhere; }
+
+.plan-out { display: inline-flex; padding: var(--space-1); border: 0; border-radius: var(--radius-sm); background: none; color: var(--color-text-muted); cursor: pointer; }
+
+.plan-out:hover { color: var(--color-text); background: var(--color-surface); }
+
+/* Below a large screen the day and the Tray stack, the day first, as on a phone: side by
+   side they left the day too little room. */
+@media (max-width: 900px) {
+  .planner-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .tray { order: 1; }
+}
+
+/* The budget line: what the day holds, against planned work plus buffer. Amber, always
+   with words, when it is too much. */
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.budget.is-over { border-color: var(--color-warning); background: var(--color-warning-surface); color: var(--color-warning); }
+
+.budget-words { flex: 1 1 auto; }
+
+.budget strong { font-weight: var(--weight-bold); }
+
+.budget-move { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+
+.planner-settings { margin-bottom: var(--space-4); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.settings-unit { display: flex; align-items: center; gap: var(--space-1); }
+
+.settings-unit .detail-input { max-width: calc(var(--card-min-width) * 0.5); }
+
+.planner-settings .contact-details > .detail-input { max-width: calc(var(--card-min-width) * 2); }
+
+/* A time block: a container of time with a kind, holding tasks. Dashed, like a task:
+   it is a plan, not a fixed event. */
+.plan-block { margin-bottom: var(--space-1); padding: var(--space-1) var(--space-2) var(--space-2); border: var(--border-width) dashed var(--color-text); border-radius: var(--radius-md); }
+
+.plan-block.is-drop-target { background: var(--color-surface); }
+
+.plan-block-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-1); }
+
+.plan-block-name { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-text); cursor: pointer; }
+
+.plan-block-name:hover { text-decoration: underline; }
+
+.plan-warning { font-size: var(--text-xs); color: var(--color-warning); }
+
+.plan-add-block { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+
+/* The hours from 6 to 22. */
+/* The bar of the day on top, the hours under it. */
+
+.planner-ask { position: static; margin: 0 0 var(--space-3); flex-wrap: wrap; }
+
+/* ---- Weekly Goals and the Highlight (time/3) ---- */
+
+.task-star { flex: none; padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-base); line-height: 1; color: var(--color-text-muted); cursor: pointer; }
+
+.task-star[aria-pressed="true"] { color: var(--color-text); }
+
+.task-star:hover { color: var(--color-text); }
+
+/* The Highlight: a solid frame in the text colour, and its label. */
+.plan-highlight .plan-slot.is-highlight { padding: var(--space-2) var(--space-3); border: calc(var(--border-width) * 2) solid var(--color-text); font-size: var(--text-base); }
+
+.highlight-label {
+  flex: none;
+  padding: 0 var(--space-1);
+  border: var(--border-width) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.plan-make-highlight { flex: none; padding: 0 var(--space-2); font-size: var(--text-xs); visibility: hidden; }
+
+.plan-slot:hover .plan-make-highlight, .plan-slot:focus-within .plan-make-highlight { visibility: visible; }
+
+@media (hover: none) { .plan-make-highlight { visibility: visible; } }
+
+.week-goals:not(:empty) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin-bottom: var(--space-3); }
+
+.week-goals-title { flex-basis: 100%; margin: 0; font-size: var(--text-sm); }
+
+.week-goal { padding: 0 var(--space-2); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-xs); }
+
+.week-goal.is-done { color: var(--color-text-muted); text-decoration: line-through; }
+
+.week-goal-day { color: var(--color-text-muted); }
+
+/* ---- The week board and the planning panel (public/planning.js) ---- */
+
+.plan-board { display: flex; align-items: flex-start; gap: var(--space-4); min-width: 0; }
+
+.plan-board > .plan-column, .plan-board > .plan-week { flex: 1; min-width: 0; }
+
+.planning-panel:not([hidden]) {
+  order: 2;
+  flex: none;
+  width: var(--planning-width);
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.planning-head { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
+
+.planning-title { flex: 1; margin: 0; font-size: var(--text-base); }
+
+.planning-steps { margin: 0; padding: 0; list-style: none; }
+
+.planning-step { display: flex; gap: var(--space-2); padding: var(--space-2) 0; border-top: var(--line); }
+
+.planning-step.is-current { margin: 0 calc(var(--space-3) * -1); padding: var(--space-2) var(--space-3); background: var(--color-bg); }
+
+.planning-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-box-size);
+  height: var(--task-box-size);
+  margin-top: var(--space-1);
+  border: calc(var(--border-width) * 1.5) solid var(--color-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.planning-step[data-state="done"] .planning-mark { background: var(--color-text); color: var(--color-bg); }
+
+.planning-step[data-state="skipped"] .planning-mark { border-style: dashed; color: var(--color-text-muted); }
+
+.planning-body { flex: 1; min-width: 0; }
+
+.planning-name { margin: 0; font-size: var(--text-sm); }
+
+.planning-end, .planning-now { margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.planning-now { color: var(--color-text); }
+
+.planning-actions, .planning-picks { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+
+.planning-actions .button, .planning-picks .button { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+
+/* The week: a column per day. */
+.week-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--week-column-min), 1fr)); gap: var(--space-2); }
+
+.week-column { min-width: 0; padding: var(--space-2); border: var(--line); border-radius: var(--radius-md); font-size: var(--text-xs); }
+
+.week-column.is-today { border-color: var(--color-text); }
+
+.week-column.is-drop-target { border-style: dashed; background: var(--color-surface); }
+
+.week-column-name { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-text); cursor: pointer; }
+
+.week-column-name:hover { text-decoration: underline; }
+
+.load-bar { height: var(--space-1); margin: var(--space-1) 0; border-radius: var(--radius-sm); background: var(--color-surface); overflow: hidden; }
+
+.load-fill { display: block; height: 100%; background: var(--color-text-muted); }
+
+.load-bar.is-over .load-fill { background: var(--color-warning); }
+
+.week-load { margin: 0 0 var(--space-1); color: var(--color-text-muted); }
+
+.week-load.is-over { color: var(--color-warning); font-weight: var(--weight-bold); }
+
+.week-goal-slot { margin-bottom: var(--space-1); padding: var(--space-1); border: var(--border-width) dashed var(--color-text-muted); border-radius: var(--radius-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.week-goal-slot.has-goal { border-style: solid; border-color: var(--color-text); color: var(--color-text); font-weight: var(--weight-bold); }
+
+.week-goal-slot.is-drop-target { background: var(--color-surface); }
+
+.week-event { margin-bottom: var(--space-1); padding-left: var(--space-1); border-left: calc(var(--border-width) * 3) solid var(--color-text); overflow-wrap: anywhere; }
+
+.week-event-time { color: var(--color-text-muted); }
+
+.week-task { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); padding: var(--space-1) 0; border-top: var(--line); cursor: grab; }
+
+.week-task .task-box { width: calc(var(--task-box-size) * 0.85); height: calc(var(--task-box-size) * 0.85); }
+
+.week-task[data-checked="true"] .week-task-text { color: var(--color-text-muted); text-decoration: line-through; }
+
+.week-task[data-checked="true"] .task-box { background: var(--color-text); color: var(--color-bg); }
+
+.week-task-text { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; order: 5; }
+
+@media (max-width: 600px) {
+  .plan-board { flex-direction: column; align-items: stretch; }
+  .planning-panel:not([hidden]) { order: 0; width: auto; }
+  .week-columns { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Closing the day (public/shutdown.js) ---- */
+
+.shutdown-dialog { width: min(34rem, calc(100vw - var(--space-6))); }
+
+.shutdown-title { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+
+.shutdown-all { margin-left: auto; padding: 0 var(--space-1); font-size: var(--text-xs); }
+
+.shutdown-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
+
+.shutdown-highlight { border-top: 0; }
+
+.shutdown-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.shutdown-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.shutdown-row[data-checked="true"] .shutdown-text { color: var(--color-text-muted); text-decoration: line-through; }
+
+.shutdown-row[data-checked="true"] .task-box { background: var(--color-text); color: var(--color-bg); }
+
+.shutdown-choice .switch-button { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+
+.shutdown-line { width: 100%; margin-top: var(--space-3); }
+
+.day-closed { margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.day-closed-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.day-closed-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: var(--weight-bold); }
+
+.day-closed-reopen { margin-left: auto; }
+
+.day-closed-line { margin: var(--space-2) 0 var(--space-1); }
+
+.day-closed-journal { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.plan-close-day { margin-top: var(--space-2); }
+
+/* The Weekly Review in the planning panel. */
+.review-part { padding: var(--space-2) 0; border-top: var(--line); }
+
+.review-title { margin: 0 0 var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+
+.review-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); text-align: center; font-size: var(--text-xs); }
+
+.review-day { display: flex; flex-direction: column; }
+
+.review-day-name { color: var(--color-text-muted); }
+
+.review-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+
+.review-row .task-box { width: calc(var(--task-box-size) * 0.85); height: calc(var(--task-box-size) * 0.85); }
+
+.review-row[data-checked="true"] .task-box { background: var(--color-text); color: var(--color-bg); }
+
+.review-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.review-line { margin: var(--space-1) 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+
+.review-wins { width: 100%; margin-top: var(--space-2); }
+
+.week-review-open { margin-top: var(--space-3); }
+
+/* ---- The quarterly review (public/quarter.js) ---- */
+
+.planner-layout.is-quarter { grid-template-columns: minmax(0, 1fr); }
+
+.plan-quarter { flex: 1; min-width: 0; max-width: var(--page-max-width); }
+
+.quarter-summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); font-size: var(--text-sm); }
+
+.quarter-part { padding: var(--space-3) 0; border-top: var(--line); }
+
+.quarter-title { margin: 0 0 var(--space-2); font-size: var(--text-base); }
+
+.quarter-week { display: grid; grid-template-columns: calc(var(--space-8) * 2) minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--space-2); align-items: baseline; padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
+
+.quarter-week:first-of-type { border-top: 0; }
+
+.quarter-week-name { text-align: left; }
+
+.quarter-week-wins { color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.quarter-goal { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+
+.quarter-goal-name { flex: 1; min-width: 0; color: var(--color-text); overflow-wrap: anywhere; }
+
+.quarter-loose { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
+
+.quarter-loose:first-of-type { border-top: 0; }
+
+.quarter-loose .button { margin-left: auto; }
+
+.quarter-wins { width: 100%; margin-bottom: var(--space-2); }
+
+.quarter-add { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+
+.quarter-add .detail-input { flex: 1; min-width: 0; }
+
+@media (max-width: 600px) {
+  .quarter-week { grid-template-columns: calc(var(--space-8) * 2) minmax(0, 1fr); }
+  .quarter-week-wins { grid-column: 2; }
+}
+
+/* ---- The assistant (public/assistant.js) ---- */
+
+.chat-layout { display: grid; grid-template-columns: minmax(0, var(--page-max-width)) var(--inbox-list-width); gap: var(--space-8); align-items: start; }
+
+.chat-pane { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+
+.chat-thread { display: flex; flex-direction: column; gap: var(--space-3); max-height: var(--chat-thread-height); overflow-y: auto; }
+
+.chat-bubble { max-width: var(--chat-bubble-max); padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); overflow-wrap: anywhere; }
+
+.chat-bubble.is-user { align-self: flex-end; background: var(--color-surface); }
+
+.chat-bubble.is-assistant { align-self: flex-start; }
+
+.chat-bubble[data-state="failed"] .chat-text { color: var(--color-text-muted); }
+
+.chat-who { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-bold); }
+
+.chat-text { margin: 0; white-space: normal; }
+
+.chat-bubble.is-user .chat-text { white-space: pre-wrap; }
+
+.chat-text > :first-child { margin-top: var(--space-1); }
+
+.chat-text > :last-child { margin-bottom: 0; }
+
+.chat-text pre { padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); overflow-x: auto; }
+
+.chat-working { color: var(--color-text-muted); }
+
+.chat-note { margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.chat-steps { margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.chat-steps summary { cursor: pointer; }
+
+.chat-step-list { margin: var(--space-1) 0 0; padding-left: var(--space-4); }
+
+.chat-step-tool { font-weight: var(--weight-bold); margin-right: var(--space-1); }
+
+.chat-step-detail { overflow-wrap: anywhere; }
+
+.chat-files { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-1) 0 0; color: var(--color-text); }
+
+.chat-composer { display: flex; gap: var(--space-2); align-items: flex-end; padding: var(--space-2); border: var(--line); border-radius: var(--radius-md); }
+
+.chat-input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; color: var(--color-text); resize: vertical; }
+
+.chat-input:focus { outline: none; }
+
+.chat-composer:focus-within { border-color: var(--color-text); }
+
+.chat-buttons { display: flex; gap: var(--space-1); }
+
+.chat-empty { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.chat-examples { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.question-chip { padding: var(--space-1) var(--space-3); border: var(--line); border-radius: calc(var(--radius-md) * 2); background: none; font: inherit; font-size: var(--text-sm); color: var(--color-text); cursor: pointer; }
+
+.question-chip:hover { background: var(--color-surface); }
+
+.chat-list { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.chat-list-title { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.chat-new { align-self: flex-start; margin-bottom: var(--space-2); }
+
+.chat-list-item { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--color-text); text-decoration: none; font-size: var(--text-sm); }
+
+.chat-list-item:hover { background: var(--color-surface); }
+
+.chat-list-item[aria-current="page"] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+.chat-list-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chat-actions { margin-left: auto; }
+
+@media (max-width: 900px) {
+  .chat-layout { grid-template-columns: minmax(0, 1fr); }
+  .chat-thread { max-height: none; }
+}
+
+/* The assistant's citations, cards and the page a question was asked on (assistant/2). */
+.citations { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+
+.citation { display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); color: var(--color-text); text-decoration: none; font-size: var(--text-xs); }
+
+.citation:hover { background: var(--color-surface); }
+
+.citation-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--weight-bold); }
+
+.citation-kind { color: var(--color-text-muted); }
+
+.action-card { margin-top: var(--space-2); padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-sm); }
+
+.action-card[data-state="proposed"] { border-style: dashed; border-color: var(--color-text); }
+
+.action-card[data-state="dismissed"], .action-card[data-state="undone"] { color: var(--color-text-muted); }
+
+.action-what { display: flex; align-items: baseline; gap: var(--space-1); margin: 0; }
+
+.action-what > span:not(.icon) { flex: 1; min-width: 0; }
+
+.action-preview { margin-top: var(--space-2); padding: var(--space-2); background: var(--color-surface); border-radius: var(--radius-sm); }
+
+.action-preview-title { margin: 0 0 var(--space-1); font-weight: var(--weight-bold); }
+
+.action-preview-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-xs); }
+
+.action-buttons { display: flex; gap: var(--space-1); margin-top: var(--space-2); }
+
+.chat-context { display: block; margin-top: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.ask-notes { display: flex; align-items: center; gap: var(--space-1); flex: 1; min-width: 0; max-width: var(--capture-width); margin: 0 var(--space-3); padding: 0 var(--space-2); border: var(--line); border-radius: var(--radius-md); color: var(--color-text-muted); }
+
+.ask-notes[hidden] { display: none; }
+
+.ask-notes:focus-within { border-color: var(--color-text); }
+
+.ask-input { flex: 1; min-width: 0; padding: var(--space-1) 0; border: 0; background: none; font: inherit; font-size: var(--text-sm); color: var(--color-text); }
+
+.ask-input:focus { outline: none; }
+
+.ask-button { padding: 0 var(--space-1); }
+
+.chat-text a { color: var(--color-text); text-decoration: underline; }
+
+@media (max-width: 600px) {
+  .page-footer { flex-wrap: wrap; }
+  .ask-notes { order: -1; flex-basis: 100%; max-width: none; margin: 0; }
+}
+
+/* Settings: what your assistant may do alone (public/settings.js, assistant/4). */
+.settings-part { padding: var(--space-3) 0; border-top: var(--line); }
+
+.settings-title { margin: 0 0 var(--space-1); font-size: var(--text-base); }
+
+.permission-rows { margin: var(--space-2) 0; }
+
+.permission-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) 0; border-top: var(--line); }
+
+.permission-name { flex: 1 1 calc(var(--card-min-width) * 1.2); min-width: 0; }
+.permission-what { display: block; font-size: var(--text-sm); font-weight: 400; color: var(--color-text-muted); }
+
+.permission-floor { padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); }
+
+.permission-floor-line { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-1) 0; font-size: var(--text-sm); }
+
+.activity-log { margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+
+.activity-row { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
+
+.activity-when { flex: none; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
+.activity-what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.activity-row[data-kind="refused"] .activity-what b { text-decoration: underline; }
+
+.activity-chat { color: var(--color-text-muted); }
+
+@media (max-width: 600px) {
+  .activity-when { flex-basis: 100%; }
+}
+
+/* What your assistant proposes on the Planner (time/3, its assistant step). */
+.plan-suggestions { margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.plan-suggestions[hidden] { display: none; }
+
+.plan-suggestions-title { display: flex; align-items: center; gap: var(--space-1); margin: 0; font-size: var(--text-sm); }
+
+/* The week strip above the day (public/planner.js): a click opens that day. */
+.day-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); margin-bottom: var(--space-3); }
+
+.day-strip-day { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-md); background: none; font: inherit; font-size: var(--text-xs); color: var(--color-text); text-align: left; cursor: pointer; }
+
+.day-strip-day:hover { background: var(--color-surface); }
+
+.day-strip-day[aria-pressed="true"] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+.day-strip-day.is-today .day-strip-name b { text-decoration: underline; }
+
+.day-strip-name { font-size: var(--text-sm); white-space: nowrap; }
+
+.day-strip-what { overflow: hidden; color: var(--color-text-muted); text-overflow: ellipsis; white-space: nowrap; }
+
+.day-strip-day .load-bar { margin: var(--space-1) 0 0; }
+
+/* When the day's column is narrow (a phone, or a narrow window beside Tasks to place),
+   each day shows as two short lines: its weekday and its date. */
+.plan-column { container-type: inline-size; }
+
+@container (max-width: 620px) {
+  .day-strip { gap: 2px; }
+  .day-strip-day { align-items: center; padding: var(--space-1) 2px; text-align: center; }
+  .day-strip-name { display: flex; flex-direction: column; font-size: var(--text-xs); line-height: 1.2; }
+  .day-strip-what { display: none; }
+  .day-strip-day .load-bar { width: 100%; }
+}
+
+/* Plan my day (the dialog): tick what belongs in the day. */
+.plan-dialog { width: min(32rem, calc(100vw - var(--space-6))); }
+
+.plan-dialog-free { margin: 0 0 var(--space-2); color: var(--color-text-muted); }
+
+.plan-dialog-row { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); cursor: pointer; }
+
+.plan-dialog-tick { margin-top: var(--space-1); }
+
+.plan-dialog-text { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+
+.plan-dialog-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.plan-dialog-tally { min-height: 1.2em; margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.plan-dialog .capture-foot { flex-wrap: wrap; gap: var(--space-2); }
+
+.plan-dialog-steps { padding-left: 0; }
+
+/* ---- The day in hours (public/planner.js): Morning and Afternoon as bands of hours ---- */
+
+.plan-hours { position: relative; margin-top: var(--space-1); }
+
+.plan-hour-line { position: absolute; right: 0; left: 0; border-top: var(--line); }
+
+.plan-hour-label { position: absolute; top: var(--space-1); left: 0; width: var(--plan-gutter); font-size: var(--text-xs); line-height: 1; color: var(--color-text-muted); }
+
+.on-grid { position: absolute; z-index: 1; box-sizing: border-box; margin: 0; overflow: hidden; }
+
+.plan-event.on-grid { flex-direction: column; align-items: stretch; gap: 0; padding: var(--space-1) var(--space-2); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+.plan-event.on-grid .plan-time { width: auto; }
+
+/* The name keeps its line; a short event has its name and time side by side. */
+.plan-event.on-grid .plan-event-title { flex: none; }
+
+.plan-event.on-grid.is-short { flex-direction: row; align-items: baseline; gap: var(--space-2); }
+
+.plan-event.on-grid.is-short .plan-event-title { flex: 0 1 auto; }
+
+.plan-event.on-grid.is-short .plan-locked { position: static; margin-left: auto; }
+
+.plan-event.on-grid .plan-locked { position: absolute; top: var(--space-1); right: var(--space-2); }
+
+.plan-event-more { border-top: var(--border-width) dashed var(--color-text-muted); }
+
+.plan-slot.on-grid { align-items: flex-start; align-content: flex-start; background: var(--color-bg); }
+
+.plan-slot.on-grid:focus { outline: calc(var(--border-width) * 2) solid var(--color-text); outline-offset: -1px; }
+
+.plan-slot-time { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.plan-block.on-grid { overflow-y: auto; background: var(--color-bg); }
+
+.plan-highlight-mark { padding: var(--space-1) var(--space-2); border: calc(var(--border-width) * 2) solid var(--color-text); border-radius: var(--radius-sm); background: var(--color-bg); font-size: var(--text-xs); }
+
+.plan-now { position: absolute; z-index: 0; right: 0; left: var(--plan-gutter); border-top: calc(var(--border-width) * 2) solid var(--color-text); }
+
+.plan-hours-empty { position: absolute; top: var(--space-2); left: var(--plan-gutter); }
+
+.plan-part-title .plan-add-block { margin-left: auto; padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+@media (max-width: 600px) {
+  /* On a phone a task's place on the hours shows its time; its words get the room. */
+  .plan-slot.on-grid .plan-slot-time { display: none; }
+  .plan-slot.on-grid .plan-slot-text { flex-basis: 50%; }
+}
+
+/* A task on the hours keeps its × in its corner, however short it is. */
+.plan-slot.on-grid { padding-right: calc(var(--space-6) + var(--space-1)); }
+
+.plan-slot.on-grid .plan-out { position: absolute; top: var(--space-1); right: var(--space-1); }
+
+.tray-row[data-checked="true"] .tray-words { color: var(--color-text-muted); text-decoration: line-through; }
+
+/* A long task's few words: a click opens the whole text (public/planner.js). */
+.task-short { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
+
+.task-short:hover { text-decoration: underline; }
+
+.task-short[aria-expanded="true"] { white-space: normal; }
+
+/* The Journal day's sections: its entries, the day's calendar, Linked from. */
+.journal-section { margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--line); }
+
+.journal-section-title { margin: 0 0 var(--space-2); font-size: var(--text-base); }
+
+/* The Library (public/library.js, foundations/8): every token with its live value, and the
+   pieces drawn with the app's own classes. */
+.lib-group { margin: var(--space-6) 0 0; font-size: var(--text-lg); }
+.lib-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-3); align-items: flex-start; }
+.lib-swatch, .lib-demo { display: flex; flex-direction: column; gap: var(--space-1); min-width: 112px; font-size: var(--text-xs); }
+.lib-chip { height: var(--space-12); display: flex; align-items: center; padding: 0 var(--space-3); border: var(--line); border-radius: var(--radius-sm); font-family: var(--font-heading); font-size: var(--text-xl); }
+.lib-line { border-width: 0 0 var(--border-width); border-radius: 0; }
+.lib-corner { background: var(--color-surface); }
+.lib-name { color: var(--color-text); font-weight: var(--weight-bold); }
+.lib-value { color: var(--color-text-muted); font-family: var(--font-mono); }
+.lib-types, .lib-spaces, .lib-rows { margin-top: var(--space-3); }
+.lib-type { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-1) 0; font-size: var(--text-xs); }
+.lib-type-sample { flex: 0 0 240px; color: var(--color-text); }
+.lib-space { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) 0; font-size: var(--text-xs); }
+.lib-space .lib-name { flex: 0 0 96px; }
+.lib-bar { height: var(--space-2); background: var(--color-text); }
+.lib-sample { padding: var(--space-3) 0; }
+.lib-field { display: flex; align-items: center; gap: var(--space-2); max-width: 280px; padding: var(--space-1) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+.lib-card-sample { max-width: 280px; margin-top: var(--space-3); }
+.lib-chat { display: flex; flex-direction: column; gap: var(--space-2); max-width: 420px; margin-top: var(--space-3); }
+.lib-dialog { margin-top: var(--space-3); }
+.lib-capture { margin: 0; width: min(var(--capture-width), 100%); }
+.lib-dialog-text { margin: 0; }
+.lib-sidebar { display: flex; flex-direction: column; gap: var(--space-1); width: var(--sidebar-width); margin-top: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); }
+.snooze-picker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.snooze-pick { display: inline-flex; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); }
+.capture-worlds, .inbox-worlds { display: inline-flex; gap: var(--space-1); }
+.capture-worlds .chip, .inbox-worlds .chip { display: inline-flex; align-items: center; gap: var(--space-1); }
+.inbox-worlds { margin-bottom: var(--space-3); }
+.inbox-item-line .icon { vertical-align: middle; margin-right: var(--space-1); }
+.allowed-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
+.allowed-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
+
+/* A reconnect rhythm (People in depth, advanced/people/5): the cadence chip under a person's name
+   (quiet and dashed when Off, bold when overdue), and the Reconnect list in People. */
+.cadence { margin-top: var(--space-2); }
+
+.cadence-chip[data-overdue="true"] { font-weight: var(--weight-bold); color: var(--color-text); }
+
+.cadence-choices { margin: var(--space-2) 0 0; }
+
+.cadence-choices[hidden] { display: none; }
+
+.reconnect { margin-bottom: var(--space-4); }
+
+.reconnect-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.reconnect-row .person-row { flex: 1 1 var(--card-min-width); min-width: 0; }
+
+.reconnect-row[data-due="true"] .reconnect-due { font-weight: var(--weight-bold); color: var(--color-text); }
+
+.reconnect-row .button { flex: none; }
+
+/* Bring your contacts in (People in depth): the box that reads a file and says what it would do. */
+.import-box { width: min(100% - var(--space-6), calc(var(--card-min-width) * 2)); }
+
+.import-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+
+.import-choose { cursor: pointer; margin: var(--space-2) 0; }
+
+.import-choose:focus-within { outline: var(--border-width) solid var(--color-text); outline-offset: var(--border-width); }
+
+.import-report { margin: var(--space-2) 0 0; font-weight: var(--weight-bold); }
+
+.import-report:empty { display: none; }
+
+/* One person, two entries (People in depth): the list of possible duplicates and the merge pair. */
+.duplicates { margin-bottom: var(--space-4); }
+
+.duplicate-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-2) 0; border-top: var(--line); }
+
+.duplicate-people { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); flex: 1 1 var(--card-min-width); min-width: 0; font-weight: var(--weight-bold); }
+
+.duplicate-and { color: var(--color-text-muted); font-weight: var(--weight-regular); }
+
+.merge-box { width: min(100% - var(--space-6), calc(var(--card-min-width) * 3.2)); margin: var(--space-4) auto; max-height: calc(100vh - var(--space-4) * 2); overflow: auto; }
+
+.merge-pair { margin: var(--space-3) 0; }
+
+.merge-pair[hidden] { display: none; }
+
+.merge-row { display: grid; grid-template-columns: calc(var(--space-8) * 2) minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--space-2); align-items: start; padding: var(--space-2) 0; border-top: var(--line); }
+
+.merge-row-head { border-top: 0; }
+
+.merge-label { font-size: var(--text-sm); color: var(--color-text-muted); padding-top: var(--space-1); }
+
+.merge-cell { display: flex; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); cursor: pointer; }
+
+.merge-cell[data-chosen="true"] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+.merge-cell input { margin-top: var(--space-1); flex: none; accent-color: var(--color-text); }
+
+.merge-both { align-self: start; white-space: nowrap; }
+
+.merge-value { min-width: 0; overflow-wrap: anywhere; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+.merge-head { align-items: center; border-style: dashed; }
+
+.merge-head-text { display: flex; flex-direction: column; min-width: 0; }
+
+.merge-keep-word { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+@media (max-width: 600px) {
+  .merge-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .merge-label { grid-column: 1 / -1; padding-top: 0; }
+  .merge-both { grid-column: 1 / -1; }
+  .merge-row-head > :first-child { display: none; }
+  .merge-row-head > :last-child { display: none; }
+}
+
+/* The Mic pill (Dictation, advanced/voice/1): a small pill with four states. Idle sits in the foot of the
+   page and says which key to hold; listening, writing and done float at the foot of the window. */
+.mic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border: var(--line);
+  border-radius: var(--space-12);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+button.mic-pill { cursor: pointer; }
+
+button.mic-pill:hover { color: var(--color-text); }
+
+.mic-pill[hidden] { display: none; }
+
+.mic-pill-live {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bottom-bar-height) + var(--space-3));
+  transform: translateX(-50%);
+  z-index: 20;
+  color: var(--color-text);
+}
+
+.mic-words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(var(--card-min-width) * 1.6); }
+
+.mic-pill[data-state="listening"] .icon { color: var(--color-text); }
+
+/* The level line: a short line that grows with the sound. */
+.mic-level { display: inline-block; width: var(--space-8); height: var(--space-1); border: var(--line); border-radius: var(--space-12); overflow: hidden; }
+
+.mic-level-bar { display: block; height: 100%; background: var(--color-text); }
+
+.mic-stop { padding: 0 var(--space-2); }
+
+@media (min-width: 601px) { .mic-pill-live { bottom: var(--space-6); } }
+
+/* Your dictations, in Settings. */
+.dictation-list { margin-top: var(--space-2); }
+
+.dictation-row { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--line); }
+
+.dictation-when { flex: none; width: calc(var(--space-12) * 1.6); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.dictation-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.dictation-went { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.dictation-row .button { flex: none; }
+
+.lib-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.dictation-key { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.dictation-key .detail-input { flex: 1 1 var(--card-min-width); width: auto; }
+
+/* The glossary, in Settings. */
+.glossary-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: var(--space-2) 0; }
+
+.glossary-add .detail-input { flex: 1 1 var(--card-min-width); width: auto; }
+
+.glossary-list { margin-top: var(--space-2); }
+
+.glossary-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--line); }
+
+.glossary-term { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.glossary-heard { color: var(--color-text-muted); }
+
+.glossary-source { flex: none; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.glossary-row .button { flex: none; }
+
+@media (max-width: 600px) { .glossary-source { display: none; } }
+
+/* A secret typed or pasted into a text field (the ElevenLabs key): shown as dots, but not a password field, so a password manager leaves it alone. */
+.secret-input { -webkit-text-security: disc; text-security: disc; }
+
+/* The glossary's question and its answer: in the Undo bar's look, at the foot of the window like a reminder's notice. */
+.glossary-proposal {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 20;
+  width: min(var(--capture-width), calc(100vw - var(--space-4) * 2));
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) { .glossary-proposal { bottom: calc(var(--bottom-bar-height) + var(--space-2)); } }
+
+/* Google (Settings › Google, advanced/mail/1): the Google account row, its steps and its actions. */
+.google-account { padding: var(--space-3) 0; border-top: var(--line); }
+
+.google-account-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+
+.google-account-who { flex: 1 1 var(--card-min-width); min-width: 0; display: flex; flex-direction: column; }
+
+.google-account-email { overflow-wrap: anywhere; }
+
+.google-health { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.google-account[data-health='needs_signin'] .google-health { color: var(--color-text); font-weight: 600; }
+
+.google-steps { margin: var(--space-2) 0; padding-left: var(--space-6); color: var(--color-text-muted); }
+
+.google-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+
+/* Mail (/mail, advanced/mail/2): the import form, the labels, the files read in and the Mail row. */
+.mail-import-form { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0; }
+
+.mail-import-form .button { align-self: flex-start; }
+
+.mail-drop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-4); border: var(--border-width) dashed var(--color-border); border-radius: var(--radius-md); cursor: pointer; color: var(--color-text-muted); }
+
+.mail-drop:hover, .mail-drop.is-over { background: var(--color-surface); border-color: var(--color-text-muted); }
+
+.mail-chosen { flex-basis: 100%; font-weight: var(--weight-bold); color: var(--color-text); overflow-wrap: anywhere; }
+
+.mail-progress { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
+
+.mail-progress-row, .mail-label-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; font-size: var(--text-sm); }
+
+.mail-label-row { align-items: baseline; padding: var(--space-2) 0; border-top: var(--line); font-size: var(--text-base); }
+
+.mail-label-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.mail-label-kind { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.mail-label-count { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+.mail-import-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: var(--line); }
+
+.mail-import-name { font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+
+.mail-import-what { grid-column: 1; }
+
+.mail-import-when { grid-column: 2; grid-row: 1; font-size: var(--text-sm); color: var(--color-text-muted); text-align: right; }
+
+.mail-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; column-gap: var(--space-3); padding: var(--space-3) var(--space-1); border-top: var(--line); }
+
+.mail-shape { display: inline-flex; padding-top: var(--space-1); color: var(--color-text-muted); }
+
+.mail-main { min-width: 0; display: flex; flex-direction: column; }
+
+.mail-who { font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mail-subject { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mail-snippet { font-size: var(--text-sm); color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mail-meta { display: flex; flex-direction: column; align-items: flex-end; font-size: var(--text-sm); color: var(--color-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 600px) { .mail-import-row { grid-template-columns: minmax(0, 1fr); } .mail-import-when { grid-column: 1; grid-row: auto; text-align: left; } }
+
+/* The Speedy mark (advanced/tasks/1): a Speedy is a quiet bolt, a Task a plain box; the words say which. */
+.kind-mark { white-space: nowrap; }
+
+.kind-mark[data-kind='speedy'] { font-weight: var(--weight-bold); }
+
+/* An alarm that has ended, in the Reminders view: its time, and its task struck through. */
+.alarm-row { display: flex; gap: var(--space-3); align-items: baseline; padding: var(--space-2) var(--space-1); border-top: var(--line); color: var(--color-text-muted); }
+
+.alarm-time { font-size: var(--text-sm); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.alarm-time .icon svg { width: var(--text-xs); height: var(--text-xs); }
+
+.alarm-words { min-width: 0; overflow-wrap: anywhere; }
+
+.lib-notice .notice { position: static; max-width: calc(var(--card-min-width) * 2); }
+
+/* Tasks in depth 4: which rows the keys act on (a word and a shape, not only the grey), and how many. */
+.task-selection { margin: var(--space-1) 0; font-weight: var(--weight-bold); }
+
+.task-selection:empty { display: none; }
+
+.task-selected-word { flex: none; font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
+
+.task-selected-word .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Tasks in depth 5: one quiet line above today in the Planner when something is missed. */
+.planner-missed-line { margin: var(--space-1) 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.planner-missed-line .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Settings › Capture from anywhere (Tasks in depth 6). */
+.capture-device { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: var(--line); align-items: baseline; }
+
+.capture-device-used { grid-column: 1; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.capture-device .button { grid-column: 2; grid-row: 1 / span 2; }
+
+.capture-add { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+
+.capture-add .detail-input { flex: 1 1 var(--card-min-width); width: auto; }
+
+.capture-token-box { margin: var(--space-3) 0; padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.capture-token { display: block; margin: var(--space-2) 0; overflow-wrap: anywhere; user-select: all; }
+
+.inbox-shared .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Tasks in depth 7: the Inbox in two piles, each with its heading and the World tag (a circle or a square, and a word). */
+.world-tag { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.inbox-pile { margin: var(--space-3) 0 var(--space-1); padding-top: var(--space-2); border-top: var(--line); font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+
+.inbox-pile:first-child { margin-top: 0; border-top: 0; }
+
+/* Tasks in depth 8: the Inbox's four views (the Tabs), and a row of Snoozed, Done or Trash with the one button that brings it back. */
+.inbox-views { margin: var(--space-2) 0; }
+
+.inbox-other-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) var(--space-1); border-top: var(--line); align-items: baseline; }
+
+.inbox-other-row .inbox-item-when { grid-column: 1; }
+
+.inbox-other-row .button { grid-column: 2; grid-row: 1 / span 2; }
+
+.inbox-views[hidden] { display: none; }
+
+/* Mail 3: the Count check row (a label, Gmail's count, yours, and Equal or how many to fill). */
+.count-row { display: grid; grid-template-columns: minmax(0, 1fr) 6ch 6ch 9ch; gap: var(--space-3); align-items: baseline; padding: var(--space-2) 0; border-top: var(--line); font-variant-numeric: tabular-nums; }
+
+.count-head { font-size: var(--text-sm); color: var(--color-text-muted); border-top: 0; }
+
+.count-number { text-align: right; }
+
+.count-state { font-size: var(--text-sm); white-space: nowrap; }
+
+.count-row[data-equal='false'] .count-state { font-weight: var(--weight-bold); }
+
+.count-state .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Mail 4: the sync line at the foot of Mail, and what is on its way to Gmail. */
+.sync-line { margin: var(--space-4) 0 0; padding-top: var(--space-2); border-top: var(--line); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.outbox-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--line); align-items: baseline; }
+
+.outbox-what { font-weight: var(--weight-bold); white-space: nowrap; }
+
+.outbox-subject { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.outbox-state { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.outbox-row[data-state='failed'] .outbox-state { color: var(--color-text); font-weight: var(--weight-bold); }
+
+@media (max-width: 600px) { .outbox-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* Mail 5: the Mail app: an account switch, the six split tabs, the list and the reader. */
+.mail-accounts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-2) 0; }
+
+.mail-accounts[hidden] { display: none; }
+
+.mail-layout { display: grid; grid-template-columns: minmax(var(--card-min-width), 2fr) 3fr; gap: var(--space-4); align-items: start; }
+
+.mail-list-panel { min-width: 0; }
+
+.mail-splits { flex-wrap: wrap; margin: var(--space-2) 0; }
+
+.mail-letter { display: inline-flex; align-items: center; justify-content: center; width: var(--text-lg); height: var(--text-lg); flex: none; border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-bold); }
+
+.mail-row-open { width: 100%; text-align: left; background: none; border: 0; border-top: var(--line); font: inherit; color: inherit; cursor: pointer; }
+
+.mail-row-open:hover, .mail-row-open[aria-current='true'] { background: var(--color-surface); }
+
+.mail-row[data-unread='true'] .mail-subject { font-weight: var(--weight-bold); }
+
+.mail-meta .mail-letter { margin-bottom: var(--space-1); }
+
+.mail-reader { min-width: 0; padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); }
+
+.mail-back { display: none; }
+
+.mail-rule { margin: 0 0 var(--space-3); padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); font-size: var(--text-sm); }
+
+.mail-rule .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Tasks made from a conversation (Mail 11), and an invitation in a mail (Mail 12): a card with the meeting and three keys. */
+.mail-tasks { list-style: none; margin: 0 0 var(--space-3); padding: 0; font-size: var(--text-sm); }
+.mail-tasks li { padding: var(--space-1) 0; }
+.mail-tasks li.is-done a { text-decoration: line-through; color: var(--color-text-muted); }
+.mail-tasks .icon svg { width: var(--text-xs); height: var(--text-xs); }
+.mail-chip { text-decoration: none; }
+.invite-card { margin: 0 0 var(--space-3); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); display: grid; gap: var(--space-1); }
+.invite-card p { margin: 0; }
+.invite-title { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-base); }
+.invite-when, .invite-place, .invite-from { font-size: var(--text-sm); }
+.invite-from, .invite-status { color: var(--color-text-muted); }
+.invite-status { font-size: var(--text-sm); }
+.invite-keys { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.invite-keys .button[aria-pressed="true"] { font-weight: 700; background: var(--color-bg); }
+.invite-card[data-state="cancelled"] .invite-title strong { text-decoration: line-through; }
+
+.mail-reader-subject { margin: 0 0 var(--space-3); }
+
+.mail-message { padding: var(--space-3) 0; border-top: var(--line); }
+
+.mail-message-head { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; }
+
+.mail-message-when, .mail-message-to { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.mail-message-to { flex-basis: 100%; overflow-wrap: anywhere; }
+
+.mail-text { margin-top: var(--space-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.mail-attachments { font-size: var(--text-sm); }
+
+@media (max-width: 900px) {
+  .mail-layout { grid-template-columns: minmax(0, 1fr); }
+  .mail-layout.is-open .mail-list-panel { display: none; }
+  .mail-layout:not(.is-open) .mail-reader-col { display: none; }
+  .mail-back { display: inline-flex; margin-bottom: var(--space-2); }
+}
+
+/* Mail 6: the keys. The Key hint, the Remind me menu, the command palette and the panel of times. */
+.key-hint { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+.mail-remind { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.mail-remind .capture-hint { flex-basis: 100%; margin: 0; }
+
+.mail-palette-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
+
+.mail-command { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: pointer; }
+
+.mail-command[aria-selected='true'] { background: var(--color-surface); font-weight: var(--weight-bold); }
+
+.mail-command[aria-disabled='true'] { color: var(--color-text-muted); cursor: default; }
+
+.mail-times-table { width: 100%; border-collapse: collapse; margin: var(--space-3) 0; }
+
+.mail-times-table td { padding: var(--space-1) var(--space-2); border-top: var(--line); }
+
+.mail-time { text-align: right; font-variant-numeric: tabular-nums; }
+
+.mail-undo { margin-top: var(--space-3); }
+
+/* Mail 7: the Sealed frame, the bar for the images and the marks on links that go somewhere else. */
+.sealed-frame { display: block; width: 100%; min-height: 80px; margin-top: var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); }
+
+.mail-images-bar { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); font-size: var(--text-sm); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.mail-link-marks { margin: var(--space-2) 0; padding-left: var(--space-4); font-size: var(--text-sm); font-weight: var(--weight-bold); }
+
+.mail-images-bar .icon svg, .mail-link-marks .icon svg { width: var(--text-xs); height: var(--text-xs); }
+
+/* Mail 8: the composer under the conversation, and the bar that counts the ten seconds. */
+.mail-composer { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.mail-compose-body { min-height: 8rem; resize: vertical; }
+
+.mail-compose-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+.mail-remind-check { font-size: var(--text-sm); }
+
+.mail-allow { margin: 0; padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); font-size: var(--text-sm); }
+
+.mail-sending { margin-top: var(--space-3); }
+
+.mail-reader-col { min-width: 0; }
+
+/* Mail 9: the Opened chip, and what did not count. */
+.confirm-row { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; padding: var(--space-2) 0; border-top: var(--line); }
+
+.confirm-mail { flex: 1 1 var(--card-min-width); min-width: 0; overflow-wrap: anywhere; font-size: var(--text-sm); }
+
+.confirm-chip { font-weight: var(--weight-bold); white-space: nowrap; }
+
+.confirm-row[data-opened='false'] .confirm-chip { font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+.confirm-skipped { flex-basis: 100%; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.confirm-chip .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
+
+/* Mail 10: who is in a conversation, and the section "Mail with …" on a person's or company's page. */
+.mail-people { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+.mail-person { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+
+.mail-person-card, .mail-company-card { display: inline-flex; align-items: center; gap: var(--space-2); color: inherit; text-decoration: none; }
+
+.mail-person-text { display: flex; flex-direction: column; font-size: var(--text-sm); }
+
+.mail-person-card.is-unknown .mail-person-text span { color: var(--color-text-muted); }
+
+.mail-company-card { padding-left: var(--space-2); border-left: var(--line); font-size: var(--text-sm); }
+
+.last-touch-chip { margin-left: var(--space-2); font-size: var(--text-sm); font-weight: var(--weight-regular); color: var(--color-text-muted); }
+
+.last-touch-chip:empty { display: none; }
+
+.mail-with-link { display: block; color: inherit; text-decoration: none; }
+
+.contact-mail { margin-top: var(--space-4); }
+
+/* The outline (Writing and thinking): a triangle that folds a bullet's children, the zoom path, and what a zoom hides. */
+.fold-toggle { position: absolute; left: calc(var(--space-6) * -1 - var(--space-1)); top: var(--space-1); width: var(--space-3); height: var(--space-4); padding: 0; border: 0; background: none; color: var(--color-text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; }
+.fold-toggle svg { width: var(--space-3); height: var(--space-3); transition: transform 120ms; }
+.fold-toggle.is-open svg { transform: rotate(90deg); }
+.note-body li:hover > .fold-toggle, .fold-toggle:focus-visible, li.is-folded > .fold-toggle { opacity: 1; }
+.note-body li.is-folded > ul, .note-body li.is-folded > ol { display: none; }
+.note-body li.is-folded > p::after { content: " …"; color: var(--color-text-muted); }
+.zoom-path { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: 0 0 var(--space-3); font-size: var(--text-sm); }
+.zoom-path[hidden] { display: none; }
+.zoom-sep { color: var(--color-text-muted); }
+.zoom-path .button[aria-current="true"] { font-weight: 700; }
+.note-body .zoom-hidden { display: none; }
+.note-body .zoom-ancestor { list-style: none; padding-left: 0; margin-left: 0; }
+.note-body li.zoom-target { list-style: none; }
+.note-body li.zoom-target > p:first-of-type { font-family: var(--font-heading); font-size: var(--text-xl); margin-bottom: var(--space-2); }
+
+/* A link to a bullet (Writing 2): its words as they are now, underlined; alone in its line, the bullet and what is under it in a frame. */
+.block-ref-link { color: inherit; text-decoration: underline; text-underline-offset: var(--space-1); cursor: pointer; }
+.block-ref.is-missing { color: var(--color-text-muted); font-style: italic; }
+.block-ref.is-embed { display: block; }
+.block-embed { display: block; border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); padding: var(--space-2) var(--space-3); margin: var(--space-1) 0; }
+.block-embed-words { display: block; }
+.block-embed-children { display: block; margin-top: var(--space-1); }
+.block-embed-child { display: block; padding-left: var(--space-3); color: var(--color-text); }
+.block-embed-child::before { content: "– "; color: var(--color-text-muted); }
+.block-embed-from { display: block; margin-top: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); text-decoration: none; }
+.used-in { margin-left: var(--space-2); padding: 0 var(--space-2); border: var(--line); border-radius: var(--radius-md); background: none; color: var(--color-text-muted); font-size: var(--text-xs); cursor: pointer; }
+.used-in-pop { position: absolute; z-index: 20; margin: 0; padding: var(--space-2); list-style: none; min-width: 12rem; border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); font-size: var(--text-sm); }
+.used-in-pop li { padding: var(--space-1) var(--space-2); }
+.used-in-kind { color: var(--color-text-muted); }
+.note-body li.is-found { background: var(--color-surface); border-radius: var(--radius-sm); }
+
+/* Comments on a passage (Writing 3): a dotted underline on the words, a Comment button beside a selection, and threads under the text. */
+.note-body .has-comment { text-decoration: underline dotted; text-underline-offset: var(--space-1); cursor: pointer; }
+.comment-button { position: fixed; z-index: 30; }
+.comments-pane { margin: var(--space-6) 0; display: grid; gap: var(--space-3); }
+.comments-pane[hidden] { display: none; }
+.comments-title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 400; margin: 0; }
+.comment-list { display: grid; gap: var(--space-3); }
+.comment-thread, .comment-draft { border: var(--line); border-radius: var(--radius-md); padding: var(--space-3); display: grid; gap: var(--space-2); background: var(--color-surface); }
+.comment-thread p { margin: 0; }
+.comment-thread.is-resolved { opacity: 0.7; }
+.comment-thread.is-found { background: var(--color-bg); }
+.comment-quote { margin: 0; padding-left: var(--space-3); border-left: var(--line); border-left-width: var(--space-1); color: var(--color-text-muted); font-size: var(--text-sm); }
+.comment-when { color: var(--color-text-muted); font-size: var(--text-xs); }
+.comment-reply { padding-left: var(--space-3); }
+.comment-reply[data-author="assistant"] { border-left: var(--line); border-left-width: var(--space-1); }
+.comment-decision, .comment-actions, .comment-reply-form { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.comment-reply-form .search-input { flex: 1 1 12rem; }
+.comment-chat { font-size: var(--text-sm); }
+
+/* Versions of a note (Writing 4): the clock with its count, the Version list and the words that changed. */
+.version-count { margin-left: var(--space-1); font-size: var(--text-xs); }
+.versions-box { width: min(46rem, 94vw); }
+.versions-grid { display: grid; grid-template-columns: minmax(12rem, 18rem) 1fr; gap: var(--space-4); margin: var(--space-3) 0; }
+@media (max-width: 700px) { .versions-grid { grid-template-columns: 1fr; } }
+.version-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); max-height: 22rem; overflow: auto; }
+.version-row { width: 100%; display: grid; gap: var(--space-1); text-align: left; padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); background: none; color: var(--color-text); cursor: pointer; font: inherit; }
+.version-row[aria-pressed="true"] { background: var(--color-surface); font-weight: 700; }
+.version-seq { font-size: var(--text-sm); }
+.version-what, .version-who { font-size: var(--text-xs); font-weight: 400; color: var(--color-text-muted); }
+.versions-view { min-width: 0; }
+.versions-heading { font-family: var(--font-heading); font-weight: 400; font-size: var(--text-base); margin: 0 0 var(--space-2); }
+.version-diff, .version-text { white-space: pre-wrap; margin: 0 0 var(--space-3); font-size: var(--text-sm); max-height: 20rem; overflow: auto; }
+.version-text { font-family: inherit; }
+.diff-add { text-decoration: underline; text-decoration-style: double; background: var(--color-surface); }
+.diff-del { text-decoration: line-through; color: var(--color-text-muted); }
+
+/* A clash (Writing 5): both sides of a line you and your assistant changed, and the choice. */
+.clash-pane { display: grid; gap: var(--space-3); margin: var(--space-4) 0; }
+.clash-pane[hidden] { display: none; }
+.clash-box { border: var(--line); border-width: var(--space-1) var(--border-width) var(--border-width); border-radius: var(--radius-md); padding: var(--space-3); display: grid; gap: var(--space-3); background: var(--color-surface); }
+.clash-what { margin: 0; font-size: var(--text-sm); }
+.clash-sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+@media (max-width: 600px) { .clash-sides { grid-template-columns: 1fr; } }
+.clash-side { border: var(--line); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); background: var(--color-bg); min-width: 0; }
+.clash-side[data-side="theirs"] { border-style: dashed; }
+.clash-side-name { margin: 0 0 var(--space-1); font-size: var(--text-xs); font-family: var(--font-ui); font-weight: 600; color: var(--color-text-muted); }
+.clash-text { margin: 0; white-space: pre-wrap; font-family: inherit; font-size: var(--text-sm); }
+.clash-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* A board (Writing 6): a canvas of cards, words and arrows. The canvas is 1200 wide and scales with its page. */
+.board-block { margin: var(--space-3) 0; }
+.board { display: grid; gap: var(--space-2); }
+.board-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.board-title { display: inline-flex; align-items: center; gap: var(--space-2); }
+.board-add { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.board-add .button[aria-pressed="true"] { background: var(--color-surface); font-weight: 700; }
+.board-form { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.board-form .search-input { flex: 1 1 14rem; }
+.board-results { list-style: none; margin: var(--space-1) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.board-frame { position: relative; overflow: hidden; border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); width: 100%; }
+.board-stage { position: absolute; left: 0; top: 0; width: 1200px; height: 700px; transform-origin: 0 0; touch-action: none; }
+.board-arrows { position: absolute; left: 0; top: 0; width: 1200px; height: 700px; color: var(--color-text-muted); pointer-events: none; overflow: visible; }
+.board-arrow.is-assistant { stroke-dasharray: 8 6; }
+.board-card { position: absolute; box-sizing: border-box; display: grid; gap: var(--space-1); align-content: start; padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: calc(var(--text-base) * 1.6); line-height: 1.3; cursor: grab; user-select: none; } /* the canvas is drawn at 1200 units and scaled to its page, so its words are drawn larger */
+.board-card.is-text { border-color: transparent; background: none; padding: var(--space-1); }
+.board-card.is-selected { border-width: var(--space-2); }
+.board-card.is-live { background: var(--color-bg); }
+.board-card.is-assistant { border-style: dashed; border-width: var(--space-2); }
+.board-card-kind { font-size: calc(var(--text-xs) * 1.6); color: var(--color-text-muted); font-family: var(--font-ui); font-weight: 600; }
+.board-card-title { font-weight: 600; overflow-wrap: anywhere; }
+.board-card.is-text .board-card-title { font-weight: 400; }
+.board-card-sub { font-size: calc(var(--text-sm) * 1.6); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.board-tag { font-size: calc(var(--text-xs) * 1.6); color: var(--color-text-muted); font-family: var(--font-ui); border: var(--line); border-radius: var(--radius-sm); padding: 0 var(--space-1); justify-self: start; }
+.board-remove, .board-open-card { position: absolute; top: var(--space-1); right: var(--space-1); width: var(--space-8); height: var(--space-8); padding: 0; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; }
+.board-open-card { right: calc(var(--space-8) + var(--space-2)); }
+.board-card:hover .board-remove, .board-card:hover .board-open-card, .board-card:focus-within .board-remove, .board-card:focus-within .board-open-card { opacity: 1; }
+@media (pointer: coarse) { .board-remove, .board-open-card { opacity: 1; } }
+.board-edit { width: 100%; font: inherit; font-size: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-1); background: var(--color-bg); color: var(--color-text); }
+.board-host-large .board-frame { margin-top: var(--space-2); }
+.lib-board { position: relative; height: 12rem; border: var(--line); border-radius: var(--radius-md); overflow: hidden; background: var(--color-bg); }
+.lib-board .board-card { cursor: default; }
+.lib-arrow { position: absolute; left: 150px; top: var(--space-4); color: var(--color-text-muted); }
+.lib-board .board-card, .lib-board .board-card-kind, .lib-board .board-card-sub, .lib-board .board-tag { font-size: var(--text-sm); }
+.lib-board .board-card { padding: var(--space-2) var(--space-3); }
+
+/* Import (Writing 9): the buttons and one report a run. */
+.import-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.import-reports { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.import-report { border: var(--line); border-radius: var(--radius-md); padding: var(--space-3); display: grid; gap: var(--space-2); background: var(--color-surface); }
+.import-report-title { margin: 0; font-size: var(--text-base); font-family: var(--font-ui); font-weight: 600; }
+.import-report-when { color: var(--color-text-muted); font-weight: 400; font-size: var(--text-sm); }
+.import-report-counts { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--text-sm); }
+.import-report-counts dt { color: var(--color-text-muted); }
+.import-report-counts dd { margin: 0; font-weight: 700; }
+.import-report-note { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* The pen (Writing 8): ink in its own layer over the board, faded once it has become words, and a page lying under the board. */
+.board-page { position: absolute; left: 0; top: 0; width: 1200px; height: 700px; object-fit: contain; pointer-events: none; opacity: 0.9; }
+.board-ink { position: absolute; left: 0; top: 0; width: 1200px; height: 700px; color: var(--color-text); pointer-events: none; overflow: visible; }
+.board-ink.is-pen { pointer-events: all; cursor: crosshair; touch-action: none; }
+.ink-stroke.is-faded { opacity: 0.2; }
+.board-add .button[aria-pressed="true"] { background: var(--color-surface); font-weight: 700; }
+.lib-ink { width: min(100%, 24rem); color: var(--color-text); border: var(--line); border-radius: var(--radius-md); }
+
+/* Calendar in depth (advanced/calendar/2): the Lens switch, the Order, the Task block and the Hour grid.
+   Flat, a thin line, dashed for what can move; the amber warning only with its words. */
+.plan-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.plan-tools:has(> [hidden]:only-child) { display: none; }
+.lens-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lens-bar[hidden], .lens-bar .switch[hidden] { display: none; }
+
+.order-day { display: flex; flex-direction: column; gap: var(--space-1); }
+.order-anchor { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border: var(--line); border-left: calc(var(--border-width) * 3) solid var(--color-text); border-radius: var(--radius-sm); background: var(--color-surface); font-size: var(--text-sm); }
+.order-anchor.is-block { border-style: dashed; }
+.order-time { flex: none; width: var(--entry-when-width); font-size: var(--text-xs); color: var(--color-text-muted); }
+.order-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.order-gap { display: flex; flex-direction: column; gap: var(--space-1); margin: var(--space-1) 0 var(--space-2) var(--space-4); }
+.order-gap-state { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.order-gap-state span { color: var(--color-text-muted); }
+.order-gap[data-over="true"] .order-gap-state { color: var(--color-warning); font-weight: var(--weight-bold); }
+.order-gap[data-over="true"] .order-gap-state span { font-weight: var(--weight-regular); }
+
+/* A task as a block: dashed (a task can move), as tall as its estimate when drawn in hours. */
+.task-block { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border: var(--border-width) dashed var(--color-text-muted); border-radius: var(--radius-sm); background: var(--color-bg); font-size: var(--text-sm); overflow: hidden; }
+.task-block .icon { flex: none; }
+.task-block-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-block-minutes { flex: none; font-size: var(--text-xs); color: var(--color-text-muted); }
+.task-block.is-done .task-block-text { color: var(--color-text-muted); text-decoration: line-through; }
+.task-block.is-squeezed { border-color: var(--color-warning); }
+.hour-grid .task-block .icon, .hour-grid .task-block-minutes { display: none; }
+.hour-grid .task-block { position: absolute; right: var(--space-1); left: 0; align-items: flex-start; padding: 0 var(--space-1); font-size: var(--text-xs); }
+
+.hour-grid { display: grid; gap: 0 var(--space-1); align-items: start; }
+.hour-grid-head { margin: 0 0 var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-bold); text-align: center; }
+.hour-grid-date { font-weight: var(--weight-regular); color: var(--color-text-muted); }
+.hour-grid-hours { position: relative; }
+.hour-grid-hour { position: absolute; left: 0; font-size: var(--text-xs); line-height: 1; color: var(--color-text-muted); transform: translateY(-50%); }
+.hour-grid-day { position: relative; border-left: var(--line); border-right: var(--line); }
+.hour-grid-line { position: absolute; right: 0; left: 0; border-top: var(--line); }
+.grid-event { position: absolute; padding: 0 var(--space-1); border: var(--line); border-left: calc(var(--border-width) * 3) solid var(--color-text); border-radius: var(--radius-sm); background: var(--color-surface); font-size: var(--text-xs); overflow: hidden; }
+.grid-event.is-block { border-style: dashed; }
+.grid-event-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The gap under a dragged task lights up and names the event it would follow (a line in the text colour, no fill colour). */
+.grid-gap { position: absolute; right: 0; left: 0; z-index: 1; border: var(--border-width) solid var(--color-text); border-radius: var(--radius-sm); pointer-events: none; }
+.grid-gap[hidden] { display: none; }
+.grid-gap-label { position: absolute; top: 0; left: 0; padding: 0 var(--space-1); background: var(--color-text); color: var(--color-bg); font-size: var(--text-xs); }
+.task-block.is-dragging { opacity: 0.5; }
+
+/* A task pinned to a time (Calendar in depth): solid, with a pin, because it holds its time; it is a task still. */
+.pin-mark { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-text-muted); }
+.plan-slot.is-pinned, .order-anchor.is-pin, .grid-event.is-pin { border-style: solid; border-color: var(--color-text); background: var(--color-bg); }
+.order-anchor.is-pin { border-left-width: calc(var(--border-width) * 3); }
+.order-anchor.is-done .order-title, .grid-event.is-done .grid-event-title { color: var(--color-text-muted); text-decoration: line-through; }
+.grid-event.is-pin { display: flex; align-items: flex-start; gap: var(--space-1); cursor: pointer; }
+.grid-event.is-pin .icon { flex: none; }
+.task-block-pin { visibility: hidden; margin-left: auto; }
+.task-block:hover .task-block-pin, .task-block:focus-within .task-block-pin { visibility: visible; }
+.hour-grid .task-block-pin { display: none; }
+@media (hover: none) { .task-block-pin { visibility: visible; } }
+.plan-pin { visibility: hidden; }
+.plan-slot:hover .plan-pin, .plan-slot:focus-within .plan-pin { visibility: visible; }
+@media (hover: none) { .plan-pin { visibility: visible; } }
+.pin-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-3) 0; }
+.pin-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+
+/* An event in words (Calendar in depth): the field, and the Sentence preview, chips that say what Enter will make. */
+.words-field { width: 100%; }
+.words-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+.words-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-surface); font-size: var(--text-sm); }
+.words-chip.is-guess { border-style: dashed; color: var(--color-text-muted); }
+.words-chip-guess { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* Routines (Calendar in depth): the Template chip, and a task that came from one is dotted so it can be told apart from a task. */
+.routine-strip { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border: var(--line); border-radius: var(--radius-md); }
+.routine-strip[hidden] { display: none; }
+.routine-title { margin: 0; font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+.routine-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.routine-add { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-left: auto; }
+.routine-name { width: calc(var(--space-6) * 6); }
+.routine-minutes { width: calc(var(--space-6) * 2.5); }
+.template-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: var(--border-width) dotted var(--color-text); border-radius: var(--radius-sm); background: var(--color-bg); font-size: var(--text-sm); cursor: grab; }
+.template-chip-minutes { font-size: var(--text-xs); color: var(--color-text-muted); }
+.template-chip-remove { display: inline-flex; padding: 0; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; }
+.plan-slot.is-routine, .task-block.is-routine { border-style: dotted; border-color: var(--color-text); }
+
+/* A draft event, drawn with the pointer in the Calendar's hours (Calendar in depth): dashed, with a small field for its name. */
+.cal-draft { position: absolute; right: var(--space-1); left: var(--space-1); z-index: 2; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1); border: var(--border-width) dashed var(--color-text); border-radius: var(--radius-sm); background: var(--color-bg); font-size: var(--text-xs); overflow: hidden; }
+.cal-draft-time { color: var(--color-text-muted); }
+.cal-draft-field { width: 100%; min-width: 0; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); font: inherit; font-size: var(--text-sm); }
+
+/* The G mark (Calendar in depth 7): a small G in a square, so an event in Google Calendar is told apart by a shape and a letter, not by colour. */
+.g-mark { display: inline-flex; align-items: center; justify-content: center; width: 1.1em; height: 1.1em; margin-right: var(--space-1); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-bold); line-height: 1; vertical-align: baseline; }
+.event-guests { display: flex; flex-direction: column; gap: var(--space-1); }
+.event-guest { font-size: var(--text-sm); }
+.google-calendar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+
+/* The G mark's other states (Calendar in depth 8): dashed while a change waits to go, a ring when it changed in both places, struck when not saved. */
+.g-mark.is-waiting { border-style: dashed; }
+.g-mark.is-clash { border-style: double; border-width: calc(var(--border-width) * 3); }
+.g-mark.is-failed { text-decoration: line-through; }
+.google-changes { margin-top: var(--space-6); padding-top: var(--space-3); border-top: var(--line); }
+.google-change { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+.google-change-what { flex: 1 1 calc(var(--card-min-width) * 0.6); min-width: 0; }
+.google-change-state { font-size: var(--text-xs); color: var(--color-text-muted); }
+.google-change.is-clash { padding: var(--space-2); border: var(--border-width) dashed var(--color-text); border-radius: var(--radius-sm); }
+
+.google-guards { margin-top: var(--space-3); }
+.guard-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-2) 0; }
+.guard-field { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); }
+
+/* Answer bar (Calendar in depth 9), and an invitation that waits dashed for your answer, struck when you said no. */
+.answer-bar { display: inline-flex; border: var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.answer-bar .switch-button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-text); font-weight: var(--weight-bold); }
+.answer-bar .switch-button:disabled { cursor: default; }
+.cal-event.is-invitation { border-style: dashed; background: var(--color-bg); }
+.cal-event.is-declined { opacity: 0.6; text-decoration: line-through; }
+
+/* The welcome (public/welcome.js) */
+.welcome-words { padding-bottom: var(--space-3); }
+.welcome-lead { font-size: var(--text-lg); margin: 0 0 var(--space-2); }
+.welcome-ready { display: flex; align-items: center; gap: var(--space-1); }
+.welcome-steps { display: grid; gap: var(--space-2); }
+.welcome-step { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); color: inherit; text-decoration: none; }
+.welcome-step:hover { background: var(--color-surface); }
+.welcome-step-words { display: flex; flex-direction: column; gap: var(--space-1); }
+
+/* The Sovran Library key (public/settings.js) */
+.library-key { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.library-key .detail-input { flex: 1 1 240px; }
