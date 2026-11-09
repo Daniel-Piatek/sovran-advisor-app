@@ -71,7 +71,8 @@ else works the same.
 
 ## For Claude: updating it ("update Sovran Advisor")
 
-1. Stop the app if it runs (Mac: quit Sovran Advisor; Windows: close its black window).
+1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the
+   app keeps running until it is stopped). On Windows, closing its black window stops it too.
 2. In the app's folder: `git pull`, then `npm install --omit=dev`.
 3. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
    was upgraded or moved (for example by `brew upgrade node`): the icon remembers where Node.js

@@ -111,7 +111,7 @@ const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 
 export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND,
-  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000,
+  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null,
 } = {}) {
   const db = openDatabase(dataDir);
   settleAnswers(db);
@@ -1129,6 +1129,14 @@ export function startServer({
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
     }
+    // POST /api/quit {}   stops the app (npm run stop; updating needs it stopped). Only when started as the app itself.
+    if (url.pathname === '/api/quit' && onQuit) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      await readJson(req);
+      sendJson(res, 200, { stopping: true });
+      setTimeout(onQuit, 100);
+      return undefined;
+    }
     // The welcome (welcome.js): GET /api/welcome → { seen, name, assistant_ready };  PATCH /api/welcome { name?, seen? }
     // The Sovran Library (sovran-library.js): GET /api/library → { connected, key_end };  PUT /api/library { key } ('' removes it)
     if (url.pathname === '/api/library') {
@@ -1610,6 +1618,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     ...(process.env.ASSISTANT_COMMAND ? { assistantCommand: JSON.parse(process.env.ASSISTANT_COMMAND) } : {}),
     // READ_CALENDARS=off: keep other calendars as they were last read (the demo copy).
     ...(process.env.READ_CALENDARS === 'off' ? { readCalendarsEvery: 0 } : {}),
+    onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js)
   });
   console.log(`Listening on ${url}`);
   for (const signal of ['SIGINT', 'SIGTERM']) {
