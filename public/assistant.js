@@ -31,6 +31,7 @@ export const assistantApi = {
   list: () => request('GET', '/api/conversations'),
   create: () => request('POST', '/api/conversations', {}),
   get: (id) => request('GET', `/api/conversations/${id}`),
+  rename: (id, title) => request('PATCH', `/api/conversations/${id}`, { title }),
   remove: (id) => request('DELETE', `/api/conversations/${id}`),
   restore: (id) => request('POST', `/api/conversations/${id}/restore`, {}),
   stop: (id) => request('POST', `/api/conversations/${id}/stop`, {}),
@@ -207,11 +208,38 @@ export async function showAssistant(id) {
     thread.replaceChildren(...messages.map((m) => bubble(m, () => drawThread())));
     thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
-    title.textContent = conversation?.title || 'Assistant';
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
-    actions.replaceChildren(...(conversation?.messages.length ? [el('button', {
-      type: 'button', class: 'button button-quiet', onclick: () => remove(),
-    }, icon('trash'), 'Delete chat')] : []));
+    actions.replaceChildren(...(conversation?.messages.length ? [
+      el('button', { type: 'button', class: 'button button-quiet', onclick: () => startRename() }, icon('edit'), 'Rename'),
+      el('button', { type: 'button', class: 'button button-quiet', onclick: () => remove() }, icon('trash'), 'Delete chat'),
+    ] : []));
+  }
+
+  // Rename: the chat's name in the list turns into a box; Enter keeps the new name, Esc leaves it as it was.
+  function startRename() {
+    const name = list.querySelector('.chat-list-item[aria-current="page"] .chat-list-name');
+    if (!name || !conversation) return;
+    const box = el('input', { type: 'text', class: 'chat-rename', 'aria-label': 'Chat name', maxlength: 80, value: conversation.title || '' });
+    let done = false;
+    const finish = async (keep) => {
+      if (done) return;
+      done = true;
+      const wanted = box.value.trim();
+      if (keep && wanted && wanted !== conversation.title) {
+        try { conversation = { ...conversation, title: (await assistantApi.rename(conversation.id, wanted)).title }; } catch (err) { problem.textContent = err.message; }
+      }
+      drawThread();
+      drawList();
+    };
+    box.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+      if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+    });
+    box.addEventListener('blur', () => finish(true));
+    box.addEventListener('click', (event) => event.preventDefault());
+    name.replaceChildren(box);
+    box.focus();
+    box.select();
   }
 
   async function load(conversationId) {

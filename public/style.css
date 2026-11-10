@@ -3904,3 +3904,8 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
    as the columns below and their lines meet (2026-11-11, the owner's wish). */
 .cal-body { scrollbar-width: none; }
 .cal-body::-webkit-scrollbar { display: none; }
+
+/* The chosen chat is marked in Gold, not grey (2026-11-11, the owner's wish); renaming turns its name into a box. */
+.assistant-page .chat-list-item[aria-current="page"] { background: color-mix(in srgb, var(--kind-assistant) 28%, var(--color-bg)); }
+.assistant-page .chat-list-item:hover:not([aria-current="page"]) { background: color-mix(in srgb, var(--kind-assistant) 12%, var(--color-bg)); }
+.chat-rename { width: 100%; min-width: 0; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); font: inherit; }
