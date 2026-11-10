@@ -3847,11 +3847,11 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 
 /* The panels start at the very top of the screen, level with Notes, the Timeline and People (2026-11-10, the
    owner's wish): the Journal, the Inbox, My Life and the Assistant. Their layouts get the space back. */
-.page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: 0; }
+.page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page, .page.planner-page { padding-top: 0; }
 .journal-layout, .life-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12)); }
 .inbox-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
 /* The Assistant's title and New chat sit in a wide, low white bar across the top, with its section line. */
-.assistant-page .top-bar, .inbox-page .top-bar {
+.assistant-page .top-bar, .inbox-page .top-bar, .planner-page .top-bar {
   margin: 0 0 var(--space-3);
   padding: var(--space-3) var(--space-4);
   border: var(--line);
@@ -3859,7 +3859,7 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
   border-radius: var(--radius-md);
   background: var(--color-bg);
 }
-.assistant-page .top-bar-title, .inbox-page .top-bar-title { margin: 0; }
+.assistant-page .top-bar-title, .inbox-page .top-bar-title, .planner-page .top-bar-title { margin: 0; }
 .chat-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
 @media (max-width: 600px) {
   .page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: var(--space-3); }
@@ -3867,14 +3867,35 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 
 /* Notes, People and the Timeline: the title and add button over a thin grey line, like the Journal, and the
    content flush to the left of the white box (2026-11-10, the owner's wish). */
-.page.notes-page, .page.people-page, .page.timeline-page { --page-width: none; }
-.notes-page .top-bar, .people-page .top-bar, .timeline-page .top-bar {
+.page.notes-page, .page.people-page, .page.timeline-page, .page.calendar-page { --page-width: none; }
+.notes-page .top-bar, .people-page .top-bar, .timeline-page .top-bar, .calendar-page .top-bar {
   padding-bottom: var(--space-4);
   border-bottom: var(--line);
   margin-bottom: var(--space-4);
 }
 /* The Assistant: New chat's left edge level with the chat panel's. */
 .assistant-page .top-bar, .inbox-page .top-bar { display: grid; grid-template-columns: calc(var(--inbox-list-width) + var(--space-3) - var(--space-4) - var(--border-width)) auto 1fr; column-gap: 0; }
-.assistant-page .top-bar .page-add, .inbox-page .top-bar .page-add { margin-left: 0; }
+/* The Planner and My Life: the same, the button level with their right-hand panel. */
+.planner-page .top-bar { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.planner-page .top-bar > .top-bar-title { flex: 0 0 calc(var(--inbox-list-width) - var(--space-4) - var(--border-width)); }
+.life-page .top-bar { display: grid; grid-template-columns: calc(var(--life-list-width) + var(--space-3) - var(--space-4) - var(--border-width)) auto 1fr; column-gap: 0; }
+.life-overview-line { margin-left: var(--space-4); }
+@media (max-width: 600px) { .planner-page .top-bar > .top-bar-title { flex: 1 1 auto; } }
+.assistant-page .top-bar .page-add, .inbox-page .top-bar .page-add, .planner-page .top-bar .page-add { margin-left: 0; }
 /* Their title row sits as high in the white box as the Journal's (2026-11-10, the owner's wish). */
-.page.notes-page, .page.people-page, .page.timeline-page { padding: calc(var(--space-3) * 2) calc(var(--space-3) * 2) var(--space-12); }
+.page.notes-page, .page.people-page, .page.timeline-page, .page.calendar-page { padding: calc(var(--space-3) * 2) calc(var(--space-3) * 2) var(--space-12); }
+
+/* On the Planner each kind is in its own colour, lighter (2026-11-11, the owner's wish): a task in Orange, a time
+   block in the Planner's Turquoise, an event in its calendar's colour (set where it is drawn). */
+.plan-slot {
+  border: var(--line);
+  border-left: calc(var(--border-width) * 3) solid color-mix(in srgb, var(--kind-tasks) 70%, var(--color-bg));
+  background: color-mix(in srgb, var(--kind-tasks) 14%, var(--color-bg));
+}
+.plan-block {
+  border-color: color-mix(in srgb, var(--kind-planner) 80%, var(--color-bg));
+  background: color-mix(in srgb, var(--kind-planner) 14%, var(--color-bg));
+}
+.plan-block.on-grid { background: color-mix(in srgb, var(--kind-planner) 14%, var(--color-bg)); }
+.plan-block.is-drop-target { background: color-mix(in srgb, var(--kind-planner) 28%, var(--color-bg)); }
+.tray-row { border-left: calc(var(--border-width) * 3) solid color-mix(in srgb, var(--kind-tasks) 70%, var(--color-bg)); }

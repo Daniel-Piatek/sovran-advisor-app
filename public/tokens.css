@@ -32,20 +32,20 @@
   --color-warning: #8f5400;
   --color-warning-surface: #fbf1de;
   /* Calendars (time/1): each subscribed calendar's line and dot, never anything else. */
-  --cal-1: #1d8a68;  /* teal */
-  --cal-2: #c5532c;  /* coral */
-  --cal-3: #6b62c9;  /* violet */
-  --cal-4: #a36a14;  /* amber */
-  --cal-5: #b8476e;  /* rose */
-  --cal-6: #5a8a1e;  /* green */
-  /* Their pale fills (2026-10-26): behind an event's title on the Planner's day and the
-     Calendar, under its line. Never anything else. */
-  --cal-1-fill: #ddebe6;
-  --cal-2-fill: #f3e4de;
-  --cal-3-fill: #e7e6f3;
-  --cal-4-fill: #efe7db;
-  --cal-5-fill: #f1e3e7;
-  --cal-6-fill: #e5ebdd;
+  /* Calendars (2026-11-11, the owner's wish): a calendar's colour is one of the kinds' brand colours, lighter, so the
+     Calendar and the Planner sit with the rest of the app. 1 Turquoise (events), 2 Orange, 3 Violet, 4 Gold, 5 Cobalt, 6 Green. */
+  --cal-1: color-mix(in srgb, var(--kind-time) 70%, var(--color-bg));
+  --cal-2: color-mix(in srgb, var(--kind-tasks) 70%, var(--color-bg));
+  --cal-3: color-mix(in srgb, var(--kind-people) 70%, var(--color-bg));
+  --cal-4: color-mix(in srgb, var(--kind-goal) 70%, var(--color-bg));
+  --cal-5: color-mix(in srgb, var(--kind-notes) 70%, var(--color-bg));
+  --cal-6: color-mix(in srgb, var(--kind-life) 70%, var(--color-bg));
+  --cal-1-fill: color-mix(in srgb, var(--kind-time) 16%, var(--color-bg));
+  --cal-2-fill: color-mix(in srgb, var(--kind-tasks) 16%, var(--color-bg));
+  --cal-3-fill: color-mix(in srgb, var(--kind-people) 16%, var(--color-bg));
+  --cal-4-fill: color-mix(in srgb, var(--kind-goal) 16%, var(--color-bg));
+  --cal-5-fill: color-mix(in srgb, var(--kind-notes) 16%, var(--color-bg));
+  --cal-6-fill: color-mix(in srgb, var(--kind-life) 16%, var(--color-bg));
 
   /* Kinds (2026-11-09, the owner's wish): each kind of information has one brand colour, the same on every
      screen, so a note, a journal entry or a person is known by its colour wherever it shows. It is a disc
@@ -167,16 +167,4 @@
   --color-warning: #e8a33d;
   --color-warning-surface: #2b2215;
   --kind-timeline: #d4d1d1;  --kind-timeline-ink: #1f1d1d; /* Charcoal would vanish on the dark page: a light stone instead */
-  --cal-1: #4fc49c;
-  --cal-2: #ec8f6e;
-  --cal-3: #a39cf0;
-  --cal-4: #e3a547;
-  --cal-5: #e98ab0;
-  --cal-6: #93c55a;
-  --cal-1-fill: #213932;
-  --cal-2-fill: #412e29;
-  --cal-3-fill: #323143;
-  --cal-4-fill: #3f3321;
-  --cal-5-fill: #402d36;
-  --cal-6-fill: #2f3925;
 }

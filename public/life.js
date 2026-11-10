@@ -168,8 +168,8 @@ export async function showLife(id) {
   const newButton = el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => startAdding() },
     icon('plus'), 'New Key Element');
   // The overview's top line: the title, what the page holds, and the page's one accent.
-  const overviewTop = el('header', { class: 'life-overview-top' },
-    el('h1', { class: 'life-overview-title' }, 'My Life'),
+  const overviewTop = el('header', { class: 'top-bar life-overview-top' },
+    el('h1', { class: 'top-bar-title life-overview-title' }, 'My Life'),
     newButton,
     el('span', { class: 'life-overview-line' }, 'Key Elements with their Goals, Projects and Topics'));
 
@@ -179,7 +179,6 @@ export async function showLife(id) {
     const keyElements = active.filter((item) => item.kind === 'key_element');
     const homeless = active.filter((item) => item.kind !== 'key_element' && !keyElements.some((k) => k.id === item.home_id));
     main.replaceChildren(
-      overviewTop,
       ...(!items.length ? [el('p', { class: 'empty' }, 'Start with what is permanent: your health, your work, your family.')] : []),
       ...(keyElements.length ? [el('div', { class: 'life-cards' }, ...keyElements.map((keyElement) => {
         const under = active.filter((item) => item.home_id === keyElement.id).sort(byKind);
@@ -213,7 +212,7 @@ export async function showLife(id) {
 
   const deleted = takeFlash();
   const layout = el('div', { class: `life-layout${id ? ' life-layout-item' : ''}` }, list, main);
-  screen.replaceChildren(layout);
+  screen.replaceChildren(overviewTop, layout);
   if (deleted?.kind === 'life') {
     layout.after(undoBar(`“${deleted.title}” deleted.`, async () => {
       await api.restoreLifeItem(deleted.id);
