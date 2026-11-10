@@ -31,7 +31,7 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   height: 100vh;
-  padding: var(--space-6) var(--space-3);
+  padding: var(--space-8) var(--space-3); /* Capture sits a little below the panels' top edge (2026-11-10, the owner's wish) */
 }
 
 .sidebar-link {
@@ -3847,3 +3847,22 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .assistant-page .chat-list-item { border-radius: 0; border-bottom: var(--line); }
 .assistant-page .chat-list-item:first-of-type { border-top: var(--line); }
 .chat-thread[hidden] { display: none; }
+
+/* The panels start at the very top of the screen, level with Notes, the Timeline and People (2026-11-10, the
+   owner's wish): the Journal, the Inbox, My Life and the Assistant. Their layouts get the space back. */
+.page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: 0; }
+.journal-layout, .inbox-layout, .life-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12)); }
+/* The Assistant's title and New chat sit in a wide, low white bar across the top, with its section line. */
+.assistant-page .top-bar {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--line);
+  border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+.assistant-page .top-bar-title { margin: 0; }
+.chat-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
+@media (max-width: 600px) {
+  .page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: var(--space-3); }
+}
