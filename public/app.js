@@ -20,7 +20,7 @@
 // The frame around every screen (sidebar, bottom bar, moving between screens) is in
 // public/shell.js; small shared pieces are in public/ui.js.
 
-import { startRouter } from './shell.js';
+import { startRouter, loadCourse } from './shell.js';
 import { showList, showNote, showDeleted } from './notes-screens.js';
 import { showJournalDay, showEntry, showNewEntry } from './journal.js';
 import { showInbox } from './inbox.js';
@@ -40,6 +40,7 @@ import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
 
 await loadModules(); // which optional parts are on, before any screen is drawn
+loadCourse(); // the Course link's address, when it comes
 // A new install opens on the welcome, until it has been seen once.
 if (location.pathname === '/' && !(await welcomeState().catch(() => ({ seen: true }))).seen) history.replaceState({}, '', '/welcome');
 

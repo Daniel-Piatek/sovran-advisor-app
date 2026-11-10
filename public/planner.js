@@ -223,7 +223,7 @@ export async function showPlanner(dayParam) {
     ...[['day', 'Day'], ['week', 'Week'], ['quarter', 'Quarter']].map(([name, label]) => el('button', {
       type: 'button', class: 'switch-button switch-button-text', 'data-view': name, onclick: () => go(day, name),
     }, label)));
-  const planButton = el('button', { type: 'button', class: 'button button-primary', onclick: () => (view === 'week' ? togglePanel() : openPlanDay()) }, 'Plan my day');
+  const planButton = el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => (view === 'week' ? togglePanel() : openPlanDay()) }, 'Plan my day');
   async function togglePanel(open = !(panelOpen && panelKind === 'plan')) {
     panelOpen = open;
     panelKind = 'plan';
@@ -238,13 +238,13 @@ export async function showPlanner(dayParam) {
   screen.replaceChildren(
     el('header', { class: 'top-bar cal-bar' },
       el('h1', { class: 'top-bar-title' }, 'Planner'),
+      planButton,
       el('div', { class: 'cal-nav' },
         earlier,
         dayLabel,
         later,
         el('button', { type: 'button', class: 'button', onclick: () => go(today()) }, 'Today')),
       viewSwitch,
-      planButton,
       el('button', {
         type: 'button', class: 'button button-quiet', 'aria-expanded': 'false',
         onclick: (e) => { settingsPlace.hidden = !settingsPlace.hidden; e.currentTarget.setAttribute('aria-expanded', String(!settingsPlace.hidden)); drawSettings(); },

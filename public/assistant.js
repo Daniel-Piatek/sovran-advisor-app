@@ -110,7 +110,6 @@ export function cardNode(card, changed) {
     note);
 }
 
-export const EXAMPLES = ['What is on today?', 'What did I write this week?', 'What is in this folder?'];
 const STEP_NAMES = {
   Write: 'Wrote', Edit: 'Changed', MultiEdit: 'Changed', Read: 'Read', Bash: 'Ran', Glob: 'Looked for', Grep: 'Searched for', LS: 'Listed',
   WebFetch: 'Opened', WebSearch: 'Searched the web for', ToolSearch: 'Got its tools ready',
@@ -162,20 +161,23 @@ export async function showAssistant(id) {
 
   const list = el('nav', { class: 'chat-list', 'aria-label': 'Your chats' });
   const thread = el('div', { class: 'chat-thread', role: 'log', 'aria-live': 'polite', 'aria-label': 'Conversation' });
-  const input = el('textarea', { class: 'chat-input', 'aria-label': 'Message', rows: 2, placeholder: 'Ask your assistant… (Enter sends)', maxlength: 20000 });
-  const sendButton = el('button', { type: 'button', class: 'button button-primary chat-send', onclick: () => send(input.value) }, 'Send');
+  const input = el('textarea', { class: 'chat-input', 'aria-label': 'Message', rows: 2, placeholder: 'Ask your assistant', maxlength: 20000 });
+  const sendButton = el('button', { type: 'button', class: 'button chat-send', onclick: () => send(input.value) }, 'Send');
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   const undoPlace = el('div', {});
   const title = el('h1', { class: 'top-bar-title' }, 'Assistant');
   const actions = el('span', { class: 'chat-actions' });
+  // New chat is the page's one red button, beside the title as on every section's page (2026-11-10, the owner's wish).
+  const newChat = el('a', { class: 'button button-primary page-add', href: '/assistant' }, icon('plus'), 'New chat');
 
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, title, actions),
+    el('header', { class: 'top-bar' }, title, newChat, actions),
+    // Your chats on the left, the chat on the right, each a panel of its own on the grey, like the Planner.
     el('div', { class: 'chat-layout' },
+      list,
       el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, thread,
-        el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, stopButton, sendButton)), problem),
-      list),
+        el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, stopButton, sendButton)), problem)),
     undoPlace,
   );
 
@@ -194,7 +196,6 @@ export async function showAssistant(id) {
     try { chats = await assistantApi.list(); } catch { return; }
     list.replaceChildren(
       el('h2', { class: 'chat-list-title' }, 'Your chats'),
-      el('a', { class: 'button button-quiet chat-new', href: '/assistant' }, icon('plus'), 'New chat'),
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
       }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
@@ -202,11 +203,9 @@ export async function showAssistant(id) {
 
   function drawThread() {
     const messages = conversation?.messages ?? [];
-    thread.replaceChildren(...(messages.length ? messages.map((m) => bubble(m, () => drawThread())) : [
-      el('div', { class: 'chat-empty' },
-        el('p', { class: 'empty' }, 'Ask your assistant anything. Claude Code answers here, on your own Claude plan. It can search and read your notes, journal and tasks; it adds what you ask for, and any other change waits for you on a card.'),
-        el('div', { class: 'chat-examples' }, ...EXAMPLES.map((q) => el('button', { type: 'button', class: 'question-chip', onclick: () => send(q) }, q)))),
-    ]));
+    // A new chat shows only the box to ask in (2026-11-10, the owner's wish).
+    thread.replaceChildren(...messages.map((m) => bubble(m, () => drawThread())));
+    thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
     title.textContent = conversation?.title || 'Assistant';
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';

@@ -12,8 +12,6 @@ import {
   today, isDay, weekdayName, longDate, addDays, weekStart, dayNumber, monthName, dateOf, dayOf,
 } from './ui.js';
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
-import { eventsApi, noteAbout, eventLine } from './calendar.js';
-import { moduleOn } from './modules.js';
 
 // A just-added entry comes back whole (body); listed ones bring only their start (preview).
 const firstLine = (entry) => plainText(entry.preview ?? entry.body).split('\n').map((line) => line.trim()).find(Boolean) ?? '';
@@ -41,21 +39,6 @@ function journalPicker(journals, selected, onChange) {
 export const dayHref = (day, journalId) => `/journal/${day}${journalId ? `?journal=${journalId}` : ''}`;
 
 // ---- Getting to other days ----
-
-// Heptabase's week strip: the seven days of the week, Monday first, with arrows to the
-// week before and after. The day being shown is marked.
-function weekStrip(day, filter) {
-  const monday = weekStart(day);
-  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-  const link = (d) => el('a', {
-    class: 'week-day', href: dayHref(d, filter), 'aria-label': `${weekdayName(d)}, ${longDate(d)}`,
-    'aria-current': d === day ? 'date' : false, 'data-today': d === today() ? '' : false,
-  }, el('span', { class: 'week-day-name' }, weekdayName(d, 'short')), el('span', { class: 'week-day-number' }, String(dayNumber(d))));
-  return el('nav', { class: 'week-strip', 'aria-label': 'Week' },
-    el('a', { class: 'week-arrow', href: dayHref(addDays(day, -7), filter), 'aria-label': 'Week before' }, icon('left')),
-    ...days.map(link),
-    el('a', { class: 'week-arrow', href: dayHref(addDays(day, 7), filter), 'aria-label': 'Week after' }, icon('right')));
-}
 
 // The small month, like Fantastical's: a dot on every day with entries, the count for
 // the day being shown underneath, arrows for the months before and after.
@@ -100,23 +83,6 @@ function miniMonth(day, filter) {
 }
 
 // ---- A day's page ----
-
-// The day's events, on top of its page (time/1): what is fixed that day, each with Note
-// (or Open note). A click on an event opens it in the Calendar.
-function dayEvents(day) {
-  const place = el('section', { class: 'day-events', 'aria-label': 'Events' });
-  const time = (at) => new Date(`${at}:00`).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-  eventsApi.list(day, day).then((events) => {
-    if (!events.length) { place.replaceChildren(el('p', { class: 'empty' }, 'Nothing on the calendar.')); return; }
-    place.replaceChildren(...events.map((event) => el('div', { class: 'day-event' },
-      el('span', { class: 'day-event-when' }, event.all_day ? 'all day' : time(event.starts_at)),
-      el('a', {
-        class: 'day-event-title', href: `/calendar/${day}?view=day&open=${encodeURIComponent(event.id)}`, style: eventLine(event),
-      }, event.title, event.calendar ? el('span', { class: 'day-event-calendar' }, ` · ${event.calendar.name}`) : null),
-      el('button', { type: 'button', class: 'button', onclick: () => noteAbout(event) }, event.note_id ? 'Open note' : 'Note'))));
-  }).catch(() => place.replaceChildren());
-  return place;
-}
 
 export async function showJournalDay(dayInAddress) {
   const day = dayInAddress && isDay(dayInAddress) ? dayInAddress : today();
@@ -211,7 +177,7 @@ export async function showJournalDay(dayInAddress) {
 
   // New entry opens its own page, in the journal being shown (General when All is).
   const newHref = () => `/journal/new?day=${day}${filter ? `&journal=${filter}` : ''}`;
-  const newButton = el('a', { class: 'button button-primary', href: newHref() }, icon('plus'), 'New entry');
+  const newButton = el('a', { class: 'button button-primary page-add', href: newHref() }, icon('plus'), 'New entry');
   // n opens it, while not typing somewhere.
   const onKey = (event) => {
     if (event.key !== 'n' || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -241,8 +207,6 @@ export async function showJournalDay(dayInAddress) {
   async function load() {
     month = miniMonth(day, filter);
     monthPlace.replaceChildren(month.box);
-    strip.replaceChildren(weekStrip(day, filter));
-    if (todayLink) todayLink.setAttribute('href', dayHref(today(), filter));
     newButton.setAttribute('href', newHref());
     await Promise.all([
       (async () => {
@@ -258,7 +222,6 @@ export async function showJournalDay(dayInAddress) {
   }
 
   let month = miniMonth(day, filter);
-  const strip = el('div', { class: 'week-strip-place' }, weekStrip(day, filter));
   const monthPlace = el('aside', { class: 'journal-aside' }, month.box);
   // On a phone the small month waits behind a button, to leave room for the day.
   const monthToggle = el('button', {
@@ -268,23 +231,23 @@ export async function showJournalDay(dayInAddress) {
       monthToggle.setAttribute('aria-expanded', String(open));
     },
   }, icon('calendar'));
-  const todayLink = isToday ? null : el('a', { class: 'button button-quiet', href: dayHref(today(), filter) }, 'Today');
 
   const deleted = takeFlash();
   app.className = 'page page-journal';
   screen.replaceChildren(
     el('div', { class: 'journal-layout' },
       el('div', { class: 'journal-main' },
-        el('div', { class: 'journal-top' }, strip, todayLink, monthToggle),
-        // In order: the day with New entry, the day's entries (with the journal buttons),
-        // the day's calendar, and what links here, each its own section.
+        // The week's days are gone (2026-11-10, the owner's wish): the small month beside it is how to reach a day.
+        el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Journal'), newButton, monthToggle),
+        // In order, a line between each (2026-11-10, the owner's wish): Journal with New entry beside it, as on
+        // every section's page; the day; the day's entries (with the journal buttons),
+        // and what links here, each its own section.
         el('header', { class: 'day-heading' },
           el('div', { class: 'day-heading-date' },
             el('p', { class: 'day-weekday' }, isToday ? `${weekdayName(day)} · Today` : weekdayName(day)),
-            el('h1', {}, longDate(day))),
-          newButton),
+            el('h2', { class: 'day-date' }, longDate(day)))),
         el('section', { class: 'journal-section', 'aria-label': isToday ? 'Today’s entries' : 'The day’s entries' },
-          el('h2', { class: 'journal-section-title' }, isToday ? 'Today’s entries' : 'The day’s entries'),
+          // No heading over the journal tabs (2026-11-10, the owner's wish): the tabs are the section's top.
           filters,
           journalTools,
           ...(deleted?.kind === 'entry'
@@ -294,10 +257,7 @@ export async function showJournalDay(dayInAddress) {
             })]
             : []),
           list),
-        // With the Calendar section switched off (Settings › Modules), the day shows no calendar.
-        ...(moduleOn('calendar') ? [el('section', { class: 'journal-section', 'aria-label': isToday ? 'Today’s calendar' : 'The day’s calendar' },
-          el('h2', { class: 'journal-section-title' }, isToday ? 'Today’s calendar' : 'The day’s calendar'),
-          dayEvents(day))] : []),
+        // No calendar on the Journal (2026-11-10, the owner's wish): a meeting's note starts from its event in the Calendar.
         el('div', { class: 'journal-section' }, linkedFromSection('day', day))),
       monthPlace),
   );

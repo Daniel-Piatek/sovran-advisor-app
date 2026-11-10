@@ -88,7 +88,7 @@ export async function showList() {
 
   const newNote = el('button', {
     type: 'button',
-    class: 'button button-primary',
+    class: 'button button-primary page-add',
     onclick: async () => {
       newNote.disabled = true;
       try {
@@ -99,7 +99,7 @@ export async function showList() {
         content.prepend(el('p', { class: 'empty' }, "The note couldn't be made. Is the app still running?"));
       }
     },
-  }, 'New note');
+  }, icon('plus'), 'New note');
 
   // After a delete: "… deleted. Undo" brings the note straight back into the list.
   const deleted = takeFlash();
@@ -107,8 +107,9 @@ export async function showList() {
   screen.replaceChildren(
     el('header', { class: 'top-bar' },
       el('h1', { class: 'top-bar-title' }, 'Notes'),
+      newNote,
       el('label', { class: 'search' }, icon('search'), search),
-      viewSwitch, newNote),
+      viewSwitch),
     content,
     journalResults,
     ...(deleted?.kind === 'note'

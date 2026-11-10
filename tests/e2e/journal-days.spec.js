@@ -14,25 +14,19 @@ async function addEntry(app, entry) {
 }
 const week = (page) => page.getByRole('navigation', { name: 'Week' });
 const month = (page) => page.getByRole('navigation', { name: 'Month' });
-// The day's own entries: in their section, under the day's calendar.
+// The day's own entries: in their section.
 const dayRows = (page) => page.locator('.journal-main .journal-section > .entry-list .entry-row');
 
-test('the week strip shows the week, marks the day, and goes to another day', async ({ page, app }) => {
+test('there is no week strip; the small month takes you to another day and back to today', async ({ page, app, isMobile }) => {
   await addEntry(app, { day: yesterday, body: 'Yesterday I wrote this' });
   await page.goto(`${app.url}/journal`);
-  await expect(week(page).locator('.week-day')).toHaveCount(7);
-  await expect(week(page).locator('.week-day[aria-current="date"]')).toHaveCount(1);
-  await expect(week(page).locator('.week-day[aria-current="date"]')).toHaveAttribute('data-today', '');
-
-  await page.goto(`${app.url}/journal/${yesterday}`);
+  await expect(week(page)).toHaveCount(0);
+  if (isMobile) await page.getByRole('button', { name: 'Show the month' }).click();
+  await month(page).locator(`.mini-day[href="/journal/${yesterday}"]`).first().click();
   await expect(dayRows(page).locator('.entry-row-line')).toHaveText(['Yesterday I wrote this']);
-  await page.getByRole('link', { name: 'Today', exact: true }).click();
+  if (isMobile) await page.getByRole('button', { name: 'Show the month' }).click();
+  await month(page).locator('.mini-day[data-today]').click();
   await expect(page.locator('.day-weekday')).toContainText('Today');
-
-  await week(page).getByRole('link', { name: 'Week before' }).click();
-  await expect(page).toHaveURL(new RegExp(`/journal/${shift(-7)}$`));
-  await week(page).getByRole('link', { name: 'Week after' }).click();
-  await expect(page).toHaveURL(new RegExp(`/journal/${today}$`));
 });
 
 test('the small month: a dot on days with entries, the count, and any day opens', async ({ page, app, isMobile }) => {
@@ -66,7 +60,7 @@ test('the small month moves between months', async ({ page, app, isMobile }) => 
   await expect(name).toHaveText(october);
 });
 
-test('the day page, in order: the date with New entry, its entries with the journal buttons, the day’s calendar, Linked from; no Earlier', async ({ page, app }) => {
+test('the day page, in order: Journal with New entry, the date, its entries with the journal buttons, Linked from (no calendar); no Earlier', async ({ page, app }) => {
   const health = await (await fetch(`${app.url}/api/journals`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Health"}',
   })).json();
@@ -75,18 +69,18 @@ test('the day page, in order: the date with New entry, its entries with the jour
   await addEntry(app, { day: today, journal_id: health.id, body: 'Slept well' });
   await fetch(`${app.url}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Gym', starts_at: `${today}T07:00`, ends_at: `${today}T08:00` }) });
   await page.goto(`${app.url}/journal`);
-  const order = ['heading', 'entries', 'calendar', 'linked'];
+  const order = ['title', 'heading', 'entries', 'linked'];
   const tops = {
+    title: page.locator('.top-bar'),
     heading: page.locator('.day-heading'),
     entries: page.getByRole('region', { name: 'Today’s entries' }),
-    calendar: page.getByRole('region', { name: 'Today’s calendar' }),
     linked: page.getByRole('heading', { name: 'Linked from' }),
   };
   const y = [];
   for (const key of order) y.push((await tops[key].boundingBox()).y);
   expect([...y].sort((a, b) => a - b)).toEqual(y);
-  await expect(tops.heading.getByRole('link', { name: 'New entry' })).toBeVisible();
-  await expect(tops.calendar).toContainText('Gym');
+  await expect(tops.title.getByRole('link', { name: 'New entry' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Today’s calendar' })).toHaveCount(0);
   await expect(tops.entries.getByRole('group', { name: 'Journals' })).toBeVisible();
   await expect(dayRows(page).locator('.entry-row-line')).toHaveText(['Today', 'Slept well']);
   await expect(page.getByRole('region', { name: 'Earlier' })).toHaveCount(0);

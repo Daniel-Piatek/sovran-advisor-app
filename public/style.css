@@ -91,13 +91,13 @@ body {
 
 /* The Planner and the Journal: each column is a panel of its own, on the grey. */
 /* The grey around the panels is their gap, so the page needs no sides of its own. */
-.page.planner-page, .page.page-journal { padding: var(--space-8) 0 var(--space-12); border: 0; background: transparent; }
+.page.planner-page, .page.page-journal, .page.assistant-page { padding: var(--space-8) 0 var(--space-12); border: 0; background: transparent; }
 
 /* The Planner, My Life, the Journal and Tasks fill the whole width beside the sidebar,
    however large the screen (2026-10-27, the owner's wish): no empty grey on both sides. */
-.page.planner-page, .page.page-journal, .page.tasks-page { --page-width: none; }
+.page.planner-page, .page.page-journal, .page.tasks-page, .page.assistant-page { --page-width: none; }
 
-.tray, .plan-board, .journal-main, .journal-aside, .life-list, .life-main, .inbox-list-panel, .inbox-current {
+.tray, .plan-board, .journal-main, .journal-aside, .life-list, .life-main, .inbox-list-panel, .inbox-current, .assistant-page .chat-list, .assistant-page .chat-pane {
   padding: var(--space-3);
   border: var(--line);
   border-radius: var(--radius-md);
@@ -247,7 +247,11 @@ h1 {
   margin-bottom: var(--space-6);
 }
 
-.top-bar-title { flex: 1; margin: 0; }
+.top-bar-title { flex: none; margin: 0; }
+/* A page's add button (New note, New entry, New chat…) sits just right of the title, the same place on every
+   section's page (2026-11-10, the owner's wish); the rest of the bar keeps to the right. */
+.page-add { flex: none; margin-left: calc(var(--space-12) + var(--space-8)); } /* well apart from the title (2026-11-10, the owner's wish) */
+.top-bar > .top-bar-title + :not(.page-add), .top-bar > .page-add + * { margin-left: auto; }
 
 .switch {
   display: flex;
@@ -611,7 +615,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
    (A media query can't read a variable, so the phone width is written here.) */
 @media (max-width: 600px) {
   .page { min-height: 0; margin: 0; padding-top: var(--space-6); border: 0; border-radius: 0; }
-  .page.planner-page, .page.page-journal { padding: var(--space-3) var(--space-2) var(--space-6); }
+  .page.planner-page, .page.page-journal, .page.assistant-page { padding: var(--space-3) var(--space-2) var(--space-6); }
   .journal-main { padding: var(--space-4); }
   .note-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .top-bar { flex-wrap: wrap; }
@@ -649,7 +653,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   color: var(--color-text-muted);
 }
 
-.day-heading h1 { margin: 0; }
+.day-heading .day-date { margin: 0; font-family: var(--font-heading); font-size: var(--text-xl); font-weight: var(--weight-regular); }
 
 .entry-list { margin-bottom: var(--space-4); }
 
@@ -685,6 +689,8 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
 
 /* Journals: the filter above the entries, and a journal's name as a tag on an entry. */
 .journal-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+/* The journal tabs: low, for the eye to pass over (2026-11-10, the owner's wish). */
+.journal-filters .chip { padding: 0 var(--space-3); line-height: 1.6; }
 
 .chip {
   padding: var(--space-1) var(--space-3);
@@ -751,15 +757,9 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   min-height: calc(100vh - var(--space-3) * 2 - var(--space-8) - var(--space-12));
 }
 
-.journal-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-6); }
-
-.week-strip-place { flex: 1; min-width: 0; }
-
 .month-toggle { display: none; }
 
-/* Heptabase's week strip. */
-.week-strip { display: flex; align-items: center; gap: var(--space-1); }
-
+/* The small month's arrows. */
 .week-arrow {
   display: inline-flex;
   align-items: center;
@@ -773,31 +773,6 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
 }
 
 .week-arrow:hover { color: var(--color-text); }
-
-.week-day {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border: var(--line);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  white-space: nowrap;
-}
-
-.week-day:hover { color: var(--color-text); }
-
-.week-day[data-today] { color: var(--color-text); font-weight: var(--weight-bold); }
-
-.week-day[aria-current="date"] {
-  border-color: var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-weight: var(--weight-bold);
-}
 
 /* The small month: a dot under every day with entries. */
 .mini-month {
@@ -859,8 +834,6 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   .journal-aside { display: none; position: static; order: -1; margin-bottom: var(--space-4); }
   .journal-aside.is-open { display: block; }
   .month-toggle { display: inline-flex; }
-  .week-strip { gap: 0; }
-  .week-day { flex-direction: column; align-items: center; gap: 0; padding: var(--space-1) 0; font-size: var(--text-xs); }
 }
 
 .search-journal { margin-top: var(--space-8); }
@@ -2138,30 +2111,7 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 /* ---- The Calendar (public/calendar.js) ---- */
 
-/* The day's events on its journal page. */
-.day-events:not(:empty) { margin: 0 0 var(--space-4); border-top: var(--line); }
-
-.day-event { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: var(--line); font-size: var(--text-sm); }
-
-.day-event-when { flex: none; width: var(--entry-when-width); color: var(--color-text-muted); font-size: var(--text-xs); }
-
-.day-event-title {
-  flex: 1;
-  min-width: 0;
-  padding-left: var(--space-2);
-  border-left: calc(var(--border-width) * 3) solid var(--color-text);
-  color: inherit;
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.day-event-title:hover { text-decoration: underline; }
-
-.day-event-calendar { color: var(--color-text-muted); }
-
-.day-event .button { flex: none; padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+.day-event-calendar { color: var(--color-text-muted); } /* the Planner's event line */
 
 .event-notes { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-3); }
 
@@ -2731,7 +2681,8 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 /* ---- The assistant (public/assistant.js) ---- */
 
-.chat-layout { display: grid; grid-template-columns: minmax(0, var(--page-max-width)) var(--inbox-list-width); gap: var(--space-8); align-items: start; }
+.chat-layout { display: grid; grid-template-columns: var(--inbox-list-width) minmax(0, 1fr); gap: var(--space-3); align-items: stretch;
+  min-height: calc(100vh - var(--space-3) * 2 - var(--space-8) - var(--space-12) - var(--space-12)); }
 
 .chat-pane { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 
@@ -2783,10 +2734,6 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .chat-buttons { display: flex; gap: var(--space-1); }
 
-.chat-empty { display: flex; flex-direction: column; gap: var(--space-3); }
-
-.chat-examples { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-
 .question-chip { padding: var(--space-1) var(--space-3); border: var(--line); border-radius: calc(var(--radius-md) * 2); background: none; font: inherit; font-size: var(--text-sm); color: var(--color-text); cursor: pointer; }
 
 .question-chip:hover { background: var(--color-surface); }
@@ -2794,8 +2741,6 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 .chat-list { display: flex; flex-direction: column; gap: var(--space-1); }
 
 .chat-list-title { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
-
-.chat-new { align-self: flex-start; margin-bottom: var(--space-2); }
 
 .chat-list-item { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--color-text); text-decoration: none; font-size: var(--text-sm); }
 
@@ -3808,7 +3753,7 @@ button.mic-pill:hover { color: var(--color-text); }
 /* My Life's three levels (2026-11-09, the owner's wish: not all green). A Goal is Gold, the crown you reach for;
    a Project is Orange, the Tasks' colour, since a project is where its tasks live; a Topic is Cobalt, the Notes'
    colour, since a topic is knowledge you keep, not an outcome. */
-.icon[data-icon="goal"] { --kind: var(--kind-journal); --kind-ink: var(--kind-journal-ink); }
+.icon[data-icon="goal"] { --kind: var(--kind-goal); --kind-ink: var(--kind-goal-ink); }
 .icon[data-icon="project"] { --kind: var(--kind-tasks); --kind-ink: var(--kind-tasks-ink); }
 .icon[data-icon="topic"] { --kind: var(--kind-notes); --kind-ink: var(--kind-notes-ink); }
 .icon[data-icon="assistant"] { --kind: var(--kind-assistant); --kind-ink: var(--kind-assistant-ink); }
@@ -3829,9 +3774,10 @@ html[data-section="timeline"] { --section: var(--kind-timeline); }
 html[data-section="key_element"] { --section: var(--kind-life); }
 html[data-section="assistant"] { --section: var(--kind-assistant); }
 html[data-section] .page { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
-html[data-section] .page.planner-page, html[data-section] .page.page-journal { border-top: 0; }
+html[data-section] .page.planner-page, html[data-section] .page.page-journal, html[data-section] .page.assistant-page { border-top: 0; }
 html[data-section] .page.planner-page .tray, html[data-section] .page.planner-page .plan-board,
-html[data-section] .journal-main, html[data-section] .journal-aside, html[data-section] .life-list, html[data-section] .life-main { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
+html[data-section] .journal-main, html[data-section] .journal-aside, html[data-section] .life-list, html[data-section] .life-main,
+html[data-section] .assistant-page .chat-list, html[data-section] .assistant-page .chat-pane { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
 /* A person's or a company's face is the People colour too: its ring. */
 .face { border-color: var(--kind-people); }
 
@@ -3879,3 +3825,25 @@ html[data-section] .journal-main, html[data-section] .journal-aside, html[data-s
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* A page's title is in its section's colour (2026-11-10, the owner's wish): the Planner's in its light Turquoise,
+   the Calendar's in Turquoise, the Journal's in Yellow. Inbox, Settings and Library keep the text colour. */
+html[data-section]:not([data-section=""]) { --page-title-color: var(--section); }
+.top-bar-title, .life-overview-title { color: var(--page-title-color); }
+/* On a phone My Life's list and page are no panels, so they have no line on top either. */
+@media (max-width: 600px) {
+  html[data-section] .life-list, html[data-section] .life-main { border-top: 0; }
+}
+
+/* The Journal's panel, top to bottom with a line between each (2026-11-10, the owner's wish):
+   Journal and New entry, the week's days, the day, then the day's entries. */
+.journal-main > .top-bar { margin-bottom: var(--space-4); }
+.journal-main > .day-heading { margin-bottom: 0; padding: var(--space-4) 0; border-top: var(--line); }
+.journal-main > .day-heading + .journal-section { margin-top: 0; }
+
+/* The Assistant's chats: a thin line between each, no more room than before. */
+.assistant-page .chat-list { gap: 0; }
+.assistant-page .chat-list-title { margin-bottom: var(--space-2); }
+.assistant-page .chat-list-item { border-radius: 0; border-bottom: var(--line); }
+.assistant-page .chat-list-item:first-of-type { border-top: var(--line); }
+.chat-thread[hidden] { display: none; }
