@@ -3868,7 +3868,7 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 /* Notes, People and the Timeline: the title and add button over a thin grey line, like the Journal, and the
    content flush to the left of the white box (2026-11-10, the owner's wish). */
 .page.notes-page, .page.people-page, .page.timeline-page { --page-width: none; }
-.notes-page > .top-bar, .people-page > .top-bar, .timeline-page > .top-bar {
+.notes-page .top-bar, .people-page .top-bar, .timeline-page .top-bar {
   padding-bottom: var(--space-4);
   border-bottom: var(--line);
   margin-bottom: var(--space-4);
@@ -3876,3 +3876,5 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 /* The Assistant: New chat's left edge level with the chat panel's. */
 .assistant-page .top-bar, .inbox-page .top-bar { display: grid; grid-template-columns: calc(var(--inbox-list-width) + var(--space-3) - var(--space-4) - var(--border-width)) auto 1fr; column-gap: 0; }
 .assistant-page .top-bar .page-add, .inbox-page .top-bar .page-add { margin-left: 0; }
+/* Their title row sits as high in the white box as the Journal's (2026-11-10, the owner's wish). */
+.page.notes-page, .page.people-page, .page.timeline-page { padding: calc(var(--space-3) * 2) calc(var(--space-3) * 2) var(--space-12); }
