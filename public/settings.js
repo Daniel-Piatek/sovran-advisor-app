@@ -5,7 +5,7 @@
 // changed and every step it took, asked for or was refused.
 
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
-import { app, screen } from './shell.js';
+import { app, screen, loadCourse } from './shell.js';
 import { listedModules, switchModule, moduleOn } from './modules.js';
 import { googleSection, googleCalendarSection } from './google.js';
 import { readTimings, BUDGET_MS } from './timings.js';
@@ -201,6 +201,31 @@ function librarySection() {
     status);
 }
 
+// The course page (course.js): the address the Course link opens. The app may come with one; another can be
+// set here, and clearing it goes back to the app's own (if it has none, the link goes).
+function courseSection() {
+  const status = el('p', { class: 'empty', role: 'status' });
+  const input = el('input', { type: 'text', class: 'detail-input', 'aria-label': 'Course page address', placeholder: 'https://…', autocomplete: 'off' });
+  const reset = el('button', { type: 'button', class: 'button button-quiet', hidden: true }, 'Use the app’s own');
+  const show = (state) => {
+    input.value = state.url;
+    status.textContent = state.url ? 'The Course link in the sidebar opens this page.' : 'No course page yet: the Course link shows once there is one.';
+    reset.hidden = !state.own;
+    loadCourse();
+  };
+  const save = async (url) => {
+    try { show(await request('PUT', '/api/course', { url })); } catch (err) { status.textContent = err.message; }
+  };
+  reset.addEventListener('click', () => save(''));
+  request('GET', '/api/course').then(show).catch(() => { status.textContent = "The course page's address couldn't be loaded."; });
+  return el('section', { class: 'settings-part', 'aria-label': 'Course' },
+    el('h2', { class: 'settings-title' }, 'Course'),
+    el('p', { class: 'empty' }, 'The page online for your course: the session replays, the homework and your questions.'),
+    el('form', { class: 'library-key', onsubmit: (event) => { event.preventDefault(); save(input.value); } },
+      input, el('button', { type: 'submit', class: 'button' }, 'Save'), reset),
+    status);
+}
+
 export async function showSettings() {
   document.title = 'Settings';
   app.className = 'page';
@@ -270,6 +295,7 @@ export async function showSettings() {
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
     librarySection(),
+    ...(moduleOn('course') ? [courseSection()] : []),
     el('section', { class: 'settings-part', 'aria-label': 'Your assistant' },
       el('h2', { class: 'settings-title' }, 'What your assistant may do alone'),
       el('p', { class: 'empty' }, 'Does it alone: it happens when you ask for it. Asks first: it waits for your yes on a card in the chat.'),

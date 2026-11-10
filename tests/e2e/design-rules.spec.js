@@ -73,7 +73,7 @@ const screens = [
     const res = await fetch(`${app.url}/api/life`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"kind":"project","title":"Spring plan"}' });
     return `/life/${(await res.json()).id}`;
   } },
-  { name: 'the Assistant', ready: '.chat-examples', open: async () => '/assistant' },
+  { name: 'the Assistant', ready: '.chat-input', open: async () => '/assistant' },
   { name: 'Settings', ready: '.permission-row', open: async () => '/settings' },
   { name: 'the Library', ready: '.lib-swatch', open: async () => '/library' },
   { name: 'a conversation', ready: '.chat-bubble[data-state="done"]', open: async (app) => {

@@ -34,6 +34,11 @@ export const MODULES = [
     starter: false,
   },
   {
+    id: 'course',
+    label: 'Course',
+    description: 'A Course link in the sidebar: your course’s own page online, with the session replays, the homework and your questions. It opens in your browser.',
+  },
+  {
     id: 'people-plus',
     label: 'People in depth',
     description: 'Type @ for a person or @@ for a company in any text, a task’s words too. Their page lists every place you named them.',

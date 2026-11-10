@@ -1,7 +1,7 @@
 // The frame around every screen: the sidebar (Notes, Journal), the bottom bar with the
 // Light/Dark switch, and moving between screens without reloading.
 
-import { el, icon, api } from './ui.js';
+import { el, icon, api, request } from './ui.js';
 import { openCapture, whenCaptured } from './capture.js';
 import { forgetPageNames } from './editor.js';
 import { moduleOn, onModulesChanged } from './modules.js';
@@ -26,6 +26,8 @@ const sections = [
   { name: 'My Life', module: 'life', href: '/life', icon: 'key_element', more: true, owns: (path) => /^\/life(\/|$)/.test(path) },
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
   { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
+  // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
+  { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
   { name: 'Settings', href: '/settings', icon: 'settings', more: true, owns: (path) => path === '/settings' },
   { name: 'Library', href: '/library', icon: 'grid', more: true, owns: (path) => path === '/library' },
 ];
@@ -44,8 +46,18 @@ const sectionOf = (name) => sections.find((s) => s.name === name);
 function showModuleSections() {
   for (const link of [...sectionLinks, ...moreMenu.querySelectorAll('.more-link')]) {
     const module = sectionOf(link.dataset.section)?.module;
-    if (module) link.hidden = !moduleOn(module);
+    if (module) link.hidden = !moduleOn(module) || (sectionOf(link.dataset.section)?.external && !courseUrl);
   }
+}
+// The Course link's address comes from the app (GET /api/course); Settings tells the sidebar when it changes.
+let courseUrl = '';
+export async function loadCourse() {
+  try { courseUrl = (await request('GET', '/api/course')).url || ''; } catch { courseUrl = ''; }
+  for (const link of document.querySelectorAll('[data-section="Course"]')) {
+    if (courseUrl) Object.assign(link, { href: courseUrl, target: '_blank', rel: 'noopener' });
+    else { link.setAttribute('href', '#'); link.removeAttribute('target'); link.removeAttribute('rel'); }
+  }
+  showModuleSections();
 }
 onModulesChanged(showModuleSections);
 const moreButton = el('button', {

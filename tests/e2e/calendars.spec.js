@@ -78,41 +78,7 @@ test.describe('a bad link', () => {
   });
 });
 
-test('today’s journal shows its meetings; Note starts a note that links to the event', async ({ page, app }, testInfo) => {
-  const today = localDay();
-  await fetch(`${app.url}/api/calendars`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: testInfo.icsUrl }) });
-  await fetch(`${app.url}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Dentist', starts_at: `${today}T15:00`, ends_at: `${today}T16:00` }) });
-  await page.goto(`${app.url}/journal`);
-  const events = page.getByRole('region', { name: 'Events' });
-  await expect(events.locator('.day-event-title')).toHaveText(['Offsite · Work', 'Team meeting · Work', 'Dentist']);
-  await expect(events.locator('.day-event-when').first()).toHaveText('all day');
-
-  await events.locator('.day-event', { hasText: 'Team meeting' }).getByRole('button', { name: 'Note' }).click();
-  await expect(page).toHaveURL(/\/notes\/[0-9a-f-]{36}$/);
-  await expect(page.getByLabel('Title')).toHaveValue(/^Team meeting · /);
-  const link = page.getByRole('textbox', { name: 'Text', exact: true }).locator('.page-link');
-  await expect(link).toContainText('Team meeting');
-  await expect(link.locator('.page-link-kind')).toHaveText('◷');
-  await page.getByRole('textbox', { name: 'Text', exact: true }).press('End');
-  await page.keyboard.type('Agreed the dates.');
-  await expect(page.getByRole('status')).toHaveText('Saved');
-
-  // The link opens the event in the Calendar, which lists the note.
-  await link.click();
-  await expect(page).toHaveURL(new RegExp(`/calendar/${today}\\?view=day`));
-  const dialog = page.getByRole('dialog', { name: 'Event' });
-  await expect(dialog).toContainText('Team meeting');
-  await expect(dialog.getByRole('region', { name: 'Notes about it' }).locator('.linked-from-row')).toContainText('Agreed the dates.');
-  await expect(dialog.getByRole('button', { name: 'Open note' })).toBeVisible();
-  await dialog.getByRole('button', { name: 'Close' }).click();
-
-  // Back on the day, the meeting has its note: a second click opens the same one.
-  await page.goto(`${app.url}/journal`);
-  await events.locator('.day-event', { hasText: 'Team meeting' }).getByRole('button', { name: 'Open note' }).click();
-  await expect(page.getByRole('textbox', { name: 'Text', exact: true })).toContainText('Agreed the dates.');
-  expect((await (await fetch(`${app.url}/api/notes`)).json()).length).toBe(1);
-});
-
+// The Journal no longer lists the day's meetings (2026-11-10, the owner's wish); a meeting's note starts from its event.
 test('your own event’s dialog starts a note too', async ({ page, app }) => {
   const today = localDay();
   await fetch(`${app.url}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Call with Jonas', starts_at: `${today}T11:00`, ends_at: `${today}T11:30` }) });

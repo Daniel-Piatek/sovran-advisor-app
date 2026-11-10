@@ -17,7 +17,8 @@ async function openAssistant(page, app, info) {
 
 test('ask what is in this folder: the question on the right, the answer streams in on the left', async ({ page, app }, info) => {
   await openAssistant(page, app, info);
-  await page.getByRole('button', { name: 'What is in this folder?' }).click();
+  await page.getByRole('textbox', { name: 'Message' }).fill('What is in this folder?');
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
   await expect(bubbles(page, 'user')).toHaveText(['What is in this folder?']);
   await expect(bubbles(page, 'assistant')).toContainText('This folder is empty so far.');
   await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'done');
@@ -78,7 +79,8 @@ test('Stop ends the answer and keeps what came; then you can ask again', async (
 
 test('a chat deleted comes back with Undo', async ({ page, app }) => {
   await page.goto(`${app.url}/assistant`);
-  await page.getByRole('button', { name: 'What is on today?' }).click();
+  await page.getByRole('textbox', { name: 'Message' }).fill('What is on today?');
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
   await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'done');
   await page.getByRole('button', { name: 'Delete chat' }).click();
   await expect(page.getByRole('navigation', { name: 'Your chats' })).toContainText('No chats yet.');

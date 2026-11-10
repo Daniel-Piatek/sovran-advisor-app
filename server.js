@@ -78,6 +78,7 @@ import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
 import { startBackups } from './backup.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
+import { getCourse, setCourseUrl } from './course.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
@@ -1140,6 +1141,12 @@ export function startServer({
     }
     // The welcome (welcome.js): GET /api/welcome → { seen, name, assistant_ready };  PATCH /api/welcome { name?, seen? }
     // The Sovran Library (sovran-library.js): GET /api/library → { connected, key_end };  PUT /api/library { key } ('' removes it)
+    // The course page (course.js): GET /api/course → { url, own };  PUT /api/course { url } ('' goes back to the app's own)
+    if (url.pathname === '/api/course') {
+      if (req.method === 'GET') return sendJson(res, 200, getCourse(db));
+      if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, setCourseUrl(db, ((await readJson(req)) ?? {}).url)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
     if (url.pathname === '/api/library') {
       if (req.method === 'GET') return sendJson(res, 200, getLibrary(db));
       if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });

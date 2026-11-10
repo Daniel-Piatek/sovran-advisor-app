@@ -19,7 +19,7 @@ const emptyDb = () => prepareDatabase(new DatabaseSync(':memory:'));
 
 test('People in depth is on until it is switched off, and the switch is kept', () => {
   const db = emptyDb();
-  assert.deepEqual(listModules(db).map((m) => [m.id, m.label, m.on]), [['tasks', 'Tasks', false], ['planner', 'Planner', false], ['calendar', 'Calendar', false], ['life', 'My Life', false], ['people-plus', 'People in depth', true], ['voice', 'Dictation', false], ['tasks-plus', 'Tasks in depth', true], ['calendar-links', 'Calendar links', true], ['calendar-plus', 'Calendar in depth', true], ['calendar-google', 'Google Calendar', false], ['writing', 'Writing and thinking', true]]);
+  assert.deepEqual(listModules(db).map((m) => [m.id, m.label, m.on]), [['tasks', 'Tasks', false], ['planner', 'Planner', false], ['calendar', 'Calendar', false], ['life', 'My Life', false], ['course', 'Course', true], ['people-plus', 'People in depth', true], ['voice', 'Dictation', false], ['tasks-plus', 'Tasks in depth', true], ['calendar-links', 'Calendar links', true], ['calendar-plus', 'Calendar in depth', true], ['calendar-google', 'Google Calendar', false], ['writing', 'Writing and thinking', true]]);
   setModule(db, 'people-plus', false);
   assert.equal(moduleOn(db, 'people-plus'), false);
   setModule(db, 'people-plus', true);
@@ -106,7 +106,7 @@ test('the modules API', async (t) => {
   const send = (method, url, body) => fetch(app.url + url, {
     method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body),
   });
-  assert.deepEqual((await (await fetch(`${app.url}/api/modules`)).json()).map((m) => [m.id, m.on]), [['tasks', false], ['planner', false], ['calendar', false], ['life', false], ['people-plus', true], ['voice', false], ['tasks-plus', true], ['calendar-links', true], ['calendar-plus', true], ['calendar-google', false], ['writing', true]]);
+  assert.deepEqual((await (await fetch(`${app.url}/api/modules`)).json()).map((m) => [m.id, m.on]), [['tasks', false], ['planner', false], ['calendar', false], ['life', false], ['course', true], ['people-plus', true], ['voice', false], ['tasks-plus', true], ['calendar-links', true], ['calendar-plus', true], ['calendar-google', false], ['writing', true]]);
   for (const bad of [{}, { id: 'people-plus' }, { id: 'people-plus', on: 'no' }, { id: 'no-such-module', on: true }]) {
     assert.equal((await send('PATCH', '/api/modules', bad)).status, 400, JSON.stringify(bad));
   }

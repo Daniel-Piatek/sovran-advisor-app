@@ -171,6 +171,8 @@ const icons = {
   mic: svg('<rect x="6" y="1.5" width="4" height="8" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5M5.5 14.5h5"/>'),
   log: svg('<path d="M3 4.5h10M3 8h10M3 11.5h6"/>'),
   timeline: svg('<path d="M4.5 2v12"/><circle cx="4.5" cy="4.5" r="1.6"/><circle cx="4.5" cy="11.5" r="1.6"/><path d="M8.5 4.5h5M8.5 11.5h5"/>'),
+  // A mortarboard: the course (course.js).
+  course: svg('<path d="M1.5 6L8 3l6.5 3L8 9z"/><path d="M4.5 7.4v3.4c1 .9 2.2 1.4 3.5 1.4s2.5-.5 3.5-1.4V7.4M14.5 6v3.5"/>'),
   more: svg('<circle cx="3.5" cy="8" r="1"/><circle cx="8" cy="8" r="1"/><circle cx="12.5" cy="8" r="1"/>'),
   bell: svg('<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1.2 1.5H2.8zM6.5 14.5h3"/>'),
   repeat: svg('<path d="M2.5 7V6a2.5 2.5 0 0 1 2.5-2.5h8M11 1.5l2 2-2 2M13.5 9v1a2.5 2.5 0 0 1-2.5 2.5H3M5 14.5l-2-2 2-2"/>'),
@@ -212,7 +214,8 @@ const discs = {
   goal: disc('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'),
   project: disc('<path d="M9 17.5V6.8M9 7.2h7l-1.6 2.4L16 12H9"/>'),
   topic: disc('<path d="M10.6 7l-1.2 10M14.6 7l-1.2 10M7.6 10h9M7.2 14h9"/>'),
-  assistant: disc('<path d="M7 8.2h10v6.4h-5.4L9 17v-2.4H7z"/>'),
+  // A small robot's face (2026-11-10, the owner's wish): its antenna, a rounded head, two eyes and a mouth.
+  assistant: disc('<path d="M12 5.6v2"/><rect x="7" y="7.6" width="10" height="8.6" rx="2.2"/><path d="M10 11.2v.6M14 11.2v.6M10.2 14h3.6"/>'),
 };
 
 export function icon(name) {

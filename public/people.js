@@ -65,8 +65,8 @@ export async function showPeople(kind = 'person') {
       el('span', { class: 'capture-hint' }, 'Enter adds · Esc cancels'), message);
     name.focus();
   }
-  const newButton = el('button', { type: 'button', class: 'button button-primary', onclick: startAdding },
-    isPeople ? 'New person' : 'New company');
+  const newButton = el('button', { type: 'button', class: 'button button-primary page-add', onclick: startAdding },
+    icon('plus'), isPeople ? 'New person' : 'New company');
 
   // n adds one, while not typing somewhere.
   const onKey = (event) => {
@@ -79,7 +79,7 @@ export async function showPeople(kind = 'person') {
   onLeave(() => document.removeEventListener('keydown', onKey));
 
   const deleted = takeFlash();
-  app.className = 'page page-wide';
+  app.className = 'page page-wide people-page';
   // With People in depth on, the people who are due come first: Reconnect.
   const reconnectPlace = el('div', {});
   const duplicatesPlace = el('div', {});
@@ -90,9 +90,9 @@ export async function showPeople(kind = 'person') {
   screen.replaceChildren(
     el('header', { class: 'top-bar' },
       el('h1', { class: 'top-bar-title' }, isPeople ? 'People' : 'Companies'),
+      newButton,
       el('label', { class: 'search' }, icon('search'), search),
-      ...(isPeople && moduleOn('people-plus') ? [el('button', { type: 'button', class: 'button', onclick: () => openImport({ onDone: () => navigate('/people', { replace: true }) }) }, 'Import')] : []),
-      newButton),
+      ...(isPeople && moduleOn('people-plus') ? [el('button', { type: 'button', class: 'button', onclick: () => openImport({ onDone: () => navigate('/people', { replace: true }) }) }, 'Import')] : [])),
     tabs,
     adding,
     duplicatesPlace,

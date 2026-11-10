@@ -572,7 +572,7 @@ test('Overview, in the list\'s heading, opens the overview from an item\'s page 
   const work = await send(app, 'POST', '/api/life', { kind: 'key_element', title: 'Work' });
   await page.goto(`${app.url}/life/${work.id}`);
   const overview = page.getByRole('link', { name: 'Overview', exact: true });
-  await expect(page.locator('.life-list-title')).toHaveText('My Life');
+  await expect(page.locator('.life-list-title')).toHaveCount(0); // the name is on the page beside, not over the list (2026-11-10)
   await expect(overview).not.toHaveAttribute('aria-current', 'page');
   await overview.click();
   await expect(page).toHaveURL(`${app.url}/life`);
@@ -603,7 +603,8 @@ test('on a large screen the list and the page are two panels on the grey; on a p
       for (const panel of [listLook, mainLook]) expect(panel.border).toBe('0px');
       expect(await look('.page')).toMatchObject({ background: await colour('--color-bg') });
     } else {
-      for (const panel of [listLook, mainLook]) expect(panel).toEqual({ border: '1px', radius: await page.evaluate(() => { const p = document.createElement('i'); p.style.borderRadius = 'var(--radius-md)'; document.body.append(p); const r = getComputedStyle(p).borderTopLeftRadius; p.remove(); return r; }), background: await colour('--color-bg') });
+      // Each panel wears the section's line along its top (2026-11-09).
+      for (const panel of [listLook, mainLook]) expect(panel).toEqual({ border: '3px', radius: await page.evaluate(() => { const p = document.createElement('i'); p.style.borderRadius = 'var(--radius-md)'; document.body.append(p); const r = getComputedStyle(p).borderTopLeftRadius; p.remove(); return r; }), background: await colour('--color-bg') });
       // No outer panel: the screen itself has no border and no fill, the grey of the frame shows between the panels.
       expect(await look('.page')).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)' });
       const [a, b] = await Promise.all([page.locator('.life-list').boundingBox(), page.locator('.life-main').boundingBox()]);

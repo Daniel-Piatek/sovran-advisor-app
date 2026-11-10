@@ -148,7 +148,7 @@ export async function showLife(id) {
   // On /life the Overview button shows as current; on an item's page it opens the overview.
   const overview = el('a', { class: 'button button-quiet life-overview', href: '/life', 'aria-current': id ? false : 'page' }, 'Overview');
   const list = el('nav', { class: 'life-list', 'aria-label': 'My Life' },
-    el('div', { class: 'life-list-top' }, el('h2', { class: 'life-list-title' }, 'My Life'), overview),
+    el('div', { class: 'life-list-top' }, overview),
     el('label', { class: 'search' }, icon('search'), filterInput, el('kbd', { class: 'sidebar-key' }, '/')),
     tree, addKey, adding, ...groups.map((g) => g.section));
 
@@ -165,13 +165,13 @@ export async function showLife(id) {
   // ---- The right side: the Life cards, or one item ----
 
   const main = el('div', { class: 'life-main' });
-  const newButton = el('button', { type: 'button', class: 'button button-primary', onclick: () => startAdding() },
-    'New Key Element');
+  const newButton = el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => startAdding() },
+    icon('plus'), 'New Key Element');
   // The overview's top line: the title, what the page holds, and the page's one accent.
-  const overviewTop = el('header', { class: 'life-overview-top' },
-    el('h1', { class: 'life-overview-title' }, 'My Life'),
-    el('span', { class: 'life-overview-line' }, 'Key Elements with their Goals, Projects and Topics'),
-    newButton);
+  const overviewTop = el('header', { class: 'top-bar life-overview-top' },
+    el('h1', { class: 'top-bar-title life-overview-title' }, 'My Life'),
+    newButton,
+    el('span', { class: 'life-overview-line' }, 'Key Elements with their Goals, Projects and Topics'));
 
   function drawMain() {
     if (open) return;
@@ -179,7 +179,6 @@ export async function showLife(id) {
     const keyElements = active.filter((item) => item.kind === 'key_element');
     const homeless = active.filter((item) => item.kind !== 'key_element' && !keyElements.some((k) => k.id === item.home_id));
     main.replaceChildren(
-      overviewTop,
       ...(!items.length ? [el('p', { class: 'empty' }, 'Start with what is permanent: your health, your work, your family.')] : []),
       ...(keyElements.length ? [el('div', { class: 'life-cards' }, ...keyElements.map((keyElement) => {
         const under = active.filter((item) => item.home_id === keyElement.id).sort(byKind);
@@ -213,7 +212,7 @@ export async function showLife(id) {
 
   const deleted = takeFlash();
   const layout = el('div', { class: `life-layout${id ? ' life-layout-item' : ''}` }, list, main);
-  screen.replaceChildren(layout);
+  screen.replaceChildren(overviewTop, layout);
   if (deleted?.kind === 'life') {
     layout.after(undoBar(`“${deleted.title}” deleted.`, async () => {
       await api.restoreLifeItem(deleted.id);

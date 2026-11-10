@@ -6,6 +6,10 @@ test('a new install opens on the welcome; a first step opens its page and the we
   await expect(page).toHaveURL(/\/welcome$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome to Sovran Advisor');
   await expect(page.getByText('Your trusty companion on your Sovran Quest journey.')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Your name' })).toHaveAttribute('placeholder', 'Type your name here.');
+  // One first step only, and nothing after it (2026-11-10, the owner's wish).
+  await expect(page.locator('.welcome-step')).toHaveCount(1);
+  await expect(page.getByText('More when you want it')).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Your name' }).fill('Ana');
   await expect(page.getByRole('region', { name: 'What to call you' }).getByRole('status')).toHaveText('Saved.');
   await page.getByRole('link', { name: /Write your first journal entry/ }).click();

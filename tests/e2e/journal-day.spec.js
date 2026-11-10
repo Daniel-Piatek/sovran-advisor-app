@@ -8,22 +8,26 @@ const rows = (page) => page.locator('.entry-list .entry-row');
 const text = (page) => page.getByLabel('Text');
 const entriesOf = async (app, day = localDay()) => (await fetch(`${app.url}/api/entries?day=${day}`)).json();
 
-test('the journal opens on today: New entry beside the date, then the entries, then the calendar', async ({ page, app }) => {
+test('the journal opens on today: Journal on top with New entry beside it, then the date, the entries; no calendar', async ({ page, app }) => {
   await page.goto(app.url);
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'Journal' }).click();
   const heading = page.getByRole('heading', { level: 1 });
-  await expect(heading).toHaveText(
+  await expect(heading).toHaveText('Journal');
+  await expect(page.locator('.day-date')).toHaveText(
     await page.evaluate(() => new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })));
   await expect(page.locator('.day-weekday')).toContainText('Today');
   await expect(page.getByText('Nothing written today yet.')).toBeVisible();
-  // There is no write box any more: New entry sits on the date's line.
+  // There is no write box: New entry sits on the title's line.
   await expect(page.locator('.journal-main .ProseMirror')).toHaveCount(0);
   const button = page.getByRole('link', { name: 'New entry' });
   const box = async (l) => l.evaluate((n) => { const r = n.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
   const [h, b] = [await box(heading), await box(button)];
   expect(b.top).toBeLessThan(h.bottom);
   expect(b.bottom).toBeGreaterThan(h.top);
-  await expect(page.locator('.journal-main .journal-section')).toHaveText([/Today’s entries/, /Today’s calendar/, /Linked from/]);
+  await expect(page.locator('.journal-main .journal-section')).toHaveCount(2);
+  await expect(page.getByRole('heading', { name: 'Today’s entries' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Today’s entries' }).getByRole('group', { name: 'Journals' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Today’s calendar' })).toHaveCount(0);
 });
 
 test('New entry opens a page like a note’s; what is written there is an entry of the day', async ({ page, app }) => {
@@ -127,7 +131,7 @@ test('...and when the page is reloaded', async ({ page, app }) => {
 
 test('any day has its own page, and a new entry from there is on that day', async ({ page, app }) => {
   await page.goto(`${app.url}/journal/2026-10-20`);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+  await expect(page.locator('.day-date')).toHaveText(
     await page.evaluate(() => new Date(2026, 9, 20).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })));
   await expect(page.locator('.day-weekday')).not.toContainText('Today');
   await expect(page.getByText('Nothing written on this day.')).toBeVisible();
