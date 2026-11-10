@@ -2947,12 +2947,10 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .tray-row[data-checked="true"] .tray-words { color: var(--color-text-muted); text-decoration: line-through; }
 
-/* A long task's few words: a click opens the whole text (public/planner.js). */
-.task-short { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
+/* A task's title wherever it shows on the Planner: a click opens the task pop-up (public/task-modal.js). */
+.task-open { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
 
-.task-short:hover { text-decoration: underline; }
-
-.task-short[aria-expanded="true"] { white-space: normal; }
+.task-open:hover { text-decoration: underline; }
 
 /* The Journal day's sections: its entries, the day's calendar, Linked from. */
 .journal-section { margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--line); }
@@ -3931,3 +3929,22 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .task-modal-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
 .task-modal-foot .home-chip, .task-modal-foot > :first-child { margin-right: auto; }
 .task-modal .task-capture { margin-top: var(--space-3); }
+
+/* The chats column: "Chats" with its small Rename and Delete beside it (2026-11-11, the owner's wish). */
+.chat-list-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.chat-list-head .chat-list-title { margin: 0; }
+.chat-list-head .chat-actions { display: inline-flex; gap: var(--space-1); }
+.chat-list-head .button { padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+/* The task pop-up's date row, and the Keys pop-up. */
+.task-modal-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+
+.task-modal-date { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+.keys-modal { width: min(30rem, calc(100vw - var(--space-6))); }
+
+.keys-list { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: var(--space-3) 0; }
+
+.keys-list dt, .keys-list dd { margin: 0; }
+
+.keys-modal:not([open]) { display: none; }

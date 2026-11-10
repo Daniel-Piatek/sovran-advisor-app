@@ -71,7 +71,6 @@ test('switched off, q does nothing and the marks go; every task stays; switched 
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('q');
   await expect(box(page)).toHaveCount(0);
-  await expect(page.getByLabel('Add a task')).not.toBeFocused();
   expect((await allTasks(app)).length).toBe(1);
 
   await page.goto(`${app.url}/settings`);
@@ -80,7 +79,7 @@ test('switched off, q does nothing and the marks go; every task stays; switched 
   await page.goto(`${app.url}/tasks`);
   await expect(marks(page)).toHaveText(['Speedy · 5 min']);
   await page.keyboard.press('q');
-  await expect(page.getByLabel('Add a task')).toBeFocused();
+  await expect(box(page).getByRole('textbox', { name: 'Add a task' })).toBeFocused();
 });
 
 test('the Library shows the Speedy mark', async ({ page, app }) => {
@@ -250,10 +249,10 @@ test('keys never act inside a text field, and Esc clears the selection', async (
   await post(app, { text: 'one', due: today() });
   await post(app, { text: 'two', due: today() });
   await page.goto(`${app.url}/tasks`);
-  await page.getByLabel('Add a task').fill('');
-  await page.getByLabel('Add a task').focus();
+  await page.getByLabel('Search tasks').focus();
   await page.keyboard.type('jjxxee');
-  await expect(page.getByLabel('Add a task')).toHaveValue('jjxxee');
+  await expect(page.getByLabel('Search tasks')).toHaveValue('jjxxee');
+  await page.getByLabel('Search tasks').fill('');
   await expect(page.locator('.task-selection')).toBeHidden();
   await page.keyboard.press('Escape');
   await page.locator('body').click({ position: { x: 5, y: 5 } });

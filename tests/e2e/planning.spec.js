@@ -31,7 +31,8 @@ test('star a task and make it today’s Highlight: it is at the top; pick anothe
 
 test('* in the add bar makes a Weekly Goal; the sixth gets a word, never a stop', async ({ page, app }) => {
   await page.goto(`${app.url}/tasks`);
-  const bar = page.getByLabel('Add a task');
+  await page.keyboard.press('q');
+  const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.fill('write the offer * fri');
   await expect(page.locator('.quick-chips > *')).toContainText(['★ Weekly Goal']);
   await page.keyboard.press('Enter');

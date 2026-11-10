@@ -387,7 +387,7 @@ test('three captures sorted to empty: one a task on tomorrow, one a note, one go
   await expect(row).toContainText('Book the train to Hamburg');
   await row.locator('.task-words').click();
   await expect(page.locator('.task-capture')).toContainText('From the Inbox, captured');
-  await expect(page.getByLabel('The task’s words')).toHaveValue(/Book the train to Hamburg tomorrow/); // its words are its title; the pop-up does not repeat them
+  await expect(page.getByLabel('The task’s words')).toHaveValue('Book the train to Hamburg'); // its words are its title; the pop-up does not repeat the capture
 });
 
 test('T starts the task at the capture\'s home, and the home goes on the task', async ({ page, app }) => {

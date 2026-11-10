@@ -96,7 +96,7 @@ test('a chat can be renamed; the top bar stays "Assistant" and the chosen chat i
   await expect(bubbles(page, 'assistant')).toContainText('You said:');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
   await expect(page.locator('.chat-list-item[aria-current="page"]')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Rename' }).click();
+  await page.getByRole('button', { name: 'Rename chat' }).click();
   await page.getByRole('textbox', { name: 'Chat name' }).fill('Workshop plan');
   await page.getByRole('textbox', { name: 'Chat name' }).press('Enter');
   await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();

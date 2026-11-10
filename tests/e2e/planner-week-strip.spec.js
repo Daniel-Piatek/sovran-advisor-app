@@ -80,15 +80,11 @@ test('Plan my day: what is still free, tick what belongs, Put them in the day; C
   expect(mine.find((t) => t.text === 'Sort the attic').due).toBe('');
 });
 
-test('a long task shows its few words in Tasks to place; a click opens the whole text, another folds it', async ({ page, app }) => {
+test('a long task shows its few words in Tasks to place; a click opens it in the pop-up with the whole title', async ({ page, app }) => {
   const long = 'Have to figure out how to iterate this thing so that I duplicate it as the changes come in';
   await post(app, '/api/tasks', { text: long });
   await expect.poll(async () => (await tasks(app)).find((t) => t.text === long).short_text, { timeout: 10_000 }).toBe('Have to figure');
   await page.goto(`${app.url}/planner`);
-  const words = toPlace(page).getByRole('list', { name: 'No date' }).getByRole('button', { name: 'Have to figure' });
-  await expect(words).toHaveAttribute('aria-expanded', 'false');
-  await words.click();
-  await expect(toPlace(page).getByRole('list', { name: 'No date' }).locator('.task-short')).toHaveText(long);
-  await toPlace(page).getByRole('list', { name: 'No date' }).locator('.task-short').click();
-  await expect(toPlace(page).getByRole('list', { name: 'No date' }).locator('.task-short')).toHaveText('Have to figure');
+  await toPlace(page).getByRole('list', { name: 'No date' }).getByRole('button', { name: 'Have to figure' }).click();
+  await expect(page.getByRole('dialog', { name: 'Task' }).getByLabel('The task’s words')).toHaveValue(long);
 });

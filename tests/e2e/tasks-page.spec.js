@@ -294,6 +294,7 @@ test('the keys t and m still move the selected task', async ({ page, app }) => {
   await page.goto(`${app.url}/tasks?view=today`);
   await page.locator('.task-row', { hasText: 'by key' }).locator('.task-words').click();
   await page.getByRole('button', { name: 'Close' }).click(); // focus is on the row again
+  await expect(page.locator('.task-row', { hasText: 'by key' })).toBeFocused();
   await page.keyboard.press('m');
   await expect.poll(async () => (await taskNamed(app, 'by key')).due).toBe(inDays(1));
   await page.goto(`${app.url}/tasks?view=upcoming`);
@@ -391,6 +392,7 @@ test('the Home… picker keeps the strip open: typing, Escape and a pick inside 
   await expect(strip).toHaveCount(1);
   await picker.getByLabel('Find a home').press('Enter'); // Enter picks, does not close
   await expect(strip).toHaveCount(1);
-  await expect.poll(async () => (await taskNamed(app, 'task with a home to pick')).home?.id).toBe(pricing.id);
   await expect(strip.locator('.home-name')).toHaveText('Pricing');
+  await strip.getByRole('button', { name: 'Close' }).click(); // saved as it closes
+  await expect.poll(async () => (await taskNamed(app, 'task with a home to pick')).home?.id).toBe(pricing.id);
 });

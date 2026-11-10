@@ -47,7 +47,7 @@ function checkbox(id, text, done, onToggle) {
 
 // ---- The Order: the day as one list, anchors and gaps ----
 
-export function orderView(column, { onToggle = null, onPin = null } = {}) {
+export function orderView(column, { onToggle = null, onPin = null, onOpen = null } = {}) {
   const { order, words } = column;
   return el('div', { class: 'order-day', role: 'list', 'aria-label': 'The day in order' },
     ...order.sequence.map((part) => {
@@ -69,7 +69,7 @@ export function orderView(column, { onToggle = null, onPin = null } = {}) {
       }
       const gap = part.gap;
       return el('div', { class: 'order-gap', role: 'listitem', 'data-over': String(gap.over > 0) },
-        ...gap.items.map((item) => taskBlock(item, words.get(item.id), { rowed: true, onToggle, onPin })),
+        ...gap.items.map((item) => taskBlock(item, words.get(item.id), { rowed: true, onToggle, onPin, onOpen })),
         gap.over > 0
           ? el('p', { class: 'order-gap-state plan-warning' }, `Over by ${length(gap.over)}`, el('span', {}, ` · ${length(gap.length)} between ${gap.after ? 'the ' : ''}${timeLabel(gap.from)} and ${timeLabel(gap.to)}`))
           : el('p', { class: 'order-gap-state' }, gap.items.length ? `Free ${length(gap.free)}` : `Free ${length(gap.length)}`, el('span', {}, ` · ${timeLabel(gap.from)}–${timeLabel(gap.to)}`)));
@@ -78,14 +78,14 @@ export function orderView(column, { onToggle = null, onPin = null } = {}) {
 
 // ---- The Task block: a task as tall as its estimate, dashed because a task can move ----
 
-export function taskBlock(item, info = { text: 'A task', done: false }, { rowed = false, hourPx = 0, from = 0, onToggle = null, onPin = null } = {}) {
+export function taskBlock(item, info = { text: 'A task', done: false }, { rowed = false, hourPx = 0, from = 0, onToggle = null, onPin = null, onOpen = null } = {}) {
   const squeezed = item.shown < item.minutes;
   const node = el('div', {
     class: `task-block${info.done ? ' is-done' : ''}${rowed ? ' is-row' : ''}${squeezed ? ' is-squeezed' : ''}${info.routine ? ' is-routine' : ''}`,
     'data-task': item.id, title: squeezed ? `${info.text}: ${length(item.minutes)}, shown shorter because its gap is over` : `${info.text}: ${length(item.minutes)}`,
   },
     ...(onToggle ? [checkbox(item.id, info.text, info.done, onToggle)] : [icon('task')]),
-    el('span', { class: 'task-block-text' }, info.text),
+    onOpen ? el('button', { type: 'button', class: 'task-block-text task-open', title: info.text, onclick: (e) => { e.stopPropagation(); onOpen(item.id); } }, info.text) : el('span', { class: 'task-block-text' }, info.text),
     el('span', { class: 'task-block-minutes' }, length(item.minutes)),
     ...(onPin && !info.done ? [el('button', { type: 'button', class: 'button button-quiet task-block-pin', 'aria-label': `Pin ${info.text} to a time`, onclick: () => onPin(item.id) }, 'Pin to a time')] : []));
   if (hourPx) node.style.cssText = `top: ${((item.at - from) / 60) * hourPx}px; height: ${Math.max(((item.shown) / 60) * hourPx - 2, 14)}px;`;
@@ -113,7 +113,7 @@ function lanesOf(items) {
 
 const gridHourPx = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-hour-height')) || 40;
 
-export function hourGrid(columns, { hourPx = gridHourPx(), label = (c) => c.day, onDrop = null, onPin = null } = {}) {
+export function hourGrid(columns, { hourPx = gridHourPx(), label = (c) => c.day, onDrop = null, onPin = null, onOpen = null } = {}) {
   const from = Math.min(...columns.map((c) => c.from));
   const to = Math.max(...columns.map((c) => c.to));
   const height = ((to - from) / 60) * hourPx;
@@ -135,7 +135,7 @@ export function hourGrid(columns, { hourPx = gridHourPx(), label = (c) => c.day,
           style: `${a.line ?? ''} ${a.fill ?? ''} top: ${((a.start - from) / 60) * hourPx}px; height: ${Math.max(((a.end - a.start) / 60) * hourPx - 2, 14)}px; left: calc(100% * ${a.lane} / ${a.lanes}); width: calc(100% / ${a.lanes} - var(--space-1));`,
         }, ...(a.kind === 'pin' ? [icon('pin')] : []), el('span', { class: 'grid-event-title' }, a.google ? gMark(a.sync) : null, a.title))),
         ...c.order.gaps.flatMap((gap) => gap.items.map((item) => {
-          const block = taskBlock(item, c.words.get(item.id), { hourPx, from });
+          const block = taskBlock(item, c.words.get(item.id), { hourPx, from, onOpen });
           if (onDrop) {
             block.draggable = true;
             block.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/x-task', item.id); e.dataTransfer.effectAllowed = 'move'; block.classList.add('is-dragging'); });

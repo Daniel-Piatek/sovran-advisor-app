@@ -173,7 +173,7 @@ export async function showAssistant(id) {
   const newChat = el('a', { class: 'button button-primary page-add', href: '/assistant' }, icon('plus'), 'New chat');
 
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, title, newChat, actions),
+    el('header', { class: 'top-bar' }, title, newChat),
     // Your chats on the left, the chat on the right, each a panel of its own on the grey, like the Planner.
     el('div', { class: 'chat-layout' },
       list,
@@ -196,7 +196,7 @@ export async function showAssistant(id) {
     let chats = [];
     try { chats = await assistantApi.list(); } catch { return; }
     list.replaceChildren(
-      el('h2', { class: 'chat-list-title' }, 'Your chats'),
+      el('div', { class: 'chat-list-head' }, el('h2', { class: 'chat-list-title' }, 'Chats'), actions),
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
       }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
@@ -210,8 +210,8 @@ export async function showAssistant(id) {
     thread.scrollTop = thread.scrollHeight;
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
     actions.replaceChildren(...(conversation?.messages.length ? [
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => startRename() }, icon('edit'), 'Rename'),
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => remove() }, icon('trash'), 'Delete chat'),
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Rename chat', onclick: () => startRename() }, 'Rename'),
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Delete chat', onclick: () => remove() }, 'Delete'),
     ] : []));
   }
 
