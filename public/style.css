@@ -3899,3 +3899,8 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .plan-block.on-grid { background: color-mix(in srgb, var(--kind-planner) 14%, var(--color-bg)); }
 .plan-block.is-drop-target { background: color-mix(in srgb, var(--kind-planner) 28%, var(--color-bg)); }
 .tray-row { border-left: calc(var(--border-width) * 3) solid color-mix(in srgb, var(--kind-tasks) 70%, var(--color-bg)); }
+
+/* The hours scroll without a bar of their own, so the day columns above (the names, the whole-day row) are as wide
+   as the columns below and their lines meet (2026-11-11, the owner's wish). */
+.cal-body { scrollbar-width: none; }
+.cal-body::-webkit-scrollbar { display: none; }
