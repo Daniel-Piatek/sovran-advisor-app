@@ -13,6 +13,12 @@ your mentor changes theirs: by asking Claude.
    - "Switch the Planner on."
 3. Claude explains what it will do, makes the change, checks it, and tells you when to look.
 
+**Not sure how to start?** Ask the assistant inside Sovran Advisor, for example "I'd like the
+journal to look different, how do I do that?". It can't change the app itself (it only works
+with your notes, and the app is running while you talk to it), but it helps you put your wish
+into words, shows you how to open Claude Code in the right folder, and gives you the sentence
+to paste there.
+
 Your notes, journal and people are never part of a change. They live in the `data` folder, and
 Claude leaves that folder alone.
 
