@@ -408,8 +408,8 @@ async function entryPage({ status, actions, back }, entry, { files = null } = {}
   if (entry.id) {
     showTaskAt(editor);
   } else {
-    // A new entry starts with the cursor in its text, ready to write.
-    editor.focus();
+    // A new entry starts with the cursor in its title, as a new note does (2026-11-11, the owner's wish); Enter goes on to the text.
+    title.field.focus();
     if (files?.length) addFiles(editor, files);
   }
 }
