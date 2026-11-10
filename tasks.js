@@ -36,6 +36,7 @@ const SOURCES = {
 const FLAGS = ['', 'must', 'like'];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export const MAX_TASK_LENGTH = 1_000;
+export const MAX_DETAILS_LENGTH = 20_000;
 
 // Every task line in a text, in order: its line number, done, due, estimate and words.
 export function extractTasks(markdown) {
@@ -122,7 +123,7 @@ export function listTasks(db, { done, home, id } = {}) {
     ...(id ? ['t.id = $id'] : []),
   ];
   const rows = db.prepare(`SELECT t.id, t.text, t.done, t.due, t.done_at, t.source_kind, t.source_id, t.position, t.line,
-      t.flag, t.estimate, t.repeat, t.repeat_from, t.mail_thread_id, t.home_id AS own_home_id, t.plan_part, t.plan_at, t.pin_at, t.pin_minutes, t.template_id, t.short_text, t.block_id, t.goal_week, t.due_moves, t.created_at, t.updated_at,
+      t.flag, t.estimate, t.repeat, t.repeat_from, t.mail_thread_id, t.home_id AS own_home_id, t.plan_part, t.plan_at, t.pin_at, t.pin_minutes, t.template_id, t.short_text, t.details, t.block_id, t.goal_week, t.due_moves, t.created_at, t.updated_at,
       n.title AS note_title, e.title AS entry_title, e.day AS entry_day, p.name AS person_name, c.name AS company_name,
       h.id AS home_id, h.title AS home_title, h.kind AS home_kind,
       cap.id AS capture_id, cap.body AS capture_body, cap.captured_at AS captured_at,
@@ -144,7 +145,7 @@ export function listTasks(db, { done, home, id } = {}) {
     return {
       id: row.id, text: row.text, done: row.done === 1, due: row.due, done_at: row.done_at, position: row.position,
       line: row.line, flag: row.flag, estimate: row.estimate, repeat: row.repeat, repeat_from: row.repeat_from, mail_thread_id: row.mail_thread_id, own_home_id: row.own_home_id,
-      plan_part: row.plan_part, plan_at: row.plan_at, pin_at: row.pin_at, pin_minutes: row.pin_minutes, template_id: row.template_id, short_text: row.short_text, block_id: row.block_id, goal_week: row.goal_week, due_moves: row.due_moves,
+      plan_part: row.plan_part, plan_at: row.plan_at, pin_at: row.pin_at, pin_minutes: row.pin_minutes, template_id: row.template_id, short_text: row.short_text, details: row.details, block_id: row.block_id, goal_week: row.goal_week, due_moves: row.due_moves,
       created_at: row.created_at, updated_at: row.updated_at,
       home: row.home_id ? { id: row.home_id, title: row.home_title, kind: row.home_kind } : null,
       reminder: reminderId ? { id: reminderId, at } : null,
@@ -202,6 +203,7 @@ export function checkTaskInput(input, { creating = false } = {}) {
     if (typeof input.text !== 'string' || !input.text.trim()) return 'A task needs words.';
     if (input.text.length > MAX_TASK_LENGTH) return `text is longer than ${MAX_TASK_LENGTH} characters.`;
   }
+  if ('details' in input && (typeof input.details !== 'string' || input.details.length > MAX_DETAILS_LENGTH)) return `details is words, at most ${MAX_DETAILS_LENGTH} characters.`;
   if ('done' in input && typeof input.done !== 'boolean') return 'done is true or false.';
   if ('due' in input && !(input.due === '' || input.due === 'someday' || (typeof input.due === 'string' && DAY.test(input.due)))) {
     return 'due is a date (YYYY-MM-DD), someday, or empty.';
@@ -259,7 +261,7 @@ const inTransaction = (db, work) => {
 export const createTask = (db, task) => inTransaction(db, () => insertTask(db, task));
 
 // The same, inside a change already under way (sorting a capture).
-export function insertTask(db, { text, due = '', flag = '', estimate = null, repeat = '', home_id = null, remind_time, origin = 'typed', capture_id = null, goal_week = '', mentions = [], repeat_from = null, mail_thread_id = null }) {
+export function insertTask(db, { text, details = '', due = '', flag = '', estimate = null, repeat = '', home_id = null, remind_time, origin = 'typed', capture_id = null, goal_week = '', mentions = [], repeat_from = null, mail_thread_id = null }) {
   {
     checkHome(db, home_id);
     const rule = repeat ? parseRepeat(repeat) : '';
@@ -269,6 +271,7 @@ export function insertTask(db, { text, due = '', flag = '', estimate = null, rep
     db.prepare(`INSERT INTO tasks (id, created_at, updated_at, origin, source_kind, source_id, position, line, text, due, flag, estimate, repeat, home_id, capture_id, repeat_from)
       VALUES (?, ?, ?, ?, 'own', '', 0, 0, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(id, time, time, origin, text.trim(), day, flag, estimate, rule, home_id || null, capture_id, repeat_from);
+    if (details) db.prepare('UPDATE tasks SET details = ? WHERE id = ?').run(details, id);
     if (remind_time) addReminder(db, id, `${DAY.test(day) ? day : localDay()}T${remind_time}`);
     if (goal_week) db.prepare('UPDATE tasks SET goal_week = ? WHERE id = ?').run(goal_week, id);
     if (mail_thread_id) db.prepare('UPDATE tasks SET mail_thread_id = ? WHERE id = ?').run(String(mail_thread_id), id);
@@ -286,6 +289,7 @@ export function changeTask(db, id, changes) {
     const task = getTask(db, id);
     if (!task) return null;
     const { done, due, estimate } = changes;
+    if ('details' in changes) db.prepare('UPDATE tasks SET details = ?, updated_at = ? WHERE id = ?').run(changes.details, now(), id);
     if ('home_id' in changes) checkHome(db, changes.home_id);
     // Where it sits in its day (the Planner). A block belongs to one day: a task put in a
     // block takes that day, and a task moved to another day leaves its block.

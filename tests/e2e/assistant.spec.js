@@ -87,3 +87,20 @@ test('a chat deleted comes back with Undo', async ({ page, app }) => {
   await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
   await expect(bubbles(page, 'user')).toHaveText(['What is on today?']);
 });
+
+test('a chat can be renamed; the top bar stays "Assistant" and the chosen chat is marked', async ({ page, app }) => {
+  await page.goto(`${app.url}/assistant`);
+  const input = page.getByRole('textbox', { name: 'Message' });
+  await input.fill('A very long first question that would have filled the whole top of the page if it were the title');
+  await input.press('Enter');
+  await expect(bubbles(page, 'assistant')).toContainText('You said:');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
+  await expect(page.locator('.chat-list-item[aria-current="page"]')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Rename' }).click();
+  await page.getByRole('textbox', { name: 'Chat name' }).fill('Workshop plan');
+  await page.getByRole('textbox', { name: 'Chat name' }).press('Enter');
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
+});

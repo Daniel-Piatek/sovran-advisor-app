@@ -3909,3 +3909,25 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .assistant-page .chat-list-item[aria-current="page"] { background: color-mix(in srgb, var(--kind-assistant) 28%, var(--color-bg)); }
 .assistant-page .chat-list-item:hover:not([aria-current="page"]) { background: color-mix(in srgb, var(--kind-assistant) 12%, var(--color-bg)); }
 .chat-rename { width: 100%; min-width: 0; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); font: inherit; }
+
+/* An opened task is a pop-up (2026-11-11, the owner's wish): a Title, its Details, its Home, Delete and Done. */
+.task-edit.task-modal {
+  display: block;
+  position: fixed;
+  width: min(40rem, calc(100vw - var(--space-6)));
+  max-height: calc(100vh - var(--space-12));
+  overflow: auto;
+  padding: var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.task-edit.task-modal:not([open]) { display: none; }
+.task-modal::backdrop { background: color-mix(in srgb, var(--color-text) 35%, transparent); }
+.task-modal-label { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-3); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+.task-modal .task-edit-words, .task-modal .task-edit-details { width: 100%; font-size: var(--text-base); font-weight: var(--weight-regular); color: var(--color-text); }
+.task-modal .task-edit-details { min-height: calc(var(--space-12) * 2.5); resize: vertical; font-family: inherit; }
+.task-modal-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.task-modal-foot .home-chip, .task-modal-foot > :first-child { margin-right: auto; }
+.task-modal .task-capture { margin-top: var(--space-3); }

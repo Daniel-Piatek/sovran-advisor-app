@@ -164,6 +164,7 @@ export async function showTasks() {
   let stripClose = null;      // closes the open strip, keeping its words
   let draft = null;           // the words typed in the open strip, kept through a redraw
   let openedFor = null;       // the task whose strip has had the cursor already
+  let draftDetails = null;    // { id, value }: the details typed in the open pop-up, kept across a redraw
   let focusWords = false;     // a strip was just opened: its words get the cursor
   let hadCursor = false;      // the words had the cursor when the page was redrawn
   const taskOf = (id) => tasks.find((t) => t.id === id) ?? done.find((t) => t.id === id);
@@ -311,12 +312,21 @@ export async function showTasks() {
     const own = task.source.kind === 'own';
     const draftHere = () => (draft?.id === task.id ? draft.value : task.text);
     let closing = null;
+    // The details: the task's own words, apart from its title; only this pop-up shows them.
+    const detailsBox = el('textarea', {
+      class: 'detail-input task-edit-details', 'aria-label': 'Details', rows: 7, maxlength: 20000, placeholder: 'Details, if the title needs more words.',
+      oninput: () => { draftDetails = { id: task.id, value: detailsBox.value }; },
+    }, draftDetails?.id === task.id ? draftDetails.value : (task.details ?? ''));
     const close = ({ refocus = true } = {}) => {
       closing ??= (async () => {
         const typed = words.value?.trim();
         if (own && typed && typed !== task.text) {
           try { Object.assign(task, await api.changeTask(task.id, { text: typed, mentions: mention.mentions() })); } catch (err) { failed(err); closing = null; return; }
         }
+        if (detailsBox.value !== (task.details ?? '')) {
+          try { Object.assign(task, await api.changeTask(task.id, { details: detailsBox.value })); } catch (err) { failed(err); closing = null; return; }
+        }
+        draftDetails = null;
         editClose();
         editing = null;
         draft = null;
@@ -355,19 +365,26 @@ export async function showTasks() {
         undoPlace.replaceChildren(undoBar(`“${task.text}” deleted.`, async () => { await api.restoreTask(task.id); await load(); }));
       },
     }, icon('trash'), 'Delete') : null;
-    const strip = el('div', {
-      class: 'task-edit',
-      // Enter and Escape in the strip close it, but not inside the home picker, which keeps them.
+    const strip = el('dialog', {
+      class: 'task-edit task-modal', 'aria-label': 'Task',
+      // Enter and Escape close it, but not inside the home picker (which keeps them) nor in the details (where Enter is a new line).
       onkeydown: (event) => {
-        if (event.target.closest('.home-picker, button, a')) return;
+        if (event.target.closest('.home-picker, button, a, textarea')) { if (event.key === 'Escape' && !event.target.closest('.home-picker')) { event.preventDefault(); close(); } return; }
         if (event.key === 'Escape' || (event.key === 'Enter' && (!own || words.value.trim()))) { event.preventDefault(); close(); }
       },
-    }, words, home.element, remove,
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => close() }, 'Close'),
-      // Where it came from, when it was made from a capture in the Inbox.
-      task.capture ? el('p', { class: 'task-capture' },
-        el('span', { class: 'task-capture-when' }, `From the Inbox, captured ${new Date(task.capture.captured_at).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`),
-        el('span', {}, task.capture.body)) : null);
+      oncancel: (event) => { event.preventDefault(); close(); },
+      onclick: (event) => { // a click on the dimmed page around it, not on the pop-up itself
+        const box = strip.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
+      },
+    },
+    el('label', { class: 'task-modal-label' }, 'Title', words),
+    el('label', { class: 'task-modal-label' }, 'Details', detailsBox),
+    el('div', { class: 'task-modal-foot' }, home.element, remove, el('button', { type: 'button', class: 'button', onclick: () => close() }, 'Close')),
+    // Where it came from, when it was made from a capture in the Inbox (its words are the title already).
+    task.capture ? el('p', { class: 'task-capture' },
+      el('span', { class: 'task-capture-when' }, `From the Inbox, captured ${new Date(task.capture.captured_at).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`)) : null);
+    setTimeout(() => { if (strip.isConnected && !strip.open) strip.showModal(); });
     if (openedFor !== task.id) { // newly opened: the cursor goes to its words (once the page is drawn)
       openedFor = task.id;
       focusWords = own;
