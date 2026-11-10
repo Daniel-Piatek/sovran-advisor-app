@@ -326,7 +326,12 @@ export async function showNote(id) {
   }
 
   // A new, empty note starts with the title ready to type in.
-  if (!note.title && !note.body) title.field.focus();
+  if (!note.title && !note.body) {
+    title.field.focus();
+    // The New note button may still hold the focus as the page changes: take it back once the page has settled.
+    requestAnimationFrame(() => { if (!document.activeElement || ['BODY', 'BUTTON', 'A'].includes(document.activeElement.tagName)) title.field.focus(); });
+    setTimeout(() => { if (!document.activeElement || ['BODY', 'BUTTON', 'A'].includes(document.activeElement.tagName)) title.field.focus(); }, 150);
+  }
 }
 
 // ---- Recently deleted ----
