@@ -68,8 +68,8 @@ export async function showInbox() {
   let editing = false;
   let watching = null; // the capture whose suggestion is being waited for
 
-  const heading = el('h1', { class: 'inbox-list-title' }, 'Inbox');
-  const captureButton = el('button', { type: 'button', class: 'button button-primary', onclick: () => openCapture() },
+  const heading = el('h1', { class: 'top-bar-title' }, 'Inbox');
+  const captureButton = el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => openCapture() },
     icon('plus'), 'Capture');
   const list = el('nav', { class: 'inbox-list', 'aria-label': 'Waiting' });
   // Two chips show one world at a time; pressing the chosen one again shows both.
@@ -92,7 +92,7 @@ export async function showInbox() {
     }, name, counts[count] ? el('span', { class: 'tab-count' }, String(counts[count])) : null)));
   };
   const listPanel = el('aside', { class: 'inbox-list-panel' },
-    el('div', { class: 'inbox-list-top' }, heading, captureButton), viewTabs, filters, list);
+    viewTabs, filters, list);
   const current = el('section', { class: 'inbox-current', 'aria-label': 'Sorting' });
   const status = el('span', { class: 'save-status', role: 'status' });
   const undoPlace = el('div', { class: 'inbox-undo' });
@@ -101,7 +101,7 @@ export async function showInbox() {
   let opened = Boolean(currentId);
 
   app.className = 'page page-wide planner-page inbox-page';
-  screen.replaceChildren(layout, undoPlace);
+  screen.replaceChildren(el('header', { class: 'top-bar' }, heading, captureButton), layout, undoPlace);
   setFooterLink(recentlyDeletedLink());
 
   async function closeEditor() {

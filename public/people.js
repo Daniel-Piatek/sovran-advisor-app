@@ -79,7 +79,7 @@ export async function showPeople(kind = 'person') {
   onLeave(() => document.removeEventListener('keydown', onKey));
 
   const deleted = takeFlash();
-  app.className = 'page page-wide';
+  app.className = 'page page-wide people-page';
   // With People in depth on, the people who are due come first: Reconnect.
   const reconnectPlace = el('div', {});
   const duplicatesPlace = el('div', {});

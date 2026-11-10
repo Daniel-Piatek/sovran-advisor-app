@@ -31,7 +31,7 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   height: 100vh;
-  padding: var(--space-8) var(--space-3); /* Capture sits a little below the panels' top edge (2026-11-10, the owner's wish) */
+  padding: calc(var(--space-8) + var(--space-2)) var(--space-3); /* Capture sits a little below the panels' top edge (2026-11-10, the owner's wish) */
 }
 
 .sidebar-link {
@@ -1071,11 +1071,8 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
 
 .inbox-list-panel { display: flex; flex-direction: column; min-width: 0; }
 
-.inbox-list-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
 
-.inbox-list-title { flex: 1; margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--line-height-tight); }
 
-.inbox-list-top .button { flex: none; padding: var(--space-1) var(--space-3); }
 
 .inbox-list { display: flex; flex-direction: column; gap: var(--space-2); }
 
@@ -3851,9 +3848,10 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 /* The panels start at the very top of the screen, level with Notes, the Timeline and People (2026-11-10, the
    owner's wish): the Journal, the Inbox, My Life and the Assistant. Their layouts get the space back. */
 .page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: 0; }
-.journal-layout, .inbox-layout, .life-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12)); }
+.journal-layout, .life-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12)); }
+.inbox-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
 /* The Assistant's title and New chat sit in a wide, low white bar across the top, with its section line. */
-.assistant-page .top-bar {
+.assistant-page .top-bar, .inbox-page .top-bar {
   margin: 0 0 var(--space-3);
   padding: var(--space-3) var(--space-4);
   border: var(--line);
@@ -3861,8 +3859,20 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
   border-radius: var(--radius-md);
   background: var(--color-bg);
 }
-.assistant-page .top-bar-title { margin: 0; }
+.assistant-page .top-bar-title, .inbox-page .top-bar-title { margin: 0; }
 .chat-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
 @media (max-width: 600px) {
   .page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page { padding-top: var(--space-3); }
 }
+
+/* Notes, People and the Timeline: the title and add button over a thin grey line, like the Journal, and the
+   content flush to the left of the white box (2026-11-10, the owner's wish). */
+.page.notes-page, .page.people-page, .page.timeline-page { --page-width: none; }
+.notes-page > .top-bar, .people-page > .top-bar, .timeline-page > .top-bar {
+  padding-bottom: var(--space-4);
+  border-bottom: var(--line);
+  margin-bottom: var(--space-4);
+}
+/* The Assistant: New chat's left edge level with the chat panel's. */
+.assistant-page .top-bar, .inbox-page .top-bar { display: grid; grid-template-columns: calc(var(--inbox-list-width) + var(--space-3) - var(--space-4) - var(--border-width)) auto 1fr; column-gap: 0; }
+.assistant-page .top-bar .page-add, .inbox-page .top-bar .page-add { margin-left: 0; }

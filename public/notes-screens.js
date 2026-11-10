@@ -103,7 +103,7 @@ export async function showList() {
 
   // After a delete: "… deleted. Undo" brings the note straight back into the list.
   const deleted = takeFlash();
-  app.className = 'page page-wide';
+  app.className = 'page page-wide notes-page';
   screen.replaceChildren(
     el('header', { class: 'top-bar' },
       el('h1', { class: 'top-bar-title' }, 'Notes'),
