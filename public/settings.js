@@ -260,6 +260,30 @@ function courseSection() {
     status);
 }
 
+// Restart: after an update, or when something asks for it, without the Terminal. The app stops, starts again
+// by itself (a changed database is moved forward with a whole copy kept first), and this page comes back.
+function restartSection() {
+  const status = el('p', { class: 'empty', role: 'status' });
+  const button = el('button', { type: 'button', class: 'button' }, 'Restart the app');
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    status.textContent = 'Restarting…';
+    try { await request('POST', '/api/restart', {}); } catch { status.textContent = 'This copy of the app cannot restart itself. Close it and open it again.'; button.disabled = false; return; }
+    const alive = async () => { try { await fetch('/api/health', { signal: AbortSignal.timeout(800) }); return true; } catch { return false; } };
+    for (let i = 0; i < 40 && await alive(); i++) await new Promise((resolve) => setTimeout(resolve, 250)); // wait for it to go
+    for (let i = 0; i < 120; i++) {
+      if (await alive()) { location.reload(); return; }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    status.textContent = 'It did not come back. Open the app from its icon, or ask Claude for help.';
+    button.disabled = false;
+  });
+  return el('section', { class: 'settings-part', 'aria-label': 'Restart' },
+    el('h2', { class: 'settings-title' }, 'Restart'),
+    el('p', { class: 'empty' }, 'After an update the app may ask for a restart. This stops it and starts it again; your data stays as it is.'),
+    el('div', { class: 'library-key' }, button), status);
+}
+
 export async function showSettings() {
   document.title = 'Settings';
   app.className = 'page';
@@ -352,6 +376,7 @@ export async function showSettings() {
     importPlace,
     googlePlace,
     dictationPlace,
+    restartSection(),
     el('section', { class: 'settings-part', 'aria-label': 'Always allowed' },
       el('h2', { class: 'settings-title' }, 'Always allowed'),
       el('p', { class: 'empty' }, 'Kinds of step you chose “Always allow” for on a card. They no longer ask. Deleting and the floor always do.'),
