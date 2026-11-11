@@ -17,6 +17,11 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
   let home = making ? (defaults.home ?? null) : task.home;
   let due = making ? (defaults.due ?? '') : task.due;
   let closing = false;
+  let pressedOutside = false;
+  const outside = (event) => {
+    const box = dialog.getBoundingClientRect();
+    return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+  };
   let dueByHand = false; // a date chosen here wins over one said in the title; the Tasks page's own default does not
 
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
@@ -130,10 +135,10 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
       if (event.key === 'Enter' && event.target === words && words.value.trim()) { event.preventDefault(); close(); }
     },
     oncancel: (event) => { event.preventDefault(); close({ save: !making }); },
-    onclick: (event) => { // a click on the dimmed page around it, not on the pop-up itself
-      const box = dialog.getBoundingClientRect();
-      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close({ save: !making });
-    },
+    // A click on the dimmed page around it closes it, but only when the press and the release both land outside
+    // (dragging to select the title and letting go past the edge must not close it).
+    onmousedown: (event) => { pressedOutside = outside(event); },
+    onclick: (event) => { if (pressedOutside && outside(event)) close({ save: !making }); pressedOutside = false; },
   },
   el('label', { class: 'task-modal-label' }, 'Title', words),
   el('label', { class: 'task-modal-label' }, 'Details', detailsBox),
