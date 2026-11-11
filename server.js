@@ -77,7 +77,7 @@ import { applyAction, dismissAction, undoAction, planCards } from './assistant-t
 import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
 import { chosenAI, getAssistantChoice, setProvider } from './ai.js';
-import { DEFAULT_CODEX_COMMAND } from './codex.js';
+import { findCodex } from './codex.js';
 import { startBackups } from './backup.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
@@ -114,7 +114,7 @@ const contentTypes = {
 const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 
 export function startServer({
-  port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = DEFAULT_CODEX_COMMAND,
+  port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null,
 } = {}) {
   const db = openDatabase(dataDir);
@@ -123,7 +123,8 @@ export function startServer({
   const mcpSecret = randomBytes(32).toString('hex');
   let mcpUrl = '';
   // The AI chosen in Settings (ai.js): your own Claude, or your own ChatGPT; asked afresh each time.
-  const commands = { claude: assistantCommand, codex: codexCommand };
+  // codex: the one given, else found each time it is needed (on the PATH, or inside the ChatGPT app on a Mac).
+  const commands = { claude: assistantCommand, get codex() { return codexCommand ?? findCodex(); } };
   const ai = () => chosenAI(db, commands);
   // Your assistant reads each capture in the background and suggests where it goes.
   const reader = readCaptures

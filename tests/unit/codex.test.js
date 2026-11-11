@@ -165,3 +165,37 @@ test('a test copy that took the AI step as 66 still gets the task details at 67'
   assert.equal(db.prepare('PRAGMA user_version').get().user_version, 67);
   db.close();
 });
+
+test('which codex: the one on the PATH first, else on a Mac the one inside the ChatGPT app', async () => {
+  const { findCodex } = await import('../../codex.js');
+  const app = '/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex';
+  const mine = '/Users/s/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex';
+  const has = (...files) => (file) => files.includes(file);
+  const mac = { platform: 'darwin', home: '/Users/s', env: { PATH: '/opt/homebrew/bin:/usr/bin' } };
+  assert.deepEqual(findCodex({ ...mac, isRunnable: has('/opt/homebrew/bin/codex', app) }), ['codex'], 'Homebrew or npm first');
+  assert.deepEqual(findCodex({ ...mac, isRunnable: has(app) }), [app], 'else the ChatGPT app’s own');
+  assert.deepEqual(findCodex({ ...mac, isRunnable: has(mine) }), [mine], 'also in their own Applications folder');
+  assert.deepEqual(findCodex({ ...mac, isRunnable: has() }), ['codex'], 'none: plain codex, which reads as not set up');
+  assert.deepEqual(findCodex({ platform: 'linux', home: '/home/s', env: { PATH: '/usr/bin' }, isRunnable: has(app) }), ['codex'], 'the app’s copy only on a Mac');
+  assert.deepEqual(findCodex({ platform: 'win32', env: { PATH: '' }, isRunnable: has(app) }), ['codex'], 'Windows unchanged');
+});
+
+test('a codex in a folder of its own (the ChatGPT app’s) answers like any other', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-app-'));
+  const bin = path.join(dir, 'Applications', 'ChatGPT.app', 'Contents', 'Resources', 'codex-cli', 'bin');
+  fs.mkdirSync(bin, { recursive: true });
+  const file = path.join(bin, 'codex');
+  fs.writeFileSync(file, `#!/bin/sh\nexec "${process.execPath}" "${fileURLToPath(new URL('../fake-codex.js', import.meta.url))}" "$@"\n`);
+  fs.chmodSync(file, 0o755);
+  const { findCodex } = await import('../../codex.js');
+  const { programReady } = await import('../../ai.js');
+  const found = findCodex({ platform: 'darwin', home: dir, env: { PATH: '' } });
+  assert.deepEqual(found, [file]);
+  assert.equal(programReady(found), true);
+  const dataDir = scratch();
+  const db = openDatabase(dataDir);
+  const answer = await sendMessage(db, createConversation(db, dataDir).id, 'Hello app', { dataDir, command: found, provider: 'codex' });
+  assert.equal(answer.text, 'You said: Hello app');
+  db.close();
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+});

@@ -40,7 +40,8 @@ export const chosenAI = (db, commands) => {
 const found = new Map();
 export function programReady(command) {
   const key = JSON.stringify(command);
-  if (!found.has(key)) {
+  // Only a yes is kept: a program installed while the app runs is found on the next look.
+  if (!found.get(key)) {
     const result = spawnSync(command[0], [...command.slice(1), '--version'], { timeout: 10_000, stdio: 'ignore', shell: process.platform === 'win32' });
     found.set(key, !result.error && result.status === 0);
   }
