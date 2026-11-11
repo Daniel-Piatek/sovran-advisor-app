@@ -3255,11 +3255,6 @@ button.mic-pill:hover { color: var(--color-text); }
 
 .task-selected-word .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
 
-/* Tasks in depth 5: one quiet line above today in the Planner when something is missed. */
-.planner-missed-line { margin: var(--space-1) 0; font-size: var(--text-sm); color: var(--color-text-muted); }
-
-.planner-missed-line .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
-
 /* Settings › Capture from anywhere (Tasks in depth 6). */
 .capture-device { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: var(--line); align-items: baseline; }
 

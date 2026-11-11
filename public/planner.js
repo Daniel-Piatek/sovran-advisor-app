@@ -612,10 +612,7 @@ export async function showPlanner(dayParam) {
 
   function drawAsk() {
     const missed = plan.tray.missed;
-    // With Tasks in depth: when something is missed, one quiet line above today, with its count and the way to the Missed view.
-    const line = () => (moduleOn('tasks-plus') && day === today() && missed.length
-      ? el('p', { class: 'planner-missed-line', role: 'status' }, icon('task'), ` ${missed.length} missed · `, el('a', { href: '/tasks?view=missed' }, 'Open')) : null);
-    if (plan.settings.missed !== 'ask' || day !== today() || !missed.length || keptInMissed === today()) { askPlace.replaceChildren(...[line()].filter(Boolean)); return; }
+    if (plan.settings.missed !== 'ask' || day !== today() || !missed.length || keptInMissed === today()) { askPlace.replaceChildren(); return; }
     const count = missed.length === 1 ? '1 task from an earlier day is' : `${missed.length} tasks from earlier days are`;
     askPlace.replaceChildren(el('div', { class: 'undo-bar planner-ask', role: 'status' },
       el('span', {}, `${count} not done.`),
