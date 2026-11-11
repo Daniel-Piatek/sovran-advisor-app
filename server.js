@@ -345,7 +345,7 @@ export function startServer({
         const input = await readJson(req);
         const problem = checkNoteInput(input);
         if (problem) return sendJson(res, 400, { error: problem });
-        return sendJson(res, 201, createNote(db, { title: input.title, body: input.body }));
+        return sendJson(res, 201, createNote(db, { title: input.title, body: input.body, ...(input.origin === 'assistant' ? { origin: 'assistant' } : {}) }));
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
     }

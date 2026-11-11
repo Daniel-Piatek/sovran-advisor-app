@@ -71,7 +71,7 @@ test('Stop ends the answer and keeps what came; then you can ask again', async (
   await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'stopped');
   await expect(bubbles(page, 'assistant')).toContainText('Stopped.');
   await expect(bubbles(page, 'assistant')).not.toContainText('word50');
-  await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeVisible();
   await input.fill('Still there?');
   await input.press('Enter');
   await expect(bubbles(page, 'assistant').last()).toContainText('You said: Still there?');
@@ -103,4 +103,22 @@ test('a chat can be renamed; the top bar stays "Assistant" and the chosen chat i
   await page.reload();
   await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
+});
+
+test('a reply can be kept as a Note, or sent to the Inbox, with one click', async ({ page, app }) => {
+  await page.goto(`${app.url}/assistant`);
+  const input = page.getByRole('textbox', { name: 'Message' });
+  await input.fill('What is in this folder?');
+  await input.press('Enter');
+  await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'done');
+  const reply = bubbles(page, 'assistant');
+  await reply.getByRole('button', { name: 'Save as Note' }).click();
+  await expect(reply.getByRole('status')).toContainText('Saved as a note.');
+  const notes = await fetch(`${app.url}/api/notes`).then((r) => r.json());
+  expect(notes.length).toBe(1);
+  expect(notes[0].title).toContain('This folder is empty');
+  await reply.getByRole('button', { name: 'Send to Inbox' }).click();
+  await expect(reply.getByRole('status')).toContainText('Sent to the Inbox.');
+  const waiting = await fetch(`${app.url}/api/captures`).then((r) => r.json());
+  expect(waiting.map((c) => c.body)).toEqual([expect.stringContaining('This folder is empty')]);
 });

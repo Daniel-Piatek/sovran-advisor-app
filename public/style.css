@@ -3943,3 +3943,10 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .keys-list dt, .keys-list dd { margin: 0; }
 
 .keys-modal:not([open]) { display: none; }
+
+/* Under an Assistant reply: keep it as a Note or send it to the Inbox. */
+.chat-keep { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+
+.chat-keep .button { padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+.chat-keep-result { font-size: var(--text-xs); color: var(--color-text-muted); }
