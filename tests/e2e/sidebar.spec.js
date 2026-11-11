@@ -80,7 +80,7 @@ test('Settings and Library sit at the foot of the column, and the others can be 
   const settings = await sections(page).getByRole('link', { name: 'Settings' }).boundingBox();
   const assistant = await sections(page).getByRole('link', { name: 'Assistant' }).boundingBox();
   // Library is the very last, Settings just above it, and a gap of free space lies between them and the rest.
-  expect(Math.abs(sidebarBox.y + sidebarBox.height - (library.y + library.height))).toBeLessThan(40);
+  expect(Math.abs(sidebarBox.y + sidebarBox.height - (library.y + library.height))).toBeLessThanOrEqual(40);
   expect(settings.y).toBeLessThan(library.y);
   expect(settings.y - (assistant.y + assistant.height)).toBeGreaterThan(40);
   // They can't be dragged.

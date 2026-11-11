@@ -1169,7 +1169,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
 /* The words are the page's title: the first block large, the rest at reading size. */
 .inbox-words { min-height: var(--space-8); }
 
-.inbox-words > :first-child { font-size: var(--text-xl); font-weight: var(--weight-regular); line-height: var(--line-height-tight); }
+.inbox-words > :first-child { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: var(--weight-regular); line-height: var(--line-height-tight); }
 
 /* Your assistant's suggestion: one bar on the surface colour, Accept inside it at the right
    (the reference's); under it the line "Or make it" with the quiet choices. */
@@ -2949,12 +2949,10 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .tray-row[data-checked="true"] .tray-words { color: var(--color-text-muted); text-decoration: line-through; }
 
-/* A long task's few words: a click opens the whole text (public/planner.js). */
-.task-short { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
+/* A task's title wherever it shows on the Planner: a click opens the task pop-up (public/task-modal.js). */
+.task-open { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
 
-.task-short:hover { text-decoration: underline; }
-
-.task-short[aria-expanded="true"] { white-space: normal; }
+.task-open:hover { text-decoration: underline; }
 
 /* The Journal day's sections: its entries, the day's calendar, Linked from. */
 .journal-section { margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--line); }
@@ -3258,11 +3256,6 @@ button.mic-pill:hover { color: var(--color-text); }
 .task-selected-word { flex: none; font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
 
 .task-selected-word .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
-
-/* Tasks in depth 5: one quiet line above today in the Planner when something is missed. */
-.planner-missed-line { margin: var(--space-1) 0; font-size: var(--text-sm); color: var(--color-text-muted); }
-
-.planner-missed-line .icon svg { width: var(--text-xs); height: var(--text-xs); vertical-align: calc(var(--border-width) * -1); }
 
 /* Settings › Capture from anywhere (Tasks in depth 6). */
 .capture-device { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: var(--line); align-items: baseline; }
@@ -3902,6 +3895,64 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .plan-block.is-drop-target { background: color-mix(in srgb, var(--kind-planner) 28%, var(--color-bg)); }
 .tray-row { border-left: calc(var(--border-width) * 3) solid color-mix(in srgb, var(--kind-tasks) 70%, var(--color-bg)); }
 
+/* The hours scroll without a bar of their own, so the day columns above (the names, the whole-day row) are as wide
+   as the columns below and their lines meet (2026-11-11, the owner's wish). */
+.cal-body { scrollbar-width: none; }
+.cal-body::-webkit-scrollbar { display: none; }
+
+/* The chosen chat is marked in Gold, not grey (2026-11-11, the owner's wish); renaming turns its name into a box. */
+.assistant-page .chat-list-item[aria-current="page"] { background: color-mix(in srgb, var(--kind-assistant) 28%, var(--color-bg)); }
+.assistant-page .chat-list-item:hover:not([aria-current="page"]) { background: color-mix(in srgb, var(--kind-assistant) 12%, var(--color-bg)); }
+.chat-rename { width: 100%; min-width: 0; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); font: inherit; }
+
+/* An opened task is a pop-up (2026-11-11, the owner's wish): a Title, its Details, its Home, Delete and Done. */
+.task-edit.task-modal {
+  display: block;
+  position: fixed;
+  width: min(40rem, calc(100vw - var(--space-6)));
+  max-height: calc(100vh - var(--space-12));
+  overflow: auto;
+  padding: var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.task-edit.task-modal:not([open]) { display: none; }
+.task-modal::backdrop { background: color-mix(in srgb, var(--color-text) 35%, transparent); }
+.task-modal-label { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-3); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+.task-modal .task-edit-words, .task-modal .task-edit-details { width: 100%; font-size: var(--text-base); font-weight: var(--weight-regular); color: var(--color-text); }
+.task-modal .task-edit-details { min-height: calc(var(--space-12) * 2.5); resize: vertical; font-family: inherit; }
+.task-modal-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.task-modal-foot .home-chip, .task-modal-foot > :first-child { margin-right: auto; }
+.task-modal .task-capture { margin-top: var(--space-3); }
+
+/* The chats column: "Chats" with its small Rename and Delete beside it (2026-11-11, the owner's wish). */
+.chat-list-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.chat-list-head .chat-list-title { margin: 0; }
+.chat-list-head .chat-actions { display: inline-flex; gap: var(--space-1); }
+.chat-list-head .button { padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+/* The task pop-up's date row, and the Keys pop-up. */
+.task-modal-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+
+.task-modal-date { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+.keys-modal { width: min(30rem, calc(100vw - var(--space-6))); }
+
+.keys-list { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: var(--space-3) 0; }
+
+.keys-list dt, .keys-list dd { margin: 0; }
+
+.keys-modal:not([open]) { display: none; }
+
+/* Under an Assistant reply: keep it as a Note or send it to the Inbox. */
+.chat-keep { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+
+.chat-keep .button { padding: 0 var(--space-2); font-size: var(--text-xs); }
+
+.chat-keep-result { font-size: var(--text-xs); color: var(--color-text-muted); }
+
 /* Which AI gave an answer (Claude or ChatGPT): a small chip in its own colour; a line where a chat changed AI. */
 .chat-ai { display: inline-block; padding: 0 var(--space-1); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-bold); line-height: 1.5; }
 .chat-ai[data-ai="claude"] { background: var(--ai-claude); color: var(--ai-claude-ink); }
@@ -3916,6 +3967,8 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .chat-text th, .chat-text td { padding: var(--space-1) var(--space-2); border-bottom: var(--line); text-align: left; vertical-align: top; overflow-wrap: normal; word-break: normal; }
 .chat-text th { white-space: nowrap; }
 .chat-text td:first-child, .chat-text td:nth-child(2) { min-width: 6em; }
+/* A short cell (a few words, like "4. Reconnect") stays on one line; longer ones wrap between words. */
+.chat-text td.is-short { white-space: nowrap; }
 
 /* Wide view (2026-11-11, the owner's wish): the conversation in a large window over the page; drag its
    bottom-right corner to make it bigger or smaller. Not on a phone, where the chat already fills the screen. */

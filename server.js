@@ -70,7 +70,7 @@ import {
   quarterReview, closeQuarter, reopenQuarter, markGoal, addNextGoal,
 } from './reviews.js';
 import {
-  checkMessageInput, listConversations, getConversation, createConversation, deleteConversation, restoreConversation,
+  checkMessageInput, listConversations, getConversation, createConversation, deleteConversation, renameConversation, restoreConversation,
   sendMessage, stopAnswer, isAnswering, settleAnswers, stopAll, toolsFor, DEFAULT_COMMAND,
 } from './assistant.js';
 import { applyAction, dismissAction, undoAction, planCards } from './assistant-tools.js';
@@ -350,7 +350,7 @@ export function startServer({
         const input = await readJson(req);
         const problem = checkNoteInput(input);
         if (problem) return sendJson(res, 400, { error: problem });
-        return sendJson(res, 201, createNote(db, { title: input.title, body: input.body }));
+        return sendJson(res, 201, createNote(db, { title: input.title, body: input.body, ...(input.origin === 'assistant' ? { origin: 'assistant' } : {}) }));
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
     }
@@ -866,6 +866,7 @@ export function startServer({
     //   GET    /api/conversations                 every conversation, last used first
     //   POST   /api/conversations                 a new one, with its own folder
     //   GET    /api/conversations/:id             one, with its messages
+    //   PATCH  /api/conversations/:id             { title }: rename it
     //   DELETE /api/conversations/:id,  POST /api/conversations/:id/restore
     //   POST   /api/conversations/:id/messages    { text }: the answer streams back as lines of JSON
     //   POST   /api/conversations/:id/stop        end the answer under way
@@ -881,6 +882,12 @@ export function startServer({
         if (req.method === 'GET') {
           const conversation = getConversation(db, id);
           return conversation ? sendJson(res, 200, { ...conversation, answering: isAnswering(id) }) : sendJson(res, 404, { error: 'Not found' });
+        }
+        if (req.method === 'PATCH') {
+          const input = await readJson(req);
+          const renamed = renameConversation(db, id, input?.title);
+          if (renamed === undefined) return sendJson(res, 400, { error: 'A name is 1 to 80 characters.' });
+          return renamed ? sendJson(res, 200, renamed) : sendJson(res, 404, { error: 'Not found' });
         }
         if (req.method === 'DELETE') {
           const deleted = deleteConversation(db, id);

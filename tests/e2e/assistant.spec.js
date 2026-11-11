@@ -71,7 +71,7 @@ test('Stop ends the answer and keeps what came; then you can ask again', async (
   await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'stopped');
   await expect(bubbles(page, 'assistant')).toContainText('Stopped.');
   await expect(bubbles(page, 'assistant')).not.toContainText('word50');
-  await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeVisible();
   await input.fill('Still there?');
   await input.press('Enter');
   await expect(bubbles(page, 'assistant').last()).toContainText('You said: Still there?');
@@ -105,4 +105,35 @@ test('wide view: the conversation opens in a large window over the page; Esc and
   await expect(page.getByRole('region', { name: 'Chat' })).toHaveClass(/is-wide/); // remembered on this computer
   await page.getByRole('button', { name: 'Close wide view' }).click();
   await expect(page.getByRole('region', { name: 'Chat' })).not.toHaveClass(/is-wide/);
+});
+
+test('a chat can be renamed; the top bar stays "Assistant" and the chosen chat is marked', async ({ page, app }) => {
+  await page.goto(`${app.url}/assistant`);
+  const input = page.getByRole('textbox', { name: 'Message' });
+  await input.fill('A very long first question that would have filled the whole top of the page if it were the title');
+  await input.press('Enter');
+  await expect(bubbles(page, 'assistant')).toContainText('You said:');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
+  await expect(page.locator('.chat-list-item[aria-current="page"]')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Rename chat' }).click();
+  await page.getByRole('textbox', { name: 'Chat name' }).fill('Workshop plan');
+  await page.getByRole('textbox', { name: 'Chat name' }).press('Enter');
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).getByRole('link', { name: 'Workshop plan' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
+});
+
+test('a reply can be sent to the Inbox with one click', async ({ page, app }) => {
+  await page.goto(`${app.url}/assistant`);
+  const input = page.getByRole('textbox', { name: 'Message' });
+  await input.fill('What is in this folder?');
+  await input.press('Enter');
+  await expect(bubbles(page, 'assistant')).toHaveAttribute('data-state', 'done');
+  const reply = bubbles(page, 'assistant');
+  await expect(reply.getByRole('button', { name: 'Save as Note' })).toHaveCount(0);
+  await reply.getByRole('button', { name: 'Send to Inbox' }).click();
+  await expect(reply.getByRole('status')).toContainText('Sent to the Inbox.');
+  const waiting = await fetch(`${app.url}/api/captures`).then((r) => r.json());
+  expect(waiting.map((c) => c.body)).toEqual([expect.stringContaining('This folder is empty')]);
 });

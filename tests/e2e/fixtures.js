@@ -105,9 +105,11 @@ export async function tapAtEnd(editor) {
 }
 
 // A new journal entry, the way a person starts one: New entry on the day's page (today, or
-// the day given), then the cursor in its text. The entry is made once something is written.
+// the day given), the cursor in its title, and Enter to go on to its text. The entry is made once something is written.
 export async function newEntry(page, app, day = null) {
   await page.goto(`${app.url}/journal${day ? `/${day}` : ''}`);
   await page.getByRole('link', { name: 'New entry' }).click();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('textbox', { name: 'Text', exact: true })).toBeFocused();
 }

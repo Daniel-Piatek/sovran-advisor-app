@@ -57,7 +57,7 @@ test('two panels: the list with + Capture (the accent) and the capture with its 
   await expect(page.locator('.inbox-kind')).toHaveText('Capture');
   // Accept and the other buttons are not the accent: only + Capture is.
   if (onPhone(page)) await page.getByRole('button', { name: 'Back to the list' }).click();
-  const add = page.locator('.inbox-list-top').getByRole('button', { name: 'Capture' });
+  const add = page.locator('.top-bar').getByRole('button', { name: 'Capture' });
   await expect(add).toHaveClass(/button-primary/);
   await add.click();
   await expect(page.getByRole('dialog', { name: 'Quick capture' })).toBeVisible();
@@ -387,7 +387,7 @@ test('three captures sorted to empty: one a task on tomorrow, one a note, one go
   await expect(row).toContainText('Book the train to Hamburg');
   await row.locator('.task-words').click();
   await expect(page.locator('.task-capture')).toContainText('From the Inbox, captured');
-  await expect(page.locator('.task-capture')).toContainText('Book the train to Hamburg tomorrow');
+  await expect(page.getByLabel('The task’s words')).toHaveValue('Book the train to Hamburg'); // its words are its title; the pop-up does not repeat the capture
 });
 
 test('T starts the task at the capture\'s home, and the home goes on the task', async ({ page, app }) => {

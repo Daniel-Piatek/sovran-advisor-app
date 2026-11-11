@@ -35,6 +35,8 @@ test('New entry opens a page like a note’s; what is written there is an entry 
   await page.getByRole('link', { name: 'New entry' }).click();
   await expect(page).toHaveURL(new RegExp(`/journal/new\\?day=${localDay()}$`));
   await expect(page.getByLabel('Title')).toHaveAttribute('placeholder', 'Untitled');
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await expect(page.getByRole('region', { name: 'Info' })).toContainText('Written');
   await page.keyboard.type('Call with Z went **well**.');
@@ -114,6 +116,8 @@ test('Delete on a new entry with nothing written goes back to the day, with noth
 test('typed in a new entry and left at once: it is kept', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
   await page.getByRole('link', { name: 'New entry' }).click();
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await page.keyboard.type('Half a thought');
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'Notes' }).click();
@@ -123,6 +127,8 @@ test('typed in a new entry and left at once: it is kept', async ({ page, app }) 
 
 test('...and when the page is reloaded', async ({ page, app }) => {
   await page.goto(`${app.url}/journal/new?day=${localDay()}`);
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await page.keyboard.type('Typed, then reloaded');
   await page.reload();
@@ -137,6 +143,8 @@ test('any day has its own page, and a new entry from there is on that day', asyn
   await expect(page.getByText('Nothing written on this day.')).toBeVisible();
   await page.getByRole('link', { name: 'New entry' }).click();
   await expect(page.getByRole('link', { name: 'Back to Journal' })).toContainText('Oct 20');
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await page.keyboard.type('Written later for that day');
   await expect(page.getByRole('status')).toHaveText('Saved');
@@ -147,6 +155,8 @@ test('any day has its own page, and a new entry from there is on that day', asyn
 
 test('the slash menu works in a new entry', async ({ page, app }) => {
   await page.goto(`${app.url}/journal/new?day=${localDay()}`);
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await page.keyboard.type('/quote');
   await page.keyboard.press('Enter');
@@ -163,6 +173,8 @@ test('typing on while the new entry is first saved makes it once, with every wor
     if (route.request().method() === 'POST') await new Promise((resolve) => setTimeout(resolve, 600));
     await route.continue();
   });
+  await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+  await page.keyboard.press('Enter');
   await expect(text(page)).toBeFocused();
   await page.keyboard.type('First words');
   await page.waitForTimeout(900); // the save has started
@@ -180,6 +192,8 @@ test.describe('when the app does not answer', () => {
     await page.route('**/api/entries', (route) => (route.request().method() === 'POST' && down
       ? route.fulfill({ status: 500, body: '{}' })
       : route.continue()));
+    await expect(page.getByLabel('Title')).toBeFocused(); // the cursor starts in the title
+    await page.keyboard.press('Enter');
     await expect(text(page)).toBeFocused();
     await page.keyboard.type('Not saved yet');
     await expect(page.getByRole('status')).toHaveText("Couldn't save. Trying again…");

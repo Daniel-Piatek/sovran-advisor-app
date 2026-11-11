@@ -149,3 +149,19 @@ test('the model, named in a few words; the chat list says which AI answered last
   assert.deepEqual(listConversations(db).map((c) => c.last_ai).sort(), ['', 'codex']);
   db.close();
 });
+
+test('a test copy that took the AI step as 66 still gets the task details at 67', async () => {
+  const { DatabaseSync } = await import('node:sqlite');
+  const dataDir = scratch();
+  openDatabase(dataDir).close();
+  const file = path.join(dataDir, 'app.db');
+  const raw = new DatabaseSync(file);
+  raw.exec('ALTER TABLE tasks DROP COLUMN details');
+  raw.exec('PRAGMA user_version = 66');
+  raw.close();
+  const db = openDatabase(dataDir);
+  const columns = db.prepare("SELECT name FROM pragma_table_info('tasks')").all().map((c) => c.name);
+  assert.ok(columns.includes('details'));
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 67);
+  db.close();
+});
