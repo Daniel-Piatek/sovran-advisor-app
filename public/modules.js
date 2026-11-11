@@ -27,4 +27,5 @@ export async function loadModules() {
 
 export const moduleOn = (id) => modules.find((m) => m.id === id)?.on ?? true;
 export const switchModule = async (id, on) => setModules(await request('PATCH', '/api/modules', { id, on }));
-export const listedModules = () => modules;
+// A module marked hidden (not ready to offer yet) stays out of the Settings list; it is off.
+export const listedModules = () => modules.filter((m) => !m.hidden);
