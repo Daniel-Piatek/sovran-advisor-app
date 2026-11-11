@@ -18,7 +18,7 @@ import path from 'node:path';
 import { actionsOf, findPage, cancelWaits } from './assistant-tools.js';
 import { NEVER_TOOLS, judgeStep, logActivity } from './permissions.js';
 import { localDay } from './entries.js';
-import { codexArgs, codexEnv, lineReader } from './codex.js';
+import { codexArgs, codexEnv, codexModel, lineReader } from './codex.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -44,7 +44,7 @@ export const guide = () => [
 ].join(' ');
 
 const CONVERSATION_COLUMNS = 'id, title, folder, session_id, started, created_at, updated_at, deleted_at';
-const MESSAGE_COLUMNS = 'id, conversation_id, role, text, steps, sources, context, state, created_at, updated_at';
+const MESSAGE_COLUMNS = 'id, conversation_id, role, text, steps, sources, context, state, ai, model, created_at, updated_at';
 const message = (row) => ({ ...row, steps: JSON.parse(row.steps), sources: JSON.parse(row.sources), context: row.context ? JSON.parse(row.context) : null });
 
 export function checkMessageInput(input) {
@@ -61,8 +61,11 @@ export function settleAnswers(db) {
   db.prepare("UPDATE chat_messages SET state = 'stopped', updated_at = ? WHERE state = 'answering'").run(now());
 }
 
-export const listConversations = (db) => db.prepare(`SELECT ${CONVERSATION_COLUMNS} FROM conversations
-  WHERE deleted_at IS NULL ORDER BY updated_at DESC`).all().map((row) => ({ ...row, started: row.started === 1 }));
+// Each with the AI that answered last in it (ai: claude, codex, or '' before that was kept).
+export const listConversations = (db) => db.prepare(`SELECT ${CONVERSATION_COLUMNS},
+  (SELECT ai FROM chat_messages m WHERE m.conversation_id = conversations.id AND m.role = 'assistant' AND m.ai != '' AND m.deleted_at IS NULL
+    ORDER BY m.created_at DESC, m.rowid DESC LIMIT 1) AS last_ai
+  FROM conversations WHERE deleted_at IS NULL ORDER BY updated_at DESC`).all().map((row) => ({ ...row, last_ai: row.last_ai ?? '', started: row.started === 1 }));
 
 export function getConversation(db, id, { deleted = false } = {}) {
   const row = db.prepare(`SELECT ${CONVERSATION_COLUMNS} FROM conversations WHERE id = ?`).get(id);
@@ -96,11 +99,11 @@ export function restoreConversation(db, id) {
   return getConversation(db, id);
 }
 
-function addMessage(db, conversationId, role, text, state, context = null) {
+function addMessage(db, conversationId, role, text, state, context = null, ai = '') {
   const id = randomUUID();
   const time = now();
-  db.prepare('INSERT INTO chat_messages (id, created_at, updated_at, conversation_id, role, text, state, context) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(id, time, time, conversationId, role, text, state, context ? JSON.stringify(context) : '');
+  db.prepare('INSERT INTO chat_messages (id, created_at, updated_at, conversation_id, role, text, state, context, ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(id, time, time, conversationId, role, text, state, context ? JSON.stringify(context) : '', ai);
   db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(time, conversationId);
   return id;
 }
@@ -148,7 +151,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
   const words = text.trim();
   addMessage(db, id, 'user', words, 'done', context);
   if (!conversation.title) db.prepare('UPDATE conversations SET title = ? WHERE id = ?').run(words.split('\n')[0].slice(0, 80), id);
-  const answerId = addMessage(db, id, 'assistant', '', 'answering');
+  const answerId = addMessage(db, id, 'assistant', '', 'answering', null, provider === 'codex' ? 'codex' : 'claude');
   const folder = path.join(dataDir, conversation.folder);
   fs.mkdirSync(folder, { recursive: true });
   const folderReal = fs.realpathSync(folder);
@@ -171,9 +174,10 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     const all = new Map([...read, ...linked.map((p) => [p.id, p])]);
     return [...all.values()].map(({ id: pageId, kind, title, path: where }) => ({ id: pageId, kind, title, path: where }));
   };
+  let model = ''; // the model it named: Claude Code says so as it starts; Codex in its own record of the thread
   const save = (state) => {
-    db.prepare('UPDATE chat_messages SET text = ?, steps = ?, sources = ?, state = ?, updated_at = ? WHERE id = ?')
-      .run(answer, JSON.stringify(steps), JSON.stringify(sourcesOf()), state, now(), answerId);
+    db.prepare('UPDATE chat_messages SET text = ?, steps = ?, sources = ?, state = ?, model = ?, updated_at = ? WHERE id = ?')
+      .run(answer, JSON.stringify(steps), JSON.stringify(sourcesOf()), state, model, now(), answerId);
     saved = Date.now();
   };
   // The app's tools, for the claude command: a config file only the app and it read.
@@ -243,6 +247,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
       if (event.type === 'system' && event.subtype === 'init') {
         if (provider === 'codex') db.prepare('UPDATE conversations SET started = 1, session_id = ? WHERE id = ?').run(`codex:${event.session_id}`, id);
         else db.prepare('UPDATE conversations SET started = 1 WHERE id = ?').run(id);
+        if (typeof event.model === 'string') model = event.model.slice(0, 100);
       } else if (event.type === 'stream_event' && event.event?.type === 'content_block_delta' && event.event.delta?.type === 'text_delta') {
         const delta = event.event.delta.text;
         if (answer && !answer.endsWith('\n') && steps.length && steps.at(-1).after === answer.length) answer += '\n\n';
@@ -296,6 +301,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
         answer = answer ? `${answer}\n\n(${reason})` : `The assistant couldn't answer: ${reason}`;
       }
       if (!answer && result?.result) answer = result.result;
+      if (provider === 'codex' && !model && reader.state.thread) model = codexModel(reader.state.thread);
       for (const step of steps) if (step.state === 'working') step.state = state === 'done' ? 'done' : 'stopped';
       save(state);
       const finished = getMessage(db, answerId);

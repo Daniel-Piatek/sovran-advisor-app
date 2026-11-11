@@ -61,7 +61,7 @@ if (prompt.trim() === 'fail') {
 }
 const asked = fs.existsSync(memory) ? JSON.parse(fs.readFileSync(memory, 'utf8')) : [];
 fs.writeFileSync(memory, JSON.stringify([...asked, prompt]));
-out({ type: 'system', subtype: 'init', cwd: process.cwd(), apiKeySource: 'none' });
+out({ type: 'system', subtype: 'init', cwd: process.cwd(), apiKeySource: 'none', model: 'claude-opus-5-5' });
 
 async function say(text, every = 5) {
   out({ type: 'stream_event', event: { type: 'content_block_start', content_block: { type: 'text', text: '' } } });

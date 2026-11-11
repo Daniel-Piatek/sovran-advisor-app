@@ -41,3 +41,28 @@ test('Settings: the assistant’s AI is Claude, or ChatGPT; the choice holds and
   await expect(page.getByText('You said: Hello from ChatGPT')).toBeVisible();
   await fetch(`${app.url}/api/assistant/ai`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: 'claude' }) });
 });
+
+test('each answer names the AI and model that gave it; a chat says which it started with and where it switched', async ({ page, app }) => {
+  const put = (provider) => fetch(`${app.url}/api/assistant/ai`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider }) });
+  await put('claude');
+  await page.goto(`${app.url}/assistant`);
+  const box = page.getByRole('textbox', { name: 'Message' });
+  await expect(box).toHaveAttribute('placeholder', 'Ask your assistant (Claude)');
+  await box.fill('Hello one');
+  await box.press('Enter');
+  await expect(page.getByText('You said: Hello one')).toBeVisible();
+  const log = page.getByRole('log', { name: 'Conversation' });
+  await expect(log.locator('.chat-switch').first()).toHaveText('Started with Claude Opus 5.5');
+  await expect(log.locator('.chat-bubble.is-assistant .chat-ai').first()).toHaveText('Claude Opus 5.5');
+  await put('codex');
+  await page.reload();
+  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveAttribute('placeholder', 'Ask your assistant (ChatGPT)');
+  await page.getByRole('textbox', { name: 'Message' }).fill('Hello two');
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
+  await expect(page.getByText('You said: Hello two')).toBeVisible();
+  await expect(log.locator('.chat-bubble.is-assistant .chat-ai').last()).toHaveText('ChatGPT (GPT-6.1 Sol)');
+  await page.reload();
+  await expect(page.getByRole('log', { name: 'Conversation' }).locator('.chat-switch')).toHaveText(['Started with Claude Opus 5.5', 'Switched to ChatGPT (GPT-6.1 Sol)']);
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).locator('.chat-ai').first()).toHaveText('ChatGPT');
+  await put('claude');
+});

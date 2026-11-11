@@ -13,6 +13,7 @@
 
 import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar, clockTime } from './ui.js';
+import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
 import { dueLabel } from './due.js';
 
@@ -132,6 +133,8 @@ function stepsNode(steps) {
     ...(files.length ? [el('p', { class: 'chat-files' }, icon('notes'), files.join(', '))] : []));
 }
 
+const aiChip = (ai, words) => el('span', { class: 'chat-ai', 'data-ai': ai }, words);
+
 // A bubble: yours on the right, the assistant's on the left with its label.
 function bubble(message, changed = () => {}) {
   if (message.role === 'user') {
@@ -141,7 +144,9 @@ function bubble(message, changed = () => {}) {
   const body = el('div', { class: 'chat-text' });
   body.innerHTML = markdown.render(message.text);
   const node = el('div', { class: 'chat-bubble is-assistant', 'data-role': 'assistant', 'data-state': message.state },
-    el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant', el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
+    el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant',
+      ...(aiLabel(message) ? [el('span', { class: 'plan-free' }, ' · '), aiChip(message.ai, aiLabel(message))] : []),
+      el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
     body,
     ...(message.state === 'answering' ? [el('span', { class: 'chat-working', 'aria-label': 'Answering' }, '…')] : []),
     ...(message.state === 'stopped' ? [el('p', { class: 'chat-note' }, 'Stopped.')] : []),
@@ -157,6 +162,7 @@ export async function showAssistant(id) {
   let conversation = null;
   let answering = false;
   let left = false;
+  let chosen = ''; // the AI chosen in Settings now (claude or codex)
   onLeave(() => { left = true; });
 
   const list = el('nav', { class: 'chat-list', 'aria-label': 'Your chats' });
@@ -198,13 +204,30 @@ export async function showAssistant(id) {
       el('h2', { class: 'chat-list-title' }, 'Your chats'),
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
-      }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
+      }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'),
+      ...(AI_NAMES[c.last_ai] ? [aiChip(c.last_ai, AI_NAMES[c.last_ai])] : []))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
   }
 
   function drawThread() {
     const messages = conversation?.messages ?? [];
     // A new chat shows only the box to ask in (2026-11-10, the owner's wish).
-    thread.replaceChildren(...messages.map((m) => bubble(m, () => drawThread())));
+    // Which AI it began with, at the top, and a line wherever it changed (before the question it answered).
+    const nodes = [];
+    let last = '';
+    for (const m of messages) {
+      if (m.role === 'assistant' && AI_NAMES[m.ai]) {
+        const words = aiLabel(m);
+        if (!last) nodes.unshift(el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Started with ', aiChip(m.ai, words)));
+        else if (m.ai !== last) {
+          const line = el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Switched to ', aiChip(m.ai, words));
+          const at = nodes.length && nodes.at(-1).dataset.role === 'user' ? nodes.length - 1 : nodes.length;
+          nodes.splice(at, 0, line);
+        }
+        last = m.ai;
+      }
+      nodes.push(bubble(m, () => drawThread()));
+    }
+    thread.replaceChildren(...nodes);
     thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
     title.textContent = conversation?.title || 'Assistant';
@@ -213,6 +236,12 @@ export async function showAssistant(id) {
       type: 'button', class: 'button button-quiet', onclick: () => remove(),
     }, icon('trash'), 'Delete chat')] : []));
   }
+
+  // Which AI answers next, named in the box to ask in.
+  request('GET', '/api/assistant/ai').then((state) => {
+    chosen = state.provider;
+    input.placeholder = `Ask your assistant (${AI_NAMES[chosen] ?? 'Claude'})`;
+  }).catch(() => {});
 
   async function load(conversationId) {
     conversation = conversationId ? await assistantApi.get(conversationId) : null;
@@ -244,7 +273,7 @@ export async function showAssistant(id) {
     }
     input.value = '';
     const asked = { role: 'user', text: text.trim(), context, created_at: new Date().toISOString(), steps: [] };
-    const answer = { role: 'assistant', text: '', state: 'answering', created_at: new Date().toISOString(), steps: [], sources: [], cards: [] };
+    const answer = { role: 'assistant', text: '', state: 'answering', ai: chosen, model: '', created_at: new Date().toISOString(), steps: [], sources: [], cards: [] };
     conversation.messages.push(asked, answer);
     conversation.title ||= asked.text.split('\n')[0].slice(0, 80);
     drawThread();
@@ -293,7 +322,7 @@ export async function showAssistant(id) {
       if (!left) redraw();
     }
     setAnswering(false);
-    if (!left) { drawList(); input.focus(); }
+    if (!left) { drawThread(); drawList(); input.focus(); } // drawn again: the answer now names its model
   }
 
   async function stop() {

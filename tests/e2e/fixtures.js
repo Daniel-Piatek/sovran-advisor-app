@@ -32,7 +32,7 @@ export const test = base.extend({
     const gcal = await startFakeGcal(); // Google Calendar's own API, stood in for; a test fills its `events`
     await new Promise((resolve) => eleven.listen(0, '127.0.0.1', resolve));
     const child = spawn(process.execPath, [serverFile], {
-      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), FAKE_LINK_TITLES: '1', ...google.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
+      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), CODEX_HOME: path.join(dataDir, '.codex-home'), FAKE_LINK_TITLES: '1', ...google.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

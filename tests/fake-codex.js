@@ -45,6 +45,15 @@ if (resumed && !fs.existsSync(memory)) {
   process.exit(1);
 }
 out({ type: 'thread.started', thread_id: thread });
+// Its own record of the thread, as Codex keeps one, with the model (only under a CODEX_HOME a test gave).
+if (process.env.CODEX_HOME) {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const folder = path.join(process.env.CODEX_HOME, 'sessions', String(d.getFullYear()), pad(d.getMonth() + 1), pad(d.getDate()));
+  fs.mkdirSync(folder, { recursive: true });
+  fs.appendFileSync(path.join(folder, `rollout-2026-01-01T00-00-00-${thread}.jsonl`),
+    `${JSON.stringify({ type: 'turn_context', payload: { model: 'gpt-6.1-sol' } })}\n`);
+}
 out({ type: 'turn.started' });
 const asked = fs.existsSync(memory) ? JSON.parse(fs.readFileSync(memory, 'utf8')) : [];
 fs.writeFileSync(memory, JSON.stringify([...asked, prompt]));

@@ -548,7 +548,9 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   steps TEXT NOT NULL DEFAULT '[]',
   state TEXT NOT NULL DEFAULT 'done' CHECK (state IN ('done', 'answering', 'stopped', 'failed')),
   sources TEXT NOT NULL DEFAULT '[]',
-  context TEXT NOT NULL DEFAULT ''
+  context TEXT NOT NULL DEFAULT '',
+  ai TEXT NOT NULL DEFAULT '',     -- which AI gave an answer: claude or codex (ChatGPT); '' before it was kept
+  model TEXT NOT NULL DEFAULT ''   -- the model it named, e.g. claude-opus-5-5 or gpt-6.1-sol
 );
 
 CREATE INDEX IF NOT EXISTS chat_messages_by_conversation ON chat_messages (conversation_id, created_at);

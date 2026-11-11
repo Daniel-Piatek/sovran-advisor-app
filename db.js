@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 65;
+export const SCHEMA_VERSION = 66;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -353,6 +353,12 @@ const steps = {
   },
   // 65: Calendar 10: your assistant's proposals of events are a kind of card (calendar_propose).
   65(db) { remakeActions(db, "'calendar_propose'"); },
+  // 66: each answer says which AI gave it (Claude or ChatGPT, ai.js) and its model, when it was told.
+  66(db) {
+    const columns = db.prepare("SELECT name FROM pragma_table_info('chat_messages')").all().map((c) => c.name);
+    if (columns.length && !columns.includes('ai')) db.exec("ALTER TABLE chat_messages ADD COLUMN ai TEXT NOT NULL DEFAULT ''");
+    if (columns.length && !columns.includes('model')) db.exec("ALTER TABLE chat_messages ADD COLUMN model TEXT NOT NULL DEFAULT ''");
+  },
 };
 
 // The links table as schema.sql has it now, every row kept (SQLite can't change a CHECK in place).

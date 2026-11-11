@@ -13,6 +13,9 @@
 // Codex gives an answer whole, not word by word, so it appears when it is ready.
 
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 export const DEFAULT_CODEX_COMMAND = ['codex'];
 export const TOKEN_ENV = 'SOVRAN_APP_TOKEN';
@@ -131,4 +134,31 @@ export function lineReader(provider, handle) {
       else handle(event);
     },
   };
+}
+
+// The model a Codex thread used: Codex does not print it, but keeps it in its own record of the
+// thread ($CODEX_HOME/sessions/<year>/<month>/<day>/rollout-…-<thread>.jsonl). Looked for in the
+// last two days' folders only; '' when it cannot be found.
+export function codexModel(thread, { home = process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), when = new Date() } = {}) {
+  try {
+    const days = new Set();
+    for (const back of [0, 1]) {
+      const d = new Date(when.getTime() - back * 86_400_000);
+      const pad = (n) => String(n).padStart(2, '0');
+      days.add(path.join(String(d.getFullYear()), pad(d.getMonth() + 1), pad(d.getDate())));
+      days.add(path.join(String(d.getUTCFullYear()), pad(d.getUTCMonth() + 1), pad(d.getUTCDate())));
+    }
+    for (const day of days) {
+      const folder = path.join(home, 'sessions', day);
+      const file = fs.existsSync(folder) && fs.readdirSync(folder).find((f) => f.endsWith(`${thread}.jsonl`));
+      if (!file) continue;
+      let model = '';
+      for (const line of fs.readFileSync(path.join(folder, file), 'utf8').split('\n')) {
+        if (!line.includes('"turn_context"')) continue;
+        try { const found = JSON.parse(line).payload?.model; if (typeof found === 'string') model = found; } catch { /* a line cut short */ }
+      }
+      return model.slice(0, 100);
+    }
+  } catch { /* not there: no name */ }
+  return '';
 }

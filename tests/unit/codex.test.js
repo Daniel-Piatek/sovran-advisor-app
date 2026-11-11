@@ -70,6 +70,7 @@ test('Codex runs locked down: no shell, no web, not the owner’s own settings; 
 
 test('a conversation with ChatGPT carries on its own thread; switching AI starts afresh there, told what was said', async () => {
   const dataDir = scratch();
+  process.env.CODEX_HOME = path.join(dataDir, '.codex-home');
   const db = openDatabase(dataDir);
   const conversation = createConversation(db, dataDir);
   const parts = [];
@@ -77,6 +78,7 @@ test('a conversation with ChatGPT carries on its own thread; switching AI starts
   const first = await sendMessage(db, conversation.id, 'Hello there', { dataDir, command: fakeCodex, provider: 'codex', send: (e) => parts.push(e) });
   delete process.env.OPENAI_API_KEY;
   assert.deepEqual([first.state, first.text], ['done', 'You said: Hello there']);
+  assert.deepEqual([first.ai, first.model], ['codex', 'gpt-6.1-sol'], 'each answer says which AI and model gave it');
   assert.equal(parts.at(-1).type, 'done');
   assert.equal(lastRun(dataDir, conversation).api_key, false, 'never an API key: their ChatGPT sign-in');
   const thread = getConversation(db, conversation.id).session_id;
@@ -89,6 +91,8 @@ test('a conversation with ChatGPT carries on its own thread; switching AI starts
   // Now with Claude: a fresh Claude conversation, told what was said so far.
   const claude = await sendMessage(db, conversation.id, 'What did I ask?', { dataDir, command: fakeClaude });
   assert.equal(claude.state, 'done');
+  assert.deepEqual([claude.ai, claude.model], ['claude', 'claude-opus-5-5']);
+  assert.equal(getConversation(db, conversation.id).messages.find((m) => m.role === 'user').ai, '', 'only answers carry an AI');
   const now = getConversation(db, conversation.id);
   assert.doesNotMatch(now.session_id, /^codex:/);
   const claudeRun = JSON.parse(fs.readFileSync(path.join(dataDir, conversation.folder, '.fake-claude-last-run.json'), 'utf8'));
@@ -100,6 +104,7 @@ test('a conversation with ChatGPT carries on its own thread; switching AI starts
   const failed = await sendMessage(db, createConversation(db, dataDir).id, 'fail', { dataDir, command: fakeCodex, provider: 'codex' });
   assert.equal(failed.state, 'failed');
   assert.match(failed.text, /not signed in to ChatGPT/);
+  delete process.env.CODEX_HOME;
   db.close();
 });
 
@@ -123,4 +128,24 @@ test('through the app: Settings chooses ChatGPT, and it uses the app’s tools e
   assert.deepEqual(answer.sources.map((s) => s.title), ['Bank call']);
   const run = lastRun(dataDir, conversation);
   assert.equal(run.token, true, 'the app’s secret reached it, in its environment');
+});
+
+test('the model, named in a few words; the chat list says which AI answered last', async () => {
+  const { modelName, aiLabel } = await import('../../public/ai-names.js');
+  assert.equal(modelName('claude-opus-5-5'), 'Opus 5.5');
+  assert.equal(modelName('claude-sonnet-4-5-20250929'), 'Sonnet 4.5');
+  assert.equal(modelName('gpt-6.1-sol'), 'GPT-6.1 Sol');
+  assert.equal(modelName(''), '');
+  assert.equal(aiLabel({ ai: 'codex', model: 'gpt-6.1-sol' }), 'ChatGPT (GPT-6.1 Sol)');
+  assert.equal(aiLabel({ ai: 'claude', model: '' }), 'Claude');
+  assert.equal(aiLabel({ ai: 'claude', model: 'claude-opus-5-5' }), 'Claude Opus 5.5');
+  assert.equal(aiLabel({ ai: '', model: '' }), '');
+  const dataDir = scratch();
+  const db = openDatabase(dataDir);
+  const { listConversations } = await import('../../assistant.js');
+  const a = createConversation(db, dataDir);
+  createConversation(db, dataDir);
+  await sendMessage(db, a.id, 'Hello', { dataDir, command: fakeCodex, provider: 'codex' });
+  assert.deepEqual(listConversations(db).map((c) => c.last_ai).sort(), ['', 'codex']);
+  db.close();
 });
