@@ -35,6 +35,11 @@ Paste this into Claude Code on your computer:
 Claude does the rest and tells you when it needs you. To get a newer version later, tell
 Claude: "update Sovran Advisor".
 
+## Make it your own
+
+Ask Claude to change your copy the way you like it. `CUSTOMISING.md` explains how, and how
+your changes stay safe when you update.
+
 ## For the curious
 
 - Start it by hand: `npm start`, then open http://127.0.0.1:3300.

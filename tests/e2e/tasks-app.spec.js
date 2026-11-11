@@ -18,37 +18,59 @@ test('q from anywhere: "call the dentist tomorrow ~10m" is a Speedy called "call
   expect((await allTasks(app)).map((t) => [t.text, t.due, t.estimate, t.source.kind])).toEqual([['call the dentist', inDays(1), 10, 'own']]);
 });
 
-test('the add bar on the Tasks page: chips while typing, a home, and nothing typed is lost', async ({ page, app }) => {
+test('the q box: chips while typing, a home, and what is said fills the boxes', async ({ page, app }) => {
   const workshop = await fetch(`${app.url}/api/life`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'project', title: 'Autumn workshop' }) }).then((r) => r.json());
   await page.goto(`${app.url}/tasks`);
   await page.keyboard.press('q');
-  const bar = page.getByLabel('Add a task');
+  const box = page.getByRole('dialog', { name: 'Add a task' });
+  const bar = box.getByRole('textbox', { name: 'Add a task' });
   await expect(bar).toBeFocused();
   await page.keyboard.type('plan the whole workshop day fri ~4h !must 2pm');
-  // The day and flag go into their boxes; what else it read shows as chips.
-  const chips = page.locator('.tasks-page .quick-chips > *');
+  const chips = box.locator('.quick-chips > *');
   await expect(chips).toHaveCount(2);
   await expect(chips.nth(1)).toHaveText('4 h · Task');
-  await expect(page.getByLabel('Day', { exact: true })).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
-  await expect(page.getByLabel('Flag', { exact: true })).toHaveValue('must');
-  await expect(page.getByText('Over three hours: it may be worth splitting into smaller tasks.')).toBeVisible();
-  await page.getByRole('button', { name: 'Give it a home' }).click();
+  await expect(box.getByLabel('Day', { exact: true })).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  await expect(box.getByLabel('Flag', { exact: true })).toHaveValue('must');
+  await expect(box.getByText('Over three hours: it may be worth splitting into smaller tasks.')).toBeVisible();
+  await box.getByRole('button', { name: 'Give it a home' }).click();
   await page.getByRole('option', { name: /Autumn workshop/ }).click();
   await bar.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Added “plan the whole workshop day”', { exact: false })).toBeVisible();
+  await expect(box).toBeHidden();
   const [task] = await allTasks(app);
   expect([task.text, task.flag, task.estimate, task.home.id, task.reminder.at.slice(11)]).toEqual(['plan the whole workshop day', 'must', 240, workshop.id, '14:00']);
-  await expect(bar).toHaveValue('');
-  await page.keyboard.press('Escape');
-  await page.locator('body').click({ position: { x: 5, y: 5 } });
-  await page.keyboard.press('7'); // All
-  await expect(page.locator('.task-row .task-words')).toContainText(['plan the whole workshop day']);
+});
 
-  // Words that are not a day stay in the title.
-  await bar.fill('read may sarton');
+test('the Add task pop-up on the Tasks page: title, details, date, flag and home; what the title says fills the boxes left alone', async ({ page, app }) => {
+  const workshop = await fetch(`${app.url}/api/life`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'project', title: 'Autumn workshop' }) }).then((r) => r.json());
+  await page.goto(`${app.url}/tasks`);
+  await expect(page.locator('.tasks-page .quick-add')).toHaveCount(0); // the long add bar is gone
+  const modal = page.getByRole('dialog', { name: 'New task' });
+  await page.getByRole('button', { name: 'Add task' }).click();
+  await expect(modal.getByLabel('The task’s words')).toBeFocused();
+  await modal.getByLabel('The task’s words').fill('book the kickoff room tomorrow !like ~30m');
+  await modal.getByLabel('Details').fill('Ask about the garden room');
+  await modal.getByLabel('Date').fill(inDays(3));
+  await modal.getByLabel('Flag').selectOption('must');
+  await modal.getByRole('button', { name: 'Give it a home' }).click();
+  await page.getByRole('option', { name: /Autumn workshop/ }).click();
+  await modal.getByRole('button', { name: 'Add task' }).click();
+  await expect(modal).toBeHidden();
+  const [task] = await allTasks(app);
+  // A date and flag chosen in the boxes win over the words.
+  expect([task.text, task.details, task.due, task.flag, task.estimate, task.home.id]).toEqual(['book the kickoff room', 'Ask about the garden room', inDays(3), 'must', 30, workshop.id]);
+
+  // On Today the date starts as today, but a day said in the title wins; Enter adds; Escape makes nothing.
+  await page.getByRole('button', { name: 'Add task' }).click();
+  await modal.getByLabel('The task’s words').fill('call the printer tomorrow');
   await page.keyboard.press('Enter');
-  expect((await allTasks(app)).map((t) => t.text)).toContain('read may sarton');
+  await expect(modal).toBeHidden();
+  expect((await allTasks(app)).find((t) => t.text === 'call the printer').due).toBe(inDays(1));
+  await page.getByRole('button', { name: 'Add task' }).click();
+  await modal.getByLabel('The task’s words').fill('never made');
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+  expect((await allTasks(app)).some((t) => t.text === 'never made')).toBe(false);
 });
 
 const group = (page, name) => page.getByRole('region', { name, exact: true });
@@ -137,9 +159,10 @@ const minutesAgo = (n) => { const d = new Date(Date.now() - n * 60_000); return 
 
 test('"water the plants every monday 9am", finished: next Monday’s task appears, with its reminder', async ({ page, app }) => {
   await page.goto(`${app.url}/tasks`);
-  await page.getByLabel('Add a task').fill('water the plants every monday 9am');
-  await expect(page.locator('.quick-chips > *')).toHaveText([/9:00/, /Every monday/]);
+  await page.getByRole('button', { name: 'Add task' }).click();
+  await page.getByLabel('The task’s words').fill('water the plants every monday 9am');
   await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'New task' })).toBeHidden();
   const [first] = await allTasks(app);
   expect(new Date(`${first.due}T12:00`).getDay()).toBe(1);
   expect(first.reminder.at).toBe(`${first.due}T09:00`);
@@ -180,12 +203,12 @@ test('a task with a home shows under that Project’s Open tasks, with the tasks
   const note = await app.createNote({ title: 'Kick-off', body: '- [ ] book the room' });
   await app.updateNote(note.id, { home_id: onboarding.id });
   await page.goto(`${app.url}/tasks`);
-  await page.getByLabel('Add a task').fill('send the welcome pack fri');
+  await page.getByRole('button', { name: 'Add task' }).click();
+  await page.getByLabel('The task’s words').fill('send the welcome pack fri');
   await page.getByRole('button', { name: 'Give it a home' }).click();
   await page.getByRole('option', { name: /Nordlicht onboarding/ }).click();
-  await page.getByLabel('Add a task').focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByText(/Added “send the welcome pack”/)).toBeVisible();
+  await page.getByRole('button', { name: 'Add task' }).last().click();
+  await expect(page.getByRole('dialog', { name: 'New task' })).toBeHidden();
 
   await page.goto(`${app.url}/life/${onboarding.id}`);
   const open = page.getByRole('region', { name: 'Open tasks' });
@@ -226,6 +249,7 @@ test('a task of its own is renamed and deleted with Undo; a task in a note gets 
   await expect(page.locator('.task-edit')).toContainText('Its words are changed in its page.');
   await page.locator('.task-edit').getByRole('button', { name: 'Give it a home' }).click();
   await page.getByRole('option', { name: /Pricing/ }).click();
+  await page.getByRole('button', { name: 'Close' }).click(); // what changed is saved as it closes
   await expect.poll(async () => (await allTasks(app)).find((t) => t.text === 'read about rates').home?.id).toBe(pricing.id);
 
   // Deleted, it waits in Recently deleted.
@@ -235,47 +259,6 @@ test('a task of its own is renamed and deleted with Undo; a task in a note gets 
   await expect(deleted.locator('.tag')).toHaveText('Task');
   await deleted.getByRole('button', { name: 'Restore' }).click();
   expect((await allTasks(app)).some((t) => t.text === 'reply to Jonas about March')).toBe(true);
-});
-
-test('the add line: words, day, flag, home and Add side by side; a box set by hand keeps its choice', async ({ page, app, isMobile }) => {
-  await fetch(`${app.url}/api/life`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'project', title: 'Autumn workshop' }) });
-  await page.goto(`${app.url}/tasks`);
-  const bar = page.getByLabel('Add a task');
-  const day = page.getByLabel('Day', { exact: true });
-  const flag = page.getByLabel('Flag', { exact: true });
-  const add = page.locator('.quick-row').getByRole('button', { name: 'Add' });
-  // On a large screen it is one line; on a phone the words and Add, then the boxes.
-  const middle = (locator) => locator.evaluate((n) => { const r = n.getBoundingClientRect(); return r.top + r.height / 2; });
-  const [words, dayAt, addAt] = [await middle(bar), await middle(day), await middle(add)];
-  expect(Math.abs(words - addAt)).toBeLessThan(12);
-  if (isMobile) expect(dayAt).toBeGreaterThan(words + 12);
-  else expect(Math.abs(words - dayAt)).toBeLessThan(12);
-
-  // The words fill the boxes as you type.
-  await bar.fill('book the kickoff room tomorrow !like');
-  await expect(day).toHaveValue(inDays(1));
-  await expect(flag).toHaveValue('like');
-  // Chosen by hand, a box wins over the words.
-  await day.fill(inDays(3));
-  await flag.selectOption('must');
-  await bar.fill('book the kickoff room tomorrow !like ~30m');
-  await expect(day).toHaveValue(inDays(3));
-  await expect(flag).toHaveValue('must');
-  await page.getByRole('button', { name: 'Give it a home' }).click();
-  await page.getByRole('option', { name: /Autumn workshop/ }).click();
-  await add.click();
-  await expect(page.getByText('Added “book the kickoff room”', { exact: false })).toBeVisible();
-  const [task] = await allTasks(app);
-  expect([task.text, task.due, task.flag, task.estimate, task.home.title]).toEqual(['book the kickoff room', inDays(3), 'must', 30, 'Autumn workshop']);
-  // Emptied for the next one, and the boxes follow the words again.
-  await expect(bar).toHaveValue('');
-  await expect(day).toHaveValue('');
-  await expect(flag).toHaveValue('');
-  await bar.fill('call the printer someday');
-  await expect(day).toHaveValue('');
-  await expect(page.locator('.tasks-page .quick-chips > *')).toHaveText(['Someday']);
-  await bar.press('Enter');
-  expect((await allTasks(app)).find((t) => t.text === 'call the printer').due).toBe('someday');
 });
 
 test('search finds a task by its words, its home or its page, open or done, whatever the view', async ({ page, app }) => {

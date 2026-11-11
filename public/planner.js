@@ -48,6 +48,7 @@ import { eventLine, eventFill, gMark } from './calendar.js';
 import { openShutdown, closedBar, shutdownApi } from './shutdown.js';
 import { cardNode } from './assistant.js';
 import { dayColumn as columnOf, orderView, hourGrid, lensControls, templateChip } from './day-hours.js';
+import { openTaskModal } from './task-modal.js';
 import { weekBoard, planningPanel, reviewPanel } from './planning.js';
 import { quarterBoard, quarterApi, quarterOf, quarterLabel } from './quarter.js';
 
@@ -506,7 +507,7 @@ export async function showPlanner(dayParam) {
   const dialog = el('dialog', { class: 'capture-box event-dialog', 'aria-label': 'Time block' });
   const shutdownDialog = el('dialog', { class: 'capture-box event-dialog shutdown-dialog', 'aria-label': 'Close the day' });
   document.body.append(dialog, shutdownDialog, planDialog, pinDialog);
-  onLeave(() => { dialog.remove(); shutdownDialog.remove(); planDialog.remove(); pinDialog.remove(); undoPlace.replaceChildren(); });
+  onLeave(() => { dialog.remove(); shutdownDialog.remove(); planDialog.remove(); pinDialog.remove(); document.querySelector('dialog.task-modal')?.remove(); undoPlace.replaceChildren(); });
   const canClose = () => view === 'day' && day <= today() && !plan?.closed?.closed;
   const closeTheDay = () => openShutdown(shutdownDialog, plan, { closed: load });
   async function reopenTheDay() {
@@ -611,10 +612,7 @@ export async function showPlanner(dayParam) {
 
   function drawAsk() {
     const missed = plan.tray.missed;
-    // With Tasks in depth: when something is missed, one quiet line above today, with its count and the way to the Missed view.
-    const line = () => (moduleOn('tasks-plus') && day === today() && missed.length
-      ? el('p', { class: 'planner-missed-line', role: 'status' }, icon('task'), ` ${missed.length} missed · `, el('a', { href: '/tasks?view=missed' }, 'Open')) : null);
-    if (plan.settings.missed !== 'ask' || day !== today() || !missed.length || keptInMissed === today()) { askPlace.replaceChildren(...[line()].filter(Boolean)); return; }
+    if (plan.settings.missed !== 'ask' || day !== today() || !missed.length || keptInMissed === today()) { askPlace.replaceChildren(); return; }
     const count = missed.length === 1 ? '1 task from an earlier day is' : `${missed.length} tasks from earlier days are`;
     askPlace.replaceChildren(el('div', { class: 'undo-bar planner-ask', role: 'status' },
       el('span', {}, `${count} not done.`),
@@ -823,20 +821,10 @@ export async function showPlanner(dayParam) {
     return node;
   }
 
-  // A task's words: a long one shows its few words (by the assistant); a click on them opens
-  // the whole text, and another click folds it again.
+  // A task's words: its title, as a button that opens the same pop-up as the Tasks page.
+  const openTask = (task) => openTaskModal({ task, undoPlace, onChanged: () => load(), onDeleted: () => load() });
   function taskWords(task, className) {
-    if (!task.short_text) return el('span', { class: className }, task.text);
-    const words = el('button', {
-      type: 'button', class: `${className} task-short`, 'aria-expanded': 'false', title: task.text,
-      onclick: (e) => {
-        e.stopPropagation();
-        const open = words.getAttribute('aria-expanded') !== 'true';
-        words.setAttribute('aria-expanded', String(open));
-        words.textContent = open ? task.text : task.short_text;
-      },
-    }, task.short_text);
-    return words;
+    return el('button', { type: 'button', class: `${className} task-open`, title: task.text, onclick: (e) => { e.stopPropagation(); openTask(task); } }, task.short_text || task.text);
   }
 
   // A task waiting to be placed. A missed one on today's Planner comes back with Today;
@@ -978,6 +966,7 @@ export async function showPlanner(dayParam) {
     planNext: () => { panelOpen = true; panelKind = 'plan'; return go(addDays(week.week, 7), 'week'); },
     close: () => togglePanel(false),
     reload: load,
+    openTask,
     makeHighlight,
   });
 
@@ -1058,6 +1047,7 @@ export async function showPlanner(dayParam) {
       other = orderView(columnOf(plan, hours, day), {
         onToggle: (id, done) => change({ id }, { done }),
         onPin: (id) => { const t = plan.tasks.find((x) => x.id === id); if (t) openPin(t); },
+        onOpen: (id) => { const t = plan.tasks.find((x) => x.id === id); if (t) openTask(t); },
       });
     } else if (lensOn && lens === 'hours' && range !== 'day') {
       const first = range === '7' ? weekStart(day) : day;
@@ -1067,6 +1057,7 @@ export async function showPlanner(dayParam) {
       if (mine !== grids) return;
       other = hourGrid(plansOf.map((p, i) => columnOf(p, layoutOfPlan(p, days[i]), days[i])), {
         onPin: (id) => { const t = plansOf.flatMap((p) => p.tasks).find((x) => x.id === id); if (t) openPin(t); },
+        onOpen: (id) => { const t = plansOf.flatMap((p) => p.tasks).find((x) => x.id === id); if (t) openTask(t); },
         // A task let go in a gap of a day takes that place: its day, and a time inside the gap that puts it where the pointer was.
         onDrop: async (id, d, minutes) => {
           const done = startTiming('Drop a task');

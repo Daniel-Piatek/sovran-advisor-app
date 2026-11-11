@@ -31,6 +31,7 @@ export const assistantApi = {
   list: () => request('GET', '/api/conversations'),
   create: () => request('POST', '/api/conversations', {}),
   get: (id) => request('GET', `/api/conversations/${id}`),
+  rename: (id, title) => request('PATCH', `/api/conversations/${id}`, { title }),
   remove: (id) => request('DELETE', `/api/conversations/${id}`),
   restore: (id) => request('POST', `/api/conversations/${id}/restore`, {}),
   stop: (id) => request('POST', `/api/conversations/${id}/stop`, {}),
@@ -132,6 +133,26 @@ function stepsNode(steps) {
     ...(files.length ? [el('p', { class: 'chat-files' }, icon('notes'), files.join(', '))] : []));
 }
 
+// What to keep of a reply: the part selected inside it, else all of it. The title is its first line, without the marks.
+function keepOf(message, body) {
+  const selection = window.getSelection();
+  const picked = selection && !selection.isCollapsed && body.contains(selection.anchorNode) && body.contains(selection.focusNode) ? selection.toString().trim() : '';
+  const text = picked || message.text.trim();
+  const first = text.split('\n').find((line) => line.trim()) ?? '';
+  return { text, title: first.replace(/^[#>*\-\s\d.]+/, '').replace(/[*_`]/g, '').trim().slice(0, 80), part: Boolean(picked) };
+}
+
+// Under a finished reply: send it to the Inbox to be sorted later. A selected part is kept alone.
+function keepButtons(message, body) {
+  const result = el('span', { class: 'chat-keep-result', role: 'status' });
+  const done = (text, href) => result.replaceChildren(text, ...(href ? [' ', el('a', { href }, 'Open')] : []));
+  const inbox = el('button', { type: 'button', class: 'button button-quiet', title: 'Send this reply (or the part you selected) to the Inbox', onclick: async () => {
+    const { text } = keepOf(message, body);
+    try { await request('POST', '/api/captures', { body: text, world: 'inner' }); done('Sent to the Inbox.', '/inbox'); } catch (err) { done(`Couldn't send: ${err.message}`); }
+  } }, 'Send to Inbox');
+  return el('div', { class: 'chat-keep' }, inbox, result);
+}
+
 // A bubble: yours on the right, the assistant's on the left with its label.
 function bubble(message, changed = () => {}) {
   if (message.role === 'user') {
@@ -145,6 +166,7 @@ function bubble(message, changed = () => {}) {
     body,
     ...(message.state === 'answering' ? [el('span', { class: 'chat-working', 'aria-label': 'Answering' }, '…')] : []),
     ...(message.state === 'stopped' ? [el('p', { class: 'chat-note' }, 'Stopped.')] : []),
+    ...(message.state === 'answering' || !message.text?.trim() ? [] : [keepButtons(message, body)]),
     citations(message.sources),
     ...(message.cards ?? []).map((card) => cardNode(card, (next) => { Object.assign(card, next); changed(); })),
     stepsNode(message.steps));
@@ -172,7 +194,7 @@ export async function showAssistant(id) {
   const newChat = el('a', { class: 'button button-primary page-add', href: '/assistant' }, icon('plus'), 'New chat');
 
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, title, newChat, actions),
+    el('header', { class: 'top-bar' }, title, newChat),
     // Your chats on the left, the chat on the right, each a panel of its own on the grey, like the Planner.
     el('div', { class: 'chat-layout' },
       list,
@@ -195,7 +217,7 @@ export async function showAssistant(id) {
     let chats = [];
     try { chats = await assistantApi.list(); } catch { return; }
     list.replaceChildren(
-      el('h2', { class: 'chat-list-title' }, 'Your chats'),
+      el('div', { class: 'chat-list-head' }, el('h2', { class: 'chat-list-title' }, 'Chats'), actions),
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
       }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
@@ -207,11 +229,38 @@ export async function showAssistant(id) {
     thread.replaceChildren(...messages.map((m) => bubble(m, () => drawThread())));
     thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
-    title.textContent = conversation?.title || 'Assistant';
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
-    actions.replaceChildren(...(conversation?.messages.length ? [el('button', {
-      type: 'button', class: 'button button-quiet', onclick: () => remove(),
-    }, icon('trash'), 'Delete chat')] : []));
+    actions.replaceChildren(...(conversation?.messages.length ? [
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Rename chat', onclick: () => startRename() }, 'Rename'),
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Delete chat', onclick: () => remove() }, 'Delete'),
+    ] : []));
+  }
+
+  // Rename: the chat's name in the list turns into a box; Enter keeps the new name, Esc leaves it as it was.
+  function startRename() {
+    const name = list.querySelector('.chat-list-item[aria-current="page"] .chat-list-name');
+    if (!name || !conversation) return;
+    const box = el('input', { type: 'text', class: 'chat-rename', 'aria-label': 'Chat name', maxlength: 80, value: conversation.title || '' });
+    let done = false;
+    const finish = async (keep) => {
+      if (done) return;
+      done = true;
+      const wanted = box.value.trim();
+      if (keep && wanted && wanted !== conversation.title) {
+        try { conversation = { ...conversation, title: (await assistantApi.rename(conversation.id, wanted)).title }; } catch (err) { problem.textContent = err.message; }
+      }
+      drawThread();
+      drawList();
+    };
+    box.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+      if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+    });
+    box.addEventListener('blur', () => finish(true));
+    box.addEventListener('click', (event) => event.preventDefault());
+    name.replaceChildren(box);
+    box.focus();
+    box.select();
   }
 
   async function load(conversationId) {

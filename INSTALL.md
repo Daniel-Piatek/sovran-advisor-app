@@ -28,7 +28,7 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
    If macOS asks to install the command line developer tools for `git`, the person presses
    Install and you continue when it is done. (Without git: download
    https://github.com/Daniel-Piatek/sovran-advisor-app/archive/refs/heads/main.zip and unzip it
-   to `~/Sovran Advisor`; updates then work the same way, by downloading again.)
+   to `~/Sovran Advisor`; see "Installed from a zip" under updating.)
 3. **Install what it needs:** `cd "$HOME/Sovran Advisor" && npm install --omit=dev`.
 4. **The app icon**, from the app's folder:
    `cd "$HOME/Sovran Advisor" && npm run desktop:build && mkdir -p ~/Applications && cp -R "build/Sovran Advisor.app" ~/Applications/`.
@@ -108,15 +108,47 @@ while the computer is switched on and awake.
 
 ## For Claude: updating it ("update Sovran Advisor")
 
+The person may have changed their own copy (see `CUSTOMISING.md`). Their changes must survive
+the update. Never use `git reset --hard`, `git checkout -- <file>`, `git stash drop`,
+`git clean` or a fresh download over the folder to get past a problem, unless the person has
+said yes to losing that exact change.
+
 1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the
    app keeps running until it is stopped). On Windows, closing its black window stops it too.
-2. In the app's folder: `git pull`, then `npm install --omit=dev`.
-3. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
+2. **Keep the person's changes.** In the app's folder, run `git status`. If files the app came
+   with are changed or new files are there (`data/` never shows: it is left out of git), save
+   them as their own step: `git add -A` and
+   `git commit -m "My own changes before the update of YYYY-MM-DD"` (if git asks who is
+   committing, set `user.name` and `user.email` for this folder only, with
+   `git config user.name "<their name>"` and `git config user.email "sovran@localhost"`).
+   Check that `MY-CHANGES.md` lists them; add what is missing.
+3. **Mark the spot:** `git tag before-update-YYYY-MM-DD` (add `-2` if that tag is there), so the
+   whole update can be undone.
+4. **Bring in the new version:** `git pull --no-rebase origin main`, then `npm install --omit=dev`.
+   - If git says it **merged** or **fast-forwarded**, go on.
+   - If git reports a **CONFLICT**, stop. For each clash, tell the person in plain words what
+     their change was (from `MY-CHANGES.md`) and what the new version changes in the same place.
+     Offer: keep mine, take the new one (then make their change again on top, if they want),
+     combine them (show the result before saving), or not now (`git merge --abort`, which puts
+     everything back as it was). Wait for their answer, then finish with `git commit`.
+5. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
    was upgraded or moved (for example by `brew upgrade node`): the icon remembers where Node.js
    was when it was built, and does not start without it.
-4. Start it again. A database from an older version is upgraded by the app itself, after it
-   keeps a whole copy next to it; there is also a daily copy in `data/backups/`.
+6. Start it again and check that the person's own changes still work. A database from an older
+   version is upgraded by the app itself, after it keeps a whole copy next to it; there is also a
+   daily copy in `data/backups/`.
 
-Never touch the `data/` folder: it is the person's own notes, journal and people. If `git pull`
-reports that a file the person changed clashes with the update, stop and explain it to them in
-plain words before doing anything else.
+**To undo an update** ("undo the last Sovran Advisor update"): stop the app and run
+`git reset --hard before-update-YYYY-MM-DD` with the latest such tag, after saying in one
+sentence that this puts the app's files back as they were before that update (their notes are
+not touched). If the update upgraded the database, tell the person before going back, because
+the older version may not open the newer database: the copy it kept is
+`data/app.db.before-v<N>.bak`.
+
+**Installed from a zip (no git):** downloading again would wipe the person's changes. Download
+the new zip into a new folder, move `data/` and `MY-CHANGES.md` across into it, make the changes
+listed in `MY-CHANGES.md` again, and keep the old folder, renamed `Sovran Advisor (before
+update)`, until the person says all is well. Better still, offer to install git first and use it
+from then on.
+
+Never touch the `data/` folder: it is the person's own notes, journal and people.

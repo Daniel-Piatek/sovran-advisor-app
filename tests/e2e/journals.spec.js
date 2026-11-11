@@ -23,6 +23,8 @@ test('General is always there, and a new journal can be added', async ({ page, a
 // New entry, then the words, then back to the day.
 async function write(page, words) {
   await page.getByRole('link', { name: 'New entry' }).click();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('textbox', { name: 'Text', exact: true })).toBeFocused();
   await page.keyboard.type(words);
   await expect(page.getByRole('status')).toHaveText('Saved');

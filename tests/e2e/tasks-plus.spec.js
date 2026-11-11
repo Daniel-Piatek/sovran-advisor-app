@@ -71,7 +71,6 @@ test('switched off, q does nothing and the marks go; every task stays; switched 
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('q');
   await expect(box(page)).toHaveCount(0);
-  await expect(page.getByLabel('Add a task')).not.toBeFocused();
   expect((await allTasks(app)).length).toBe(1);
 
   await page.goto(`${app.url}/settings`);
@@ -80,7 +79,7 @@ test('switched off, q does nothing and the marks go; every task stays; switched 
   await page.goto(`${app.url}/tasks`);
   await expect(marks(page)).toHaveText(['Speedy · 5 min']);
   await page.keyboard.press('q');
-  await expect(page.getByLabel('Add a task')).toBeFocused();
+  await expect(box(page).getByRole('textbox', { name: 'Add a task' })).toBeFocused();
 });
 
 test('the Library shows the Speedy mark', async ({ page, app }) => {
@@ -250,10 +249,10 @@ test('keys never act inside a text field, and Esc clears the selection', async (
   await post(app, { text: 'one', due: today() });
   await post(app, { text: 'two', due: today() });
   await page.goto(`${app.url}/tasks`);
-  await page.getByLabel('Add a task').fill('');
-  await page.getByLabel('Add a task').focus();
+  await page.getByLabel('Search tasks').focus();
   await page.keyboard.type('jjxxee');
-  await expect(page.getByLabel('Add a task')).toHaveValue('jjxxee');
+  await expect(page.getByLabel('Search tasks')).toHaveValue('jjxxee');
+  await page.getByLabel('Search tasks').fill('');
   await expect(page.locator('.task-selection')).toBeHidden();
   await page.keyboard.press('Escape');
   await page.locator('body').click({ position: { x: 5, y: 5 } });
@@ -333,12 +332,9 @@ test('d picks another day for a missed task, and m moves it to tomorrow', async 
   await expect.poll(async () => (await allTasks(app)).find((t) => t.text === 'book the room').due).toBe(inDays(1));
 });
 
-test('the Planner says how many are missed and opens the Missed view; off, the line and the view go', async ({ page, app }) => {
+test('the Missed view lists what was missed; off, the view goes', async ({ page, app }) => {
   await post(app, { text: 'update the workshop page', due: inDays(-4) });
-  await page.goto(`${app.url}/planner`);
-  const line = page.locator('.planner-missed-line');
-  await expect(line).toContainText('1 missed');
-  await line.getByRole('link', { name: 'Open' }).click();
+  await page.goto(`${app.url}/tasks?view=missed`);
   await expect(page).toHaveURL(/\/tasks\?view=missed$/);
   await expect(page.locator('.task-row .task-words')).toHaveText([/update the workshop page/]);
 
@@ -346,9 +342,6 @@ test('the Planner says how many are missed and opens the Missed view; off, the l
   const module = page.locator('[data-module="tasks-plus"]');
   await module.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(module.getByRole('button', { name: 'Off', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.goto(`${app.url}/planner`);
-  await expect(page.getByRole('heading', { name: 'Planner' })).toBeVisible();
-  await expect(page.locator('.planner-missed-line')).toHaveCount(0);
   await page.goto(`${app.url}/tasks`);
   await expect(page.getByRole('tab', { name: /Missed/ })).toHaveCount(0);
 });

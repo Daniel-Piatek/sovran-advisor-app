@@ -5,7 +5,7 @@ const pureWhite = 'rgb(255, 255, 255)';
 
 for (const theme of ['light', 'dark']) {
   test(`the ${theme} theme comes from the tokens, with no pure black or white`, async ({ page, app }) => {
-    await page.goto(app.url);
+    await page.goto(`${app.url}/notes`);
     if (theme === 'dark') await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
 
     const seen = await page.evaluate(() => {
