@@ -9,6 +9,7 @@
 //             The same names may sit in data/hosts.txt, one a line (hostsFile).
 
 import http from 'node:http';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -115,7 +116,7 @@ const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 
 export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
-  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null,
+  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
 } = {}) {
   const db = openDatabase(dataDir);
   settleAnswers(db);
@@ -1152,6 +1153,15 @@ export function startServer({
       setTimeout(onQuit, 100);
       return undefined;
     }
+    // POST /api/restart {}   stops the app and starts it again (Settings > Restart), so an update or a changed
+    // database takes effect without the Terminal. Only when started as the app itself.
+    if (url.pathname === '/api/restart' && onRestart) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      await readJson(req);
+      sendJson(res, 200, { restarting: true });
+      setTimeout(onRestart, 100);
+      return undefined;
+    }
     // The welcome (welcome.js): GET /api/welcome → { seen, name, assistant_ready };  PATCH /api/welcome { name?, seen? }
     // The Sovran Library (sovran-library.js): GET /api/library → { connected, key_end };  PUT /api/library { key } ('' removes it)
     // The course page (course.js): GET /api/course → { url, own };  PUT /api/course { url } ('' goes back to the app's own)
@@ -1646,6 +1656,14 @@ function sendJson(res, status, data) {
 
 // Started with `node server.js` (not imported by a test).
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const ownPort = Number(process.env.PORT ?? 3300);
+  // Started by a restart: the one that was running is on its way out; wait until its address is free.
+  if (process.env.RESTART_WAIT) {
+    for (let i = 0; i < 60; i++) {
+      try { await fetch(`http://127.0.0.1:${ownPort}/api/health`, { signal: AbortSignal.timeout(500) }); } catch { break; }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
   const { url, close } = await startServer({
     port: Number(process.env.PORT ?? 3300), // 3300: never the same address as APP Daniel (3000) on one Mac
     dataDir: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : undefined,
@@ -1660,6 +1678,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     // READ_CALENDARS=off: keep other calendars as they were last read (the demo copy).
     ...(process.env.READ_CALENDARS === 'off' ? { readCalendarsEvery: 0 } : {}),
     onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js)
+    // Settings > Restart: the same command again (same folder, same settings), on its own, then this one stops.
+    onRestart: () => {
+      spawn(process.execPath, process.argv.slice(1), { cwd: process.cwd(), env: { ...process.env, PORT: new URL(url).port, RESTART_WAIT: '1' }, detached: true, stdio: 'ignore', windowsHide: true }).unref();
+      process.kill(process.pid, 'SIGTERM');
+    },
   });
   console.log(`Listening on ${url}`);
   for (const signal of ['SIGINT', 'SIGTERM']) {
