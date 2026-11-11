@@ -18,6 +18,26 @@ import os from 'node:os';
 import path from 'node:path';
 
 export const DEFAULT_CODEX_COMMAND = ['codex'];
+// The copy of Codex that comes inside OpenAI's ChatGPT app for the Mac (2026-11-11): a student who
+// has the ChatGPT app needs no Terminal or Node.js install for it. Codex on the PATH comes first.
+export const CHATGPT_APP_CODEX = 'ChatGPT.app/Contents/Resources/codex-cli/bin/codex';
+
+const runnable = (file) => { try { fs.accessSync(file, fs.constants.X_OK); return fs.statSync(file).isFile(); } catch { return false; } };
+
+// Which codex to start: `codex` when it is on the PATH (as installed with npm or Homebrew), else on a
+// Mac the one inside the ChatGPT app (in /Applications or the owner's own Applications folder), else
+// plain `codex`, which then reads as "not set up yet". Looked up each time, so installing either one
+// works without restarting the app.
+export function findCodex({ env = process.env, platform = process.platform, home = os.homedir(), isRunnable = runnable } = {}) {
+  if (platform === 'win32') return DEFAULT_CODEX_COMMAND;
+  const onPath = String(env.PATH ?? '').split(path.delimiter).filter(Boolean).some((dir) => isRunnable(path.join(dir, 'codex')));
+  if (onPath) return DEFAULT_CODEX_COMMAND;
+  if (platform === 'darwin') {
+    const inApp = [path.join('/Applications', CHATGPT_APP_CODEX), path.join(home, 'Applications', CHATGPT_APP_CODEX)].find(isRunnable);
+    if (inApp) return [inApp];
+  }
+  return DEFAULT_CODEX_COMMAND;
+}
 export const TOKEN_ENV = 'SOVRAN_APP_TOKEN';
 
 // Parts of Codex switched off for the app, where this version of Codex has them (an unknown
