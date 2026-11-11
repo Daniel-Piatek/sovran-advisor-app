@@ -1,10 +1,21 @@
-// The Course link (course.js): hidden until the course page's address is known, then a sidebar link that
-// opens that page in a new tab; Settings sets the address; off in Settings › Modules, it goes.
+// The Course link (course.js): not offered yet (hidden from Settings › Modules and off). Switched on behind the
+// scenes it still works: hidden until the course page's address is known, then a sidebar link that opens that
+// page in a new tab; Settings sets the address; off again, it goes.
 import { test, expect } from './fixtures.js';
 
+const mod = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'course', on }) });
 const put = (app, url) => fetch(`${app.url}/api/course`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
 
+test('the Course module is not offered yet: off, no sidebar link and no row in Settings', async ({ page, app }) => {
+  expect((await put(app, 'https://example.com/course')).status).toBe(200);
+  await page.goto(`${app.url}/settings`);
+  await expect(page.getByRole('region', { name: 'Modules' }).locator('[data-module="course"]')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Course' })).toHaveCount(0);
+  await expect(page.locator('.sidebar-link[data-section="Course"]')).toHaveJSProperty('hidden', true);
+});
+
 test('the Course link shows once there is an address, opens it in a new tab, and goes when the module is off', async ({ page, app }) => {
+  await mod(app, true);
   await page.goto(app.url);
   const link = page.locator('.sidebar-link[data-section="Course"]'); // on a phone it sits under More
   await expect(link).toHaveJSProperty('hidden', true);
@@ -14,7 +25,7 @@ test('the Course link shows once there is an address, opens it in a new tab, and
   await expect(link).toHaveAttribute('href', 'https://example.com/course');
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link).toHaveAttribute('rel', 'noopener');
-  await fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'course', on: false }) });
+  await mod(app, false);
   await page.goto(app.url);
   await expect(link).toHaveJSProperty('hidden', true);
 });
@@ -22,6 +33,7 @@ test('the Course link shows once there is an address, opens it in a new tab, and
 test.describe('a bad address', () => {
   test.use({ expectedConsoleErrors: [/400/] });
   test('Settings sets the address, refuses one that is not a web address, and clearing it removes the link', async ({ page, app }) => {
+  await mod(app, true);
   await page.goto(`${app.url}/settings`);
   const part = page.getByRole('region', { name: 'Course' });
   await part.getByLabel('Course page address').fill('not an address');
