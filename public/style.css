@@ -3907,3 +3907,12 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .chat-ai[data-ai="claude"] { background: var(--ai-claude); color: var(--ai-claude-ink); }
 .chat-ai[data-ai="codex"] { background: var(--ai-chatgpt); color: var(--ai-chatgpt-ink); }
 .chat-switch { align-self: center; display: flex; align-items: center; gap: var(--space-1); margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* Tables in an answer (2026-11-11, the owner's wish): words are never split inside a cell, short columns keep
+   their words whole, the answer may use the chat's full width, and a table still too wide scrolls sideways
+   on its own instead of squeezing. */
+.chat-bubble:has(table) { max-width: 100%; }
+.chat-text table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: var(--space-2) 0; font-size: var(--text-sm); }
+.chat-text th, .chat-text td { padding: var(--space-1) var(--space-2); border-bottom: var(--line); text-align: left; vertical-align: top; overflow-wrap: normal; word-break: normal; }
+.chat-text th { white-space: nowrap; }
+.chat-text td:first-child, .chat-text td:nth-child(2) { min-width: 6em; }
