@@ -154,6 +154,8 @@ const icons = {
   goal: svg('<circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.5"/>'),
   project: svg('<path d="M3.5 14.5V2M3.5 2.5h9l-2 3 2 3h-9"/>'),
   topic: svg('<path d="M6 2L4.5 14M11.5 2L10 14M2.5 5.5h11M2 10.5h11"/>'),
+  // A Habit is a rhythm: an arrow that comes back round (advanced/mylife/1).
+  habit: svg('<path d="M13.2 8A5.2 5.2 0 1 1 11.6 4.3M13 2v3.2h-3.2"/>'),
   task: svg('<rect x="2" y="2" width="12" height="12" rx="2.5"/><path d="M5 8.2l2 2 4-4.5"/>'),
   attach: svg('<path d="M13 7.5l-5 5a3 3 0 0 1-4.2-4.2l5.5-5.5a2 2 0 0 1 2.8 2.8L6.5 11.2a1 1 0 0 1-1.4-1.4L10 5"/>'),
   edit: svg('<path d="M2.5 13.5l.7-3L11 2.7a1.4 1.4 0 0 1 2 0l.3.3a1.4 1.4 0 0 1 0 2L5.5 12.8zM9.5 4.2l2.3 2.3"/>'),
@@ -214,6 +216,7 @@ const discs = {
   goal: disc('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'),
   project: disc('<path d="M9 17.5V6.8M9 7.2h7l-1.6 2.4L16 12H9"/>'),
   topic: disc('<path d="M10.6 7l-1.2 10M14.6 7l-1.2 10M7.6 10h9M7.2 14h9"/>'),
+  habit: disc('<path d="M16.6 12a4.6 4.6 0 1 1-1.4-3.3M16.8 6.8v2.5h-2.5"/>'),
   // A small robot's face (2026-11-10, the owner's wish): its antenna, a rounded head, two eyes and a mouth.
   assistant: disc('<path d="M12 5.6v2"/><rect x="7" y="7.6" width="10" height="8.6" rx="2.2"/><path d="M10 11.2v.6M14 11.2v.6M10.2 14h3.6"/>'),
 };

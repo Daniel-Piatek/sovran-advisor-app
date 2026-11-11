@@ -354,7 +354,8 @@ export async function showTasks() {
       showDue && task.due && task.due !== todayDay() ? el('span', { class: 'due-chip' }, dueLabel(task.due)) : null,
       at ? el('span', { class: 'due-chip' }, icon('bell'), ` ${at.slice(0, 10) === todayDay() ? '' : `${dueLabel(at.slice(0, 10))} `}${timeLabel(at.slice(11))}`) : null,
       task.estimate ? (moduleOn('tasks-plus') ? kindMark(task.estimate) : el('span', { class: 'due-chip' }, estimateLabel(task.estimate))) : null,
-      task.repeat ? repeatChip(task.repeat) : null),
+      task.repeat ? repeatChip(task.repeat) : null,
+      task.mail_thread_id && moduleOn('mail') ? el('a', { class: 'due-chip mail-chip', href: `/mail?thread=${task.mail_thread_id}`, title: 'Open the conversation this task came from' }, icon('mail'), ' Mail') : null),
     places(task, checked ? null : scheduleButtons(task)),
     selected.has(task.id) && (picking || selected.size > 1) ? el('span', { class: 'task-selected-word' }, icon('task'), ' Selected') : null);
   };

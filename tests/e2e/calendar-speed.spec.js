@@ -11,9 +11,10 @@ const send = (app, method, url, body) => fetch(`${app.url}${url}`, { method, hea
 const timings = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('calendar.timings') ?? '[]'));
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 
-// A full week: from Monday, each day with five events and three placed tasks (56 items), and a few tasks waiting in the Tray.
+// A full week: from today, each day with five events and three placed tasks (56 items), and a few tasks waiting in the Tray.
 async function aFullWeek(app) {
-  const monday = new Date(); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  // Seven days from today, not from Monday: a day already past would put its tasks in the Tray's Missed list (2026-11-11: the test failed on a Wednesday).
+  const monday = new Date();
   await send(app, 'PATCH', '/api/settings', { day_start: '08:00', day_end: '18:00', split: '13:00' });
   for (let i = 0; i < 7; i += 1) {
     const d = new Date(monday); d.setDate(d.getDate() + i);

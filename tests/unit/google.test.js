@@ -50,6 +50,13 @@ test('schema 38 moves an older database: Google tables are new, every row is kep
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('Mail is a module with a manifest, off in a new install until it is switched on', () => {
+  const db = prepareDatabase(new DatabaseSync(':memory:'));
+  const mail = listModules(db).find((m) => m.id === 'mail');
+  assert.equal(mail.on, false);
+  assert.deepEqual(mail.permissions, ['mail.read', 'mail.send', 'mail.modify']);
+});
+
 test('the client: its secret goes to the key store, never to the database, and is never sent back', async (t) => {
   const { dataDir, storeDir, json, send, keyStore } = await setup(t);
   const state = await json('GET', '/api/google');

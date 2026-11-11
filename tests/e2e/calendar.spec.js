@@ -106,19 +106,21 @@ test('day and week, the way between them, and a line for now', async ({ page, ap
 });
 
 test('the 3 days view shows today and the next two, and steps by three', async ({ page, app }) => {
-  await addEvent(app, { title: 'Day after tomorrow', starts_at: `${inDays(2)}T10:00`, ends_at: `${inDays(2)}T11:00` });
+  await addEvent(app, { title: 'Two days on', starts_at: `${inDays(2)}T10:00`, ends_at: `${inDays(2)}T11:00` });
   await page.goto(`${app.url}/calendar`);
-  await page.getByRole('button', { name: '3 days' }).click();
+  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: '3 days', exact: true }).click();
+  const days = () => page.locator('.cal-column').evaluateAll((cols) => cols.map((c) => c.dataset.day));
   await expect(page.locator('.cal-column')).toHaveCount(3);
-  await expect(page.locator('.cal-column').evaluateAll((cols) => cols.map((c) => c.dataset.day))).resolves.toEqual([localDay(), inDays(1), inDays(2)]);
+  expect(await days()).toEqual([localDay(), inDays(1), inDays(2)]);
   await expect(page).toHaveURL(new RegExp(`/calendar/${localDay()}\\?view=3$`));
-  await expect(column(page, inDays(2)).getByRole('button', { name: /Day after tomorrow/ })).toBeVisible();
+  await expect(column(page, inDays(2)).getByRole('button', { name: /Two days on/ })).toBeVisible();
   await page.getByRole('button', { name: 'Later' }).click();
   await expect(page.locator('.cal-column').first()).toHaveAttribute('data-day', inDays(3));
-  await page.getByRole('button', { name: 'Today' }).click();
+  await page.getByRole('button', { name: 'Today', exact: true }).click();
   await expect(page.locator('.cal-column').first()).toHaveAttribute('data-day', localDay());
-  await page.reload(); // the view is kept in the address
+  await page.reload();
   await expect(page.locator('.cal-column')).toHaveCount(3);
+  expect(await days()).toEqual([localDay(), inDays(1), inDays(2)]);
 });
 
 test('a deleted event waits in Recently deleted', async ({ page, app }) => {

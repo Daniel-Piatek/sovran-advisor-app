@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { startServer } from '../../server.js';
 
-const quiet = { port: 0, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, googleCalendarEvery: 0, googleCalendarSendEvery: 0 };
+const quiet = { port: 0, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, mailSyncEvery: 0, googleCalendarEvery: 0, googleCalendarSendEvery: 0 };
 
 test('POST /api/restart answers and then runs the restart; without a restart handler the route does not exist', async (t) => {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'restart-'));

@@ -114,7 +114,10 @@ test('the notice offers Snooze for 10 min, 1 h or tomorrow, and Done ends only t
 
 test('the Reminders view lists every alarm with its task, and the ended ones struck through', async ({ page, app }) => {
   const [day, time] = minutesAgo(1);
-  await post(app, { text: 'send invoice 2026-118', due: day, remind_time: '14:00' });
+  // The alarm still waiting is tomorrow at 14:00, so it is later than the one that has rung whatever the hour (a fixed 14:00 today
+  // was earlier than now from 14:00 on, and the test failed every afternoon).
+  const next = new Date(`${day}T12:00`); next.setDate(next.getDate() + 1);
+  await post(app, { text: 'send invoice 2026-118', due: next.toLocaleDateString('en-CA'), remind_time: '14:00' });
   await post(app, { text: 'call Lena', due: day, remind_time: time });
   await page.goto(`${app.url}/tasks?view=reminders`);
   await expect(page.locator('.task-row .task-words')).toHaveText([/call Lena/, /send invoice 2026-118/]); // soonest alarm first

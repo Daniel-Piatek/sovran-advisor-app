@@ -208,7 +208,7 @@ function linkMenuPlugin(schema) {
         box.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
       }
 
-      const LIFE_NAMES = { key_element: 'Key Element', goal: 'goal', project: 'project', topic: 'topic' };
+      const LIFE_NAMES = { key_element: 'Key Element', goal: 'goal', project: 'project', topic: 'topic', habit: 'habit' };
       const subOf = (item) => (item.kind === 'block' ? item.note_title : item.kind === 'date' ? `${dueMonthDay(item.day)} · due` : item.kind === 'life' ? LIFE_NAMES[item.life_kind]
         : { note: 'note', day: 'journal day', entry: 'journal entry', person: 'person', company: 'company' }[item.kind] ?? '');
 

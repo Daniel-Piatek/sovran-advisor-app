@@ -88,25 +88,6 @@ test('a chat deleted comes back with Undo', async ({ page, app }) => {
   await expect(bubbles(page, 'user')).toHaveText(['What is on today?']);
 });
 
-test('wide view: the conversation opens in a large window over the page; Esc and the button close it', async ({ page, app }, testInfo) => {
-  test.skip(testInfo.project.name === 'phone', 'on a phone the chat already fills the screen');
-  await page.goto(`${app.url}/assistant`);
-  await page.getByRole('textbox', { name: 'Message' }).fill('Hello wide');
-  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
-  await expect(page.getByText('You said: Hello wide')).toBeVisible();
-  const pane = page.getByRole('region', { name: 'Chat' });
-  await page.getByRole('button', { name: 'Wide view' }).click();
-  await expect(pane).toHaveClass(/is-wide/);
-  await expect(pane).toHaveCSS('position', 'fixed');
-  await page.keyboard.press('Escape');
-  await expect(pane).not.toHaveClass(/is-wide/);
-  await page.getByRole('button', { name: 'Wide view' }).click();
-  await page.reload();
-  await expect(page.getByRole('region', { name: 'Chat' })).toHaveClass(/is-wide/); // remembered on this computer
-  await page.getByRole('button', { name: 'Close wide view' }).click();
-  await expect(page.getByRole('region', { name: 'Chat' })).not.toHaveClass(/is-wide/);
-});
-
 test('a chat can be renamed; the top bar stays "Assistant" and the chosen chat is marked', async ({ page, app }) => {
   await page.goto(`${app.url}/assistant`);
   const input = page.getByRole('textbox', { name: 'Message' });
@@ -136,4 +117,23 @@ test('a reply can be sent to the Inbox with one click', async ({ page, app }) =>
   await expect(reply.getByRole('status')).toContainText('Sent to the Inbox.');
   const waiting = await fetch(`${app.url}/api/captures`).then((r) => r.json());
   expect(waiting.map((c) => c.body)).toEqual([expect.stringContaining('This folder is empty')]);
+});
+
+test('wide view: the conversation opens in a large window over the page; Esc and the button close it', async ({ page, app }, testInfo) => {
+  test.skip(testInfo.project.name === 'phone', 'on a phone the chat already fills the screen');
+  await page.goto(`${app.url}/assistant`);
+  await page.getByRole('textbox', { name: 'Message' }).fill('Hello wide');
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
+  await expect(page.getByText('You said: Hello wide')).toBeVisible();
+  const pane = page.getByRole('region', { name: 'Chat' });
+  await page.getByRole('button', { name: 'Wide view' }).click();
+  await expect(pane).toHaveClass(/is-wide/);
+  await expect(pane).toHaveCSS('position', 'fixed');
+  await page.keyboard.press('Escape');
+  await expect(pane).not.toHaveClass(/is-wide/);
+  await page.getByRole('button', { name: 'Wide view' }).click();
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Chat' })).toHaveClass(/is-wide/); // remembered on this computer
+  await page.getByRole('button', { name: 'Close wide view' }).click();
+  await expect(page.getByRole('region', { name: 'Chat' })).not.toHaveClass(/is-wide/);
 });

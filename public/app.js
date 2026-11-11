@@ -15,6 +15,8 @@
 //   /assistant          a chat with your assistant; /assistant/:id one conversation  (public/assistant.js)
 //   /settings           what your assistant may do alone, and its activity  (public/settings.js)
 //   /boards/:id         a board opened large  (public/board-screen.js)
+//   /mail               your mail: one list, six splits, a reader  (public/mail-app.js)
+//   /mail/import        import a Takeout .mbox, fill from Gmail, Live with Gmail  (public/mail.js)
 //   /welcome            the first screen of a new install  (public/welcome.js)
 //   /library            the design library: every token and piece, with its live value  (public/library.js)
 // The frame around every screen (sidebar, bottom bar, moving between screens) is in
@@ -36,6 +38,8 @@ import { showPlanner } from './planner.js';
 import { showTimeline } from './timeline.js';
 import { loadModules } from './modules.js';
 import { showWelcome, welcomeState } from './welcome.js';
+import { showMailImport } from './mail.js';
+import { showMailApp } from './mail-app.js';
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
 
@@ -55,6 +59,8 @@ startRouter([
   { path: /^\/settings$/, show: showSettings },
   { path: /^\/library$/, show: showLibrary },
   { path: /^\/welcome$/, show: showWelcome },
+  { path: /^\/mail\/import$/, show: showMailImport },
+  { path: /^\/mail$/, show: showMailApp },
   { path: /^\/assistant(?:\/([0-9a-f-]{36}))?$/, show: showAssistant },
   { path: /^\/tasks$/, show: showTasks },
   { path: /^\/planner(?:\/(\d{4}-\d{2}-\d{2}))?$/, show: showPlanner },

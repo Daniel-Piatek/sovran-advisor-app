@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openDatabase } from '../../db.js';
+import { openDatabase, SCHEMA_VERSION } from '../../db.js';
 import { createConversation, getConversation, sendMessage } from '../../assistant.js';
 import { asClaudeEvents, codexArgs, codexEnv, TOKEN_ENV } from '../../codex.js';
 import { getProvider, setProvider } from '../../ai.js';
@@ -162,7 +162,7 @@ test('a test copy that took the AI step as 66 still gets the task details at 67'
   const db = openDatabase(dataDir);
   const columns = db.prepare("SELECT name FROM pragma_table_info('tasks')").all().map((c) => c.name);
   assert.ok(columns.includes('details'));
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 67);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
   db.close();
 });
 
@@ -189,7 +189,8 @@ test('a codex in a folder of its own (the ChatGPT app’s) answers like any othe
   fs.chmodSync(file, 0o755);
   const { findCodex } = await import('../../codex.js');
   const { programReady } = await import('../../ai.js');
-  const found = findCodex({ platform: 'darwin', home: dir, env: { PATH: '' } });
+  // Only the test's own folder counts: a Mac with the real ChatGPT app in /Applications must not answer first.
+  const found = findCodex({ platform: 'darwin', home: dir, env: { PATH: '' }, isRunnable: (f) => f.startsWith(dir) && fs.existsSync(f) });
   assert.deepEqual(found, [file]);
   assert.equal(programReady(found), true);
   const dataDir = scratch();

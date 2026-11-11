@@ -25,6 +25,7 @@ const sections = [
   { name: 'People', href: '/people', icon: 'person', more: true, owns: (path) => /^\/(people|companies)(\/|$)/.test(path) },
   { name: 'My Life', module: 'life', href: '/life', icon: 'key_element', more: true, owns: (path) => /^\/life(\/|$)/.test(path) },
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
+  { name: 'Mail', href: '/mail', icon: 'mail', more: true, module: 'mail', owns: (path) => /^\/mail(\/|$)/.test(path) },
   { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },

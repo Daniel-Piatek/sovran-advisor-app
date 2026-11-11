@@ -36,7 +36,7 @@ test('a Key Element with a Goal, a Project serving it, and a Topic', () => {
   assert.deepEqual(listLifeItems(db).find((i) => i.id === project.id).serves, [goal.id]);
 });
 
-test('only a Key Element can be a home, and only a Project serves Goals', () => {
+test('only a Key Element can be a home, and only a Project or a Habit serves Goals', () => {
   const db = emptyDb();
   const work = createLifeItem(db, { kind: 'key_element', title: 'Work' });
   const goal = createLifeItem(db, { kind: 'goal', title: 'Three clients', home_id: work.id });
@@ -45,7 +45,8 @@ test('only a Key Element can be a home, and only a Project serves Goals', () => 
   assert.throws(() => createLifeItem(db, { kind: 'key_element', title: 'X', home_id: work.id }), no);
   assert.throws(() => createLifeItem(db, { kind: 'topic', title: 'X', serves: [goal.id] }), no);
   assert.throws(() => createLifeItem(db, { kind: 'project', title: 'X', serves: [work.id] }), no);
-  assert.throws(() => createLifeItem(db, { kind: 'habit', title: 'X' }), no);
+  assert.throws(() => createLifeItem(db, { kind: 'habit', title: 'X', home_id: goal.id }), no);
+  assert.throws(() => createLifeItem(db, { kind: 'jelly', title: 'X' }), no);
   assert.throws(() => createLifeItem(db, { kind: 'goal', title: ' ' }), no);
   assert.throws(() => updateLifeItem(db, goal.id, { kind: 'topic' }), no);
 });

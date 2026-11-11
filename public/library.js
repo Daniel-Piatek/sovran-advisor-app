@@ -13,12 +13,14 @@ import { cadenceChip } from './cadence.js';
 import { mergePair } from './merge.js';
 import { glossaryRow } from './settings.js';
 import { googleAccountRow } from './google.js';
+import { mailRow, countRow, outboxRow, outboxMailRow, openedChip } from './mail.js';
 import { commentThread } from './comments.js';
 import { versionList, diffView } from './versions.js';
 import { clashBox } from './clash.js';
 import { boardCard } from './board.js';
 import { importReport } from './import-notes.js';
 import { strokePath } from './ink.js';
+import { splitTabs, keyHint, sealedFrame, composer, inviteCard } from './mail-app.js';
 import { kindMark, repeatChip } from './quick-add.js';
 import { calendarLinkRow, sentencePreview, gMark, answerBar } from './calendar.js';
 import { readEvent } from './event-words.js';
@@ -150,6 +152,33 @@ export function showLibrary() {
           ...['Today', 'Tomorrow', 'Other day', 'Let it go'].map((name) => el('button', { type: 'button', class: 'chip' }, name))))))),
     part('World tag', 'Whose a capture is: a circle for the Inner World (your own thought), a square for the Outer World (something someone else made), and the word where there is room. Shape and word, never colour alone. The Inbox keeps the two in two piles: Inner on top, newest first; Outer below, oldest first.',
       el('div', { class: 'lib-row' }, demo('Inner', worldTag('inner', { word: true })), demo('Outer', worldTag('outer', { word: true })))),
+    part('Count check row', 'One label counted on both sides: Gmail’s own number, yours, and the word Equal with a tick, or how many are still to fill in bold. The word and the shape carry it, never colour alone. When every row is equal the archive is whole.',
+      el('div', { class: 'count-rows', role: 'list' },
+        countRow({ label: 'Inbox', gmail: 1122, ours: 1122, equal: true }), countRow({ label: 'Finance', gmail: 161, ours: 160, equal: false, to_fill: 1 }))),
+    part('Outbox row', 'A change made here that is on its way to Gmail: what changed (+ a label added, − a label taken off), the mail, and where it is in words: Waiting, Sent to Gmail, Not sent (Gmail changed the same label later) or Failed. The list changes at once; Gmail comes after, so nothing is lost when the network is gone.',
+      el('div', { class: 'outbox-rows', role: 'list' },
+        outboxRow({ add: [], remove: ['Inbox'], subject: 'This week: 5 ideas and a question', state: 'waiting', problem: '' }),
+        outboxRow({ add: ['Starred'], remove: [], subject: 'Brief for the launch event', state: 'sent', problem: '' }))),
+    part('Outbox mail row', 'A mail you wrote that has not gone yet, in Mail’s Outbox: who it is to in bold, the subject, and where it is in words (Sending in 7 s, Waits until tomorrow 08:00, Did not go and why), with quiet buttons under it: Undo or Cancel, Send now, Try again, Let it go. The Outbox row’s look, stacked for the narrow list. Nothing is sent again by itself.',
+      el('div', { class: 'outbox-rows', role: 'list' },
+        outboxMailRow({ id: 'a', to: ['lena@example.com'], subject: 'Course visuals', state: 'waiting', send_at: new Date(Date.now() + 7000).toISOString(), problem: '' }, [el('button', { type: 'button', class: 'button button-quiet' }, 'Undo')]),
+        outboxMailRow({ id: 'b', to: ['jonas@example.com'], subject: 'The dates', state: 'failed', send_at: new Date().toISOString(), problem: 'Gmail did not take it (500).' }, [el('button', { type: 'button', class: 'button button-quiet' }, 'Try again'), el('button', { type: 'button', class: 'button button-quiet' }, 'Let it go')]))),
+    part('Split tabs', 'The Mail app’s tabs in two rows, each tab with its count. First, alone on its row: Inbox (every conversation with mail in your Inbox), Drafts (mail being written, saved as you type), Sent (every conversation you wrote in, the latest you sent first), Outbox (shown only while something has not gone, with how many failed) and Done. A thin grey line. Then the five splits of the Inbox as small capsules, Important, Calendar, Money, Newsletters and Other. A thick dark line under them parts the tabs from the list. A narrow list lets the second row wrap; nothing scrolls sideways. Tabs, like the Tasks page’s; the rules behind them are code you can read, and the line over an open mail says which one put it there.',
+      splitTabs({ counts: { inbox: 7, important: 2, calendar: 1, money: 1, news: 3, done: 40, drafts: 1, sent: 12, outbox: 2 }, failed: 1, current: 'inbox' })),
+    part('Key hint', 'A key beside the action it does, so the menu teaches you the keys: the name, and the key in a small box. The Mail commands (Cmd K) and the panel of times (?) are made of these.',
+      el('div', { class: 'lib-row' }, demo('With a name', keyHint('e', 'Done')), demo('Alone', keyHint('Cmd K')))),
+    part('Sealed frame', 'A mail’s own html, shown with no permissions at all: no script runs, nothing is fetched from the network unless the sender’s images were allowed (per sender, and remembered), and a link opens only when you press it, in a new tab. A quiet bar under it says what was held back; a link whose words name one address while it goes to another is marked. Every later screen that shows outside html uses this frame.',
+      el('div', { class: 'lib-sealed' }, sealedFrame('<h3>Five ideas</h3><p>A made-up mail, <b>sealed</b>.</p>'))),
+    part('Mail composer', 'The composer that opens under a conversation when you press r: to and subject already set, your words, Send (the screen’s one accent, ⌘↵), Send later (tomorrow 08:00) and “Remind me if no answer in 3 days”. A send waits ten seconds in your outbox with Undo; the first time, Google is asked for the one permission it did not need until now.',
+      el('div', { class: 'lib-composer' }, composer({ to: ['lena@nordlicht.example'], subject: 'Re: Onboarding call on Thursday?' }, { accent: false }))),
+    part('Opened chip', 'What a read confirmation can know, and only that: “Opened” with the time when something counted opened the mail, grey “Not opened yet” when nothing is known, and what did not count listed under it with its reason (a mail scanner, a privacy proxy). The word is chosen on purpose: the picture cannot prove anyone read a word, so it never says Read.',
+      el('div', { class: 'confirm-rows', role: 'list' },
+        openedChip({ to: ['lena@nordlicht.example'], subject: 'Re: Onboarding call on Thursday?', opened_at: new Date().toISOString(), opens: 1, not_counted: [{ kind: 'scanner', why: 'a mail scanner', at: new Date(Date.now() - 1_200_000).toISOString() }] }),
+        openedChip({ to: ['jonas@hafenkante.example'], subject: 'Dates', opened_at: null, opens: 0, not_counted: [] }))),
+    part('Mail row', 'One conversation, one line: the envelope shape, who wrote (bold), the subject, the last words in muted text, and on the right the letter of the account it came to, how many messages it holds and its last day. An unread one has its subject in bold. Kept in your own database; the list of the Mail app is made of these.',
+      el('div', { class: 'mail-threads', role: 'list' },
+        mailRow({ id: 'x', participants: ['Lena Fischer', 'You'], subject: 'Onboarding call on Thursday?', snippet: 'Perfect, see you Thursday at 10.', message_count: 3, last_at: '2026-11-04T17:00:00.000Z', account_letter: 'W', account_email: 'work@mypractice.com', unread: true }),
+        mailRow({ id: 'y', participants: ['Billing'], subject: 'Invoice 2026-114', snippet: 'Your invoice 2026-114 for 120.00 EUR is attached.', message_count: 1, last_at: '2026-10-28T08:00:00.000Z' }))),
     part('Timeline row', 'One thing that happened: its kind’s shape, its time, one line and where it lives. The whole row opens the thing where it lives. Kinds are told apart by shape and word, never colour.',
       el('div', { class: 'timeline-list' },
         timelineRow({ kind: 'note', at: '2026-11-08T09:12:00', text: 'Onboarding call with Lena', where: 'Note', href: '/library' }),
@@ -199,6 +228,13 @@ export function showLibrary() {
           el('p', { class: 'action-what' }, icon('lock'), el('span', {}, 'Wants to: Read outside its folder: /Users/me/Documents/plan.txt'), el('em', { class: 'plan-free' }, 'Waiting for you')),
           el('div', { class: 'action-buttons' },
             el('button', { type: 'button', class: 'button' }, 'Allow once'), el('button', { type: 'button', class: 'button' }, 'Always allow'), el('button', { type: 'button', class: 'button button-quiet' }, 'No'))))),
+    part('Draft card', 'A mail your assistant drafted, waiting for your Send. Nothing is sent until you press it; Edit opens it in the composer. Its limits are in code (Settings).',
+      el('div', { class: 'lib-chat' },
+        el('div', { class: 'action-card', 'data-kind': 'mail_send', 'data-state': 'proposed', role: 'group', 'aria-label': 'A draft card (an example)' },
+          el('p', { class: 'action-what' }, icon('mail'), el('span', {}, 'Send a mail to lena@nordlicht.example: “Re: Onboarding call on Thursday?”'), el('em', { class: 'plan-free' }, 'Waiting for you')),
+          el('div', { class: 'action-preview' }, el('p', { class: 'action-preview-text' }, 'Thursday works for me, see you at 10')),
+          el('div', { class: 'action-buttons' },
+            el('button', { type: 'button', class: 'button' }, 'Send'), el('a', { class: 'button', href: '/library' }, 'Edit'), el('button', { type: 'button', class: 'button button-quiet' }, 'Dismiss'))))),
     part('Sentence preview', 'What Enter will make, as chips, while you type an event in words (Calendar in depth): the title, the day, the time, the length and the people it knows. A dashed chip is a guess, with the guess in words, so a wrong one is fixed before anything exists.',
       el('div', { class: 'lib-chat' },
         sentencePreview(readEvent('lunch with Lena at the lake thu 12:30 1h', { today: '2026-11-09', names: [{ id: 'lena', name: 'Lena Fischer' }] })),
@@ -234,6 +270,24 @@ export function showLibrary() {
       el('div', { class: 'cal-calendars' },
         calendarLinkRow({ name: 'Family', colour: 2, fetched_at: new Date(Date.now() - 4 * 60_000).toISOString(), problem: '' }),
         calendarLinkRow({ name: 'School', colour: 3, fetched_at: null, problem: 'The link did not answer (404).' }))),
+    part('Habit rhythm', 'A Habit: its shape is an arrow that comes round, in My Life’s green, and its row says how often in words under its name. On its page, how often is a number, “times a” and week or month (a week takes at most seven), with what counts as done under it.',
+      el('div', { class: 'lib-chat' },
+        el('div', { class: 'life-frame' },
+          el('div', { class: 'life-item-row' }, icon('habit'),
+            el('span', { class: 'life-item-text' }, el('span', { class: 'life-item-title' }, 'Run 3× a week'), el('span', { class: 'life-item-sub' }, '3× a week · Easy pace, no watch')))),
+        el('div', { class: 'contact-details' },
+          el('label', { class: 'detail-label' }, 'How often'),
+          el('div', { class: 'life-cadence' },
+            el('input', { class: 'detail-input life-times', type: 'number', value: '3', 'aria-label': 'How many times (example)', readonly: true }),
+            el('span', {}, 'times a'),
+            el('select', { class: 'detail-input', 'aria-label': 'Per week or per month (example)' }, el('option', {}, 'week'), el('option', {}, 'month'))),
+          el('label', { class: 'detail-label' }, 'Counts as done when'),
+          el('textarea', { class: 'detail-input detail-lines', rows: 2, readonly: true, 'aria-label': 'Counts as done when (example)' }, 'Twenty minutes or more, outside')))),
+    part('Invitation card', 'An invitation in a mail: the meeting, who asked, and three keys. Answered, it says in words what happened: in your Calendar, and that the answer went by mail. Shape and words, never colour.',
+      el('div', { class: 'lib-chat' },
+        inviteCard({ summary: 'Kick-off Nordlicht', start: '2026-10-15T10:00', end: '2026-10-15T11:00', all_day: false, location: 'Nordlicht Studio', organizer: { name: 'Jonas Weber', email: 'jonas@hafenkante.example' }, attendees: [{}, {}], cancelled: false, answer: null }),
+        inviteCard({ summary: 'Kick-off Nordlicht', start: '2026-10-15T10:00', end: '2026-10-15T11:00', all_day: false, location: 'Nordlicht Studio', organizer: { name: 'Jonas Weber', email: 'jonas@hafenkante.example' }, attendees: [{}, {}], cancelled: false,
+          answer: { said: 'Yes', word: 'Accepted', in_calendar: true, send: { state: 'sent', problem: '' } } }))),
     part('Outline bullet', 'A bullet of a note written as an outline (Writing and thinking): the dot, the fold triangle that appears when the pointer is on it (always there when it is folded) and the words; a folded one ends in an ellipsis. The zoom path leads back out of a zoom.',
       el('div', { class: 'lib-chat' },
         el('div', { class: 'note-body lib-outline' },
@@ -292,6 +346,8 @@ export function showLibrary() {
           stroke(Array.from({ length: 24 }, (_, i) => [10 + i * 11, 70 + Math.sin(i / 3) * 6, 0.5, i * 20]), true);
           return svg;
         })())),
+    part('Mail chip', 'On a task that came from a conversation: a link back to it. On the open mail, the Task line says where it went.',
+      demo('Mail chip', el('a', { class: 'due-chip mail-chip', href: '/library' }, icon('mail'), ' Mail'))),
     part('Chat bubble', 'Yours on the right on the surface colour, the assistant’s on the left. Shape and side tell them apart, never colour.',
       el('div', { class: 'lib-chat' },
         el('div', { class: 'chat-bubble is-user' }, el('p', { class: 'chat-text' }, 'What did I write about Lena?')),

@@ -2,6 +2,15 @@
 // One accent colour, on at most one thing per screen.
 
 import { test, expect } from './fixtures.js';
+import { makeMailbox } from '../../scripts/demo-mail.js';
+
+// A made-up mailbox (scripts/demo-mail.js), read in through the app's own import.
+const mailbox = async (app) => {
+  await fetch(`${app.url}/api/people`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Lena Fischer","emails":"lena@nordlicht.example"}' });
+  await fetch(`${app.url}/api/mail/import?account=work%40example.com`, {
+  method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': 'w.mbox' }, body: Buffer.from(makeMailbox({ filler: 0 }).text),
+  });
+};
 
 // Every screen of the app, with some test data, and what shows once it is drawn.
 // Add each new screen here.
@@ -75,6 +84,13 @@ const screens = [
   } },
   { name: 'the Assistant', ready: '.chat-input', open: async () => '/assistant' },
   { name: 'Settings', ready: '.permission-row', open: async () => '/settings' },
+  { name: 'Mail', ready: '.mail-row', open: async (app) => { await mailbox(app); return '/mail'; } },
+  { name: 'a conversation in Mail', ready: '.mail-message', open: async (app) => {
+    await mailbox(app);
+    const { threads } = await (await fetch(`${app.url}/api/mail/inbox?split=important`)).json();
+    return `/mail?split=important&thread=${threads[0].id}`;
+  } },
+  { name: 'a new email in Mail', ready: '.mail-composer', open: async (app) => { await mailbox(app); return '/mail?new=1'; } },
   { name: 'the Library', ready: '.lib-swatch', open: async () => '/library' },
   { name: 'a conversation', ready: '.chat-bubble[data-state="done"]', open: async (app) => {
     const res = await fetch(`${app.url}/api/conversations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });

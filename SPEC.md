@@ -18,7 +18,7 @@ notes, and an assistant that knows them, all kept on the owner's own computer.
 
 ## Built in, switched on when wanted
 
-Tasks, Planner, Calendar, My Life, Google Calendar and Dictation (Settings › Modules).
+Tasks, Planner, Calendar, My Life, My Life in depth (Habits), Google Calendar, Dictation and Mail (Settings › Modules). Mail waits for setup directions.
 
 ## My own wishes
 

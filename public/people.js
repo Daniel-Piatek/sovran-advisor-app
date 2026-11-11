@@ -8,6 +8,7 @@
 import { createEditor, catchPageDrops, showTaskAt } from './editor.js';
 import { api, el, icon, request, makeSaver, undoBar, linkedFromSection } from './ui.js';
 import { createTimeline } from './timeline.js';
+import { mailRow } from './mail.js';
 import { logLine } from './log-line.js';
 import { cadenceChip, reconnectSection } from './cadence.js';
 import { openImport } from './import.js';
@@ -25,6 +26,21 @@ export function face(kind, name, size = 'small') {
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 // ---- The lists ----
+
+// Mail with them (Mail 10): the conversations with this person or company, and the day you were last in touch.
+function mailSection(kind, id, item) {
+  const place = el('div', { class: 'mail-threads', role: 'list', 'aria-label': `Mail with ${item.name}` });
+  const chip = el('span', { class: 'last-touch-chip', role: 'status' });
+  const dayWord = (iso) => { const d = new Date(iso); const t = new Date(); const days = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86_400_000); return days === 0 ? 'today' : days === 1 ? 'yesterday' : days < 30 ? `${days} days ago` : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+  request('GET', `/api/mail/with?${new URLSearchParams({ kind, id })}`).then(({ threads, last_in_touch: last }) => {
+    // Last in touch: the newer of your mail and, for a person, what you logged.
+    const logged = item.last_in_touch ? new Date(`${item.last_in_touch}T12:00`).toISOString() : null;
+    const newest = [last, logged].filter(Boolean).sort().pop();
+    if (newest) chip.textContent = `Last in touch: ${dayWord(newest)}`;
+    place.replaceChildren(...(threads.length ? threads.map((t) => el('a', { class: 'mail-with-link', href: `/mail?thread=${t.id}` }, mailRow(t))) : [el('p', { class: 'empty' }, `No mail with ${item.name} yet.`)]));
+  }).catch(() => { place.replaceChildren(el('p', { class: 'empty' }, "Their mail couldn't be loaded.")); });
+  return el('section', { class: 'contact-mail', 'aria-label': `Mail with ${item.name}` }, el('h2', { class: 'contact-heading' }, `Mail with ${item.name}`, ' ', chip), place);
+}
 
 export async function showPeople(kind = 'person') {
   const isPeople = kind === 'person';
@@ -294,6 +310,7 @@ export async function showContact(kind, id) {
             el('span', { class: 'person-row-name' }, person.name), el('span', { class: 'person-row-sub' }, person.role || '')))))
         : el('p', { class: 'empty' }, 'Nobody yet. A person’s page can put them here.'),
     ]),
+    ...(moduleOn('mail') ? [mailSection(kind, id, item)] : []),
     linkedFromSection(kind, id, { without: 'event', title: 'Mentioned in', none: `Nothing mentions ${isPerson ? 'them' : 'it'} yet. Type ${isPerson ? '@' : '@@'} and the name in a note or journal entry.` }),
     ...(isPerson && moduleOn('calendar-plus') ? [linkedFromSection(kind, id, { only: 'event', title: `Events with ${item.name.split(' ')[0]}`, none: `No events with ${item.name.split(' ')[0]} yet. Press ⌘K in the Calendar and type, for example, “lunch with ${item.name.split(' ')[0]} thu 12:30 1h”.` })] : []),
   );

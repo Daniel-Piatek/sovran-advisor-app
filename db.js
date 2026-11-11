@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 67;
+export const SCHEMA_VERSION = 69;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -366,7 +366,26 @@ const steps = {
     if (columns.length && !columns.includes('ai')) db.exec("ALTER TABLE chat_messages ADD COLUMN ai TEXT NOT NULL DEFAULT ''");
     if (columns.length && !columns.includes('model')) db.exec("ALTER TABLE chat_messages ADD COLUMN model TEXT NOT NULL DEFAULT ''");
   },
+  // 68: Habits, the fifth kind in My Life (advanced/mylife/1; APP Daniel's step 67): kind habit, how often (cadence_times a week
+  // or a month) and what counts as done. Only adds: the table is made again with every row copied, and a second run does nothing.
+  68(db) { remakeLife(db); },
+  // 69: Mail drafts (APP Daniel's step 68): mail_drafts is new (made from schema.sql), a mail being written and not sent yet. Nothing else changes.
+  69() {},
 };
+
+// life_items takes the kind habit and its three columns. SQLite can't change a CHECK in place, so the table is made again and the rows
+// copied. Other tables point at life_items (notes, tasks, captures, life_serves) by its name, which the new table takes: prepareDatabase
+// runs this step with foreign keys off (they can't be switched off inside a transaction) and checks them again before it commits.
+function remakeLife(db) {
+  const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'life_items'").get();
+  if (!table || table.sql.includes("'habit'")) return;
+  const start = schema.indexOf('CREATE TABLE IF NOT EXISTS life_items');
+  db.exec(schema.slice(start, schema.indexOf(');', start) + 2).replace('CREATE TABLE IF NOT EXISTS life_items', 'CREATE TABLE life_items_new'));
+  const columns = db.prepare("SELECT name FROM pragma_table_info('life_items')").all().map((c) => c.name).join(', ');
+  db.exec(`INSERT INTO life_items_new (${columns}) SELECT ${columns} FROM life_items`);
+  db.exec('DROP TABLE life_items'); // its index goes with it; schema.sql makes it again
+  db.exec('ALTER TABLE life_items_new RENAME TO life_items');
+}
 
 // The links table as schema.sql has it now, every row kept (SQLite can't change a CHECK in place).
 function remakeLinks(db) {
@@ -418,15 +437,24 @@ export function prepareDatabase(db, { file } = {}) {
 
   if (version < SCHEMA_VERSION && hasTables) {
     if (file) db.exec(`VACUUM INTO '${`${file}.before-v${SCHEMA_VERSION}.bak`.replaceAll("'", "''")}'`);
+    // Step 68 makes life_items again, which other tables point at: foreign keys are off for the move and checked before it commits
+    // (a reference that was already broken before is not blamed on the move).
+    const keysOff = version < 68;
+    const broken = () => db.prepare('PRAGMA foreign_key_check').all().length;
+    if (keysOff) db.exec('PRAGMA foreign_keys = OFF');
+    const brokenBefore = keysOff ? broken() : 0;
     db.exec('BEGIN');
     try {
       for (let v = version + 1; v <= SCHEMA_VERSION; v++) steps[v](db);
       db.exec(schema);
+      if (keysOff && broken() > brokenBefore) throw new Error('The move broke a reference between tables: nothing was changed.');
       db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
       db.exec('COMMIT');
     } catch (err) {
       db.exec('ROLLBACK');
       throw err;
+    } finally {
+      db.exec('PRAGMA foreign_keys = ON');
     }
   } else {
     db.exec(schema);

@@ -34,12 +34,23 @@ import { createGoogleEvent, answerGoogleEvent, changeGoogleEvent, sendDue as sen
 import { readGoogleCalendar, startGoogleCalendarRead, writableCalendars, googleCalendarState, googleCalendarJob, googleCalendarSendJob } from './gcal.js';
 import { checkTemplateInput, listTemplates, createTemplate, removeTemplate, restoreTemplate, placeTemplate } from './templates.js';
 import { listDevices, addDevice, revokeDevice, deviceForToken, checkShareInput, shareCapture } from './capture-devices.js';
+import { fillFromGmail, countCheck, canRead } from './gmail.js';
+import { inboxView, explainThread, describeSplits, SPLIT_IDS } from './mail-splits.js';
+import { saveDraft, listDrafts, getDraft, discardDraft, restoreDraft } from './mail-drafts.js';
+import { peopleOfThread, addSender, mailWith } from './mail-people.js';
 import { createBoard, getBoard, renameBoard, setBackground, addItem, changeItem, removeItem } from './boards.js';
 import { addStroke, removeStroke, strokesToText } from './ink.js';
 import { listVersions, getVersion, compareVersions, latestVersion } from './versions.js';
 import { saveWithMerge, listClashes, resolveClash, takeClashNotes } from './merge.js';
 import { createComment, replyTo, listThreads as listCommentThreads, changeComment, deleteComment, getComment, askText } from './comments.js';
 import { listBlocks, setFolded, searchBullets, bulletDetail, usedIn } from './blocks.js';
+import { invitesOfThread, answerInvite, undoAnswer, PARTSTAT } from './invite.js';
+import { mailToTask, tasksOf, describeLimits, LIMITS, draftsToday } from './mail-assistant.js';
+import { getAction, markCardEdited } from './assistant-tools.js';
+import { pixelBase, setPixelBase, recordOpen, confirmationsOf, listPeople as confirmPeople, PIXEL } from './mail-confirm.js';
+import { canSend, composeSend, undoSend, listSends, replyDraft, sendDue, remindDue, settleSends, startMailSender, pendingSends, sendNow, retrySend, dismissSend } from './mail-send.js';
+import { syncOnce, setLive, syncState, changeLabels, listOutbox, startMailSync, archiveThread, restoreToInbox, trashThread, restoreFromTrash, pendingChanges, retryMailChange, dismissMailChange } from './mail-sync.js';
+import { importMboxStream, settleImports, mailOverview, listThreads, getThread, checkAccountEmail, setImagesOk, listSenders } from './mail.js';
 import {
   defaultKeyStore, getGoogle, saveClient, removeClient, beginSignIn, finishSignIn, switchPermission, checkHealth, disconnect,
 } from './google.js';
@@ -116,10 +127,12 @@ const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 
 export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
-  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
+  readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
 } = {}) {
   const db = openDatabase(dataDir);
   settleAnswers(db);
+  settleImports(db);
+  settleSends(db); // a mail that was being sent when the app stopped is never sent again by itself
   // The assistant's tools answer only with this secret, made now and never shown or logged.
   const mcpSecret = randomBytes(32).toString('hex');
   let mcpUrl = '';
@@ -144,8 +157,12 @@ export function startServer({
   let googleProblem = '';
   let googleRedirect = '';
   let backups = null; // the daily backup (backup.js)
+  // The mail file being read in, as the page asks about it (mail.js); one at a time.
+  let mailJob = null;
+  let mailSync = null; // the Live with Gmail job
   let googleCalendar = null; // the Google Calendar read (Calendar in depth 7)
   let googleCalendarSend = null; // the sender of changes to Google events (Calendar in depth 8)
+  let mailSender = null; // sends what is due (Mail 8)
 
   // The app's data, as JSON:
   //   GET    /api/notes                 every note, last edited first (title and the start of the text)
@@ -580,7 +597,7 @@ export function startServer({
     //   GET    /api/tasks?done=1       the done ones, most recently done first
     //   GET    /api/tasks?home=:id     the tasks at home in a My Life item, open and done (a Key Element's: also those under it)
     //   GET    /api/tasks?deleted=1    tasks of their own that were deleted
-    //   POST   /api/tasks              add one of its own: { text, due?, flag?, estimate?, repeat?, home_id?, remind_time? }
+    //   POST   /api/tasks              add one of its own: { text, due?, flag?, estimate?, repeat?, home_id?, remind_time?, details?, mail_thread_id? (made from a mail, linked back) }
     //   PATCH  /api/tasks/:id          { done?, due?, flag?, estimate?, home_id?, text? (its own) }
     //   DELETE /api/tasks/:id,  POST /api/tasks/:id/restore   (a task of its own)
     //   GET    /api/reminders/due      reminders whose time has come
@@ -598,6 +615,7 @@ export function startServer({
         const input = await readJson(req);
         const problem = checkTaskInput(input, { creating: true });
         if (problem) return sendJson(res, 400, { error: problem });
+        if (input.mail_thread_id && !db.prepare('SELECT 1 FROM mail_threads WHERE id = ? AND deleted_at IS NULL').get(input.mail_thread_id)) return sendJson(res, 400, { error: 'No such conversation.' });
         return sendJson(res, 201, createTask(db, input));
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
@@ -1064,6 +1082,278 @@ export function startServer({
       const deleted = deleteInteraction(db, id);
       return deleted ? sendJson(res, 200, deleted) : sendJson(res, 404, { error: 'Not found' });
     }
+    // Mail (advanced/mail/2). Every message you ever got, kept here; a Google Takeout .mbox is read in once.
+    // POST /api/mail/import?account=<address>   the .mbox itself as the request body (X-File-Name: its name, URL-encoded),
+    //                                            read one message at a time as it arrives; answers when it is all in
+    // GET  /api/mail/import/status               what the file being read has done so far (read, added, per label)
+    // GET  /api/mail?account=<id>                totals, labels with their counts, the files read in, the accounts
+    // GET  /api/mail/threads?account=&label=&q=&before=&limit=   conversations, the latest first;  GET /api/mail/threads/:id one, with its messages
+    if (url.pathname === '/api/mail/import') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      // A name header can't be sent by another website without asking first; this server never says yes.
+      const name = req.headers['x-file-name'];
+      if (!name) return sendJson(res, 400, { error: 'Send the file name in X-File-Name.' });
+      let filename;
+      try { filename = decodeURIComponent(name); } catch { return sendJson(res, 400, { error: 'X-File-Name is not valid.' }); }
+      const email = checkAccountEmail(url.searchParams.get('account'));
+      if (!email) return sendJson(res, 400, { error: 'Which address is this mail from? Give it as name@example.com.' });
+      if (mailJob?.running) return sendJson(res, 409, { error: 'A mail file is being read in. Wait until it is done.' });
+      const size = Number(req.headers['content-length']) || 0;
+      const job = { running: true, filename, account: email, size, bytes: 0, read: 0, added: 0, already: 0, skipped: 0, labels: {}, started_at: new Date().toISOString(), finished_at: null, problem: '' };
+      mailJob = job;
+      try {
+        const result = await importMboxStream(db, req, { email, filename, size, dataDir, onProgress: (p) => Object.assign(job, p) });
+        Object.assign(job, { running: false, finished_at: new Date().toISOString() });
+        return sendJson(res, 200, result);
+      } catch (err) {
+        Object.assign(job, { running: false, finished_at: new Date().toISOString(), problem: err.status ? err.message : 'The file could not be read to the end.' });
+        throw err;
+      }
+    }
+    // POST /api/mail/fill { account_id, everything? }   everything in Gmail newer than what is kept, or with everything: true all that is missing (read only; needs Read your mail on)
+    // POST /api/mail/count-check { account_id }   each label: Gmail's count next to this app's
+    if (url.pathname === '/api/mail/fill' || url.pathname === '/api/mail/count-check') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      const id = String(input.account_id ?? '');
+      try {
+        if (url.pathname === '/api/mail/count-check') return sendJson(res, 200, await countCheck(db, keyStore, { mailAccountId: id, env: googleEnv, fetcher: googleFetch }));
+        if (mailJob?.running) return sendJson(res, 409, { error: 'A mail file is being read in. Wait until it is done.' });
+        const job = { running: true, filename: 'Fill from Gmail', account: id, size: 0, bytes: 0, read: 0, added: 0, already: 0, skipped: 0, labels: {}, started_at: new Date().toISOString(), finished_at: null, problem: '' };
+        mailJob = job;
+        try {
+          const result = await fillFromGmail(db, keyStore, { mailAccountId: id, dataDir, everything: input.everything === true, env: googleEnv, fetcher: googleFetch, onProgress: (p) => Object.assign(job, p) });
+          Object.assign(job, { running: false, finished_at: new Date().toISOString() });
+          return sendJson(res, 200, result);
+        } catch (err) {
+          Object.assign(job, { running: false, finished_at: new Date().toISOString(), problem: err.status ? err.message : 'The fill stopped half way.' });
+          throw err;
+        }
+      } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+        throw err;
+      }
+    }
+    // The Mail app (Mail 5): the Inbox of what others sent you, in six splits by rules that can be read.
+    // GET /api/mail/inbox?split=&account=&limit=&before=   the conversations of one split (inbox: the five together, important, calendar, money, news, other, done)
+    //                                                      with the rule that put each there, and the count of every split
+    // GET /api/mail/splits                                  the rules, in the order they are read
+    if (url.pathname === '/api/mail/splits') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, describeSplits());
+    }
+    if (url.pathname === '/api/mail/inbox') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const split = url.searchParams.get('split') ?? 'inbox';
+      if (!SPLIT_IDS.includes(split)) return sendJson(res, 400, { error: `split is ${SPLIT_IDS.join(', ')}.` });
+      const account = url.searchParams.get('account') ?? '';
+      const view = inboxView(db, { split, account, limit: Number(url.searchParams.get('limit') ?? 50), before: url.searchParams.get('before') ?? '' });
+      // Drafts and the Outbox ride along with every split: the Outbox tab shows (with its count) only while something has not gone.
+      const outbox = { drafts: listDrafts(db, { account }), sends: pendingSends(db, { account }), changes: pendingChanges(db, { account }) };
+      view.counts.drafts = outbox.drafts.length;
+      view.counts.outbox = outbox.sends.length + outbox.changes.length;
+      view.outbox_failed = outbox.sends.filter((x) => x.state === 'failed').length + outbox.changes.filter((x) => x.state === 'failed').length;
+      return sendJson(res, 200, { ...view, outbox });
+    }
+    // Drafts (schema 68): a mail being written, kept here as you type, in the Outbox until sent or discarded. Only here, never in Gmail.
+    // GET /api/mail/unsent?account=   the drafts, the latest first;  POST /api/mail/unsent { id?, account_id, thread_id?, to, cc?, subject, body, remind_days?, confirm? }
+    //   saves (answers { draft }, null when there was nothing worth keeping);  GET /api/mail/unsent/:id;  DELETE /api/mail/unsent/:id discards
+    //   (kept, deleted_at);  POST /api/mail/unsent/:id/restore  Undo of a discard or a send
+    if (url.pathname === '/api/mail/unsent') {
+      if (req.method === 'GET') return sendJson(res, 200, listDrafts(db, { account: url.searchParams.get('account') ?? '' }));
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, { draft: saveDraft(db, (await readJson(req)) ?? {}) }); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    const unsentMatch = url.pathname.match(/^\/api\/mail\/unsent\/([0-9a-f-]{36})(\/restore)?$/);
+    if (unsentMatch) {
+      const [, id, restore] = unsentMatch;
+      const run = restore ? (req.method === 'POST' ? restoreDraft : null) : req.method === 'GET' ? getDraft : req.method === 'DELETE' ? discardDraft : null;
+      if (!run) return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, run(db, id)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    // The Outbox (Sent and Outbox, 2026-11-11):
+    // POST /api/mail/sends/:id/send-now | retry | dismiss    Send later → now; a failed mail again (you say so); let a failed one go (kept)
+    // POST /api/mail/outbox/:id/retry | dismiss              a label change Gmail did not take: again, or let it go (skipped)
+    const pendingMatch = url.pathname.match(/^\/api\/mail\/(sends|outbox)\/([0-9a-f-]{36})\/(send-now|retry|dismiss)$/);
+    if (pendingMatch) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const [, kind, id, act] = pendingMatch;
+      const run = kind === 'sends' ? { 'send-now': sendNow, retry: retrySend, dismiss: dismissSend }[act] : { retry: retryMailChange, dismiss: dismissMailChange }[act];
+      if (!run) return sendJson(res, 404, { error: 'Not found' });
+      try { return sendJson(res, 200, run(db, id)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) }); throw err; }
+    }
+    // POST /api/mail/threads/:id/done           Done (e): the conversation leaves the Inbox; answers the mails changed
+    // POST /api/mail/threads/:id/undo-done { messages }   Undo: exactly those mails come back to the Inbox
+    // POST /api/mail/threads/:id/trash           Delete (#): every mail of it to Gmail's Trash (30 days there, never deleted for good), hidden here
+    // POST /api/mail/threads/:id/undo-trash { messages, inbox }   Undo: out of the Trash, and back in the Inbox where they were
+    const doneMatch = url.pathname.match(/^\/api\/mail\/threads\/([0-9a-f-]{36})\/(done|undo-done|trash|undo-trash)$/);
+    if (doneMatch) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      const act = { done: () => archiveThread(db, doneMatch[1]), 'undo-done': () => restoreToInbox(db, input.messages),
+        trash: () => trashThread(db, doneMatch[1]), 'undo-trash': () => restoreFromTrash(db, input.messages, input.inbox) }[doneMatch[2]];
+      try { return sendJson(res, 200, act()); } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message });
+        throw err;
+      }
+    }
+    // Mail 7: what you chose per sender. GET /api/mail/senders;  PUT /api/mail/senders { email, load_images }  (images are held back until you say so)
+    if (url.pathname === '/api/mail/senders') {
+      if (req.method === 'GET') return sendJson(res, 200, listSenders(db));
+      if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      if (typeof input.load_images !== 'boolean') return sendJson(res, 400, { error: 'load_images is true or false.' });
+      try { return sendJson(res, 200, setImagesOk(db, input.email, input.load_images)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    // Writing mail (Mail 8). Needs the Google switch “Send mail as you”; every send waits ten seconds (Undo), or until you say.
+    // GET  /api/mail/threads/:id/reply                    who a reply goes to, and its subject
+    // POST /api/mail/sends { account_id, thread_id?, to, cc?, subject, body, when?: now | tomorrow | ISO time, remind_days?, delay_seconds? }
+    // GET  /api/mail/sends?account=                        what was written, and where each is: waiting, sending, sent, undone, failed
+    // POST /api/mail/sends/:id/undo                        take it back (only while it has not been claimed); answers its words
+    // POST /api/mail/sends/run                             send what is due now, and make the reminders that are due
+    const replyMatch = url.pathname.match(/^\/api\/mail\/threads\/([0-9a-f-]{36})\/reply$/);
+    if (replyMatch) {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, replyDraft(db, replyMatch[1])); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    if (url.pathname === '/api/mail/sends') {
+      if (req.method === 'GET') return sendJson(res, 200, listSends(db, { account: url.searchParams.get('account') ?? '', limit: Number(url.searchParams.get('limit') ?? 20) }));
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      try {
+        const made = composeSend(db, { accountId: String(input.account_id ?? ''), threadId: input.thread_id ?? null, to: input.to, cc: input.cc ?? [], subject: input.subject, body: input.body,
+          when: input.when ?? 'now', remindDays: input.remind_days ?? 0, seconds: Math.min(60, Number(input.delay_seconds ?? 10)), confirm: input.confirm === true });
+        if (typeof input.card_id === 'string') markCardEdited(db, input.card_id, made.id); // a draft opened with Edit and sent from the composer is answered
+        if (typeof input.draft_id === 'string') { try { discardDraft(db, input.draft_id); } catch { /* already gone */ } } // sent: no longer a draft (Undo brings it back)
+        return sendJson(res, 201, made);
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    if (url.pathname === '/api/mail/sends/run') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const sent = await sendDue(db, keyStore, { env: googleEnv, fetcher: googleFetch });
+      return sendJson(res, 200, { sent, reminders: remindDue(db) });
+    }
+    const undoSendMatch = url.pathname.match(/^\/api\/mail\/sends\/([0-9a-f-]{36})\/undo$/);
+    if (undoSendMatch) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, undoSend(db, undoSendMatch[1])); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) }); throw err; }
+    }
+    // Read confirmations (Mail 9). GET /api/mail/confirmations → { base, people };  PUT /api/mail/pixel-base { base }: the address of this app as the
+    // other side can reach it, for the one-pixel picture ('' takes it away). Off by default, per mail, remembered per person.
+    if (url.pathname === '/api/mail/confirmations') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, { base: pixelBase(db), people: confirmPeople(db) });
+    }
+    if (url.pathname === '/api/mail/pixel-base') {
+      if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
+      try { return sendJson(res, 200, setPixelBase(db, ((await readJson(req)) ?? {}).base)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    // Mail meets People (Mail 10).
+    // POST /api/mail/people { email, name?, subject? }     a new sender becomes a person, marked "From a mail" (the one already there if it is known)
+    // GET  /api/mail/with?kind=person|company&id=          the conversations with a person or a company, and the day you were last in touch by mail
+    if (url.pathname === '/api/mail/people') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      try { const made = addSender(db, input); return sendJson(res, made.created ? 201 : 200, made); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    if (url.pathname === '/api/mail/with') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const kind = url.searchParams.get('kind');
+      const id = url.searchParams.get('id') ?? '';
+      if (!['person', 'company'].includes(kind) || !/^[0-9a-f-]{36}$/.test(id)) return sendJson(res, 400, { error: 'kind is person or company, and id is theirs.' });
+      return sendJson(res, 200, mailWith(db, { kind, id, limit: Number(url.searchParams.get('limit') ?? 20) }));
+    }
+    // From mail to action (Mail 11).
+    // POST /api/mail/threads/:id/task { split? }      t on a mail: a task with the subject, linked back to it (from Money: due in two weeks)
+    // GET  /api/mail/limits                           what your assistant may do with your mail, read only: the numbers it is held to in code
+    // GET  /api/mail/drafts/:cardId                   a draft your assistant made, to open in the composer (Edit)
+    const taskMatch2 = url.pathname.match(/^\/api\/mail\/threads\/([0-9a-f-]{36})\/task$/);
+    if (taskMatch2) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      try { return sendJson(res, 201, mailToTask(db, taskMatch2[1], { split: String(input.split ?? '') })); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    if (url.pathname === '/api/mail/limits') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, { limits: LIMITS, rules: describeLimits(), drafted_today: draftsToday(db) });
+    }
+    const draftMatch = url.pathname.match(/^\/api\/mail\/drafts\/([0-9a-f-]{36})$/);
+    if (draftMatch) {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const card = getAction(db, draftMatch[1]);
+      if (!card || card.kind !== 'mail_send' || card.state !== 'proposed') return sendJson(res, 404, { error: 'That draft is not waiting any more.' });
+      return sendJson(res, 200, { ...card.after, card_id: card.id });
+    }
+    // Live with Gmail (Mail 4).
+    // POST /api/mail/sync { account_id }          one round now: Gmail's changes in, yours out
+    // POST /api/mail/live { account_id, on }      the job that does it every 20 seconds, for this account (off until switched on)
+    // POST /api/mail/messages/:id/labels { add?, remove? }   change a mail's labels here (archive: remove Inbox; star: add Starred): the
+    //                                                       list changes at once and the change goes to Gmail by the outbox
+    // GET  /api/mail/outbox?account=              what was changed here, and where it is on its way
+    if (url.pathname === '/api/mail/sync' || url.pathname === '/api/mail/live') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      const id = String(input.account_id ?? '');
+      try {
+        if (url.pathname === '/api/mail/live') {
+          if (typeof input.on !== 'boolean') return sendJson(res, 400, { error: 'on is true or false.' });
+          if (input.on && !canRead(db, id)) return sendJson(res, 409, { error: 'Switch on “Read your mail” for this address under Settings › Google first.' });
+          return sendJson(res, 200, setLive(db, id, input.on));
+        }
+        return sendJson(res, 200, await syncOnce(db, keyStore, { mailAccountId: id, dataDir, env: googleEnv, fetcher: googleFetch }));
+      } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+        throw err;
+      }
+    }
+    if (url.pathname === '/api/mail/outbox') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, listOutbox(db, { account: url.searchParams.get('account') ?? '', limit: Number(url.searchParams.get('limit') ?? 20) }));
+    }
+    const labelsMatch = url.pathname.match(/^\/api\/mail\/messages\/([0-9a-f-]{36})\/labels$/);
+    if (labelsMatch) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      try { return sendJson(res, 200, changeLabels(db, labelsMatch[1], { add: input.add, remove: input.remove })); } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+        throw err;
+      }
+    }
+    if (url.pathname === '/api/mail/import/status') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, mailJob ?? { running: false });
+    }
+    if (url.pathname === '/api/mail') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const overview = mailOverview(db, { account: url.searchParams.get('account') ?? '' });
+      return sendJson(res, 200, { ...overview, accounts: overview.accounts.map(({ google_account_id: g, ...a }) => ({ ...a, signed_in: Boolean(g), can_read: canRead(db, a.id), can_send: canSend(db, a.id), google_account_id: g ?? null, sync: syncState(db, a.id) })) });
+    }
+    if (url.pathname === '/api/mail/threads') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, listThreads(db, {
+        account: url.searchParams.get('account') ?? '', label: url.searchParams.get('label') ?? '', q: url.searchParams.get('q') ?? '',
+        before: url.searchParams.get('before') ?? '', limit: Number(url.searchParams.get('limit') ?? 50),
+      }));
+    }
+    const threadMatch = url.pathname.match(/^\/api\/mail\/threads\/([0-9a-f-]{36})$/);
+    if (threadMatch) {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const thread = getThread(db, threadMatch[1]);
+      return thread ? sendJson(res, 200, { ...thread, rule: explainThread(db, thread.id), confirmations: confirmationsOf(db, thread.id), people: peopleOfThread(db, thread.id), tasks: tasksOf(db, thread.id), invites: invitesOfThread(db, thread.id) }) : sendJson(res, 404, { error: 'No such conversation' });
+    }
+    // Invitations in a mail (Mail 12):
+    //   POST /api/mail/messages/:id/invite { answer: yes | maybe | no }   your Calendar and the answer to the organiser, by mail (ten seconds to undo)
+    //   POST /api/mail/messages/:id/invite/undo                          take it back, while the mail has not gone
+    const inviteMatch = url.pathname.match(/^\/api\/mail\/messages\/([0-9a-f-]{36})\/invite(\/undo)?$/);
+    if (inviteMatch) {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = (await readJson(req)) ?? {};
+      try {
+        if (inviteMatch[2]) return sendJson(res, 200, undoAnswer(db, inviteMatch[1]));
+        if (!PARTSTAT[input.answer]) return sendJson(res, 400, { error: 'answer is yes, maybe or no.' });
+        return sendJson(res, 200, answerInvite(db, inviteMatch[1], PARTSTAT[input.answer]));
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
+    }
     // Capture from anywhere (Tasks in depth 6): the devices that may post a capture from outside.
     //   GET    /api/capture/devices                    the devices (no token)
     //   POST   /api/capture/devices { name, kind }     a new device: answers it with its token, this once
@@ -1381,12 +1671,15 @@ export function startServer({
     //   GET    /api/life/:id/notes?offset=   the notes at home there (a Key Element's: also those under it, each with its home), newest first, 20 at a time
     if (url.pathname === '/api/life') {
       if (req.method === 'GET') {
-        return sendJson(res, 200, url.searchParams.get('deleted') === '1' ? listDeletedLifeItems(db) : listLifeItems(db));
+        if (url.searchParams.get('deleted') === '1') return sendJson(res, 200, listDeletedLifeItems(db));
+        // Habits (My Life in depth) are left out while the module is off; the rows wait.
+        return sendJson(res, 200, moduleOn(db, 'mylife-plus') ? listLifeItems(db) : listLifeItems(db).filter((item) => item.kind !== 'habit'));
       }
       if (req.method === 'POST') {
         const input = await readJson(req);
         const problem = checkLifeInput({ title: '', ...input });
         if (problem) return sendJson(res, 400, { error: problem });
+        if (input.kind === 'habit' && !moduleOn(db, 'mylife-plus')) return sendJson(res, 409, { error: 'My Life in depth is switched off.' });
         return sendJson(res, 201, createLifeItem(db, input));
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
@@ -1523,6 +1816,15 @@ export function startServer({
       }
     }
 
+    // The one address anything outside may reach (Mail 9): the picture of a read confirmation. It looks the token up, writes a row, returns the
+    // pixel, and answers the same picture for a token it does not know. Only while Mail is on.
+    const pixelMatch = req.method === 'GET' && url.pathname.match(/^\/o\/([A-Za-z0-9_-]{20,40})\.gif$/);
+    if (pixelMatch) {
+      if (moduleOn(db, 'mail')) { try { recordOpen(db, pixelMatch[1], { userAgent: String(req.headers['user-agent'] ?? '') }); } catch { /* the picture is answered all the same */ } }
+      res.writeHead(200, { 'Content-Type': 'image/gif', 'Content-Length': PIXEL.length, 'Cache-Control': 'no-store, max-age=0', 'X-Content-Type-Options': 'nosniff' });
+      return res.end(PIXEL);
+    }
+
     // POST /capture   { text?, link? } with the device's token in X-Capture-Token (or Authorization: Bearer): a capture for the
     // Inbox from outside the app (a bookmarklet, a share sheet). Another website may ask (OPTIONS): the answer is the token, not who asks.
     if (url.pathname === '/capture' && (req.method === 'POST' || req.method === 'OPTIONS')) {
@@ -1593,6 +1895,8 @@ export function startServer({
       const url = `http://127.0.0.1:${actualPort}`;
       googleRedirect = `${url}/api/google/callback`;
       mcpUrl = `${url}/api/mcp`;
+      mailSender = startMailSender(db, keyStore, { env: googleEnv, fetcher: googleFetch, every: mailSyncEvery ? 2000 : 0 }); // what is due goes, every two seconds
+      mailSync = startMailSync(db, keyStore, { dataDir, env: googleEnv, fetcher: googleFetch, every: mailSyncEvery }); // Live with Gmail, for accounts switched to it
       googleCalendar = startGoogleCalendarRead(db, keyStore, { env: googleEnv, fetcher: googleFetch, every: googleCalendarEvery }); // each account with “Read your calendar” on, every minute
       googleCalendarSend = startGoogleCalendarSend(db, keyStore, { env: googleEnv, fetcher: googleFetch, every: googleCalendarSendEvery }); // what waits goes, with its etag
       backups = startBackups(db, dataDir, { every: backupEvery }); // a whole copy of the database each day (backup.js)
@@ -1603,8 +1907,10 @@ export function startServer({
       if (readCalendarsEvery) readAllCalendars(db).catch(() => {});
       const close = async () => {
         clearInterval(reading);
+        mailSync?.stop();
         googleCalendar?.stop();
         googleCalendarSend?.stop();
+        mailSender?.stop();
         backups?.stop();
         reader.stop();
         titler.stop();

@@ -39,7 +39,7 @@ export const assistantApi = {
   card: (id, what) => request('POST', `/api/assistant-actions/${id}/${what}`, {}),
 };
 
-const KIND_ICONS = { note: 'notes', 'journal entry': 'journal', person: 'person', company: 'person', 'key element': 'key_element', goal: 'goal', project: 'project', topic: 'topic' };
+const KIND_ICONS = { note: 'notes', 'journal entry': 'journal', person: 'person', company: 'person', 'key element': 'key_element', goal: 'goal', project: 'project', topic: 'topic', habit: 'habit' };
 
 // The pages an answer used: each a Citation that opens its page.
 function citations(sources) {
@@ -82,6 +82,7 @@ export function cardNode(card, changed) {
   const [yes, no] = card.kind === 'mail_send' ? ['Send', 'Dismiss'] : step ? ['Allow once', 'No'] : adds ? ['Approve', 'Not now'] : ['Apply', 'Dismiss'];
   const buttons = card.state === 'proposed'
     ? [el('button', { type: 'button', class: 'button', onclick: act('apply') }, yes),
+      ...(card.kind === 'mail_send' ? [el('a', { class: 'button', href: `/mail?${new URLSearchParams({ thread: card.after.thread_id, draft: card.id })}` }, 'Edit')] : []),
       ...(step && card.after?.rule ? [el('button', { type: 'button', class: 'button', title: card.after.label, onclick: act('always') }, 'Always allow')] : []),
       el('button', { type: 'button', class: 'button button-quiet', onclick: act('dismiss') }, no)]
     : ['done', 'applied'].includes(card.state) && !step ? [el('button', { type: 'button', class: 'button button-quiet', onclick: act('undo') }, 'Undo')] : [];
