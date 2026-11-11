@@ -1169,7 +1169,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
 /* The words are the page's title: the first block large, the rest at reading size. */
 .inbox-words { min-height: var(--space-8); }
 
-.inbox-words > :first-child { font-size: var(--text-xl); font-weight: var(--weight-regular); line-height: var(--line-height-tight); }
+.inbox-words > :first-child { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: var(--weight-regular); line-height: var(--line-height-tight); }
 
 /* Your assistant's suggestion: one bar on the surface colour, Accept inside it at the right
    (the reference's); under it the line "Or make it" with the quiet choices. */

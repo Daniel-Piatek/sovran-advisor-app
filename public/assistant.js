@@ -142,22 +142,15 @@ function keepOf(message, body) {
   return { text, title: first.replace(/^[#>*\-\s\d.]+/, '').replace(/[*_`]/g, '').trim().slice(0, 80), part: Boolean(picked) };
 }
 
-// Under a finished reply: keep it as a Note, or send it to the Inbox to be sorted later. A selected part is kept alone.
+// Under a finished reply: send it to the Inbox to be sorted later. A selected part is kept alone.
 function keepButtons(message, body) {
   const result = el('span', { class: 'chat-keep-result', role: 'status' });
   const done = (text, href) => result.replaceChildren(text, ...(href ? [' ', el('a', { href }, 'Open')] : []));
-  const note = el('button', { type: 'button', class: 'button button-quiet', title: 'Keep this reply (or the part you selected) as a Note', onclick: async () => {
-    const { text, title } = keepOf(message, body);
-    try {
-      const made = await request('POST', '/api/notes', { title, body: `${text}\n\n[From the Assistant](${location.pathname})`, origin: 'assistant' });
-      done('Saved as a note.', `/notes/${made.id}`);
-    } catch (err) { done(`Couldn't save: ${err.message}`); }
-  } }, 'Save as Note');
   const inbox = el('button', { type: 'button', class: 'button button-quiet', title: 'Send this reply (or the part you selected) to the Inbox', onclick: async () => {
     const { text } = keepOf(message, body);
     try { await request('POST', '/api/captures', { body: text, world: 'inner' }); done('Sent to the Inbox.', '/inbox'); } catch (err) { done(`Couldn't send: ${err.message}`); }
   } }, 'Send to Inbox');
-  return el('div', { class: 'chat-keep' }, note, inbox, result);
+  return el('div', { class: 'chat-keep' }, inbox, result);
 }
 
 // A bubble: yours on the right, the assistant's on the left with its label.
