@@ -37,6 +37,7 @@ export const MODULES = [
     id: 'course',
     label: 'Course',
     description: 'A Course link in the sidebar: your course’s own page online, with the session replays, the homework and your questions. It opens in your browser.',
+    starter: false, // off in a new install: switch it on when your teacher says the course page is ready
   },
   {
     id: 'people-plus',

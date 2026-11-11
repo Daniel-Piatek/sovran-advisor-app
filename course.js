@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 
-export const COURSE_URL = '';
+export const COURSE_URL = 'https://app.livesovran.com/sq01';
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
