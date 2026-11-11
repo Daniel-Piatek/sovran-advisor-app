@@ -5,6 +5,8 @@
 // to-do: nothing to tick. "Remind me" writes a normal task (tasks.js) for tomorrow.
 
 import { createTask } from './tasks.js';
+import { moduleOn } from './modules.js';
+import { addressesIn, lastMailDay } from './mail-touch.js';
 
 export const CADENCES = [
   { days: 7, label: 'Weekly' }, { days: 14, label: 'Every 2 weeks' }, { days: 21, label: 'Every 3 weeks' },
@@ -18,12 +20,14 @@ const dayOf = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad
 const dayNumber = (day) => { const [y, m, d] = day.split('-').map(Number); return Date.UTC(y, m - 1, d) / 86_400_000; };
 export const addDays = (day, n) => { const [y, m, d] = day.split('-').map(Number); return dayOf(new Date(y, m - 1, d + n)); };
 
-// The last day you were in touch with them: the newest of their logged lines, or null.
+// The last day you were in touch with them: the newest of their logged lines and (with Mail on) their mail, or null.
 export function lastInTouch(db, personId) {
   const row = db.prepare(`SELECT max(i.happened_at) AS at FROM interactions i
     JOIN links l ON l.from_kind = 'interaction' AND l.from_id = i.id AND l.to_kind = 'person' AND l.to_id = ?
     WHERE i.deleted_at IS NULL`).get(personId);
-  return row?.at ? row.at.slice(0, 10) : null;
+  const logged = row?.at ? row.at.slice(0, 10) : null;
+  const mail = moduleOn(db, 'mail') ? lastMailDay(db, addressesIn(db.prepare('SELECT emails FROM people WHERE id = ?').get(personId)?.emails)) : null;
+  return [logged, mail].filter(Boolean).sort().pop() ?? null;
 }
 
 // Days left until they are due (negative: overdue). With nothing logged yet they are due today.

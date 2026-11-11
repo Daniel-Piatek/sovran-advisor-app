@@ -79,6 +79,15 @@ export const MODULES = [
     tools: ['calendar_list', 'calendar_propose'],
   },
   {
+    // The manifest (advanced/mylife/1): Habits, the fifth kind in My Life. Off, My Life is the core again: no Habits group, no + Habit,
+    // and a Habit is not offered as a home; the rows wait in life_items.
+    id: 'mylife-plus',
+    starter: false, // off in a new install: switch it on in Settings › Modules when you want Habits
+    label: 'My Life in depth',
+    description: 'Habits join Key Elements, Goals, Projects and Topics in My Life: a rhythm you keep, with how often and what counts as done.',
+    tables: ['life_items'],
+  },
+  {
     // The manifest (advanced/calendar/7): your Google events on your days, read only (Calendar 8 and 9 change them). Needs the
     // Google sign-in (Settings › Google) with "Read your calendar" on. Off, Google's events and the job are gone; the rows and the sign-in stay.
     id: 'calendar-google',
@@ -97,6 +106,20 @@ export const MODULES = [
     keys: ['Tab', 'Alt+Up', 'Alt+Down', 'Cmd+.'],
     tables: ['bullets', 'comments', 'note_versions', 'note_clashes', 'boards', 'board_items', 'ink_strokes', 'import_runs'],
     tools: ['list_comments', 'reply_to_comment'],
+  },
+  {
+    // The manifest (advanced/mail/1): a place after the Inbox, the Google permissions it may ask for, its tables and tools.
+    // Off in a new install and dormant: it holds no Google credentials, and its jobs (sync, sending) do nothing while it is off.
+    id: 'mail',
+    starter: false, // off in a new install: it needs your own Google sign-in, with setup directions still to come
+    hidden: true, // not listed in Settings › Modules until those directions exist (2026-11-11); a switch that cannot work yet would only confuse
+    label: 'Mail',
+    description: 'Your own mail, kept in the app. Needs a Google sign-in of your own (Settings › Google); setup directions will follow later. Reading your mail and sending mail as you are two separate switches.',
+    permissions: ['mail.read', 'mail.send', 'mail.modify'],
+    tables: ['google_accounts', 'google_log', 'mail_accounts', 'mail_threads', 'mail_messages', 'mail_labels', 'mail_imports', 'mail_outbox', 'mail_senders', 'mail_sends', 'mail_opens', 'mail_confirm_people'],
+    tools: [], // its four tools (mail_search, mail_read, mail_draft, mail_to_task) go with the module: assistant-tools.js MODULE_TOOLS
+    public: ['GET /o/<token>.gif'], // the one address anything outside may reach (Mail 9), and only while Mail is on
+    jobs: ['mail-sync', 'mail-sender'], // Live with Gmail (Mail 4): off until switched on, stops with the module
   },
 ];
 

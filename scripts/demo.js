@@ -23,6 +23,8 @@ import { createComment, replyTo } from '../comments.js';
 import { createBoard, addItem } from '../boards.js';
 import { importObsidian, importDayOne } from '../import-notes.js';
 import { addStroke } from '../ink.js';
+import { importMboxText } from '../mail.js';
+import { makeMailbox } from './demo-mail.js';
 
 const appDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 export const DEMO_DIR = path.join(appDir, 'demo-data');
@@ -46,6 +48,11 @@ export function fillDemo(db, today = localDay(), { dataDir = null } = {}) {
   const kitchen = createLifeItem(db, { kind: 'project', title: 'Kitchen renovation', home_id: family.id, outcome: 'New counter and lights' });
   createLifeItem(db, { kind: 'topic', title: 'Stoicism', home_id: health.id });
   createLifeItem(db, { kind: 'topic', title: 'Photography', home_id: family.id });
+  // Habits (My Life in depth): a rhythm you keep; one carries a Goal.
+  createLifeItem(db, { kind: 'habit', title: 'Run 3× a week', home_id: health.id, serves: [half.id], cadence_times: 3, cadence_per: 'week',
+    done_when: 'Twenty minutes or more, outside', description: 'Easy pace, no watch' });
+  createLifeItem(db, { kind: 'habit', title: 'Read 20 min daily', home_id: work.id, cadence_times: 7, cadence_per: 'week', done_when: 'A book, not a screen' });
+  createLifeItem(db, { kind: 'habit', title: 'Family dinner Sunday', home_id: family.id, cadence_times: 1, cadence_per: 'week', done_when: 'Everyone at the table, phones away' });
 
   // ---- People and companies ----
   const nordlicht = createCompany(db, { name: 'Nordlicht', website: 'nordlicht.example', body: 'Design studio. We work with them on the course visuals.' });
@@ -167,6 +174,9 @@ export function fillDemo(db, today = localDay(), { dataDir = null } = {}) {
   createCapture(db, { body: 'Slept badly, a short walk helped' });
   createCapture(db, { body: 'https://example.com/article-on-weekly-reviews' });
 
+  // ---- Mail: a made-up Takeout file, read in through the app's own code (1,284 messages over nine labels) ----
+  const mailbox = makeMailbox({ today });
+  importMboxText(db, mailbox.text, { email: 'demo@example.com', filename: 'demo-takeout.mbox', size: mailbox.text.length, dataDir });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

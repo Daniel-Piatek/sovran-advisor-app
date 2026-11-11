@@ -28,6 +28,9 @@ import { getLifeItem } from './life.js';
 import { waitingCaptures } from './captures.js';
 import { listTasks, createTask, changeTask, getTask, deleteTask, checkTaskInput } from './tasks.js';
 import { moduleOn } from './modules.js';
+import { listThreads, getThread } from './mail.js';
+import { checkDraft, mailToTask, draftsToday, LIMITS } from './mail-assistant.js';
+import { composeSend, undoSend } from './mail-send.js';
 import { laterComments, replyTo, getComment } from './comments.js';
 import { saveWithMerge } from './merge.js';
 import { listBoards, boardText, planDrawing, drawPlan, undoChange } from './boards.js';
@@ -50,7 +53,7 @@ export const PATHS = {
 };
 
 // A tool that belongs to a module is offered, and runs, while the module is on.
-const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus' };
+const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus' };
 export const offeredTools = (db) => TOOLS.filter((tool) => !MODULE_TOOLS[tool.name] || moduleOn(db, MODULE_TOOLS[tool.name]));
 
 export const TOOLS = [
@@ -96,6 +99,26 @@ export const TOOLS = [
       properties: { person: { type: 'string' }, kind: { type: 'string', enum: INTERACTION_KINDS }, when: { type: 'string' }, sentence: { type: 'string' } },
       required: ['person', 'kind', 'sentence'],
     },
+  },
+  {
+    name: 'mail_search',
+    description: 'Search the owner’s mail (the conversations kept in this app) by words in the subject, the people or the last words. Returns up to 10 conversations with their ids. Reading only.',
+    inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
+  },
+  {
+    name: 'mail_read',
+    description: 'Read one conversation of the owner’s mail by its id (from mail_search): who wrote, when, and the words of each mail. Reading only.',
+    inputSchema: { type: 'object', properties: { thread_id: { type: 'string' } }, required: ['thread_id'] },
+  },
+  {
+    name: 'mail_draft',
+    description: 'Draft a reply on a conversation of the owner’s mail, for the owner to read and send. It NEVER sends: the answer is a card with Send, Edit and Dismiss, and nothing leaves until the owner presses Send. Limits set in the app, not in this text: only to people already in the conversation (to: leave out to reply to whoever wrote last), never an attachment, at most 10 drafts a day. If a limit stops you, say so; do not try another way.',
+    inputSchema: { type: 'object', properties: { thread_id: { type: 'string' }, text: { type: 'string' }, to: { type: 'string' } }, required: ['thread_id', 'text'] },
+  },
+  {
+    name: 'mail_to_task',
+    description: 'Make a task from a conversation of the owner’s mail, linked back to it. title: its words (the subject if left out); due: YYYY-MM-DD or leave out. Depending on their settings it is added at once or waits for their approval on a card.',
+    inputSchema: { type: 'object', properties: { thread_id: { type: 'string' }, title: { type: 'string' }, due: { type: 'string' } }, required: ['thread_id'] },
   },
   {
     name: 'calendar_list',
@@ -486,6 +509,21 @@ export function runTool(db, name, args = {}, run = {}) {
     addAction(db, run, { kind: 'log_interaction', state: 'done', target_id: made.id, title, after });
     return text({ logged: { id: made.id, with: person.name, kind: made.kind, at: made.happened_at }, note: 'Logged, as the owner allows; they can undo it on the card.' });
   }
+  if (name === 'mail_search') {
+    const found = listThreads(db, { q: String(args.query ?? ''), limit: 10 });
+    return found.length ? text(found.map((t) => ({ thread_id: t.id, subject: t.subject, people: t.participants, messages: t.message_count, last: t.last_at, account: t.account }))) : 'No conversation matches those words.';
+  }
+  if (name === 'mail_read') {
+    const thread = getThread(db, String(args.thread_id ?? ''));
+    if (!thread) throw fail(404, 'No such conversation. Search first for its id.');
+    return text({ thread_id: thread.id, subject: thread.subject, messages: thread.messages.map((m) => ({ from: m.from.name || m.from.email, email: m.from.email, to: m.to.map((a) => a.email), at: m.sent_at, text: m.text.slice(0, 6000) })).slice(-12) });
+  }
+  if (name === 'mail_draft') {
+    const draft = checkDraft(db, { threadId: String(args.thread_id ?? ''), to: args.to, text: args.text, attachments: args.attachments });
+    const title = `${draft.subject} → ${draft.to.join(', ')}`.slice(0, 200);
+    const card = addAction(db, run, { kind: 'mail_send', state: 'proposed', title, after: draft });
+    return text({ waiting: card.id, note: `A draft is on a card: Send, Edit, Dismiss. Nothing was sent, and it only goes if the owner presses Send. ${LIMITS.drafts_per_day - draftsToday(db)} drafts are left today.` });
+  }
   if (name === 'calendar_list') return text(calendarList(db, { from: args.from, to: args.to }));
   if (name === 'calendar_propose') {
     const plan = planProposal(db, args);
@@ -520,6 +558,20 @@ export function runTool(db, name, args = {}, run = {}) {
     if (!getComment(db, String(args.comment_id ?? ''))) throw fail(404, 'No such comment. List them first for the ids.');
     const reply = replyTo(db, String(args.comment_id), { body: String(args.text ?? ''), author: 'assistant' });
     return text({ replied: true, reply_id: reply.id, note: 'Your answer is in the thread, signed as yours.' });
+  }
+  if (name === 'mail_to_task') {
+    const thread = getThread(db, String(args.thread_id ?? ''));
+    if (!thread) throw fail(404, 'No such conversation. Search first for its id.');
+    const input = { text: String(args.title ?? '').trim() || thread.subject.replace(/^\s*((re|fwd?|aw)\s*:\s*)+/i, '').trim() || 'A mail', ...(args.due ? { due: args.due } : {}), mail_thread_id: thread.id };
+    const problem = checkTaskInput(input, { creating: true });
+    if (problem) throw fail(400, problem);
+    if (modeOf(db, 'add_task') === 'ask') {
+      const card = addAction(db, run, { kind: 'add_task', state: 'proposed', title: input.text, after: input });
+      return text({ waiting: card.id, note: 'Not added yet: it waits for the owner’s approval on a card. Say so.' });
+    }
+    const task = createTask(db, { ...input, origin: 'assistant' });
+    const card = addAction(db, run, { kind: 'add_task', state: 'done', target_id: task.id, title: task.text, after: { due: task.due } });
+    return text({ added: { id: task.id, text: task.text, due: task.due || 'no date' }, linked_to: thread.subject, card: card.id });
   }
   if (name === 'add_note') {
     const title = String(args.title ?? '').trim();
@@ -611,6 +663,12 @@ export function applyAction(db, id, { always = false } = {}) {
     db.prepare('UPDATE assistant_actions SET before = ? WHERE id = ?').run(JSON.stringify({ was_closed: Boolean(before?.closed) }), id);
     return setState(db, id, 'applied');
   }
+  if (card.kind === 'mail_send') {
+    // Send: the same outbox as a mail you wrote: ten seconds to take it back, then it goes (only if “Send mail as you” is on).
+    const row = composeSend(db, { accountId: card.after.account_id, threadId: card.after.thread_id, to: card.after.to, subject: card.after.subject, body: card.after.body, when: 'now' });
+    made(row.id);
+    return setState(db, id, 'applied');
+  }
   if (card.kind === 'add_task') made(createTask(db, { ...card.after, origin: 'assistant' }).id);
   else if (card.kind === 'add_note') made(createNote(db, { ...card.after, origin: 'assistant' }).id);
   else if (card.kind === 'board_draw') { drawPlan(db, card.after, card.id); made(card.id); }
@@ -632,6 +690,14 @@ export function applyAction(db, id, { always = false } = {}) {
   return setState(db, id, 'applied');
 }
 
+// A draft that was opened with Edit and sent from the composer: its card is answered.
+export function markCardEdited(db, cardId, sendId) {
+  const card = getAction(db, cardId);
+  if (!card || card.kind !== 'mail_send' || card.state !== 'proposed') return null;
+  db.prepare('UPDATE assistant_actions SET target_id = ? WHERE id = ?').run(sendId, cardId);
+  return setState(db, cardId, 'applied');
+}
+
 export function dismissAction(db, id) {
   const card = getAction(db, id);
   if (!card) return null;
@@ -649,7 +715,8 @@ export function undoAction(db, id) {
   const card = getAction(db, id);
   if (!card) return null;
   if (!['done', 'applied'].includes(card.state) || card.kind === 'step') throw fail(409, 'There is nothing to undo on that card.');
-  if (card.kind === 'board_draw') undoChange(db, card.id);
+  if (card.kind === 'mail_send') undoSend(db, card.target_id); // only while it has not gone
+  else if (card.kind === 'board_draw') undoChange(db, card.id);
   else if (card.kind === 'calendar_propose') undoProposal(db, card.after, card.target_id);
   else if (card.kind === 'add_task') deleteTask(db, card.target_id);
   else if (card.kind === 'add_note') deleteNote(db, card.target_id);

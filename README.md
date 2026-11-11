@@ -12,7 +12,10 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **The Sovran Library.** Paste the key you were given in Settings, and your assistant can also
   search the Sovran teaching and, if you have them, your own decodes.
 - **More when you want it.** Tasks, Planner, Calendar and My Life are built in and switched off.
-  Switch them on in Settings › Modules.
+  Switch them on in Settings › Modules. The Calendar shows a day, three days or a week.
+  Also off until you switch them on: **My Life in depth** (Habits, a rhythm you keep, such as
+  "Run 3× a week") and **Mail** (your own mail kept in the app; it needs a Google sign-in of your
+  own, and directions for setting that up will follow, so leave it off for now).
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
 
 ## Before you start

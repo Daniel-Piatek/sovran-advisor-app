@@ -1,4 +1,4 @@
-// My Life (pkm/3): Key Elements, Goals, Projects and Topics.
+// My Life (pkm/3): Key Elements, Goals, Projects and Topics, and (advanced/mylife/1, while My Life in depth is on) Habits.
 //   /life       the list on the left, and a Life card for every Key Element: its name
 //               (the whole row opens it), its description, then Goals, Projects and Topics
 //               under small headings, each item with how many notes are at home there
@@ -21,13 +21,31 @@ import { api, el, icon, makeSaver, undoBar, linkedFromSection, dayOf, today, add
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
 import { addBar, flagChip } from './quick-add.js';
 import { dueLabel } from './due.js';
+import { moduleOn } from './modules.js';
 
 export const KINDS = [
   { kind: 'key_element', one: 'Key Element', many: 'Key Elements' },
   { kind: 'goal', one: 'Goal', many: 'Goals' },
   { kind: 'project', one: 'Project', many: 'Projects' },
   { kind: 'topic', one: 'Topic', many: 'Topics' },
+  { kind: 'habit', one: 'Habit', many: 'Habits' }, // a rhythm you keep; only while My Life in depth is on
 ];
+// The kinds on offer: Habits go with the module.
+const activeKinds = () => KINDS.filter((k) => k.kind !== 'habit' || moduleOn('mylife-plus'));
+const cadenceWords = (i) => `${i.cadence_times}× a ${i.cadence_per}`;
+
+// What shows under a Key Element: what stands on it, and a Habit that carries one of its Goals.
+// Also what is not under any: those are listed apart.
+function arrange(items) {
+  const active = items.filter((item) => item.state === 'active');
+  const keyElements = active.filter((item) => item.kind === 'key_element');
+  const homeOfGoal = (goalId) => items.find((g) => g.id === goalId)?.home_id;
+  const underOf = (keyElement) => active.filter((item) => item.home_id === keyElement.id
+    || (item.kind === 'habit' && item.serves.some((goalId) => homeOfGoal(goalId) === keyElement.id)));
+  const placed = new Set(keyElements.flatMap((k) => underOf(k).map((item) => item.id)));
+  const homeless = active.filter((item) => item.kind !== 'key_element' && !placed.has(item.id));
+  return { active, keyElements, underOf, homeless };
+}
 export const kindName = (kind) => KINDS.find((k) => k.kind === kind)?.one ?? 'Item';
 
 // Goals, then Projects, then Topics; by name within a kind (as the server sends them).
@@ -99,17 +117,16 @@ export async function showLife(id) {
   });
 
   function drawList() {
-    const active = items.filter((item) => item.state === 'active');
-    const keyElements = active.filter((item) => item.kind === 'key_element');
+    const { keyElements, underOf, homeless } = arrange(items);
     const searching = Boolean(filter.trim());
     // A Key Element whose name fits shows all it holds; otherwise only what fits, under it.
     tree.replaceChildren(...keyElements.flatMap((keyElement) => {
-      const under = active.filter((item) => item.home_id === keyElement.id).sort(byKind);
+      const under = underOf(keyElement).sort(byKind);
       const shown = fits(keyElement.title, filter) ? under : under.filter((item) => fits(item.title, filter));
       if (searching && !shown.length && !fits(keyElement.title, filter)) return [];
       return [el('div', { class: 'life-branch' }, row(keyElement), ...shown.map((item) => row(item, { child: true })))];
     }));
-    const homeless = active.filter((item) => item.kind !== 'key_element' && !keyElements.some((k) => k.id === item.home_id)).sort(byKind);
+    homeless.sort(byKind);
     const archived = items.filter((item) => item.state === 'archived').sort(byKind);
     for (const [group, mine] of [[groups[0], homeless], [groups[1], archived]]) {
       const shown = mine.filter((item) => fits(item.title, filter));
@@ -175,18 +192,16 @@ export async function showLife(id) {
 
   function drawMain() {
     if (open) return;
-    const active = items.filter((item) => item.state === 'active');
-    const keyElements = active.filter((item) => item.kind === 'key_element');
-    const homeless = active.filter((item) => item.kind !== 'key_element' && !keyElements.some((k) => k.id === item.home_id));
+    const { keyElements, underOf, homeless } = arrange(items);
     main.replaceChildren(
       ...(!items.length ? [el('p', { class: 'empty' }, 'Start with what is permanent: your health, your work, your family.')] : []),
       ...(keyElements.length ? [el('div', { class: 'life-cards' }, ...keyElements.map((keyElement) => {
-        const under = active.filter((item) => item.home_id === keyElement.id).sort(byKind);
+        const under = underOf(keyElement).sort(byKind);
         return el('article', { class: 'life-card' },
           el('a', { class: 'life-card-title', href: `/life/${keyElement.id}` },
             icon('key_element'), el('span', { class: 'life-card-name' }, keyElement.title), icon('right')),
           ...(keyElement.description ? [el('p', { class: 'life-card-description' }, keyElement.description)] : []),
-          ...KINDS.slice(1).flatMap(({ kind, many }) => {
+          ...activeKinds().slice(1).flatMap(({ kind, many }) => {
             const mine = under.filter((item) => item.kind === kind);
             return mine.length ? [el('h3', { class: 'life-card-heading' }, many),
               el('div', { class: 'life-card-rows' }, ...mine.map((item) => row(item, { count: true })))] : [];
@@ -332,7 +347,8 @@ function notesAtHomeSection(id, { sayHome = false } = {}) {
 const itemRow = (i) => el('a', { class: 'life-item-row', href: `/life/${i.id}` }, icon(i.kind),
   el('span', { class: 'life-item-text' },
     el('span', { class: 'life-item-title' }, i.title, i.state === 'archived' ? el('span', { class: 'tag' }, 'archived') : null),
-    i.description ? el('span', { class: 'life-item-sub' }, i.description) : null));
+    i.kind === 'habit' || i.description
+      ? el('span', { class: 'life-item-sub' }, [i.kind === 'habit' ? cadenceWords(i) : '', i.description].filter(Boolean).join(' · ')) : null));
 
 const HORIZONS = [['', 'No horizon'], ['quarter', 'This quarter'], ['year', 'This year'], ['three_years', 'Three years'], ['someday', 'Someday']];
 
@@ -452,6 +468,11 @@ function showItem(item, main, items, { changed, added }) {
       ...text('Depth', 'depth', { type: 'choice', choices: [['deep', 'Deep'], ['secondary', 'Secondary']] }),
     );
   }
+  if (item.kind === 'habit') {
+    details.append(el('label', { class: 'detail-label' }, 'Carries'), servesPicker(),
+      el('label', { class: 'detail-label' }, 'How often'), cadencePicker(),
+      ...text('Counts as done when', 'done_when', { type: 'lines', placeholder: 'What makes it count: twenty minutes or more, outside' }));
+  }
 
   // The Goals a Project serves: each with a way to take it off, and a choice to add one.
   function servesPicker() {
@@ -485,7 +506,32 @@ function showItem(item, main, items, { changed, added }) {
     return place;
   }
 
-  // What a Goal is carried by: the Projects that serve it.
+  // How often a Habit comes round: a number and week or month. More than seven a week is not a rhythm, so a week
+  // brings the number down to seven.
+  function cadencePicker() {
+    const times = el('input', {
+      class: 'detail-input life-times', type: 'number', min: 1, max: item.cadence_per === 'week' ? 7 : 31, inputmode: 'numeric',
+      'aria-label': 'How many times',
+      oninput: () => {
+        const n = Number.parseInt(times.value, 10);
+        if (!Number.isInteger(n) || n < 1 || n > (per.value === 'week' ? 7 : 31)) return; // not a rhythm: not saved
+        set('cadence_times', n);
+      },
+    });
+    const per = el('select', {
+      class: 'detail-input', 'aria-label': 'Per week or per month',
+      onchange: () => {
+        times.max = per.value === 'week' ? 7 : 31;
+        if (per.value === 'week' && Number(times.value) > 7) { times.value = '7'; set('cadence_times', 7); }
+        set('cadence_per', per.value);
+      },
+    }, el('option', { value: 'week' }, 'week'), el('option', { value: 'month' }, 'month'));
+    times.value = String(item.cadence_times);
+    per.value = item.cadence_per;
+    return el('div', { class: 'life-cadence' }, times, el('span', {}, 'times a'), per);
+  }
+
+  // What a Goal is carried by: the Projects and Habits that serve it.
   const carriedBy = item.kind === 'goal' ? [
     el('h3', { class: 'life-subheading' }, 'Carried by'),
     el('div', { class: 'life-frame life-under' }, ...(item.under.length
@@ -527,7 +573,7 @@ function showItem(item, main, items, { changed, added }) {
   // add button (a name, Enter adds it into this Key Element, the field stays for the next,
   // Esc stops); then the notes and open tasks at home here or under it.
   function keyElementSections() {
-    const sections = KINDS.slice(1).map(({ kind, one, many }) => {
+    const sections = activeKinds().slice(1).map(({ kind, one, many }) => {
       const heading = el('h2', { class: 'life-section-title' });
       const frame = el('div', { class: 'life-frame' });
       const adding = el('div', { class: 'life-adding' });
@@ -547,7 +593,7 @@ function showItem(item, main, items, { changed, added }) {
             event.preventDefault();
             try {
               const made = await api.createLifeItem({ kind, title: name.value, home_id: item.id });
-              item.under = [...item.under, { id: made.id, title: made.title, description: made.description, kind: made.kind, state: made.state }]
+              item.under = [...item.under, { id: made.id, title: made.title, description: made.description, kind: made.kind, state: made.state, cadence_times: made.cadence_times, cadence_per: made.cadence_per }]
                 .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
               name.value = '';
               message.textContent = `“${made.title}” added.`;

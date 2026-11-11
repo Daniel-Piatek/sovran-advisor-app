@@ -6,8 +6,8 @@
 
 import { api, el, icon } from './ui.js';
 
-const ORDER = ['project', 'goal', 'key_element', 'topic'];
-const KIND_WORDS = { key_element: 'Key Element', goal: 'goal', project: 'project', topic: 'topic' };
+const ORDER = ['project', 'goal', 'habit', 'key_element', 'topic'];
+const KIND_WORDS = { key_element: 'Key Element', goal: 'goal', project: 'project', topic: 'topic', habit: 'habit' };
 
 const fits = (title, typed) => typed.toLowerCase().split(/\s+/).filter(Boolean)
   .every((word) => title.toLowerCase().includes(word));

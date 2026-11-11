@@ -18,14 +18,22 @@ async function signedIn(page, app) {
   await expect(account(page)).toContainText('work@mypractice.com');
 }
 
-test('the Google part of Settings follows Google Calendar: there while it is on, gone while it is off', async ({ page, app }) => {
+test('Mail has its row in Modules, switched on, and Google follows it: it stays while Google Calendar is on, and goes when both are off', async ({ page, app }) => {
   await page.goto(`${app.url}/settings`);
+  const row = page.locator('[data-module="mail"]');
   const calendarRow = page.locator('[data-module="calendar-google"]');
-  await expect(page.locator('[data-module="mail"]')).toHaveCount(0); // Mail is not in Sovran Advisor
+  await expect(row).toContainText('Mail');
+  await expect(row.getByRole('button', { name: 'On', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(google(page)).toBeVisible();
+
+  // Mail off: the sign-in is the shared piece and stays for Google Calendar; the Mail limits go.
+  await row.getByRole('button', { name: 'Off', exact: true }).click();
+  await expect(google(page)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Your assistant and mail' })).toHaveCount(0);
+  // Both off: it goes.
   await calendarRow.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(google(page)).toHaveCount(0);
-  await calendarRow.getByRole('button', { name: 'On', exact: true }).click();
+  await row.getByRole('button', { name: 'On', exact: true }).click();
   await expect(google(page)).toBeVisible();
 });
 

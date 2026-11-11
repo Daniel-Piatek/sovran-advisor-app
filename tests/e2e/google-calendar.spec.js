@@ -82,7 +82,7 @@ test('switching it off takes Google’s events from your days and your own stay;
   await expect(page.locator('.cal-event')).toHaveCount(2);
 });
 
-test('Google Calendar has its row in Modules; off, its events and the Google part of Settings go, and on again the sign-in is still there', async ({ page, app }) => {
+test('Google Calendar has its row in Modules; off, its events and part of Settings go and the sign-in stays', async ({ page, app }) => {
   await app.gcal.add({ id: 'g1', summary: 'In Google', start: `${dayOf(0)}T10:00`, end: `${dayOf(0)}T11:00` });
   await signedIn(page, app);
   await account(page).locator('[data-permission="calendar.read"]').getByRole('button', { name: 'On' }).click();
@@ -91,12 +91,9 @@ test('Google Calendar has its row in Modules; off, its events and the Google par
   await expect(row).toContainText('Google Calendar');
   await row.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Google Calendar', exact: true })).toHaveCount(0);
+  await expect(account(page)).toContainText('work@mypractice.com'); // the sign-in stays
   await page.goto(`${app.url}/calendar?view=day`);
   await expect(page.locator('.cal-event')).toHaveCount(0);
-  // On again: the sign-in is still there (Mail, the other user of the sign-in, is not in Sovran Advisor).
-  await page.goto(`${app.url}/settings`);
-  await row.getByRole('button', { name: 'On', exact: true }).click();
-  await expect(account(page)).toContainText('work@mypractice.com');
 });
 
 test('the Library shows the G mark', async ({ page, app }) => {

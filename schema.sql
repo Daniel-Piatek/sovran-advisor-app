@@ -231,6 +231,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS people_by_source ON people (source_key) WHERE 
 --                three_years or someday), shipped_means, why
 --   project      something to finish: outcome, done_means, starts_on and ends_on
 --                (YYYY-MM-DD, or empty)
+--   habit        a rhythm you keep (advanced/mylife/1): cadence_times a week or a month
+--                (cadence_per week or month) and done_when, what counts as done; it stands
+--                on a Key Element (home_id) and can carry Goals (life_serves) like a Project
 --   topic        something you explore: pulse (where it stands now), depth (deep or
 --                secondary)
 -- Every item except a Key Element has a home Key Element (home_id). state is active or
@@ -241,7 +244,7 @@ CREATE TABLE IF NOT EXISTS life_items (
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
   origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
-  kind TEXT NOT NULL CHECK (kind IN ('key_element', 'goal', 'project', 'topic')),
+  kind TEXT NOT NULL CHECK (kind IN ('key_element', 'goal', 'project', 'topic', 'habit')),
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '', -- one line about it, shown on its card
   state TEXT NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'archived')),
@@ -257,12 +260,15 @@ CREATE TABLE IF NOT EXISTS life_items (
   ends_on TEXT NOT NULL DEFAULT '' CHECK (ends_on = '' OR ends_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
   pulse TEXT NOT NULL DEFAULT '',
   depth TEXT NOT NULL DEFAULT 'secondary' CHECK (depth IN ('deep', 'secondary')),
-  body TEXT NOT NULL DEFAULT ''
+  body TEXT NOT NULL DEFAULT '',
+  cadence_times INTEGER NOT NULL DEFAULT 1 CHECK (cadence_times BETWEEN 1 AND 31),
+  cadence_per TEXT NOT NULL DEFAULT 'week' CHECK (cadence_per IN ('week', 'month')),
+  done_when TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS life_items_by_home ON life_items (home_id);
 
--- Which Goals a Project serves (later a Habit too). Taking a Goal off only sets
+-- Which Goals a Project or a Habit serves (a Habit is said to carry them). Taking a Goal off only sets
 -- deleted_at; adding it again brings the same row back.
 CREATE TABLE IF NOT EXISTS life_serves (
   id TEXT PRIMARY KEY,
@@ -551,7 +557,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   state TEXT NOT NULL DEFAULT 'done' CHECK (state IN ('done', 'answering', 'stopped', 'failed')),
   sources TEXT NOT NULL DEFAULT '[]',
   context TEXT NOT NULL DEFAULT '',
-  ai TEXT NOT NULL DEFAULT '',     -- which AI gave an answer: claude or codex (ChatGPT); '' before it was kept
+  ai TEXT NOT NULL DEFAULT '',     -- which AI gave an answer: claude or codex (ChatGPT); '' before it was kept (schema 67)
   model TEXT NOT NULL DEFAULT ''   -- the model it named, e.g. claude-opus-5-5 or gpt-6.1-sol
 );
 
@@ -915,6 +921,26 @@ CREATE TABLE IF NOT EXISTS mail_sends (
 CREATE INDEX IF NOT EXISTS mail_sends_by_state ON mail_sends (state, send_at);
 
 CREATE UNIQUE INDEX IF NOT EXISTS mail_sends_by_pixel ON mail_sends (pixel_token) WHERE pixel_token IS NOT NULL;
+
+-- Mail drafts (schema 69, 2026-11-11): a mail being written and not sent yet, kept here as you type (in this database only, never in
+-- Gmail's Drafts). It is in Mail's Drafts until you send it (then deleted_at, the mail is in mail_sends) or discard it (deleted_at;
+-- Undo clears it). thread_id: the conversation a reply belongs to; NULL for a new mail.
+CREATE TABLE IF NOT EXISTS mail_drafts (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  account_id TEXT NOT NULL REFERENCES mail_accounts (id),
+  thread_id TEXT REFERENCES mail_threads (id),
+  to_addrs TEXT NOT NULL DEFAULT '',
+  cc_addrs TEXT NOT NULL DEFAULT '',
+  subject TEXT NOT NULL DEFAULT '',
+  body_text TEXT NOT NULL DEFAULT '',
+  remind_days INTEGER NOT NULL DEFAULT 0,
+  confirm INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS mail_drafts_by_thread ON mail_drafts (thread_id, updated_at);
 
 -- Read confirmations (Mail 9, mail-confirm.js): every fetch of the one-pixel picture of a mail you sent. Only what is counted is an open ("Opened"
 -- is all it can know, never "Read"); a scanner, a privacy proxy or a fetch within thirty seconds of sending is listed and not counted.

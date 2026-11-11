@@ -20,7 +20,7 @@ async function setup(t, { pageSize = 5 } = {}) {
   const storeDir = tmp('gcal-store-');
   const google = await startFakeGoogle();
   const gcal = await startFakeGcal({ pageSize });
-  const app = await startServer({ port: 0, dataDir, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, googleCalendarEvery: 0, google: { env: { ...google.env, ...gcal.env }, keyStore: fileKeyStore(storeDir) } });
+  const app = await startServer({ port: 0, dataDir, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, mailSyncEvery: 0, googleCalendarEvery: 0, google: { env: { ...google.env, ...gcal.env }, keyStore: fileKeyStore(storeDir) } });
   t.after(async () => { await app.close(); await google.close(); await gcal.close(); fs.rmSync(dataDir, { recursive: true, force: true }); fs.rmSync(storeDir, { recursive: true, force: true }); });
   const json = async (method, url, body) => { const res = await fetch(app.url + url, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }); return { status: res.status, body: await res.json() }; };
   await json('PATCH', '/api/modules', { id: 'calendar-google', on: true }); // off in a new install

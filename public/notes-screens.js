@@ -350,7 +350,7 @@ export async function showDeleted() {
   );
 
   let items;
-  const LIFE_NAMES = { key_element: 'Key Element', goal: 'Goal', project: 'Project', topic: 'Topic' };
+  const LIFE_NAMES = { key_element: 'Key Element', goal: 'Goal', project: 'Project', topic: 'Topic', habit: 'Habit' };
   try {
     const [notes, entries, captures, contacts, life, ownTasks, events] = await Promise.all([
       api.deletedNotes(), api.deletedEntries(), api.deletedCaptures(), api.deletedContacts(), api.deletedLife(), api.deletedTasks(),

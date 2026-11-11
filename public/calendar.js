@@ -1,7 +1,7 @@
 // The Calendar (time/1): what is fixed in your days, and nothing else. Tasks never come
 // here, not even the ones with a date: that is the planner's job (next lesson).
 //   /calendar              this week (on a phone: today)
-//   /calendar/YYYY-MM-DD   the week (or ?view=day, the day) with that day
+//   /calendar/YYYY-MM-DD   the week (or ?view=day, the day; ?view=3, that day and the next two) with that day
 // An event is a block whose height is its length, with a line on its left in its
 // calendar's colour (your own events: the text colour). A thin line marks now.
 // New event (or a click in an empty hour) opens the event dialog; a click on an event
@@ -178,7 +178,8 @@ function layOut(parts) {
 export async function showCalendar(dayParam) {
   const params = new URLSearchParams(location.search);
   let toOpen = params.get('open'); // an event to open once the day is drawn (its id, or its note's link)
-  let view = params.get('view') === 'day' || (params.get('view') !== 'week' && isPhone()) ? 'day' : 'week';
+  const asked = params.get('view');
+  let view = ['day', '3', 'week'].includes(asked) ? asked : (isPhone() ? 'day' : 'week');
   let day = isDay(dayParam) ? dayParam : today();
   let events = [];
   let selectedId = null;
@@ -187,10 +188,10 @@ export async function showCalendar(dayParam) {
 
   const rangeLabel = el('span', { class: 'cal-range' });
   const viewSwitch = el('div', { class: 'switch', role: 'group', 'aria-label': 'View' },
-    ...['day', 'week'].map((name) => el('button', {
+    ...[['day', 'Day'], ['3', '3 days'], ['week', 'Week']].map(([name, label]) => el('button', {
       type: 'button', class: 'switch-button switch-button-text', 'data-view': name,
       onclick: () => { view = name; go(); },
-    }, name === 'day' ? 'Day' : 'Week')));
+    }, label)));
   const grid = el('div', { class: 'cal' });
   const status = el('p', { class: 'journal-tools-message', role: 'status' });
   const undoPlace = el('div', {});
@@ -201,9 +202,9 @@ export async function showCalendar(dayParam) {
       el('h1', { class: 'top-bar-title' }, 'Calendar'),
       el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => openDialog(null) }, icon('plus'), 'New event'),
       el('div', { class: 'cal-nav' },
-        el('button', { type: 'button', class: 'button', 'aria-label': 'Earlier', onclick: () => { day = addDays(day, view === 'day' ? -1 : -7); go(); } }, icon('left')),
+        el('button', { type: 'button', class: 'button', 'aria-label': 'Earlier', onclick: () => { day = addDays(day, -step()); go(); } }, icon('left')),
         rangeLabel,
-        el('button', { type: 'button', class: 'button', 'aria-label': 'Later', onclick: () => { day = addDays(day, view === 'day' ? 1 : 7); go(); } }, icon('right')),
+        el('button', { type: 'button', class: 'button', 'aria-label': 'Later', onclick: () => { day = addDays(day, step()); go(); } }, icon('right')),
         el('button', { type: 'button', class: 'button', onclick: () => { day = today(); go(); } }, 'Today')),
       viewSwitch,
       ...(moduleOn('calendar-plus') ? [el('button', { type: 'button', class: 'button', title: 'Type it as you would say it (⌘K)', onclick: () => openWords() }, 'In words')] : [])),
@@ -214,10 +215,13 @@ export async function showCalendar(dayParam) {
   );
   setFooterLink(recentlyDeletedLink());
 
-  const days = () => (view === 'day' ? [day] : Array.from({ length: 7 }, (_, i) => addDays(weekStart(day), i)));
+  const days = () => (view === 'day' ? [day]
+    : view === '3' ? Array.from({ length: 3 }, (_, i) => addDays(day, i))
+    : Array.from({ length: 7 }, (_, i) => addDays(weekStart(day), i)));
+  const step = () => (view === 'day' ? 1 : view === '3' ? 3 : 7);
 
   async function go() {
-    history.replaceState(null, '', `/calendar/${day}${view === 'day' ? '?view=day' : '?view=week'}`);
+    history.replaceState(null, '', `/calendar/${day}?view=${view}`);
     await load();
     if (toOpen) {
       const event = events.find((e) => e.id === toOpen || e.ref_id === toOpen);

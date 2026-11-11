@@ -79,6 +79,20 @@ function glossarySection() {
     problem, search, list, undoPlace);
 }
 
+// Your assistant and mail (advanced/mail/11): the limits it is held to, read only. They are in code, not in a prompt, so there is nothing to switch.
+function mailLimitsSection() {
+  const list = el('ul', { class: 'allowed-list', 'aria-label': 'Limits' });
+  request('GET', '/api/mail/limits').then((data) => {
+    list.replaceChildren(...data.rules.map((r) => el('li', { class: 'allowed-row', 'data-rule': r.key }, icon('lock'), el('span', {}, r.text))),
+      el('li', { class: 'empty' }, `Drafted today: ${data.drafted_today} of ${data.limits.drafts_per_day}.`));
+  }).catch(() => list.replaceChildren(el('li', { class: 'empty' }, "The limits couldn't be loaded.")));
+  return el('section', { class: 'settings-part', 'aria-label': 'Your assistant and mail' },
+    el('h2', { class: 'settings-title' }, 'Your assistant and mail'),
+    el('p', { class: 'empty' }, 'While Mail is on, your assistant can search and read your mail, make a task of a conversation and draft a reply. These limits are checked in code on every draft, whatever it is told, and cannot be changed here.'),
+    list);
+}
+
+
 // Dictation (advanced/voice/1): the hold key, whether there is a key for speech to text, and every
 // dictation kept as text, newest first, searchable, each with Copy.
 function dictationSection() {
@@ -299,13 +313,15 @@ export async function showSettings() {
     if (moduleOn('voice') && !there) dictationPlace.replaceChildren(dictationSection(), glossarySection());
     else if (!moduleOn('voice') && there) dictationPlace.replaceChildren();
   };
-  // The Google part is there while Google Calendar is on, with the Google Calendar part.
+  // The Google part is there while Mail or Google Calendar is on (the sign-in is the shared piece); the Mail limits with Mail, the
+  // Google Calendar part with Google Calendar.
   const googlePlace = el('div', {});
   const drawGoogle = () => {
-    const state = `${moduleOn('calendar-google')}`;
+    const state = `${moduleOn('mail')}${moduleOn('calendar-google')}`;
     if (googlePlace.dataset.state === state) return;
     googlePlace.dataset.state = state;
-    googlePlace.replaceChildren(...(moduleOn('calendar-google') ? [googleSection(), googleCalendarSection()] : []));
+    googlePlace.replaceChildren(...(moduleOn('mail') || moduleOn('calendar-google') ? [googleSection()] : []),
+      ...(moduleOn('calendar-google') ? [googleCalendarSection()] : []), ...(moduleOn('mail') ? [mailLimitsSection()] : []));
   };
   // Import is a part of Writing and thinking: there while it is on.
   const importPlace = el('div', {});

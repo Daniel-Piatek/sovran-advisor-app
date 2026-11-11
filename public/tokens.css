@@ -60,11 +60,11 @@
   --kind-life: #059e30;     --kind-life-ink: #fbfbfb;     /* Green: My Life (Key Elements, goals, projects, topics) */
   --kind-assistant: #d9c14b; --kind-assistant-ink: #302d2d; /* Gold (2026-11-10, the owner's wish) */
   --kind-assistant-wash: #efe3a5; /* the Assistant's gold, lightened: the chat open now (2026-11-11), dark words read on it in both themes */
-  --kind-goal: #d9c14b;     --kind-goal-ink: #302d2d;     /* Gold: My Life's Goals, the crown you reach for */
-  --kind-timeline: #302d2d;  --kind-timeline-ink: #fbfbfb; /* Charcoal: the Timeline holds every kind, so it has the neutral (2026-11-09) */
-  /* Which AI gave an answer (2026-11-11, the owner's wish): each company's own colour, from its logo. */
+  /* Which AI gave an answer (2026-11-11, the owner's wish, from the student app): each company's own colour, from its logo. */
   --ai-claude: #d97757;      --ai-claude-ink: #faf0eb;     /* Claude's terracotta */
   --ai-chatgpt: #0d0d0d;     --ai-chatgpt-ink: #fbfbfb;    /* ChatGPT's black */
+  --kind-goal: #d9c14b;     --kind-goal-ink: #302d2d;     /* Gold: My Life's Goals, the crown you reach for */
+  --kind-timeline: #302d2d;  --kind-timeline-ink: #fbfbfb; /* Charcoal: the Timeline holds every kind, so it has the neutral (2026-11-09) */
   --color-heading: var(--color-accent); /* a screen's section headings (2026-11-09, the owner's wish): Crimson, so the eye finds the parts of a page */
   --kind: var(--color-surface); --kind-ink: var(--color-text); /* style.css sets these per icon */
   --section: var(--color-border); /* the screen's kind (style.css, by the section) */
@@ -85,6 +85,7 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Type sizes */
+  --text-2xs: 0.6875rem; /* 11px: Mail's split capsules only */
   --text-xs: 0.75rem;   /* 12px */
   --text-sm: 0.875rem;  /* 14px */
   --text-base: 1rem;    /* 16px */
@@ -137,6 +138,8 @@
   --face-small: 28px;           /* a person's or company's initials, in a list */
   --face-large: 56px;           /* on their page */
   --life-list-width: 280px;     /* the My Life list, on the left */
+  --mail-list-width: 400px;     /* Mail's conversations, on the left; the divider changes it, kept per browser */
+  --mail-divider-width: 12px;   /* the strip between Mail's two panels that you drag */
   --life-icon-large: 24px;      /* an item's shape beside its name, on its page */
   --task-box-size: 16px;        /* a task's checkbox */
   --planning-width: 300px;      /* the planning panel beside the board */
@@ -157,8 +160,8 @@
 }
 
 [data-theme="dark"] {
-  --ai-chatgpt: #f2f2f2;     --ai-chatgpt-ink: #0d0d0d;    /* ChatGPT's black turns white on the dark theme */
   color-scheme: dark;
+  --ai-chatgpt: #f2f2f2;     --ai-chatgpt-ink: #0d0d0d;    /* ChatGPT's black turns white on the dark theme */
 
   /* Colours: dark theme */
   --color-bg: #1f1d1d;

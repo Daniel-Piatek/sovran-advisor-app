@@ -8,6 +8,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startFakeGoogle } from '../fake-google.js';
+import { startFakeGmail } from '../fake-gmail.js';
 import { startFakeGcal } from '../fake-gcal.js';
 
 const serverFile = fileURLToPath(new URL('../../server.js', import.meta.url));
@@ -29,10 +30,11 @@ export const test = base.extend({
     // Google is stood in for too (tests/fake-google.js), with a key store of its own in a folder beside the data.
     const google = await startFakeGoogle();
     const keyStoreDir = testInfo.outputPath('key-store');
+    const gmail = await startFakeGmail({ email: 'work@mypractice.com' }); // Gmail's own API, stood in for; a test fills its `messages`
     const gcal = await startFakeGcal(); // Google Calendar's own API, stood in for; a test fills its `events`
     await new Promise((resolve) => eleven.listen(0, '127.0.0.1', resolve));
     const child = spawn(process.execPath, [serverFile], {
-      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), CODEX_HOME: path.join(dataDir, '.codex-home'), FAKE_LINK_TITLES: '1', ...google.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
+      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), CODEX_HOME: path.join(dataDir, '.codex-home'), FAKE_LINK_TITLES: '1', ...google.env, ...gmail.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
@@ -62,17 +64,18 @@ export const test = base.extend({
       return res.json();
     };
     // A new install starts with some sections switched off (modules.js, starter: false); the tests start with everything on.
-    for (const id of ['tasks', 'planner', 'calendar', 'life', 'voice', 'calendar-google']) await send('PATCH', '/api/modules', { id, on: true });
+    for (const id of ['tasks', 'planner', 'calendar', 'life', 'voice', 'calendar-google', 'mylife-plus', 'mail']) await send('PATCH', '/api/modules', { id, on: true });
     await send('PATCH', '/api/welcome', { seen: true }); // the welcome has its own test
     const createNote = (note = {}) => send('POST', '/api/notes', note);
     const updateNote = (id, changes) => send('PATCH', `/api/notes/${id}`, changes);
 
-    await use({ url, dataDir, dbFile: path.join(dataDir, 'app.db'), createNote, updateNote, eleven, google, gcal, keyStoreDir });
+    await use({ url, dataDir, dbFile: path.join(dataDir, 'app.db'), createNote, updateNote, eleven, google, gmail, gcal, keyStoreDir });
 
     child.kill('SIGTERM');
     await new Promise((resolve) => (child.exitCode !== null ? resolve() : child.once('exit', resolve)));
     eleven.close();
     await google.close();
+    await gmail.close();
     await gcal.close();
   },
 
