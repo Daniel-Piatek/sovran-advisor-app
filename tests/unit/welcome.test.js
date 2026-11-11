@@ -14,9 +14,9 @@ test('the welcome: not seen in a new install; a name and seen are kept; the assi
     const res = await fetch(`${app.url}/api/welcome`, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
     return { status: res.status, body: await res.json() };
   };
-  assert.deepEqual((await send('GET')).body, { seen: false, name: '', assistant_ready: true });
-  assert.deepEqual((await send('PATCH', { name: '  Ana  ' })).body, { seen: false, name: 'Ana', assistant_ready: true });
-  assert.deepEqual((await send('PATCH', { seen: true })).body, { seen: true, name: 'Ana', assistant_ready: true });
+  assert.deepEqual((await send('GET')).body, { seen: false, name: '', assistant_ready: true, provider: 'claude' });
+  assert.deepEqual((await send('PATCH', { name: '  Ana  ' })).body, { seen: false, name: 'Ana', assistant_ready: true, provider: 'claude' });
+  assert.deepEqual((await send('PATCH', { seen: true })).body, { seen: true, name: 'Ana', assistant_ready: true, provider: 'claude' });
   for (const bad of [[], { name: 3 }, { name: 'x'.repeat(81) }, { seen: 'yes' }]) assert.equal((await send('PATCH', bad)).status, 400, JSON.stringify(bad));
   assert.equal((await send('DELETE')).status, 405);
 });

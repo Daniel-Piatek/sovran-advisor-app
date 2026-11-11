@@ -176,6 +176,40 @@ function timingsSection() {
       : el('p', { class: 'empty' }, 'Nothing measured yet in this browser: move an event or switch the Planner’s lens, then come back.'));
 }
 
+// Which AI answers (ai.js): your own Claude, or your own ChatGPT. Each runs on this computer, signed in
+// with your own account; the page says whether its program is installed.
+const AI = {
+  claude: { name: 'Claude', program: 'Claude Code', missing: 'Claude Code isn’t set up on this computer yet. Install it and sign in once (the install guide says how), then open this page again.' },
+  codex: { name: 'ChatGPT', program: 'Codex', missing: 'Codex, ChatGPT’s program, isn’t set up on this computer yet. Install it and sign in once with your ChatGPT account (the install guide says how), then open this page again.' },
+};
+function aiSection() {
+  const status = el('p', { class: 'empty', role: 'status' });
+  const buttons = Object.entries(AI).map(([provider, ai]) => el('button', {
+    type: 'button', class: 'button button-quiet', 'data-provider': provider, 'aria-pressed': 'false',
+    onclick: () => save(provider),
+  }, ai.name));
+  const show = (state) => {
+    for (const b of buttons) {
+      const on = b.dataset.provider === state.provider;
+      b.setAttribute('aria-pressed', String(on));
+      b.className = on ? 'button' : 'button button-quiet';
+    }
+    const ai = AI[state.provider];
+    status.textContent = state.ready[state.provider]
+      ? `Your assistant runs on your own ${ai.name} (${ai.program}), on this computer.`
+      : ai.missing;
+  };
+  const save = async (provider) => {
+    try { show(await request('PUT', '/api/assistant/ai', { provider })); } catch (err) { status.textContent = err.message; }
+  };
+  request('GET', '/api/assistant/ai').then(show).catch(() => { status.textContent = 'Which AI you use couldn’t be loaded.'; });
+  return el('section', { class: 'settings-part', 'aria-label': 'Which AI' },
+    el('h2', { class: 'settings-title' }, 'Your assistant’s AI'),
+    el('p', { class: 'empty' }, 'Choose the one you have a plan with. It answers in the Assistant and sorts your Inbox in the background. Your notes stay on this computer either way.'),
+    el('div', { class: 'library-key', role: 'group', 'aria-label': 'AI' }, ...buttons),
+    status);
+}
+
 // The Sovran Library (sovran-library.js): the key the student was given, pasted once. Only its last four
 // characters ever come back to the page.
 function librarySection() {
@@ -294,6 +328,7 @@ export async function showSettings() {
   drawImport();
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
+    aiSection(),
     librarySection(),
     ...(moduleOn('course') ? [courseSection()] : []),
     el('section', { class: 'settings-part', 'aria-label': 'Your assistant' },

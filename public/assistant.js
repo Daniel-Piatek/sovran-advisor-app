@@ -13,6 +13,7 @@
 
 import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar, clockTime } from './ui.js';
+import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
 import { dueLabel } from './due.js';
 
@@ -133,6 +134,8 @@ function stepsNode(steps) {
     ...(files.length ? [el('p', { class: 'chat-files' }, icon('notes'), files.join(', '))] : []));
 }
 
+const aiChip = (ai, words) => el('span', { class: 'chat-ai', 'data-ai': ai }, words);
+
 // What to keep of a reply: the part selected inside it, else all of it. The title is its first line, without the marks.
 function keepOf(message, body) {
   const selection = window.getSelection();
@@ -161,8 +164,12 @@ function bubble(message, changed = () => {}) {
   }
   const body = el('div', { class: 'chat-text' });
   body.innerHTML = markdown.render(message.text);
+  // Short table cells keep their words on one line ("4. Reconnect", 2026-11-11, the owner's wish).
+  for (const cell of body.querySelectorAll('td')) if (cell.textContent.trim().length <= 24) cell.classList.add('is-short');
   const node = el('div', { class: 'chat-bubble is-assistant', 'data-role': 'assistant', 'data-state': message.state },
-    el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant', el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
+    el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant',
+      ...(aiLabel(message) ? [el('span', { class: 'plan-free' }, ' · '), aiChip(message.ai, aiLabel(message))] : []),
+      el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
     body,
     ...(message.state === 'answering' ? [el('span', { class: 'chat-working', 'aria-label': 'Answering' }, '…')] : []),
     ...(message.state === 'stopped' ? [el('p', { class: 'chat-note' }, 'Stopped.')] : []),
@@ -179,6 +186,7 @@ export async function showAssistant(id) {
   let conversation = null;
   let answering = false;
   let left = false;
+  let chosen = ''; // the AI chosen in Settings now (claude or codex)
   onLeave(() => { left = true; });
 
   const list = el('nav', { class: 'chat-list', 'aria-label': 'Your chats' });
@@ -188,6 +196,11 @@ export async function showAssistant(id) {
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   const undoPlace = el('div', {});
+  // Wide view (2026-11-11, the owner's wish): the conversation in a large window over the page, its size
+  // dragged at the corner, closed with the button, Esc or a click beside it. Remembered on this computer.
+  const wideButton = el('button', { type: 'button', class: 'button button-quiet chat-wide-toggle', 'aria-pressed': 'false', onclick: () => setWide(!wide) });
+  const backdrop = el('div', { class: 'chat-backdrop', hidden: true, onclick: () => setWide(false) });
+  let wide = false;
   const title = el('h1', { class: 'top-bar-title' }, 'Assistant');
   const actions = el('span', { class: 'chat-actions' });
   // New chat is the page's one red button, beside the title as on every section's page (2026-11-10, the owner's wish).
@@ -198,10 +211,29 @@ export async function showAssistant(id) {
     // Your chats on the left, the chat on the right, each a panel of its own on the grey, like the Planner.
     el('div', { class: 'chat-layout' },
       list,
-      el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, thread,
+      backdrop,
+      el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, el('div', { class: 'chat-pane-bar' }, wideButton), thread,
         el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, stopButton, sendButton)), problem)),
     undoPlace,
   );
+
+  function setWide(on) {
+    wide = on;
+    const pane = screen.querySelector('.chat-pane');
+    pane.classList.toggle('is-wide', on);
+    if (!on) { pane.style.width = ''; pane.style.height = ''; }
+    backdrop.hidden = !on;
+    wideButton.setAttribute('aria-pressed', String(on));
+    wideButton.replaceChildren(icon(on ? 'close' : 'open'), on ? 'Close wide view' : 'Wide view');
+    try { localStorage.setItem('assistant.wide', on ? '1' : ''); } catch { /* not kept: fine */ }
+    thread.scrollTop = thread.scrollHeight;
+  }
+  const escape = (e) => { if (e.key === 'Escape' && wide) setWide(false); };
+  document.addEventListener('keydown', escape);
+  onLeave(() => document.removeEventListener('keydown', escape));
+  let wasWide = false;
+  try { wasWide = localStorage.getItem('assistant.wide') === '1'; } catch { /* none */ }
+  setWide(wasWide && window.matchMedia('(min-width: 900px)').matches);
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(input.value); }
@@ -226,9 +258,26 @@ export async function showAssistant(id) {
   function drawThread() {
     const messages = conversation?.messages ?? [];
     // A new chat shows only the box to ask in (2026-11-10, the owner's wish).
-    thread.replaceChildren(...messages.map((m) => bubble(m, () => drawThread())));
+    // Which AI it began with, at the top, and a line wherever it changed (before the question it answered).
+    const nodes = [];
+    let last = '';
+    for (const m of messages) {
+      if (m.role === 'assistant' && AI_NAMES[m.ai]) {
+        const words = aiLabel(m);
+        if (!last) nodes.unshift(el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Started with ', aiChip(m.ai, words)));
+        else if (m.ai !== last) {
+          const line = el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Switched to ', aiChip(m.ai, words));
+          const at = nodes.length && nodes.at(-1).dataset.role === 'user' ? nodes.length - 1 : nodes.length;
+          nodes.splice(at, 0, line);
+        }
+        last = m.ai;
+      }
+      nodes.push(bubble(m, () => drawThread()));
+    }
+    thread.replaceChildren(...nodes);
     thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
+    title.textContent = 'Assistant'; // always the section's name; the chat open is marked in the list (2026-11-11, the owner's wish)
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
     actions.replaceChildren(...(conversation?.messages.length ? [
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Rename chat', onclick: () => startRename() }, 'Rename'),
@@ -263,6 +312,12 @@ export async function showAssistant(id) {
     box.select();
   }
 
+  // Which AI answers next, named in the box to ask in.
+  request('GET', '/api/assistant/ai').then((state) => {
+    chosen = state.provider;
+    input.placeholder = `Ask your assistant (${AI_NAMES[chosen] ?? 'Claude'})`;
+  }).catch(() => {});
+
   async function load(conversationId) {
     conversation = conversationId ? await assistantApi.get(conversationId) : null;
     drawThread();
@@ -293,7 +348,7 @@ export async function showAssistant(id) {
     }
     input.value = '';
     const asked = { role: 'user', text: text.trim(), context, created_at: new Date().toISOString(), steps: [] };
-    const answer = { role: 'assistant', text: '', state: 'answering', created_at: new Date().toISOString(), steps: [], sources: [], cards: [] };
+    const answer = { role: 'assistant', text: '', state: 'answering', ai: chosen, model: '', created_at: new Date().toISOString(), steps: [], sources: [], cards: [] };
     conversation.messages.push(asked, answer);
     conversation.title ||= asked.text.split('\n')[0].slice(0, 80);
     drawThread();
@@ -342,7 +397,7 @@ export async function showAssistant(id) {
       if (!left) redraw();
     }
     setAnswering(false);
-    if (!left) { drawList(); input.focus(); }
+    if (!left) { drawThread(); drawList(); input.focus(); } // drawn again: the answer now names its model
   }
 
   async function stop() {

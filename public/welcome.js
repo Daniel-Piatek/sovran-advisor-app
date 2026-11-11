@@ -37,8 +37,10 @@ export async function showWelcome() {
     el('section', { class: 'settings-part', 'aria-label': 'Your assistant' },
       el('h2', { class: 'settings-title' }, 'Your assistant'),
       state.assistant_ready
-        ? el('p', { class: 'welcome-ready' }, icon('check'), ' Ready. It runs on your own Claude, on this computer.')
-        : el('p', {}, 'Not set up yet. Your assistant runs on your own Claude Code, signed in with your own Claude account. Install Claude Code, sign in once, then open this page again.')),
+        ? el('p', { class: 'welcome-ready' }, icon('check'), ` Ready. It runs on your own ${state.provider === 'codex' ? 'ChatGPT' : 'Claude'}, on this computer.`)
+        : el('p', {}, state.provider === 'codex'
+          ? 'Not set up yet. Your assistant runs on ChatGPT’s Codex, signed in with your own ChatGPT account. Install Codex, sign in once, then open this page again.'
+          : 'Not set up yet. Your assistant runs on your own Claude Code, signed in with your own Claude account. Install Claude Code, sign in once, then open this page again. (Using ChatGPT instead? Choose it in Settings.)')),
     el('section', { class: 'settings-part', 'aria-label': 'First steps' },
       el('h2', { class: 'settings-title' }, 'To begin'),
       el('div', { class: 'welcome-steps' },

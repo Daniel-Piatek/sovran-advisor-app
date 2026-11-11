@@ -76,6 +76,8 @@ import {
 import { applyAction, dismissAction, undoAction, planCards } from './assistant-tools.js';
 import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
+import { chosenAI, getAssistantChoice, setProvider } from './ai.js';
+import { DEFAULT_CODEX_COMMAND } from './codex.js';
 import { startBackups } from './backup.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
@@ -112,7 +114,7 @@ const contentTypes = {
 const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 
 export function startServer({
-  port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND,
+  port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = DEFAULT_CODEX_COMMAND,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null,
 } = {}) {
   const db = openDatabase(dataDir);
@@ -120,12 +122,15 @@ export function startServer({
   // The assistant's tools answer only with this secret, made now and never shown or logged.
   const mcpSecret = randomBytes(32).toString('hex');
   let mcpUrl = '';
+  // The AI chosen in Settings (ai.js): your own Claude, or your own ChatGPT; asked afresh each time.
+  const commands = { claude: assistantCommand, codex: codexCommand };
+  const ai = () => chosenAI(db, commands);
   // Your assistant reads each capture in the background and suggests where it goes.
   const reader = readCaptures
-    ? startReader({ db, dataDir, command: assistantCommand, mcp: () => ({ url: mcpUrl, secret: mcpSecret }) })
+    ? startReader({ db, dataDir, ai, mcp: () => ({ url: mcpUrl, secret: mcpSecret }) })
     : { read: () => {}, catchUp: () => {}, stop: () => {} };
   // A long task gets a few words from your assistant, in the background (short-titles.js).
-  const titler = writeTitles ? startTitler({ db, dataDir, command: assistantCommand }) : { catchUp: () => {}, soon: () => {}, stop: () => {} };
+  const titler = writeTitles ? startTitler({ db, dataDir, ai }) : { catchUp: () => {}, soon: () => {}, stop: () => {} };
   let ownHosts = [];
   // Google (google.js): the key store, the sign-ins under way, and a problem to tell the page once. Tests give stand-ins.
   const googleEnv = google.env ?? process.env;
@@ -218,8 +223,8 @@ export function startServer({
         if (!getBoard(db, strokesMatch[1])) return sendJson(res, 404, { error: 'No such board' });
         const chat = createConversation(db, dataDir);
         fs.writeFileSync(path.join(dataDir, chat.folder, 'handwriting.png'), bytes);
-        const answered = await sendMessage(db, chat.id, 'Read the handwriting in the picture file handwriting.png (open it with the Read tool). Answer with only the words you read, on one line, and nothing else.',
-          { dataDir, command: assistantCommand, mcp: { url: mcpUrl, secret: mcpSecret } });
+        const answered = await sendMessage(db, chat.id, 'Read the handwriting in the picture file handwriting.png (open it with the Read tool, or see it attached). Answer with only the words you read, on one line, and nothing else.',
+          { dataDir, ...ai(), mcp: { url: mcpUrl, secret: mcpSecret }, images: [path.join(dataDir, chat.folder, 'handwriting.png')] });
         const words = String(answered?.text ?? '').replace(/^["“”'\s]+|["“”'\s]+$/g, '').split('\n')[0];
         return sendJson(res, 200, { conversation_id: chat.id, item: strokesToText(db, strokesMatch[1], input.stroke_ids, words, { x: Number(input.x) || 40, y: Number(input.y) || 40 }) });
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
@@ -292,7 +297,7 @@ export function startServer({
           const chat = createConversation(db, dataDir);
           changeComment(db, commentId, { ask: 'asked' });
           try {
-            await sendMessage(db, chat.id, words, { dataDir, command: assistantCommand, mcp: { url: mcpUrl, secret: mcpSecret } });
+            await sendMessage(db, chat.id, words, { dataDir, ...ai(), mcp: { url: mcpUrl, secret: mcpSecret } });
           } catch (err) { changeComment(db, commentId, { ask: '' }); throw err; }
           const after = getComment(db, commentId);
           if (after.ask === 'asked') changeComment(db, commentId, { ask: '' }); // it answered nothing in the thread
@@ -901,7 +906,7 @@ export function startServer({
       if (problem) return sendJson(res, 400, { error: problem });
       const line = (event) => { if (!res.writableEnded) res.write(`${JSON.stringify(event)}\n`); };
       const answered = sendMessage(db, id, input.text, {
-        dataDir, command: assistantCommand, send: line, mcp: { url: mcpUrl, secret: mcpSecret }, context: input.context ?? null, library: libraryServer(db),
+        dataDir, ...ai(), send: line, mcp: { url: mcpUrl, secret: mcpSecret }, context: input.context ?? null, library: libraryServer(db),
         notes: takeClashNotes(db), // which side won a clash since it last heard (Writing 5)
       });
       res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-cache' });
@@ -1154,15 +1159,24 @@ export function startServer({
       if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
       try { return sendJson(res, 200, setCourseUrl(db, ((await readJson(req)) ?? {}).url)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
+    // Your assistant's AI (ai.js): GET /api/assistant/ai → { provider, ready: { claude, codex } };  PUT { provider: claude | codex }
+    if (url.pathname === '/api/assistant/ai') {
+      if (req.method === 'GET') return sendJson(res, 200, getAssistantChoice(db, commands));
+      if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
+      try {
+        setProvider(db, ((await readJson(req)) ?? {}).provider);
+        return sendJson(res, 200, getAssistantChoice(db, commands));
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
     if (url.pathname === '/api/library') {
       if (req.method === 'GET') return sendJson(res, 200, getLibrary(db));
       if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
       try { return sendJson(res, 200, setLibraryKey(db, ((await readJson(req)) ?? {}).key)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     if (url.pathname === '/api/welcome') {
-      if (req.method === 'GET') return sendJson(res, 200, getWelcome(db, { command: assistantCommand }));
+      if (req.method === 'GET') return sendJson(res, 200, getWelcome(db, ai()));
       if (req.method !== 'PATCH') return sendJson(res, 405, { error: 'Method not allowed' });
-      try { return sendJson(res, 200, setWelcome(db, (await readJson(req)) ?? {}, { command: assistantCommand })); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+      try { return sendJson(res, 200, setWelcome(db, (await readJson(req)) ?? {}, ai())); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     if (url.pathname === '/api/settings') {
       if (req.method === 'GET') return sendJson(res, 200, getSettings(db));
@@ -1641,6 +1655,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     // Tests never go out to the web: a stand-in gives every page the title "A page on <its host>".
     ...(process.env.FAKE_LINK_TITLES ? { linkFetcher: async (url) => `A page on ${new URL(url).hostname}` } : {}),
     ...(process.env.ASSISTANT_COMMAND ? { assistantCommand: JSON.parse(process.env.ASSISTANT_COMMAND) } : {}),
+    ...(process.env.CODEX_COMMAND ? { codexCommand: JSON.parse(process.env.CODEX_COMMAND) } : {}),
     // READ_CALENDARS=off: keep other calendars as they were last read (the demo copy).
     ...(process.env.READ_CALENDARS === 'off' ? { readCalendarsEvery: 0 } : {}),
     onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js)
