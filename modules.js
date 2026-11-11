@@ -112,6 +112,7 @@ export const MODULES = [
     // Off in a new install and dormant: it holds no Google credentials, and its jobs (sync, sending) do nothing while it is off.
     id: 'mail',
     starter: false, // off in a new install: it needs your own Google sign-in, with setup directions still to come
+    hidden: true, // not listed in Settings › Modules until those directions exist (2026-11-11); a switch that cannot work yet would only confuse
     label: 'Mail',
     description: 'Your own mail, kept in the app. Needs a Google sign-in of your own (Settings › Google); setup directions will follow later. Reading your mail and sending mail as you are two separate switches.',
     permissions: ['mail.read', 'mail.send', 'mail.modify'],
