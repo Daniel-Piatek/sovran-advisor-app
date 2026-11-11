@@ -116,15 +116,16 @@ said yes to losing that exact change.
 1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the
    app keeps running until it is stopped). On Windows, closing its black window stops it too.
 2. **Keep the person's changes.** In the app's folder, run `git status`. If files the app came
-   with are changed or new files are there (`data/` never shows: it is left out of git), save
-   them as their own step: `git add -A` and
-   `git commit -m "My own changes before the update of YYYY-MM-DD"` (if git asks who is
-   committing, set `user.name` and `user.email` for this folder only, with
-   `git config user.name "<their name>"` and `git config user.email "sovran@localhost"`).
-   Check that `MY-CHANGES.md` lists them; add what is missing.
+   with are changed or new files are there (`data/` never shows: it is left out of git), first
+   check that `MY-CHANGES.md` lists them and add what is missing (if that file is not there yet,
+   because the copy is older than it, write it after step 4 instead). Then save the changes as
+   their own step: `git add -A -- . ':!MY-CHANGES.md'` and
+   `git commit -m "My own changes before the update of YYYY-MM-DD"`. If `git config user.name`
+   answers nothing in this folder, first set a name for this folder only:
+   `git config user.name "<their name>"` and `git config user.email "sovran@localhost"`.
 3. **Mark the spot:** `git tag before-update-YYYY-MM-DD` (add `-2` if that tag is there), so the
    whole update can be undone.
-4. **Bring in the new version:** `git pull --no-rebase origin main`, then `npm install --omit=dev`.
+4. **Bring in the new version:** `git pull --no-rebase --no-edit origin main`, then `npm install --omit=dev`.
    - If git says it **merged** or **fast-forwarded**, go on.
    - If git reports a **CONFLICT**, stop. For each clash, tell the person in plain words what
      their change was (from `MY-CHANGES.md`) and what the new version changes in the same place.
