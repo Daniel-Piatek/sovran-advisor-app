@@ -36,6 +36,9 @@ test('a conversation has its own folder; the answer streams in, and the next tur
   assert.ok(first.args.includes('--session-id') && first.args.includes(conversation.session_id));
   assert.ok(first.args.includes('--tools=Read,Glob,Grep,Write'), 'an allow-list of built-ins, by name');
   assert.ok(first.args.includes('--disable-slash-commands'));
+  const told = first.args[first.args.indexOf('--append-system-prompt') + 1];
+  assert.match(told, /cannot make that change from here/, 'it says it cannot change the app itself');
+  assert.match(told, /CUSTOMISING\.md/, 'and walks the owner through it with the customising guide');
   assert.equal(getConversation(db, conversation.id).title, 'What is in this folder?');
 
   const again = await sendMessage(db, conversation.id, 'What did I ask?', { dataDir, command: fake });

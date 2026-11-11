@@ -6,7 +6,9 @@ How the AI agent (Claude Code or any other coding agent) works on this project. 
 
 - This is **Sovran Advisor**, the app Sovran students run on their own computer. It started as their mentor's own app and is updated from the Sovran Advisor repository on GitHub (see `INSTALL.md` for installing and updating).
 - The owner's data lives in `data/` only (the database, their files, `data/backups/`). Never edit, move or delete anything in `data/`, and never commit it.
-- To make it their own, the owner changes settings, switches sections on in Settings › Modules, or adds modules of their own. Changing the files that came with the app works too, but the next update may clash with those changes: say so before making one.
+- To make it their own, the owner changes settings, switches sections on in Settings › Modules, or adds modules of their own. Changing the files that came with the app works too, but the next update may clash with those changes: say so before making one. `CUSTOMISING.md` is the owner's own guide to this.
+- **`MY-CHANGES.md` is the owner's list of their own changes** (left out of git, so no update ever touches it). Read it at the start of every session. After every change to their copy, add a short entry: the date, what they asked for in their words, the files touched, and why. Write the owner's own rules, lessons learned and details of their computer and phone there too, not in this file: this file comes with the app, and an update replaces it. Create `MY-CHANGES.md` the first time it is needed.
+- Prefer new files of their own (a new module, a new screen) over editing the app's files, so updates combine cleanly. Commit each finished change in their copy (it is never pushed anywhere), so an update can merge it.
 - Mail is not part of Sovran Advisor. Google Calendar and Dictation are, switched off until the owner connects their own Google account or their own ElevenLabs key.
 
 ## The project
@@ -42,12 +44,12 @@ How the AI agent (Claude Code or any other coding agent) works on this project. 
 
 ## My computer
 
-- Not written down yet. The first time it matters, ask the owner (or look) which computer, operating system and browser they use, and write it here.
+- Not written down yet. The first time it matters, ask the owner (or look) which computer, operating system and browser they use, and write it in `MY-CHANGES.md`.
 - When a prompt says "my operating system", use that system's own way of doing things.
 
 ## My phone
 
-- Not written down yet. Ask once when it matters and write it here.
+- Not written down yet. Ask once when it matters and write it in `MY-CHANGES.md`.
 
 ## Design rules
 
@@ -130,7 +132,7 @@ Commit after every finished step, with a plain message that says what changed. O
 
 ## Lessons learned
 
-When something goes wrong, add a short rule here with the reason, so it does not happen again.
+When something goes wrong, add a short rule with the reason, so it does not happen again (in the owner's copy, in `MY-CHANGES.md`).
 
 - **To prove a check fails, undo only the change you made on purpose.** Never `git checkout` a file to undo it: that also throws away the work not yet committed in that file. (2026-10-25: it wiped the new `style.css` once; it was rewritten from the session.)
 - **Test a drop the way a person drops.** Dropping a file only worked when it was let go exactly over a line of text; the test had dropped it right on the first line. Tests now drag (dragenter, dragover, drop) onto the empty space, the title and other parts of the page (`dragFileTo` in `tests/e2e/attachments.spec.js`).

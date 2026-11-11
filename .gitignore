@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# The owner's own list of changes to their copy (CUSTOMISING.md): never part of an update
+MY-CHANGES.md
+
 # Data the app keeps, and exports from it
 data/
 demo-data/
