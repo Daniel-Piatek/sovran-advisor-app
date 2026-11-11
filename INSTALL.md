@@ -1,13 +1,18 @@
 # Installing Sovran Advisor
 
-This page is written for **Claude** (Claude Code), which installs Sovran Advisor for you.
-You only need to paste this into Claude Code on your computer:
+This page is written for **Claude** (Claude Code) or, for someone who uses ChatGPT, OpenAI's
+**Codex**, which installs Sovran Advisor for you. You only need to paste this into Claude Code
+(or the Codex app) on your computer:
 
 > Install Sovran Advisor for me by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
 
+**Which AI?** The app's assistant runs on the person's own plan: Claude (Claude Code) or
+ChatGPT (Codex). If you are Codex, or the person says they use ChatGPT, follow the ChatGPT
+steps marked below; otherwise the Claude ones.
+
 ---
 
-## For Claude: how to install it
+## For Claude or Codex: how to install it
 
 Work through the steps for the person's computer. Explain each step in a sentence before you
 run it, in plain words (the person is not a programmer). When a step needs the person (a
@@ -39,6 +44,13 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
    account. Check `claude --version` answers in a new Terminal window. If it does not, install
    Claude Code (`curl -fsSL https://claude.ai/install.sh | bash`) and have the person sign in
    once by running `claude`.
+   **ChatGPT instead:** check `codex --version` answers. If not, install Codex
+   with `npm install -g @openai/codex` (this puts it next to Node.js, where the app icon finds
+   it)
+   and have the person run `codex` once and choose **Sign in with ChatGPT** (never an API key;
+   a Plus plan or higher is best, Free and Go are for light use). Then open the app's
+   Settings › Your assistant's AI and press **ChatGPT**, or set it for them:
+   `curl -s -X PUT http://127.0.0.1:3300/api/assistant/ai -H 'Content-Type: application/json' -d '{"provider":"codex"}'`.
 6. **Check it:** the app opens at http://127.0.0.1:3300 on its welcome screen. Tell the person
    it is ready, and that their notes stay on this computer.
 
@@ -64,12 +76,14 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
 5. **The assistant:** as on a Mac, `claude --version` must answer. If not, install Claude Code
    (`irm https://claude.ai/install.ps1 | iex` in PowerShell) and have the person sign in once by
    running `claude`.
+   **ChatGPT on Windows is not ready yet** (it has not been tested there). Tell the person
+   plainly; everything else in the app works, and the assistant can wait or use Claude.
 6. **Check it:** the app opens at http://127.0.0.1:3300 on its welcome screen.
 
 Google Calendar's sign-in needs the macOS keychain, so on Windows it stays off. Everything
 else works the same.
 
-## For Claude: using it on a phone (optional: "set up Sovran Advisor on my phone")
+## For Claude or Codex: using it on a phone (optional: "set up Sovran Advisor on my phone")
 
 Only when the person asks. The app stays on their computer; their phone reaches it through
 **Tailscale**, a free private link between their own devices (nobody else can get in). It works
@@ -106,7 +120,7 @@ while the computer is switched on and awake.
   text, so the person needs their own ElevenLabs account and key (paste it into Settings ›
   Dictation). The key stays on their computer.
 
-## For Claude: updating it ("update Sovran Advisor")
+## For Claude or Codex: updating it ("update Sovran Advisor")
 
 1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the
    app keeps running until it is stopped). On Windows, closing its black window stops it too.

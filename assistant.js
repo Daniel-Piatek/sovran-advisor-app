@@ -18,6 +18,7 @@ import path from 'node:path';
 import { actionsOf, findPage, cancelWaits } from './assistant-tools.js';
 import { NEVER_TOOLS, judgeStep, logActivity } from './permissions.js';
 import { localDay } from './entries.js';
+import { codexArgs, codexEnv, lineReader } from './codex.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -25,7 +26,7 @@ const fail = (status, message) => Object.assign(new Error(message), { status });
 export const MAX_MESSAGE_LENGTH = 20_000;
 export const DEFAULT_COMMAND = ['claude'];
 const SAVE_EVERY_MS = 1000;
-const guide = () => [
+export const guide = () => [
   'You are the assistant inside the owner’s personal app (notes, journal, tasks, planner, people, My Life).',
   `Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${localDay()}.`,
   'Answer plainly and briefly. Your own files go in this conversation’s folder.',
@@ -139,8 +140,8 @@ export const toolsFor = (conversationId) => running.get(conversationId)?.tools ?
 // { type: 'card', card }, then { type: 'done', message }. Resolves with the finished
 // answer. mcp: { url, secret } of the app's tools; context: { path, title } of the page
 // the question was asked on.
-export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, send = () => {}, mcp = null, context = null, notes = [], library = null }) {
-  const conversation = getConversation(db, id);
+export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, provider = 'claude', send = () => {}, mcp = null, context = null, notes = [], library = null, images = [] }) {
+  let conversation = getConversation(db, id);
   if (!conversation) throw fail(404, 'There is no such conversation.');
   if (running.has(id)) throw fail(409, 'The assistant is still answering here. Stop it first.');
   const words = text.trim();
@@ -150,6 +151,15 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
   const folder = path.join(dataDir, conversation.folder);
   fs.mkdirSync(folder, { recursive: true });
   const folderReal = fs.realpathSync(folder);
+  // A conversation remembers the AI it was carried on with: Codex's thread is kept as codex:<id>.
+  // Carried on with the other one, it starts afresh there, told what was said so far.
+  const codexThread = conversation.session_id.startsWith('codex:') ? conversation.session_id.slice(6) : null;
+  const sameAI = conversation.started && (provider === 'codex') === Boolean(codexThread);
+  if (!sameAI && conversation.started) {
+    db.prepare('UPDATE conversations SET started = 0, session_id = ? WHERE id = ?').run(randomUUID(), id);
+    conversation = { ...conversation, started: false, session_id: db.prepare('SELECT session_id FROM conversations WHERE id = ?').get(id).session_id };
+  }
+  const earlier = sameAI ? [] : conversation.messages.filter((m) => m.text && m.state !== 'answering').slice(-12);
 
   let answer = '';
   const steps = [];
@@ -179,9 +189,16 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
       '--permission-prompt-tool', 'mcp__app__approve_step'];
   }
   const asked = context ? `${words}\n\n(Asked on this page of the app: “${context.title || context.path}”, ${context.path}.)` : words;
-  const prompt = notes.length ? `${asked}\n\n${notes.map((n) => `(Note from the app: ${n})`).join('\n')}` : asked; // what it should know since last time, not shown as something the owner wrote
+  const noted = notes.length ? `${asked}\n\n${notes.map((n) => `(Note from the app: ${n})`).join('\n')}` : asked; // what it should know since last time, not shown as something the owner wrote
+  const prompt = earlier.length
+    ? `(Note from the app: this conversation began with the owner’s other assistant. What was said so far:)\n${earlier.map((m) => `${m.role === 'user' ? 'Owner' : 'Assistant'}: ${m.text.slice(0, 2000)}`).join('\n')}\n\n${noted}`
+    : noted;
 
-  const args = [
+  const args = provider === 'codex' ? codexArgs(command, {
+    instructions: guide(), sandbox: 'workspace-write', images,
+    servers: { ...(mcp ? { app: { url: `${mcp.url}?conversation=${id}`, token: true } } : {}), ...(mcp && library ? { library: { url: library.url } } : {}) },
+    resume: sameAI ? codexThread : null,
+  }) : [
     ...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--permission-mode', 'acceptEdits', '--setting-sources', 'user', '--append-system-prompt', guide(), ...mcpArgs,
     // An allow-list of built-ins, by name (assistant/1): reading, finding, searching and writing its own
@@ -193,7 +210,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
   return new Promise((resolve) => {
     let child;
     try {
-      child = spawn(command[0], args, { cwd: folder, env: claudeEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
+      child = spawn(command[0], args, { cwd: folder, env: provider === 'codex' ? codexEnv(mcp?.secret) : claudeEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
     } catch (err) {
       answer = 'The assistant could not start.';
       save('failed');
@@ -221,11 +238,10 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     let result = null;
     let problem = '';
     let buffer = '';
-    const handle = (line) => {
-      let event;
-      try { event = JSON.parse(line); } catch { return; }
+    const handleEvent = (event) => {
       if (event.type === 'system' && event.subtype === 'init') {
-        db.prepare('UPDATE conversations SET started = 1 WHERE id = ?').run(id);
+        if (provider === 'codex') db.prepare('UPDATE conversations SET started = 1, session_id = ? WHERE id = ?').run(`codex:${event.session_id}`, id);
+        else db.prepare('UPDATE conversations SET started = 1 WHERE id = ?').run(id);
       } else if (event.type === 'stream_event' && event.event?.type === 'content_block_delta' && event.event.delta?.type === 'text_delta') {
         const delta = event.event.delta.text;
         if (answer && !answer.endsWith('\n') && steps.length && steps.at(-1).after === answer.length) answer += '\n\n';
@@ -256,6 +272,8 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
         result = event;
       }
     };
+    const reader = lineReader(provider, handleEvent);
+    const handle = (line) => reader.line(line);
     child.stdout.on('data', (chunk) => {
       buffer += chunk;
       const lines = buffer.split('\n');
@@ -264,7 +282,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     });
     child.stderr.on('data', (chunk) => { if (problem.length < 2000) problem += chunk; });
     child.on('error', (err) => {
-      problem = err.code === 'ENOENT' ? 'The claude command is not installed on this computer.' : err.message;
+      problem = err.code === 'ENOENT' ? `The ${provider === 'codex' ? 'codex' : 'claude'} command is not installed on this computer.` : err.message;
     });
     child.on('close', (code) => {
       if (buffer.trim()) handle(buffer);
@@ -273,7 +291,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
       if (run.stopped) state = 'stopped';
       else if (!result || result.is_error || (code !== 0 && code !== null)) {
         state = 'failed';
-        const reason = (result?.is_error && result.result) || problem.trim().split('\n')[0] || `It stopped (${code}).`;
+        const reason = (result?.is_error && result.result) || reader.state.problem || problem.trim().split('\n').filter((l) => !/^WARNING|^\d{4}-\d\d-\d\dT/.test(l))[0] || `It stopped (${code}).`;
         answer = answer ? `${answer}\n\n(${reason})` : `The assistant couldn't answer: ${reason}`;
       }
       if (!answer && result?.result) answer = result.result;

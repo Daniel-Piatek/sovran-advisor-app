@@ -10,6 +10,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { claudeEnv, DEFAULT_COMMAND } from './assistant.js';
+import { codexArgs, codexEnv, lineReader } from './codex.js';
 
 export const LONG_WORDS = 10;      // more words than this: a long task
 const MAX_TRIES = 3;
@@ -34,7 +35,7 @@ const prompt = (text) => [
   '"""',
 ].join('\n');
 
-export function startTitler({ db, dataDir, command = DEFAULT_COMMAND, every = 5 * 60_000 }) {
+export function startTitler({ db, dataDir, command = DEFAULT_COMMAND, ai = null, every = 5 * 60_000 }) {
   const tries = new Map(); // task id → tries this run
   const folder = path.join(dataDir, 'assistant', 'titles');
   let busy = false;
@@ -44,19 +45,22 @@ export function startTitler({ db, dataDir, command = DEFAULT_COMMAND, every = 5 
   function writeOne(task) {
     return new Promise((resolve) => {
       fs.mkdirSync(folder, { recursive: true });
-      const args = [...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--setting-sources', 'user', '--tools=', '--disable-slash-commands',
+      // The AI chosen in Settings (ai.js): Claude Code, or ChatGPT's Codex with no tools at all.
+      const { provider, command: run } = ai ? ai() : { provider: 'claude', command };
+      const args = provider === 'codex' ? codexArgs(run) : [...run.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--setting-sources', 'user', '--tools=', '--disable-slash-commands',
         '--strict-mcp-config', '--disallowedTools', 'Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep', 'WebFetch', 'WebSearch'];
       let out = '';
       let result = null;
+      const reader = lineReader(provider, (event) => { if (event.type === 'result') result = event; });
       try {
-        child = spawn(command[0], args, { cwd: folder, env: claudeEnv(), stdio: ['pipe', 'pipe', 'ignore'] });
+        child = spawn(run[0], args, { cwd: folder, env: provider === 'codex' ? codexEnv() : claudeEnv(), stdio: ['pipe', 'pipe', 'ignore'] });
       } catch { resolve(); return; }
       const timer = setTimeout(() => child?.kill('SIGTERM'), READ_FOR_MS);
       child.stdout.on('data', (chunk) => {
         out += chunk;
         const lines = out.split('\n');
         out = lines.pop();
-        for (const line of lines) { try { const e = JSON.parse(line); if (e.type === 'result') result = e; } catch { /* not JSON */ } }
+        for (const line of lines) reader.line(line);
       });
       child.on('error', () => {});
       child.on('close', () => {

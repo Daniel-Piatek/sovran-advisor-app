@@ -15,6 +15,7 @@ import { findPage } from './assistant-tools.js';
 import { localDay } from './entries.js';
 import { moduleOn } from './modules.js';
 import { claudeEnv, DEFAULT_COMMAND } from './assistant.js';
+import { codexArgs, codexEnv, lineReader } from './codex.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -101,7 +102,7 @@ export function readAnswer(db, text, { world = 'inner' } = {}) {
 }
 
 // The reader: one capture at a time, in the background.
-export function startReader({ db, dataDir, command = DEFAULT_COMMAND, mcp, quietMs = 3000 }) {
+export function startReader({ db, dataDir, command = DEFAULT_COMMAND, ai = null, mcp, quietMs = 3000 }) {
   const queue = [];
   const later = new Map(); // capture id → timer, while its words are still being typed
   let busy = false;
@@ -123,12 +124,17 @@ export function startReader({ db, dataDir, command = DEFAULT_COMMAND, mcp, quiet
       fs.writeFileSync(configFile, JSON.stringify({ mcpServers: { app: {
         type: 'http', url: `${mcp().url}?conversation=${READER}`, headers: { Authorization: `Bearer ${mcp().secret}` },
       } } }), { mode: 0o600 });
-      const args = [...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--setting-sources', 'user', '--tools=Read,Glob,Grep', '--disable-slash-commands',
+      // The AI chosen in Settings (ai.js): Claude Code, or ChatGPT's Codex with the same two tools.
+      const { provider, command: run } = ai ? ai() : { provider: 'claude', command };
+      const args = provider === 'codex' ? codexArgs(run, {
+        servers: { app: { url: `${mcp().url}?conversation=${READER}`, token: true } }, tools: { app: ['search_notes', 'read_note'] },
+      }) : [...run.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--setting-sources', 'user', '--tools=Read,Glob,Grep', '--disable-slash-commands',
         '--mcp-config', configFile, '--strict-mcp-config', '--allowedTools', 'mcp__app__search_notes', 'mcp__app__read_note'];
       let out = '';
       let result = null;
+      const reader = lineReader(provider, (event) => { if (event.type === 'result') result = event; });
       try {
-        child = spawn(command[0], args, { cwd: folder, env: claudeEnv(), stdio: ['pipe', 'pipe', 'ignore'] });
+        child = spawn(run[0], args, { cwd: folder, env: provider === 'codex' ? codexEnv(mcp().secret) : claudeEnv(), stdio: ['pipe', 'pipe', 'ignore'] });
       } catch {
         keep(db, captureId, { state: 'failed', tries });
         resolve();
@@ -139,9 +145,7 @@ export function startReader({ db, dataDir, command = DEFAULT_COMMAND, mcp, quiet
         out += chunk;
         const lines = out.split('\n');
         out = lines.pop();
-        for (const line of lines) {
-          try { const event = JSON.parse(line); if (event.type === 'result') result = event; } catch { /* not a line of JSON */ }
-        }
+        for (const line of lines) reader.line(line);
       });
       child.on('error', () => {});
       child.on('close', () => {

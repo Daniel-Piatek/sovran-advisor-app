@@ -20,3 +20,24 @@ test('a new install opens on the welcome; a first step opens its page and the we
   await page.goto(`${app.url}/welcome`);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Ana');
 });
+
+test('Settings: the assistant’s AI is Claude, or ChatGPT; the choice holds and the welcome follows it', async ({ page, app }) => {
+  await page.goto(`${app.url}/settings`);
+  const part = page.getByRole('region', { name: 'Which AI' });
+  await expect(part.getByRole('button', { name: 'Claude' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(part.getByRole('status')).toHaveText('Your assistant runs on your own Claude (Claude Code), on this computer.');
+  await part.getByRole('button', { name: 'ChatGPT' }).click();
+  await expect(part.getByRole('button', { name: 'ChatGPT' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(part.getByRole('status')).toHaveText('Your assistant runs on your own ChatGPT (Codex), on this computer.');
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Which AI' }).getByRole('button', { name: 'ChatGPT' })).toHaveAttribute('aria-pressed', 'true');
+  await page.goto(`${app.url}/welcome`);
+  await expect(page.getByText('Ready. It runs on your own ChatGPT, on this computer.')).toBeVisible();
+  // The assistant answers with ChatGPT now.
+  const conversation = await (await fetch(`${app.url}/api/conversations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).json();
+  await page.goto(`${app.url}/assistant/${conversation.id}`);
+  await page.getByRole('textbox', { name: 'Message' }).fill('Hello from ChatGPT');
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter');
+  await expect(page.getByText('You said: Hello from ChatGPT')).toBeVisible();
+  await fetch(`${app.url}/api/assistant/ai`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: 'claude' }) });
+});

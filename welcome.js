@@ -1,10 +1,11 @@
 // The welcome (Sovran Advisor): what a new student sees the first time the app opens. It
 // keeps two things in settings: their name (owner.name) and that the welcome was seen
 // (welcome.seen). It also says whether their assistant can start: the assistant is their
-// own Claude Code on this computer, signed in with their own Claude account.
+// own Claude Code (or ChatGPT's Codex, chosen in Settings) on this computer, signed in with
+// their own account.
 
 import { randomUUID } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
+import { programReady } from './ai.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -20,17 +21,11 @@ const write = (db, key, value) => {
     .run(randomUUID(), time, time, key, JSON.stringify(value));
 };
 
-// Is the claude command there? Asked once per run of the app (it takes a moment).
-let claudeFound = null;
-export function claudeReady(command) {
-  if (claudeFound === null) {
-    const result = spawnSync(command[0], [...command.slice(1), '--version'], { timeout: 10_000, stdio: 'ignore', shell: process.platform === 'win32' });
-    claudeFound = !result.error && result.status === 0;
-  }
-  return claudeFound;
-}
+// Is the chosen AI's program there (ai.js)? Asked once per run of the app (it takes a moment).
+export const claudeReady = (command) => programReady(command);
 
-export const getWelcome = (db, { command }) => ({
+export const getWelcome = (db, { command, provider = 'claude' }) => ({
+  provider,
   seen: read(db, 'welcome.seen') === true,
   name: read(db, 'owner.name') ?? '',
   assistant_ready: claudeReady(command),
@@ -43,10 +38,10 @@ export function checkWelcomeInput(input) {
   return null;
 }
 
-export function setWelcome(db, input, { command }) {
+export function setWelcome(db, input, { command, provider = 'claude' }) {
   const problem = checkWelcomeInput(input);
   if (problem) throw fail(400, problem);
   if ('name' in input) write(db, 'owner.name', input.name.trim());
   if ('seen' in input) write(db, 'welcome.seen', input.seen);
-  return getWelcome(db, { command });
+  return getWelcome(db, { command, provider });
 }
