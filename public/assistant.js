@@ -204,8 +204,7 @@ export async function showAssistant(id) {
       el('h2', { class: 'chat-list-title' }, 'Your chats'),
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
-      }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'),
-      ...(AI_NAMES[c.last_ai] ? [aiChip(c.last_ai, AI_NAMES[c.last_ai])] : []))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
+      }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
   }
 
   function drawThread() {
@@ -230,7 +229,7 @@ export async function showAssistant(id) {
     thread.replaceChildren(...nodes);
     thread.hidden = !messages.length;
     thread.scrollTop = thread.scrollHeight;
-    title.textContent = conversation?.title || 'Assistant';
+    title.textContent = 'Assistant'; // always the section's name; the chat open is marked in the list (2026-11-11, the owner's wish)
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
     actions.replaceChildren(...(conversation?.messages.length ? [el('button', {
       type: 'button', class: 'button button-quiet', onclick: () => remove(),

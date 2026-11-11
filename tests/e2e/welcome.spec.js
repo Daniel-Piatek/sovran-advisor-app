@@ -63,6 +63,7 @@ test('each answer names the AI and model that gave it; a chat says which it star
   await expect(log.locator('.chat-bubble.is-assistant .chat-ai').last()).toHaveText('ChatGPT (GPT-6.1 Sol)');
   await page.reload();
   await expect(page.getByRole('log', { name: 'Conversation' }).locator('.chat-switch')).toHaveText(['Started with Claude Opus 5.5', 'Switched to ChatGPT (GPT-6.1 Sol)']);
-  await expect(page.getByRole('navigation', { name: 'Your chats' }).locator('.chat-ai').first()).toHaveText('ChatGPT');
+  await expect(page.getByRole('navigation', { name: 'Your chats' }).locator('.chat-ai')).toHaveCount(0); // not in the list (2026-11-11, the owner's wish)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistant');
   await put('claude');
 });
