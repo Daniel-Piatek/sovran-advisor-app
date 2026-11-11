@@ -3916,3 +3916,18 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .chat-text th, .chat-text td { padding: var(--space-1) var(--space-2); border-bottom: var(--line); text-align: left; vertical-align: top; overflow-wrap: normal; word-break: normal; }
 .chat-text th { white-space: nowrap; }
 .chat-text td:first-child, .chat-text td:nth-child(2) { min-width: 6em; }
+
+/* Wide view (2026-11-11, the owner's wish): the conversation in a large window over the page; drag its
+   bottom-right corner to make it bigger or smaller. Not on a phone, where the chat already fills the screen. */
+.chat-pane-bar { display: flex; justify-content: flex-end; margin-bottom: calc(var(--space-2) * -1); }
+.chat-wide-toggle { font-size: var(--text-xs); }
+.chat-backdrop { position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--color-text) 35%, transparent); }
+.chat-backdrop[hidden] { display: none; }
+.chat-pane.is-wide {
+  position: fixed; z-index: 41; top: 4vh; left: 3vw; width: 94vw; height: 92vh;
+  min-width: 420px; min-height: 320px; max-width: 97vw; max-height: 96vh;
+  resize: both; overflow: hidden; padding: var(--space-3); background: var(--color-bg);
+}
+.chat-pane.is-wide .chat-thread { flex: 1; max-height: none; min-height: 0; }
+.chat-pane.is-wide .chat-bubble { max-width: min(100%, 72rem); }
+@media (max-width: 899px) { .chat-pane-bar { display: none; } }

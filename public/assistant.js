@@ -172,6 +172,11 @@ export async function showAssistant(id) {
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   const undoPlace = el('div', {});
+  // Wide view (2026-11-11, the owner's wish): the conversation in a large window over the page, its size
+  // dragged at the corner, closed with the button, Esc or a click beside it. Remembered on this computer.
+  const wideButton = el('button', { type: 'button', class: 'button button-quiet chat-wide-toggle', 'aria-pressed': 'false', onclick: () => setWide(!wide) });
+  const backdrop = el('div', { class: 'chat-backdrop', hidden: true, onclick: () => setWide(false) });
+  let wide = false;
   const title = el('h1', { class: 'top-bar-title' }, 'Assistant');
   const actions = el('span', { class: 'chat-actions' });
   // New chat is the page's one red button, beside the title as on every section's page (2026-11-10, the owner's wish).
@@ -182,10 +187,29 @@ export async function showAssistant(id) {
     // Your chats on the left, the chat on the right, each a panel of its own on the grey, like the Planner.
     el('div', { class: 'chat-layout' },
       list,
-      el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, thread,
+      backdrop,
+      el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, el('div', { class: 'chat-pane-bar' }, wideButton), thread,
         el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, stopButton, sendButton)), problem)),
     undoPlace,
   );
+
+  function setWide(on) {
+    wide = on;
+    const pane = screen.querySelector('.chat-pane');
+    pane.classList.toggle('is-wide', on);
+    if (!on) { pane.style.width = ''; pane.style.height = ''; }
+    backdrop.hidden = !on;
+    wideButton.setAttribute('aria-pressed', String(on));
+    wideButton.replaceChildren(icon(on ? 'close' : 'open'), on ? 'Close wide view' : 'Wide view');
+    try { localStorage.setItem('assistant.wide', on ? '1' : ''); } catch { /* not kept: fine */ }
+    thread.scrollTop = thread.scrollHeight;
+  }
+  const escape = (e) => { if (e.key === 'Escape' && wide) setWide(false); };
+  document.addEventListener('keydown', escape);
+  onLeave(() => document.removeEventListener('keydown', escape));
+  let wasWide = false;
+  try { wasWide = localStorage.getItem('assistant.wide') === '1'; } catch { /* none */ }
+  setWide(wasWide && window.matchMedia('(min-width: 900px)').matches);
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(input.value); }
