@@ -16,19 +16,19 @@
 // the selection, ⌘Enter ticks the selection, t moves it to today and m to tomorrow,
 // f flags it (none, Must, Like: never a priority), Escape selects just the one. Every open
 // task has a Schedule: Today, Other day (a date to pick) and Someday, the one it is at shown
-// as chosen. A click on a task's words (or Enter) opens it: a task of its own can be renamed,
-// given a home or deleted (with Undo); a task in a page can get a home of its own (its words
-// are changed in its page). Enter, Escape, Close or a click outside close it, keeping what
-// was typed.
+// as chosen. A click on a task's words (or Enter) opens it in a pop-up (public/task-modal.js, the same one the
+// Planner uses): title, details, date, flag, home, Delete (with Undo) and Close; a task in a page can get
+// a day, flag and home of its own (its words are changed in its page). Add task, at the top, opens the same
+// pop-up empty. Enter, Escape, Close or a click outside close it, keeping what changed. Keys shows the keys (also ?).
 
-import { api, el, icon, undoBar, wantsCursor, giveCursorBack } from './ui.js';
+import { api, el, icon, undoBar, giveCursorBack } from './ui.js';
 import { app, screen, setFooterLink, onLeave } from './shell.js';
 import { dueLabel, todayDay, addDays, estimateLabel, timeLabel, isSpeedy } from './due.js';
 import { linkShape } from './editor.js';
-import { addBar, flagChip, starButton, kindMark, repeatChip } from './quick-add.js';
+import { flagChip, starButton, kindMark, repeatChip } from './quick-add.js';
 import { moduleOn } from './modules.js';
-import { homeChip } from './home.js';
-import { mentionField, wordsWithMentions } from './mentions.js';
+import { openTaskModal } from './task-modal.js';
+import { wordsWithMentions } from './mentions.js';
 
 const isDay = (due) => /^\d{4}-\d{2}-\d{2}$/.test(due);
 const FLAG_ORDER = { must: 0, like: 1, '': 2 };
@@ -118,7 +118,6 @@ export async function showTasks() {
   const status = el('p', { class: 'journal-tools-message', role: 'status' });
   const selection = el('p', { class: 'task-selection', role: 'status' }); // how many are picked, and what the keys do to them
   const undoPlace = el('div', {});
-  const bar = addBar({ onAdded: () => load(), accent: true });
   // The search looks through every task, open and done, whatever the view: its words, its
   // short title, its home and the page it lives in. / goes to it; Escape empties it.
   let query = new URLSearchParams(location.search).get('q') ?? '';
@@ -138,10 +137,10 @@ export async function showTasks() {
   search.value = query;
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Tasks'),
-      el('label', { class: 'search' }, icon('search'), search, el('kbd', { class: 'sidebar-key' }, '/'))),
+      el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => addTask() }, icon('plus'), 'Add task'),
+      el('label', { class: 'search' }, icon('search'), search, el('kbd', { class: 'sidebar-key' }, '/')),
+      el('button', { type: 'button', class: 'button button-quiet', title: 'The keys for working through tasks (?)', onclick: () => showKeys() }, 'Keys')),
     tabs,
-    bar.element,
-    el('p', { class: 'task-keys capture-hint' }, '↑↓ or j k move · Space or e ticks · Shift-↑↓ or x selects · t today · m tomorrow · d another day · l let go · f flag · number keys open the views'),
     selection,
     status,
     list,
@@ -159,13 +158,7 @@ export async function showTasks() {
   let anchor = null;          // where a Shift selection started
   let selected = new Set();
   let picking = false;        // rows picked one by one with x: moving keeps them
-  let editing = null;         // the task opened for changing, if any
-  let editClose = () => {};
-  let stripClose = null;      // closes the open strip, keeping its words
-  let draft = null;           // the words typed in the open strip, kept through a redraw
-  let openedFor = null;       // the task whose strip has had the cursor already
-  let focusWords = false;     // a strip was just opened: its words get the cursor
-  let hadCursor = false;      // the words had the cursor when the page was redrawn
+  let editing = null;         // the task opened in the pop-up, if any
   const taskOf = (id) => tasks.find((t) => t.id === id) ?? done.find((t) => t.id === id);
   const isDone = (task) => (task.done ? !ticked.has(task.id) : ticked.has(task.id));
 
@@ -304,76 +297,30 @@ export async function showTasks() {
     ];
   };
 
-  // The strip under an opened task. It closes with Close, Enter, Escape or a click outside
-  // it, and every way of closing keeps the words typed: a save under way finishes first, and
-  // a save that fails keeps the strip open with what was typed.
-  function editStrip(task) {
-    const own = task.source.kind === 'own';
-    const draftHere = () => (draft?.id === task.id ? draft.value : task.text);
-    let closing = null;
-    const close = ({ refocus = true } = {}) => {
-      closing ??= (async () => {
-        const typed = words.value?.trim();
-        if (own && typed && typed !== task.text) {
-          try { Object.assign(task, await api.changeTask(task.id, { text: typed, mentions: mention.mentions() })); } catch (err) { failed(err); closing = null; return; }
-        }
-        editClose();
-        editing = null;
-        draft = null;
-        openedFor = null;
-        stripClose = null;
-        draw();
-        const now = document.activeElement;
-        if (refocus && (!now || now === document.body)) list.querySelector(`.task-row[data-id="${task.id}"]`)?.focus();
-      })();
-      return closing;
-    };
-    stripClose = close;
-    const home = homeChip(task.home, async (picked) => {
-      try { Object.assign(task, await api.changeTask(task.id, { home_id: picked?.id ?? null })); } catch (err) { failed(err); }
-      draw();
-    }, { compact: true });
-    editClose = () => { home.close(); mention?.close(); };
-    const words = own ? el('input', {
-      class: 'detail-input task-edit-words', 'aria-label': 'The task’s words', value: draftHere(), maxlength: 1000,
-      oninput: () => { draft = { id: task.id, value: words.value }; },
-    }) : el('span', { class: 'capture-hint' }, 'Its words are changed in its page.');
-    // @ and a few letters: a person, @@ a company (People in depth).
-    const mention = own ? mentionField(words) : null;
-    mention?.set(task.mentions ?? []);
-    if (own && hadCursor) wantsCursor(words);
-    const remove = own ? el('button', {
-      type: 'button', class: 'button button-quiet',
-      onclick: async () => {
-        try { await api.deleteTask(task.id); } catch (err) { failed(err); return; }
-        tasks = tasks.filter((t) => t.id !== task.id);
-        editing = null;
-        draft = null;
-        openedFor = null;
-        stripClose = null;
-        draw();
-        undoPlace.replaceChildren(undoBar(`“${task.text}” deleted.`, async () => { await api.restoreTask(task.id); await load(); }));
-      },
-    }, icon('trash'), 'Delete') : null;
-    const strip = el('div', {
-      class: 'task-edit',
-      // Enter and Escape in the strip close it, but not inside the home picker, which keeps them.
-      onkeydown: (event) => {
-        if (event.target.closest('.home-picker, button, a')) return;
-        if (event.key === 'Escape' || (event.key === 'Enter' && (!own || words.value.trim()))) { event.preventDefault(); close(); }
-      },
-    }, words, home.element, remove,
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => close() }, 'Close'),
-      // Where it came from, when it was made from a capture in the Inbox.
-      task.capture ? el('p', { class: 'task-capture' },
-        el('span', { class: 'task-capture-when' }, `From the Inbox, captured ${new Date(task.capture.captured_at).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`),
-        el('span', {}, task.capture.body)) : null);
-    if (openedFor !== task.id) { // newly opened: the cursor goes to its words (once the page is drawn)
-      openedFor = task.id;
-      focusWords = own;
-    }
-    return strip;
+  // Add task: the same pop-up, empty (the page's one red button). It starts on the day this view is about.
+  const addTask = () => openTaskModal({ defaults: { due: view.key === 'today' ? todayDay() : '' }, onChanged: () => load() });
+
+  // The keys, in a small pop-up (button "Keys" at the top, or the ? key).
+  function showKeys() {
+    const keys = [
+      ['↑ ↓ or j k', 'move between tasks'], ['Space or e', 'tick the task done'], ['Enter', 'open the task'], ['Shift-↑ ↓ or x', 'select several'],
+      ['t', 'today'], ['m', 'tomorrow'], ['d', 'another day'], ['l', 'let it go (delete, with Undo)'], ['f', 'flag: none, Must, Like'],
+      ['1 2 3 …', 'open the views'], ['/', 'search'], ['q', 'quick-add a task from anywhere'],
+    ];
+    const dialog = el('dialog', { class: 'task-modal keys-modal', 'aria-label': 'Keys for tasks', oncancel: () => dialog.remove(), onclick: (event) => { if (event.target === dialog) { dialog.close(); dialog.remove(); } } },
+      el('h2', { class: 'task-group-title' }, 'Keys for tasks'),
+      el('dl', { class: 'keys-list' }, ...keys.flatMap(([key, what]) => [el('dt', {}, el('kbd', { class: 'sidebar-key' }, key)), el('dd', {}, what)])),
+      el('div', { class: 'task-modal-foot' }, el('button', { type: 'button', class: 'button', onclick: () => { dialog.close(); dialog.remove(); } }, 'Close')));
+    document.body.append(dialog);
+    dialog.showModal();
   }
+
+  // A task opens in the pop-up (public/task-modal.js), the same one the Planner uses; what changed is saved as it closes.
+  const open = (task) => {
+    cursor = task.id;
+    editing = task.id;
+    openTaskModal({ task, undoPlace, onChanged: () => { editing = null; load().then(() => list.querySelector(`.task-row[data-id="${task.id}"]`)?.focus()); }, onDeleted: () => { editing = null; load(); } });
+  };
 
   const row = (task, { showDue }) => {
     const checked = isDone(task);
@@ -398,13 +345,9 @@ export async function showTasks() {
     }, task.flag ? flagChip(task.flag) : icon('project')),
     el('span', {
       class: 'task-words',
-      onclick: async (event) => {
+      onclick: (event) => {
         if (event.target.closest('button, a, input')) return;
-        if (editing && editing !== task.id && stripClose) await stripClose(); // another one was open: its words are kept first
-        if (editing && editing !== task.id) return; // that save failed: it stays open
-        editing = task.id;
-        cursor = task.id;
-        draw();
+        open(task);
       },
     },
       ...(task.text ? wordsWithMentions(task.text, task.mentions) : ['Untitled task']),
@@ -466,7 +409,6 @@ export async function showTasks() {
     selection.textContent = picked > 1 ? `${picked} tasks selected · e done · t today · m tomorrow · Esc clears` : '';
     if (!order.includes(cursor)) cursor = order[0] ?? null;
     const focused = list.contains(document.activeElement) && document.activeElement.classList.contains('task-row');
-    hadCursor = document.activeElement?.classList.contains('task-edit-words') ?? false;
     const single = !found && shown.length === 1 && shown[0].name === view.name; // a view of one group needs no heading
     list.replaceChildren(...(shown.length ? [el('div', { class: 'task-columns-head' },
       el('span', { class: 'task-places' }, el('span', { class: 'task-place task-schedule' }, 'Schedule'), el('span', { class: 'task-place' }, 'Home'), el('span', { class: 'task-place' }, 'Written in'))),
@@ -474,7 +416,7 @@ export async function showTasks() {
       single ? null : el('h2', { class: 'task-group-title' }, `${group.name} · ${(group.name === 'Done' ? group.tasks : group.tasks.filter((t) => !isDone(t))).length}`),
       el('div', { class: 'task-rows' }, ...group.tasks.flatMap((task) => [row(task, {
         showDue: !group.day && group.name !== 'Today',
-      }), task.id === editing ? editStrip(task) : null].filter(Boolean)))))]
+      })]))))]
       : [el('p', { class: 'empty' }, found ? `No task matches “${query.trim()}”.` : {
         today: 'Nothing for today. Add a task above, or start a line with [] in any note.',
         done: 'Nothing done yet.',
@@ -490,10 +432,6 @@ export async function showTasks() {
     }
     if (focused) list.querySelector(`.task-row[data-id="${cursor}"]`)?.focus();
     giveCursorBack(list);
-    if (focusWords) { // after any other redraw this click causes
-      focusWords = false;
-      setTimeout(() => list.querySelector('.task-edit-words')?.focus());
-    }
   }
 
   // What a key acts on: the selected rows still shown, or else the row the keyboard is on.
@@ -513,6 +451,7 @@ export async function showTasks() {
     if (event.altKey) return;
     if (event.target.closest?.('input, textarea, select, [contenteditable="true"], dialog')) return;
     if (event.key === '/' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); search.focus(); search.select(); return; }
+    if (event.key === '?') { event.preventDefault(); showKeys(); return; }
     if (!event.metaKey && !event.ctrlKey && /^[1-9]$/.test(event.key)) {
       event.preventDefault();
       const picked = shownViews()[Number(event.key) - 1];
@@ -538,8 +477,7 @@ export async function showTasks() {
     if (event.key === ' ') { event.preventDefault(); setDone([taskOf(cursor)], !isDone(taskOf(cursor))); }
     else if (event.key === 'Enter') {
       event.preventDefault();
-      if (editing === cursor && stripClose) stripClose(); // Enter on the open task shuts it
-      else { editing = cursor; draw(); }
+      if (taskOf(cursor)) open(taskOf(cursor));
     }
     else if (event.key === 'e') { event.preventDefault(); tickTargets(); }
     else if (event.key === 'f') {
@@ -563,30 +501,18 @@ export async function showTasks() {
       anchor = cursor;
       draw();
     } else if (event.key === 'Escape') {
-      if (editing && stripClose) stripClose(); // an open task shuts too
       picking = false;
       moveCursor(cursor, false);
     }
   };
   document.addEventListener('keydown', onKey);
-  // A click outside the open strip closes it, keeping its words. Not a click in the strip
-  // (the home picker is part of it), on a task's words (which open that task instead), or on
-  // another control (which does its own thing).
-  const onOutside = (event) => {
-    if (!editing || !stripClose) return;
-    if (event.target.closest?.('.task-edit, .task-words, button, a, input, select, textarea, label, dialog, .undo-bar')) return;
-    stripClose();
-  };
-  document.addEventListener('click', onOutside, true);
   const onChanged = () => load(); // a task added with q while here
   document.addEventListener('tasks-changed', onChanged);
   onLeave(() => {
     document.removeEventListener('keydown', onKey);
-    document.removeEventListener('click', onOutside, true);
     document.removeEventListener('tasks-changed', onChanged);
+    document.querySelectorAll('dialog.task-modal').forEach((d) => d.remove());
     undoPlace.replaceChildren();
-    bar.close();
-    editClose();
   });
   await load();
 }

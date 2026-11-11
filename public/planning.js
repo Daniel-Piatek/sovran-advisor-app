@@ -57,7 +57,7 @@ export function weekBoard(week, ctx) {
         el('span', { class: 'week-event-time' }, time(e.starts_at.slice(0, 10) < d.day ? `${d.day}T00:00` : e.starts_at)), ` ${e.title}`)),
       ...rest.map((t) => {
         const row = el('div', { class: 'week-task', 'data-checked': String(t.done) }, ctx.box(t), starButton(t, () => ctx.reload()),
-          t.flag ? flagChip(t.flag) : null, el('span', { class: 'week-task-text' }, t.text), ctx.minutesChip(t));
+          t.flag ? flagChip(t.flag) : null, el('button', { type: 'button', class: 'week-task-text task-open', title: t.text, onclick: () => ctx.openTask(t) }, t.short_text || t.text), ctx.minutesChip(t));
         ctx.draggable(row, t);
         return row;
       }));

@@ -304,6 +304,7 @@ CREATE INDEX IF NOT EXISTS life_serves_by_goal ON life_serves (goal_id);
 --   due_moves    how often its day was pushed later (time/4: Weekly Goals that kept moving)
 --   pin_at, pin_minutes  a time block (Calendar in depth): a task pinned to a time and a length of its own, HH:MM and minutes; '' and NULL when it is not pinned
 --   plan_at      its time in its day, HH:MM, once placed in the Planner's hours ('' none yet)
+--   details      the task's own free words, apart from its title (text); shown in its pop-up only
 --   short_text   a few words for a long task, written by the assistant (short-titles.js); '' none
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
@@ -330,6 +331,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   block_id TEXT,
   due_moves INTEGER NOT NULL DEFAULT 0,
   short_text TEXT NOT NULL DEFAULT '',
+  details TEXT NOT NULL DEFAULT '',
   plan_at TEXT NOT NULL DEFAULT '' CHECK (plan_at = '' OR plan_at GLOB '[0-2][0-9]:[0-5][0-9]'),
   goal_week TEXT NOT NULL DEFAULT '' CHECK (goal_week = '' OR goal_week GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
   pin_at TEXT NOT NULL DEFAULT '' CHECK (pin_at = '' OR pin_at GLOB '[0-2][0-9]:[0-5][0-9]'),

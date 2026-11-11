@@ -81,6 +81,14 @@ export function createConversation(db, dataDir) {
   return getConversation(db, id);
 }
 
+// A chat's name, as the person chooses it (1 to 80 characters); it is kept, the first question never overwrites it.
+export function renameConversation(db, id, title) {
+  if (typeof title !== 'string' || !title.trim() || title.trim().length > 80) return undefined;
+  if (!getConversation(db, id)) return null;
+  db.prepare('UPDATE conversations SET title = ? WHERE id = ?').run(title.trim(), id);
+  return getConversation(db, id);
+}
+
 // Deleting only marks it; its messages and folder stay, and Undo brings it back.
 export function deleteConversation(db, id) {
   if (!getConversation(db, id)) return null;

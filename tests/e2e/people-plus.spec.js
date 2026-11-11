@@ -9,7 +9,8 @@ const allTasks = (app) => fetch(`${app.url}/api/tasks`).then((r) => r.json());
 test('@ in the add bar: pick Lena, Enter adds the task, the row shows her as a face and a name, and her page lists it', async ({ page, app }) => {
   const lena = await send(app, 'POST', '/api/people', { name: 'Lena Fischer' });
   await page.goto(`${app.url}/tasks`);
-  const bar = page.getByLabel('Add a task');
+  await page.keyboard.press('q');
+  const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.focus();
   await page.keyboard.type('Ring @len');
   await expect(menu(page).getByRole('option').first()).toContainText('Lena Fischer');
@@ -18,10 +19,10 @@ test('@ in the add bar: pick Lena, Enter adds the task, the row shows her as a f
   await expect(bar).toHaveValue('Ring Lena Fischer ');
   await expect(menu(page)).toBeHidden();
   expect(await allTasks(app)).toEqual([]);
-  await expect(page.locator('.tasks-page .quick-chips .mention-chip')).toHaveText('LFLena Fischer');
+  await expect(page.locator('.quick-box .quick-chips .mention-chip')).toHaveText('LFLena Fischer');
   await page.keyboard.type('about March');
   await page.keyboard.press('Enter'); // now it adds
-  await expect(page.getByText('Added “Ring Lena Fischer about March”', { exact: false })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Add a task' })).toBeHidden();
 
   const [task] = await allTasks(app);
   expect([task.text, task.mentions]).toEqual(['Ring Lena Fischer about March', [{ kind: 'person', id: lena.id, name: 'Lena Fischer' }]]);
@@ -95,7 +96,7 @@ test('Settings › Modules: switching People in depth off takes away the @ menu 
   await page.keyboard.press('q');
   await page.keyboard.type('Ring @len');
   await expect(menu(page)).toBeHidden();
-  await expect(page.getByLabel('Add a task')).toHaveValue('Ring @len');
+  await expect(page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' })).toHaveValue('Ring @len');
   await page.keyboard.press('Escape');
   await page.goto(`${app.url}/notes/${note.id}`);
   const text = page.getByRole('textbox', { name: 'Text', exact: true });

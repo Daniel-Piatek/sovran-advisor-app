@@ -294,6 +294,7 @@ test('the keys t and m still move the selected task', async ({ page, app }) => {
   await page.goto(`${app.url}/tasks?view=today`);
   await page.locator('.task-row', { hasText: 'by key' }).locator('.task-words').click();
   await page.getByRole('button', { name: 'Close' }).click(); // focus is on the row again
+  await expect(page.locator('.task-row', { hasText: 'by key' })).toBeFocused();
   await page.keyboard.press('m');
   await expect.poll(async () => (await taskNamed(app, 'by key')).due).toBe(inDays(1));
   await page.goto(`${app.url}/tasks?view=upcoming`);
@@ -321,7 +322,7 @@ test('Enter in the words closes the strip and keeps them; so do a click outside 
 
   await row('first task, renamed').locator('.task-words').click();
   await words.fill('first, by a click');
-  await page.locator('h1').click(); // outside, on no control
+  await page.mouse.click(5, 5); // on the dimmed page around the pop-up
   await expect(strip).toHaveCount(0);
   expect((await taskNamed(app, 'first, by a click'))?.text).toBe('first, by a click');
 
@@ -348,16 +349,16 @@ test('a click on another task’s words opens that one; the strip of a task in a
 
   await row('one of mine').locator('.task-words').click();
   await expect(strip).toHaveCount(1);
-  await row('one of mine').locator('.task-words').click(); // its own words again: stays open
-  await expect(strip).toHaveCount(1);
   await page.getByLabel('The task’s words').fill('one of mine, typed');
-  await row('one in a note').locator('.task-words').click();
-  await expect(strip).toHaveCount(1);
-  await expect(strip).toContainText('Its words are changed in its page.'); // that one opened instead
+  await page.mouse.click(5, 5); // the pop-up is modal: a click beside it closes it, keeping the words
+  await expect(strip).toHaveCount(0);
   await expect(row('one of mine, typed')).toHaveCount(1); // the typed words were kept, not lost
   expect((await taskNamed(app, 'one of mine, typed'))?.text).toBe('one of mine, typed');
+  await row('one in a note').locator('.task-words').click();
+  await expect(strip).toHaveCount(1);
+  await expect(strip).toContainText('Its words are changed in its page.');
 
-  await page.locator('h1').click();
+  await page.mouse.click(5, 5);
   await expect(strip).toHaveCount(0);
   await row('one in a note').locator('.task-words').click();
   await expect(strip).toHaveCount(1);
@@ -391,6 +392,7 @@ test('the Home… picker keeps the strip open: typing, Escape and a pick inside 
   await expect(strip).toHaveCount(1);
   await picker.getByLabel('Find a home').press('Enter'); // Enter picks, does not close
   await expect(strip).toHaveCount(1);
-  await expect.poll(async () => (await taskNamed(app, 'task with a home to pick')).home?.id).toBe(pricing.id);
   await expect(strip.locator('.home-name')).toHaveText('Pricing');
+  await strip.getByRole('button', { name: 'Close' }).click(); // saved as it closes
+  await expect.poll(async () => (await taskNamed(app, 'task with a home to pick')).home?.id).toBe(pricing.id);
 });
