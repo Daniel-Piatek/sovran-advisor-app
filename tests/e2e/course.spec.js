@@ -1,25 +1,30 @@
-// The Course link (course.js): off in a new install; switched on in Settings › Modules, a sidebar link that
-// opens the course page (the app's own address, or one set in Settings) in a new tab.
+// The Course link (course.js): not offered yet (hidden from Settings › Modules and off). Switched on behind the
+// scenes it still works: hidden until the course page's address is known, then a sidebar link that opens that
+// page in a new tab; Settings sets the address; off again, it goes.
 import { test, expect } from './fixtures.js';
 
+const mod = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'course', on }) });
 const put = (app, url) => fetch(`${app.url}/api/course`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
 
-const mod = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'course', on }) });
-const COURSE = 'https://app.livesovran.com/sq01';
+test('the Course module is not offered yet: off, no sidebar link and no row in Settings', async ({ page, app }) => {
+  expect((await put(app, 'https://example.com/course')).status).toBe(200);
+  await page.goto(`${app.url}/settings`);
+  await expect(page.getByRole('region', { name: 'Modules' }).locator('[data-module="course"]')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Course' })).toHaveCount(0);
+  await expect(page.locator('.sidebar-link[data-section="Course"]')).toHaveJSProperty('hidden', true);
+});
 
-test('the Course link is off in a new install, opens the course page in a new tab once switched on, and goes when switched off', async ({ page, app }) => {
+test('the Course link shows once there is an address, opens it in a new tab, and goes when the module is off', async ({ page, app }) => {
+  await mod(app, true);
   await page.goto(app.url);
   const link = page.locator('.sidebar-link[data-section="Course"]'); // on a phone it sits under More
   await expect(link).toHaveJSProperty('hidden', true);
-  await mod(app, true);
-  await page.goto(app.url);
-  await expect(link).toHaveJSProperty('hidden', false);
-  await expect(link).toHaveAttribute('href', COURSE);
-  await expect(link).toHaveAttribute('target', '_blank');
-  await expect(link).toHaveAttribute('rel', 'noopener');
   expect((await put(app, 'https://example.com/course')).status).toBe(200);
   await page.goto(app.url);
+  await expect(link).toHaveJSProperty('hidden', false);
   await expect(link).toHaveAttribute('href', 'https://example.com/course');
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', 'noopener');
   await mod(app, false);
   await page.goto(app.url);
   await expect(link).toHaveJSProperty('hidden', true);
@@ -27,7 +32,7 @@ test('the Course link is off in a new install, opens the course page in a new ta
 
 test.describe('a bad address', () => {
   test.use({ expectedConsoleErrors: [/400/] });
-  test('Settings sets the address, refuses one that is not a web address, and clearing it goes back to the app\'s own', async ({ page, app }) => {
+  test('Settings sets the address, refuses one that is not a web address, and clearing it removes the link', async ({ page, app }) => {
   await mod(app, true);
   await page.goto(`${app.url}/settings`);
   const part = page.getByRole('region', { name: 'Course' });
@@ -37,9 +42,9 @@ test.describe('a bad address', () => {
   await part.getByLabel('Course page address').fill('https://example.com/course');
   await part.getByRole('button', { name: 'Save' }).click();
   const link = page.locator('.sidebar-link[data-section="Course"]');
-  await expect(link).toHaveAttribute('href', 'https://example.com/course');
+  await expect(link).toHaveJSProperty('hidden', false);
   await part.getByRole('button', { name: 'Use the app’s own' }).click();
-  await expect(link).toHaveAttribute('href', COURSE);
+  await expect(link).toHaveJSProperty('hidden', true);
 });
 });
 
