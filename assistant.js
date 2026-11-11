@@ -40,6 +40,7 @@ export const guide = () => [
   'To close the day with them: read_day, ask what became of the Highlight if you do not know, then suggest the day’s line with propose_close_day. It is saved only when they approve it.',
   'With the Sovran Library connected (mcp__library__…), it holds the teaching of the owner’s mentor and, for a client, their own decodes: search it for questions about the Sovran teaching or their decodes, follow any reading note it gives, and say when an answer comes from the library.',
   'When you use a page, cite it as a Markdown link to its path, like [Bank call](/notes/<id>). Quote the owner’s words when they ask what they wrote.',
+  'The owner chooses which AI answers here (Claude or ChatGPT) in Settings › Your assistant’s AI; you cannot switch it yourself, so point them there when they ask.',
 ].join(' ');
 
 const CONVERSATION_COLUMNS = 'id, title, folder, session_id, started, created_at, updated_at, deleted_at';
