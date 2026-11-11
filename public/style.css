@@ -3983,4 +3983,6 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 }
 .chat-pane.is-wide .chat-thread { flex: 1; max-height: none; min-height: 0; }
 .chat-pane.is-wide .chat-bubble { max-width: min(100%, 72rem); }
+/* In wide view an answer uses the whole width (2026-11-11, the owner's wish); your own questions stay on the right. */
+.chat-pane.is-wide .chat-bubble.is-assistant { max-width: 100%; }
 @media (max-width: 899px) { .chat-pane-bar { display: none; } }
