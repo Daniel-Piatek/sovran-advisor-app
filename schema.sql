@@ -664,6 +664,53 @@ CREATE TABLE IF NOT EXISTS dictations (
 
 CREATE INDEX IF NOT EXISTS dictations_by_time ON dictations (created_at);
 
+-- Voice calls with your assistant (the Voice module, advanced/voice/3-7, call.js). A call keeps nothing of its own: every
+-- turn is a pair of chat messages; a call_turns row says how that turn went.
+--   call_id        the call it was in (made by the page when the call starts)
+--   asked_id       your words, as a chat message; answer_id the answer (empty for a line with no answer)
+--   kind           turn (you spoke and it answered) or written (the call went on in writing here)
+--   source         data (answered from your own tables, no model: advanced/voice/6) or assistant
+--   filler         the one short line it said while your assistant thought (advanced/voice/6), or empty
+--   first_word_ms  from the end of your words to the first sound of the answer (advanced/voice/5); null if never spoken
+--   warm           1 when the call was warmed before it started
+--   engine         local (the free models on this computer) or elevenlabs
+CREATE TABLE IF NOT EXISTS call_turns (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  call_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL REFERENCES conversations (id),
+  asked_id TEXT NOT NULL DEFAULT '',
+  answer_id TEXT NOT NULL DEFAULT '',
+  kind TEXT NOT NULL DEFAULT 'turn' CHECK (kind IN ('turn', 'written')),
+  source TEXT NOT NULL DEFAULT 'assistant' CHECK (source IN ('data', 'assistant')),
+  filler TEXT NOT NULL DEFAULT '',
+  first_word_ms INTEGER,
+  warm INTEGER NOT NULL DEFAULT 0,
+  engine TEXT NOT NULL DEFAULT 'local'
+);
+
+CREATE INDEX IF NOT EXISTS call_turns_by_conversation ON call_turns (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS call_turns_by_call ON call_turns (call_id, created_at);
+
+-- The Voice log (advanced/voice/7): every time a layer of a call failed, and what the call did instead.
+--   layer  voice (the speech service), network or assistant
+CREATE TABLE IF NOT EXISTS voice_log (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  call_id TEXT NOT NULL DEFAULT '',
+  layer TEXT NOT NULL CHECK (layer IN ('voice', 'network', 'assistant')),
+  what TEXT NOT NULL,
+  tried INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS voice_log_by_time ON voice_log (created_at);
+
 -- The glossary (the Voice module, advanced/voice/2, glossary.js): your names and terms for the speech to text.
 --   term       how it is written
 --   heard_as   what the engine keeps hearing instead (empty for a hint)

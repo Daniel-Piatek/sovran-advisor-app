@@ -16,6 +16,8 @@ import { el, icon, request, undoBar, clockTime } from './ui.js';
 import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
 import { dueLabel } from './due.js';
+import { firstWordWords } from './spoken.js';
+import { callControls } from './call.js';
 
 const markdown = markdownit({ html: false, linkify: true, breaks: true });
 // A link to a page of the app opens it in the app; any other link opens beside the app.
@@ -49,14 +51,10 @@ function citations(sources) {
       el('span', { class: 'citation-title' }, s.title), el('span', { class: 'citation-kind' }, s.kind))));
 }
 
-// What it did, or proposes: a card with what it is, and Apply / Dismiss / Undo.
-export function cardNode(card, changed) {
-  const act = (what) => async () => {
-    try { changed(await assistantApi.card(card.id, what)); } catch (err) { note.textContent = err.message; }
-  };
-  const note = el('p', { class: 'capture-problem', role: 'alert' });
+// What a card is, in words ("Add a task: “Call the venue” · Tomorrow"): on the card, and said on a call (public/call.js).
+export function cardWhat(card) {
   const asks = card.state === 'proposed';
-  const what = {
+  return {
     add_task: () => `${asks ? 'Add' : 'Added'} a task: “${card.title}”${/^\d{4}-/.test(card.after.due ?? '') ? ` · ${dueLabel(card.after.due)}` : ''}`,
     calendar_propose: () => `${card.after.move ? `${asks ? 'Move' : 'Moved'} “${card.after.was.title}” to` : `${asks ? 'Add' : 'Added'} “${card.after.title}”`} ${card.after.starts_at.slice(0, 10)} ${card.after.starts_at.slice(11)}–${card.after.ends_at.slice(11)}${card.after.where === 'google' ? ' in Google Calendar' : ''}${card.after.people?.length ? ` with ${card.after.people.map((p) => p.name).join(', ')}` : ''}${card.reason ? ` · ${card.reason}` : ''}`,
     board_draw: () => `${asks ? 'Draw' : 'Drew'} on the board “${card.after.board_title}”: ${[card.after.items.filter((i) => i.kind !== 'arrow').length ? `${card.after.items.filter((i) => i.kind !== 'arrow').length} new` : '', card.after.items.filter((i) => i.kind === 'arrow').length ? `${card.after.items.filter((i) => i.kind === 'arrow').length} arrow(s)` : ''].filter(Boolean).join(' and ')}${card.reason ? ` · ${card.reason}` : ''}`,
@@ -71,6 +69,15 @@ export function cardNode(card, changed) {
     change_task: () => (card.after.done === true ? `Tick “${card.title}”` : card.after.done === false ? `Untick “${card.title}”`
       : `Move “${card.title}” to ${card.after.due ? dueLabel(card.after.due) : 'no day'}`) + (card.reason ? ` · ${card.reason}` : ''),
   }[card.kind]();
+}
+
+// What it did, or proposes: a card with what it is, and Apply / Dismiss / Undo.
+export function cardNode(card, changed) {
+  const act = (what) => async () => {
+    try { changed(await assistantApi.card(card.id, what)); } catch (err) { note.textContent = err.message; }
+  };
+  const note = el('p', { class: 'capture-problem', role: 'alert' });
+  const what = cardWhat(card);
   const step = card.kind === 'step';
   const adds = ['add_task', 'add_note', 'append_to_journal', 'close_day', 'log_interaction', 'board_draw', 'calendar_propose'].includes(card.kind);
   const states = {
@@ -157,11 +164,24 @@ function keepButtons(message, body) {
   return el('div', { class: 'chat-keep' }, inbox, result);
 }
 
+// How a turn of a call went (advanced/voice/3-6), under your words and under its answer: said on a call, where the answer
+// came from, the line it said while it thought, and the time to its first word (Metric chips).
+function callMarkNodes(mark) {
+  if (!mark) return [];
+  if (mark.said) return [el('p', { class: 'chat-call-mark' }, icon('phone'), 'Said on a call')];
+  return [el('p', { class: 'chat-call-mark' }, icon('phone'), 'Voice call',
+    el('span', { class: 'metric-chip' }, mark.source === 'data' ? 'from your data, no model' : 'your assistant'),
+    ...(mark.first_word_ms != null ? [el('span', { class: 'metric-chip' }, firstWordWords(mark.first_word_ms))] : []),
+    ...(mark.first_word_ms != null && !mark.warm ? [el('span', { class: 'metric-chip' }, 'cold start')] : [])),
+  ...(mark.filler ? [el('p', { class: 'chat-call-mark' }, `Said while it thought: “${mark.filler}”`)] : [])];
+}
+
 // A bubble: yours on the right, the assistant's on the left with its label.
-function bubble(message, changed = () => {}) {
+function bubble(message, changed = () => {}, mark = null) {
   if (message.role === 'user') {
     return el('div', { class: 'chat-bubble is-user', 'data-role': 'user' }, el('p', { class: 'chat-text' }, message.text),
-      ...(message.context ? [el('a', { class: 'chat-context', href: message.context.path }, 'Asked on: ', message.context.title || message.context.path)] : []));
+      ...(message.context ? [el('a', { class: 'chat-context', href: message.context.path }, 'Asked on: ', message.context.title || message.context.path)] : []),
+      ...callMarkNodes(mark));
   }
   const body = el('div', { class: 'chat-text' });
   body.innerHTML = markdown.render(message.text);
@@ -169,12 +189,13 @@ function bubble(message, changed = () => {}) {
   for (const cell of body.querySelectorAll('td')) if (cell.textContent.trim().length <= 24) cell.classList.add('is-short');
   const node = el('div', { class: 'chat-bubble is-assistant', 'data-role': 'assistant', 'data-state': message.state },
     el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant',
-      ...(aiLabel(message) ? [el('span', { class: 'plan-free' }, ' · '), aiChip(message.ai, aiLabel(message))] : []),
+      ...(aiLabel(message) && !(mark && mark.source === 'data') ? [el('span', { class: 'plan-free' }, ' · '), aiChip(message.ai, aiLabel(message))] : []),
       el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
     body,
     ...(message.state === 'answering' ? [el('span', { class: 'chat-working', 'aria-label': 'Answering' }, '…')] : []),
     ...(message.state === 'stopped' ? [el('p', { class: 'chat-note' }, 'Stopped.')] : []),
     ...(message.state === 'answering' || !message.text?.trim() ? [] : [keepButtons(message, body)]),
+    ...callMarkNodes(mark),
     citations(message.sources),
     ...(message.cards ?? []).map((card) => cardNode(card, (next) => { Object.assign(card, next); changed(); })),
     stepsNode(message.steps));
@@ -206,6 +227,27 @@ export async function showAssistant(id) {
   const actions = el('span', { class: 'chat-actions' });
   // New chat is the page's one red button, beside the title as on every section's page (2026-11-10, the owner's wish).
   const newChat = el('a', { class: 'button button-primary page-add', href: '/assistant' }, icon('plus'), 'New chat');
+  // A voice call with your assistant (advanced/voice/3-7, public/call.js): a thin front over this chat.
+  const call = callControls({
+    conversationId: () => conversation?.id ?? null,
+    ensureConversation: async () => {
+      if (!conversation) {
+        conversation = { ...(await assistantApi.create()), messages: [] };
+        history.replaceState(null, '', `/assistant/${conversation.id}`);
+      }
+      return conversation.id;
+    },
+    reload: async (conversationId) => {
+      if (left) return;
+      if (conversationId && conversationId !== conversation?.id) history.replaceState(null, '', `/assistant/${conversationId}`);
+      await load(conversationId ?? conversation?.id ?? null);
+    },
+    ask: (text, onEvent) => send(text, null, { onEvent }),
+    act: async (card, what) => { const next = await assistantApi.card(card.id, what); Object.assign(card, next); if (!left && conversation) await load(conversation.id); return card; },
+    busy: () => answering,
+    writeIn: (words) => { input.value = words; input.focus(); },
+  });
+  onLeave(() => call.end());
 
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, title, newChat),
@@ -214,7 +256,8 @@ export async function showAssistant(id) {
       list,
       backdrop,
       el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, el('div', { class: 'chat-pane-bar' }, wideButton), thread,
-        el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, stopButton, sendButton)), problem)),
+        call.widget,
+        el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, call.button, stopButton, sendButton)), problem)),
     undoPlace,
   );
 
@@ -258,9 +301,15 @@ export async function showAssistant(id) {
 
   function drawThread() {
     const messages = conversation?.messages ?? [];
+    const marks = conversation?.call_marks ?? {};
+    // The lines where a call went on in writing (advanced/voice/7), each after the last message before it.
+    const written = Object.values(marks).filter((m) => m.written);
     // A new chat shows only the box to ask in (2026-11-10, the owner's wish).
     // Which AI it began with, at the top, and a line wherever it changed (before the question it answered).
     const nodes = [];
+    const writtenLine = () => el('p', { class: 'chat-switch chat-call-written' }, icon('phone'), 'The call went on in writing.');
+    // A call that went on in writing before anything was said still leaves its line.
+    for (const w of written.filter((x) => !messages.length || x.created_at < messages[0].created_at)) nodes.push(writtenLine(w));
     let last = '';
     for (const m of messages) {
       if (m.role === 'assistant' && AI_NAMES[m.ai]) {
@@ -273,10 +322,14 @@ export async function showAssistant(id) {
         }
         last = m.ai;
       }
-      nodes.push(bubble(m, () => drawThread()));
+      nodes.push(bubble(m, () => drawThread(), marks[m.id]));
+      const next = messages[messages.indexOf(m) + 1];
+      for (const w of written.filter((x) => x.created_at >= m.created_at && (!next || x.created_at < next.created_at))) {
+        nodes.push(writtenLine(w));
+      }
     }
     thread.replaceChildren(...nodes);
-    thread.hidden = !messages.length;
+    thread.hidden = !nodes.length;
     thread.scrollTop = thread.scrollHeight;
     title.textContent = 'Assistant'; // always the section's name; the chat open is marked in the list (2026-11-11, the owner's wish)
     document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
@@ -340,8 +393,8 @@ export async function showAssistant(id) {
     }
   }
 
-  async function send(text, context = null) {
-    if (answering || !text.trim()) return;
+  async function send(text, context = null, { onEvent = () => {} } = {}) {
+    if (answering || !text.trim()) return null;
     problem.textContent = '';
     if (!conversation) {
       conversation = { ...(await assistantApi.create()), messages: [] };
@@ -389,6 +442,7 @@ export async function showAssistant(id) {
             const step = answer.steps.find((s) => s.id === event.id);
             if (step) step.state = event.error ? 'failed' : 'done';
           } else if (event.type === 'done') Object.assign(answer, event.message);
+          onEvent(event, answer);
         }
         if (!left) redraw();
       }
@@ -398,7 +452,8 @@ export async function showAssistant(id) {
       if (!left) redraw();
     }
     setAnswering(false);
-    if (!left) { drawThread(); drawList(); input.focus(); } // drawn again: the answer now names its model
+    if (!left) { drawThread(); drawList(); if (!call.active()) input.focus(); } // drawn again: the answer now names its model
+    return answer;
   }
 
   async function stop() {

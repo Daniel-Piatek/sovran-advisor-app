@@ -138,6 +138,17 @@ function addMessage(db, conversationId, role, text, state, context = null, ai = 
   return id;
 }
 
+// A question and its answer that no model gave (a call's answer from your own data, advanced/voice/6): two messages, kept
+// like any others. The model's own session never saw them, so it is not told; the chat shows them.
+export function addAnswered(db, conversationId, asked, answer) {
+  const askedId = addMessage(db, conversationId, 'user', asked, 'done');
+  if (!db.prepare('SELECT title FROM conversations WHERE id = ?').get(conversationId)?.title) {
+    db.prepare('UPDATE conversations SET title = ? WHERE id = ?').run(asked.split('\n')[0].slice(0, 80), conversationId);
+  }
+  const answerId = addMessage(db, conversationId, 'assistant', answer, 'done');
+  return { askedId, answerId };
+}
+
 const getMessage = (db, id) => {
   const found = message(db.prepare(`SELECT ${MESSAGE_COLUMNS} FROM chat_messages WHERE id = ?`).get(id));
   return found.role === 'assistant' ? { ...found, cards: actionsOf(db, id) } : found;

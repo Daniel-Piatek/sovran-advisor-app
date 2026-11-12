@@ -59,6 +59,7 @@ import { importContacts } from './import-contacts.js';
 import { importObsidian, importDayOne, listRuns } from './import-notes.js';
 import { keyterms, fixes, listGlossary, addGlossary, deleteGlossary, restoreGlossary, checkGlossaryInput } from './glossary.js';
 import { localStatus, prepareLocal, hearPiece, samplesOf } from './voice-local.js';
+import { callSettings, setCallSettings, speak, warmCall, routeTurn, checkTurnInput, addTurn, callMarks, callStats, logVoice, listVoiceLog } from './call.js';
 import { startSession, hasKey, getDictationSettings, setHoldKey, saveKey, removeKey, checkDictationInput, addDictation, listDictations } from './dictation.js';
 import { findDuplicates, dismissDuplicate, mergePeople } from './merge-people.js';
 import { reconnectList, remindToReconnect } from './reconnect.js';
@@ -902,7 +903,7 @@ export function startServer({
       if (!part) {
         if (req.method === 'GET') {
           const conversation = getConversation(db, id);
-          return conversation ? sendJson(res, 200, { ...conversation, answering: isAnswering(id) }) : sendJson(res, 404, { error: 'Not found' });
+          return conversation ? sendJson(res, 200, { ...conversation, answering: isAnswering(id), call_marks: callMarks(db, id) }) : sendJson(res, 404, { error: 'Not found' });
         }
         if (req.method === 'PATCH') {
           const input = await readJson(req);
@@ -970,6 +971,48 @@ export function startServer({
       }
       try { return sendJson(res, 200, { engine: 'elevenlabs', ...(await startSession(dataDir, { keyterms: keyterms(db) })), fixes: fixes(db) }); } catch (err) {
         if (err.code) return sendJson(res, err.status, { error: err.message, code: err.code });
+        throw err;
+      }
+    }
+    // Voice calls with your assistant (advanced/voice/3-7, call.js), only while Dictation (the Voice module) is on:
+    //   GET / PUT /api/call/settings      the voice it speaks with and its speed; whether the free models are here
+    //   POST /api/call/warm               get and load the models now, so the first turn is quick: { ready }
+    //   POST /api/call/speak { text }     the words as sound (audio/wav)
+    //   POST /api/call/route { text, conversation_id? }   answered from your data ({ source: 'data', spoken, ... }) or { source: 'assistant' }
+    //   POST /api/call/turns { call_id, conversation_id, ... }   how a turn went;  GET /api/call/stats  the numbers of the last 20 calls
+    //   GET / POST /api/voice-log         the Voice log: every failure of a layer
+    if (url.pathname.startsWith('/api/call/') || url.pathname === '/api/voice-log') {
+      if (!moduleOn(db, 'voice')) return sendJson(res, 409, { error: 'Dictation is switched off (Settings › Modules).' });
+      try {
+        if (url.pathname === '/api/call/settings') {
+          if (req.method === 'PUT') setCallSettings(db, await readJson(req));
+          else if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+          return sendJson(res, 200, await callSettings(db, dataDir));
+        }
+        if (url.pathname === '/api/call/stats') return req.method === 'GET' ? sendJson(res, 200, callStats(db)) : sendJson(res, 405, { error: 'Method not allowed' });
+        if (url.pathname === '/api/voice-log') {
+          if (req.method === 'GET') return sendJson(res, 200, listVoiceLog(db));
+          if (req.method === 'POST') return sendJson(res, 201, logVoice(db, await readJson(req)));
+          return sendJson(res, 405, { error: 'Method not allowed' });
+        }
+        if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+        const input = await readJson(req);
+        if (url.pathname === '/api/call/warm') return sendJson(res, 200, await warmCall(db, dataDir));
+        if (url.pathname === '/api/call/route') return sendJson(res, 200, routeTurn(db, dataDir, input));
+        if (url.pathname === '/api/call/turns') {
+          const problem = checkTurnInput(input);
+          if (problem) return sendJson(res, 400, { error: problem });
+          return sendJson(res, 201, addTurn(db, input));
+        }
+        if (url.pathname === '/api/call/speak') {
+          const wav = await speak(db, dataDir, input?.text);
+          res.writeHead(200, { 'Content-Type': 'audio/wav', 'Content-Length': wav.length, 'Cache-Control': 'no-store' });
+          res.end(wav);
+          return undefined;
+        }
+        return sendJson(res, 404, { error: 'Not found' });
+      } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
         throw err;
       }
     }
