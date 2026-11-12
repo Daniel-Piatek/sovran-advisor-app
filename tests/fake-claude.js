@@ -26,11 +26,25 @@
 // journal for "slept/felt/today …", let it go for "spam …", else a note; a home whose
 // name the capture uses; "fail-suggest" fails, "slow-suggest" takes two seconds.
 //   anything else          "You said: …"
+// `claude auth status` (the Check button, ai.js): signed in on Pro, unless a test wrote another state to
+// <DATA_DIR>/fake-claude-auth.json; with { fails: "…" } in it, every question fails with those words.
 
 import fs from 'node:fs';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
+const authFile = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'fake-claude-auth.json') : null;
+const auth = authFile && fs.existsSync(authFile) ? JSON.parse(fs.readFileSync(authFile, 'utf8'))
+  : { loggedIn: true, authMethod: 'claude.ai', apiProvider: 'firstParty', subscriptionType: 'pro' };
+if (args[0] === 'auth' && args[1] === 'status') {
+  process.stdout.write(`${JSON.stringify(auth, null, 2)}\n`);
+  process.exit(auth.loggedIn ? 0 : 1);
+}
+if (args.includes('--version')) { console.log('2.1.0 (Claude Code)'); process.exit(0); }
+if (auth.fails && args.includes('-p')) {
+  process.stdout.write(`${JSON.stringify({ type: 'result', subtype: 'success', is_error: true, result: auth.fails })}\n`);
+  process.exit(1);
+}
 const after = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : null);
 const session = after('--resume') ?? after('--session-id');
 const memory = path.join(process.cwd(), `.fake-claude-${session}.json`);

@@ -4205,3 +4205,20 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .help-list-link { display: block; padding: var(--space-3) 0; font-family: var(--font-ui); font-weight: 500; color: var(--color-text); text-decoration: none; }
 .help-list-link:hover { text-decoration: underline; }
 .lib-help-title { font-family: var(--font-heading); font-size: var(--text-2xl); }
+
+/* The Check button under Your assistant's AI (ai-check.js): one result, with every step to put it right. */
+.ai-check { margin-top: var(--space-3); }
+.ai-check > .empty:first-child { margin: 0 0 var(--space-2); }
+.ai-check-result { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); }
+.ai-check-result:not([data-result="working"]) { background: var(--color-warning-surface); }
+.ai-check-result p { margin: 0 0 var(--space-2); }
+.ai-check-title { font-weight: var(--weight-bold); }
+.ai-check-result[data-result="working"] .ai-check-title { margin: 0; }
+.ai-check-steps { margin: 0 0 var(--space-3); padding-left: var(--space-6); }
+.ai-check-steps li { margin: 0 0 var(--space-2); }
+.ai-check-steps .ai-check-steps { margin-top: var(--space-2); }
+.ai-check-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+.ai-check-line code { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font-family: var(--font-mono); font-size: var(--text-sm); }
+.ai-check-result kbd { display: inline-block; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font-family: var(--font-ui); font-size: var(--text-xs); line-height: 1.5; }
+.ai-check-result code { font-family: var(--font-mono); }
+.ai-check-said { font-style: italic; }

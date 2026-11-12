@@ -52,7 +52,8 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
    Settings › Your assistant's AI and press **ChatGPT**, or set it for them:
    `curl -s -X PUT http://127.0.0.1:3300/api/assistant/ai -H 'Content-Type: application/json' -d '{"provider":"codex"}'`.
 6. **Check it:** the app opens at http://127.0.0.1:3300 on its welcome screen. Tell the person
-   it is ready, and that their notes stay on this computer.
+   it is ready, and that their notes stay on this computer. Tell them too that if the assistant
+   ever doesn't answer, Settings › Your assistant's AI › **Check** says why and what to do.
 
 ### On Windows
 

@@ -18,6 +18,7 @@ import { randomUUID } from 'node:crypto';
 
 const args = process.argv.slice(2);
 if (args.includes('--version')) { console.log('codex-cli 0.0.0-fake'); process.exit(0); }
+if (args[0] === 'login' && args[1] === 'status') { console.log('Logged in using ChatGPT'); process.exit(0); }
 if (args[0] === 'features' && args[1] === 'list') {
   console.log('shell_tool                               stable             true');
   console.log('apps                                     stable             true');
