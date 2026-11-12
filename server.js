@@ -91,6 +91,7 @@ import { applyAction, dismissAction, undoAction, planCards } from './assistant-t
 import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
 import { chosenAI, getAssistantChoice, setProvider } from './ai.js';
+import { getPick, setPick, pickState, checkPickInput } from './ai-pick.js';
 import { findCodex } from './codex.js';
 import { startBackups, listBackups, checkAllBackups } from './backup.js';
 import { writeMoveFile, moveFileName, receiveMoveFile, moveStatus, cancelMove, confirmMove, applyPendingMove } from './move.js';
@@ -935,6 +936,7 @@ export function startServer({
       const answered = sendMessage(db, id, input.text, {
         dataDir, ...ai(), send: line, mcp: { url: mcpUrl, secret: mcpSecret }, context: input.context ?? null, library: libraryServer(db),
         notes: takeClashNotes(db), // which side won a clash since it last heard (Writing 5)
+        pick: moduleOn(db, 'ai-pick') ? getPick(db, id) : null, // the model and effort chosen for this chat (ai-pick.js)
       });
       res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-cache' });
       await answered;
@@ -1611,6 +1613,23 @@ export function startServer({
         setProvider(db, ((await readJson(req)) ?? {}).provider);
         return sendJson(res, 200, getAssistantChoice(db, commands));
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    // Model and effort (ai-pick.js, module ai-pick): GET /api/assistant/pick?chat=<id> → { on, models, efforts, model, effort };
+    //   PUT { chat?, model?, effort? } keeps it for that chat and as the one a new chat starts with
+    if (url.pathname === '/api/assistant/pick') {
+      const on = moduleOn(db, 'ai-pick');
+      if (req.method === 'GET') {
+        const chat = url.searchParams.get('chat');
+        if (chat && !/^[0-9a-f-]{36}$/.test(chat)) return sendJson(res, 400, { error: 'chat is a chat’s id.' });
+        return sendJson(res, 200, pickState(db, chat, on));
+      }
+      if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
+      if (!on) return sendJson(res, 409, { error: 'Switch on Model and effort in Settings › Modules first.' });
+      const input = (await readJson(req)) ?? {};
+      const problem = checkPickInput(input);
+      if (problem) return sendJson(res, 400, { error: problem });
+      setPick(db, input);
+      return sendJson(res, 200, pickState(db, input.chat ?? null, on));
     }
     if (url.pathname === '/api/library') {
       if (req.method === 'GET') return sendJson(res, 200, getLibrary(db));
