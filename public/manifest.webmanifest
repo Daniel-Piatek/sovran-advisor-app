@@ -1,6 +1,6 @@
 {
-  "name": "Notes",
-  "short_name": "Notes",
+  "name": "Sovran Advisor",
+  "short_name": "Sovran Advisor",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbfbfb",
@@ -23,6 +23,13 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Capture",
+      "short_name": "Capture",
+      "url": "/quick"
     }
   ]
 }

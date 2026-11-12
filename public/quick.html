@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Capture</title>
+  <meta name="apple-mobile-web-app-title" content="Capture">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/quick.webmanifest">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/quick.js"></script>
+</head>
+<body class="quick">
+  <main class="quick-page">
+    <form class="quick-form" id="quick-form">
+      <h1 class="quick-title">Capture</h1>
+      <textarea id="quick-text" class="quick-text" aria-label="Your thought" placeholder="What’s on your mind?" autofocus maxlength="20000"></textarea>
+      <div class="switch" role="group" aria-label="Whose is it">
+        <button type="button" class="switch-button switch-button-text" data-world="inner" aria-pressed="true">My own thought</button>
+        <button type="button" class="switch-button switch-button-text" data-world="outer" aria-pressed="false">From someone else</button>
+      </div>
+      <button type="submit" class="button button-primary quick-keep">Keep in Inbox</button>
+      <p class="quick-status" id="quick-status" role="status" aria-live="polite"></p>
+      <a class="quick-open" href="/inbox">Open the app</a>
+    </form>
+  </main>
+</body>
+</html>

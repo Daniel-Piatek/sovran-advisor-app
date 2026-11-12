@@ -12,7 +12,7 @@ export const root = fileURLToPath(new URL('../', import.meta.url));
 export const sourceFile = `${root}design/icon.svg`;
 export const tokensFile = `${root}public/tokens.css`;
 export const outDir = `${root}public/icons/`;
-export const appName = 'Notes';
+export const appName = 'Sovran Advisor';
 
 // The light theme's tokens (the first :root block), with references to other tokens resolved.
 export function readTokens(css = fs.readFileSync(tokensFile, 'utf8')) {
@@ -69,7 +69,13 @@ export const iconsetNames = {
   'icon_256x256@2x.png': 512, 'icon_512x512.png': 512, 'icon_512x512@2x.png': 1024,
 };
 
-// The web app manifest: what Android and Chrome use when the app is put on a home screen.
+// The web app manifest: what Android and Chrome use when the app is put on a home screen. A long press on its icon
+// offers Capture (the phone page of Phone, backups and moving).
+const iconList = [
+  { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+  { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+  { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+];
 export function manifest(tokens = readTokens()) {
   return JSON.stringify({
     name: appName,
@@ -78,11 +84,22 @@ export function manifest(tokens = readTokens()) {
     display: 'standalone',
     background_color: tokens['--color-bg'],
     theme_color: tokens['--color-bg'],
-    icons: [
-      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-    ],
+    icons: iconList,
+    shortcuts: [{ name: 'Capture', short_name: 'Capture', url: '/quick' }],
+  }, null, 2) + '\n';
+}
+
+// The Capture icon's own manifest (myICOR advanced/everywhere/8): put on a home screen, it opens straight into /quick.
+export function quickManifest(tokens = readTokens()) {
+  return JSON.stringify({
+    name: 'Capture',
+    short_name: 'Capture',
+    start_url: '/quick',
+    scope: '/quick',
+    display: 'standalone',
+    background_color: tokens['--color-bg'],
+    theme_color: tokens['--color-bg'],
+    icons: iconList,
   }, null, 2) + '\n';
 }
 

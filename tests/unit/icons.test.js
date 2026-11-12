@@ -4,13 +4,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
-import { outDir, root, roundSvg, tileSvg, manifest, pngs, readTokens, ico } from '../../scripts/icons.js';
+import { outDir, root, roundSvg, tileSvg, manifest, quickManifest, pngs, readTokens, ico } from '../../scripts/icons.js';
 
 const stale = 'run `npm run icons` after changing design/icon.svg or an icon token';
 
 test('the generated icons still match the source and the tokens', () => {
   assert.equal(fs.readFileSync(`${outDir}favicon.svg`, 'utf8'), roundSvg(), stale);
   assert.equal(fs.readFileSync(`${root}public/manifest.webmanifest`, 'utf8'), manifest(), stale);
+  assert.equal(fs.readFileSync(`${root}public/quick.webmanifest`, 'utf8'), quickManifest(), stale);
 });
 
 test('every size is there', () => {

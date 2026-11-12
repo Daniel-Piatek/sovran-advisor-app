@@ -110,7 +110,12 @@ while the computer is switched on and awake.
    `:8443` if used) answers from this computer.
 7. **On the phone:** open `https://<the name>` (with `:8443` if used) in Safari or Chrome, then
    Share › **Add to Home Screen**. From then on it opens like an app.
-8. Tell the person: the computer must be on and awake. On a Mac, System Settings › Energy (or
+8. **A Capture icon too (optional, two taps to the Inbox).** If the person switches on **Phone,
+   backups and moving** in Settings › Modules, the phone can also open `https://<the name>/quick`
+   (with `:8443` if used) and Share › **Add to Home Screen** a second time: that icon opens straight
+   into a box that keeps one thought in the Inbox. While the computer is asleep, what they type stays
+   on the phone and is sent when it wakes.
+9. Tell the person: the computer must be on and awake. On a Mac, System Settings › Energy (or
    Battery › Options) › "Prevent automatic sleeping when the display is off" keeps it reachable.
 
 **Speaking instead of typing.** Two ways, both optional:
@@ -125,6 +130,21 @@ while the computer is switched on and awake.
   and it answers out loud; every turn is kept in the chat. Free: it listens with the same voice
   model and speaks with a free voice (Alba, British English, about 70 MB, fetched once the first
   time the chat opens). With an ElevenLabs key, calls listen and speak with ElevenLabs instead.
+
+## For Claude or Codex: moving it to a new computer (optional: "move Sovran Advisor to my new computer")
+
+Only when the person asks. Nothing goes through a cloud account.
+
+1. **On the old computer**, in the app: Settings › Modules › switch on **Phone, backups and
+   moving**, then Settings › Phone, backups and moving › **Make a moving file**. It downloads one
+   file, `sovran-advisor-move-<date>.tar.gz`, with everything they wrote and their pictures and files.
+2. The person copies that file to the new computer (a USB stick, AirDrop, or their cloud drive).
+3. **On the new computer**: install Sovran Advisor as above. Then in the app, switch on the same
+   module and choose **Bring in a moving file**. The app checks the file and shows what it holds;
+   nothing changes until the person presses **Replace everything here with it**. The app restarts,
+   and what was there before is kept, whole, in `data/before-move-<time>/`.
+4. Not in the file, so set again on the new computer if they were used: the phone link (above),
+   an ElevenLabs key, and capture devices (Settings › Capture from anywhere).
 
 ## For Claude or Codex: updating it ("update Sovran Advisor")
 
