@@ -53,6 +53,9 @@ export function docForPath(docs, pathname) {
   return docs.find((d) => { try { return d.paths && new RegExp(d.paths).test(pathname); } catch { return false; } }) ?? null;
 }
 
+// Words too common to tell the pages apart ("how do I get the latest version" is about versions, not "how").
+const COMMON = new Set(['the', 'and', 'how', 'get', 'this', 'that', 'you', 'your', 'for', 'with', 'what', 'can', 'does', 'are', 'was', 'from', 'into', 'about']);
+
 // For the assistant (docs_read): the page for a view, or the best one or two for some words.
 export function findDocs(db, { view = '', words = '' } = {}, dir = DOCS_DIR) {
   const docs = listDocs(db, dir);
@@ -62,7 +65,7 @@ export function findDocs(db, { view = '', words = '' } = {}, dir = DOCS_DIR) {
       || docForPath([d], wanted.startsWith('/') ? wanted : `/${wanted}`));
     if (exact.length) return exact.slice(0, 1);
   }
-  const terms = `${wanted} ${String(words)}`.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((t) => t.length > 2);
+  const terms = `${wanted} ${String(words)}`.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((t) => t.length > 2 && !COMMON.has(t));
   if (!terms.length) return [];
   const score = (d) => {
     const title = d.title.toLowerCase();
