@@ -121,3 +121,10 @@ export async function newEntry(page, app, day = null) {
   await page.keyboard.press('Enter');
   await expect(page.getByRole('textbox', { name: 'Text', exact: true })).toBeFocused();
 }
+
+// Settings folds its long lists (public/fold.js): open one by its id, unless it is open already (it is remembered).
+export async function openFold(page, id) {
+  const box = page.locator(`[data-fold="${id}"]`);
+  if (!(await box.evaluate((node) => node.open))) await box.locator('> summary').click();
+  await expect(box).toHaveJSProperty('open', true);
+}

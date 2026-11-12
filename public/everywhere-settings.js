@@ -5,6 +5,7 @@
 //   A new computer     a moving file with everything in it, and bringing one in (it waits for your yes)
 
 import { el, request, clockTime, shortDate } from './ui.js';
+import { fold } from './fold.js';
 
 const number = (n) => n.toLocaleString();
 const ONE = { notes: 'note', 'journal entries': 'journal entry', people: 'person', tasks: 'task', 'Inbox items': 'Inbox item', 'assistant chats': 'assistant chat', 'pictures and files': 'picture or file' };
@@ -30,6 +31,7 @@ function phonePart() {
 
 function backupsPart() {
   const list = el('ul', { class: 'backup-list', 'aria-label': 'Daily backups' });
+  const folded = fold('backups', 'Your copies', list);
   const status = el('p', { class: 'empty', role: 'status' });
   const checkWords = (c) => {
     if (!c) return 'Not checked yet';
@@ -37,6 +39,8 @@ function backupsPart() {
     return `Checked ${shortDate(c.checked_at)} ${clockTime(c.checked_at)}: complete${c.compared ? ', the same as the app' : ''}`;
   };
   const draw = (backups) => {
+    const bad = backups.filter((b) => b.check && !b.check.ok).length;
+    folded.say(backups.length, ['copy', 'copies'], [backups[0] ? `newest ${backups[0].day}` : '', bad ? `${bad} with a problem` : ''].filter(Boolean).join(' · '));
     list.replaceChildren(...(backups.length ? backups.map((b) => el('li', { class: 'backup-row', 'data-day': b.day },
       el('span', { class: 'backup-day' }, b.day),
       el('span', { class: 'backup-check', 'data-ok': String(b.check?.ok ?? true) }, `${checkWords(b.check)} · ${size(b.bytes)}`)))
@@ -58,7 +62,7 @@ function backupsPart() {
   return el('div', { class: 'settings-subpart', 'aria-label': 'Daily backups' },
     el('h3', { class: 'settings-subtitle' }, 'Daily backups'),
     el('p', { class: 'empty' }, 'Each day the app keeps a whole copy of your data in its own folder (data/backups), the newest 14. Each copy is opened and checked as soon as it is made.'),
-    list, el('div', { class: 'move-actions' }, button), status);
+    folded, el('div', { class: 'move-actions' }, button), status);
 }
 
 function movePart() {

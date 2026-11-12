@@ -2,7 +2,7 @@
 // claude command (tests/fake-claude.js): no test depends on a real AI model.
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect } from './fixtures.js';
+import { test, expect, openFold } from './fixtures.js';
 
 const bubbles = (page, role) => page.locator(`.chat-bubble[data-role="${role}"]`);
 const tasks = (app) => fetch(`${app.url}/api/tasks`).then((r) => r.json());
@@ -35,6 +35,8 @@ test('Add a task asks first: a card, and no task until you approve; switched to 
   await page.goto(`${app.url}/settings`);
   await page.getByRole('group', { name: 'Add a task' }).getByRole('button', { name: 'Does it alone' }).click();
   await expect(page.getByRole('group', { name: 'Add a task' }).getByRole('button', { name: 'Does it alone' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-fold="activity"] summary')).toContainText(/\d+ steps? · latest/);
+  await openFold(page, 'activity');
   await expect(page.getByRole('list', { name: 'Activity' })).toContainText('You switched Add a task: Does it alone');
   await page.goto(`${app.url}/assistant`);
   await say(page, 'Add a task: buy flowers');
@@ -75,6 +77,8 @@ test('Always allow: the second read in that folder needs no card; Settings lists
   await expect(second.locator('.action-card')).toHaveCount(0);
   await page.goto(`${app.url}/settings`);
   const list = page.getByRole('region', { name: 'Always allowed' });
+  await expect(list.locator('summary')).toContainText('1 kind of step');
+  await openFold(page, 'always-allowed');
   await expect(list).toContainText(`Read files in ${path.dirname(outside)}`);
   await list.getByRole('button', { name: /Remove/ }).click();
   await expect(list).toContainText('Nothing yet.');
@@ -98,5 +102,23 @@ test('the floor: even with work outside its folder allowed, sudo is refused, and
   await expect(answer.locator('.action-card')).toHaveAttribute('data-state', 'refused');
   await expect(answer.locator('.action-card')).toContainText('Never allowed');
   await page.goto(`${app.url}/settings`);
+  await openFold(page, 'activity');
   await expect(page.getByRole('list', { name: 'Activity' }).locator('.activity-row').first()).toContainText('Refused Step: Run a command: sudo ls /');
+});
+
+test('Settings folds its long lists behind one row; open or closed is remembered', async ({ page, app }) => {
+  await page.goto(`${app.url}/settings`);
+  const activity = page.locator('[data-fold="activity"]');
+  await expect(activity).toHaveJSProperty('open', false);
+  await expect(page.getByRole('list', { name: 'Activity' })).toBeHidden();
+  await activity.locator('summary').click();
+  await expect(page.getByRole('list', { name: 'Activity' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('settings-fold:activity'))).toBe('open');
+  await page.reload();
+  await expect(activity).toHaveJSProperty('open', true);
+  await activity.locator('summary').click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('settings-fold:activity'))).toBeNull();
+  await page.reload();
+  await expect(activity).toHaveJSProperty('open', false);
+  await expect(page.locator('[data-fold="always-allowed"] summary')).toContainText('Nothing yet');
 });

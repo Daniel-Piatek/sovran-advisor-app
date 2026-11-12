@@ -4206,6 +4206,18 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .help-list-link:hover { text-decoration: underline; }
 .lib-help-title { font-family: var(--font-heading); font-size: var(--text-2xl); }
 
+/* Settings: a long list folded behind one row (fold.js): an arrow, its name, how many and the latest. */
+.settings-fold { margin: var(--space-2) 0 0; border-top: var(--line); border-bottom: var(--line); }
+.fold-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); padding: var(--space-2) 0; cursor: pointer; list-style: none; font-size: var(--text-sm); }
+.fold-head::-webkit-details-marker { display: none; }
+.fold-head > .icon { flex: none; display: inline-flex; color: var(--color-text-muted); transition: transform 120ms ease; }
+.settings-fold[open] > .fold-head > .icon { transform: rotate(90deg); }
+.fold-label { font-family: var(--font-ui); font-weight: 600; }
+.fold-note { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.fold-head:hover .fold-label { text-decoration: underline; }
+.fold-body { padding: 0 0 var(--space-2); }
+.fold-body > .activity-log { margin-top: 0; }
+
 /* The Check button under Your assistant's AI (ai-check.js): one result, with every step to put it right. */
 .ai-check { margin-top: var(--space-3); }
 .ai-check > .empty:first-child { margin: 0 0 var(--space-2); }
