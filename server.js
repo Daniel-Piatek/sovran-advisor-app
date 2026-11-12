@@ -85,14 +85,14 @@ import {
 } from './reviews.js';
 import {
   checkMessageInput, listConversations, getConversation, createConversation, deleteConversation, renameConversation, restoreConversation,
-  sendMessage, stopAnswer, isAnswering, settleAnswers, stopAll, toolsFor, DEFAULT_COMMAND,
+  sendMessage, stopAnswer, isAnswering, settleAnswers, stopAll, toolsFor, DEFAULT_COMMAND, claudeEnv,
 } from './assistant.js';
 import { applyAction, dismissAction, undoAction, planCards } from './assistant-tools.js';
 import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
-import { chosenAI, getAssistantChoice, setProvider } from './ai.js';
+import { chosenAI, getAssistantChoice, setProvider, checkAssistant } from './ai.js';
 import { getPick, setPick, pickState, checkPickInput } from './ai-pick.js';
-import { findCodex } from './codex.js';
+import { findCodex, codexEnv } from './codex.js';
 import { startBackups, listBackups, checkAllBackups } from './backup.js';
 import { writeMoveFile, moveFileName, receiveMoveFile, moveStatus, cancelMove, confirmMove, applyPendingMove } from './move.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
@@ -148,6 +148,7 @@ export function startServer({
   // codex: the one given, else found each time it is needed (on the PATH, or inside the ChatGPT app on a Mac).
   const commands = { claude: assistantCommand, get codex() { return codexCommand ?? findCodex(); } };
   const ai = () => chosenAI(db, commands);
+  let checking = null; // the Check button's run under way (ai.js)
   // Your assistant reads each capture in the background and suggests where it goes.
   const reader = readCaptures
     ? startReader({ db, dataDir, ai, mcp: () => ({ url: mcpUrl, secret: mcpSecret }) })
@@ -1613,6 +1614,17 @@ export function startServer({
         setProvider(db, ((await readJson(req)) ?? {}).provider);
         return sendJson(res, 200, getAssistantChoice(db, commands));
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    // The Check button (ai.js): POST /api/assistant/check → { provider, program, platform, command, plan, result, detail },
+    //   result one of working, missing, signed_out, free, other. One check at a time: a second press waits for the first.
+    if (url.pathname === '/api/assistant/check') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      if (!checking) {
+        const { provider, command } = ai();
+        checking = checkAssistant({ provider, command, folder: path.join(dataDir, 'assistant', 'check'), env: provider === 'codex' ? codexEnv() : claudeEnv() })
+          .finally(() => { checking = null; });
+      }
+      return sendJson(res, 200, await checking);
     }
     // Model and effort (ai-pick.js, module ai-pick): GET /api/assistant/pick?chat=<id> → { on, provider, models, efforts, model, effort }
     //   for the AI that answers now; PUT { chat?, model?, effort? } keeps it, for that AI, for that chat and for a new chat

@@ -8,7 +8,8 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Your assistant** is your own Claude (Claude Code, with your own Claude subscription) or,
   if you use ChatGPT instead, your own ChatGPT (OpenAI's Codex, with your own ChatGPT plan).
   Choose in Settings › Your assistant's AI. It reads and writes your notes, journal and people
-  when you ask.
+  when you ask. The **Check** button there tests that it is installed, signed in and answering,
+  and if not, gives every step to put it right.
 - **The Sovran Library.** Paste the key you were given in Settings, and your assistant can also
   search the Sovran teaching and, if you have them, your own decodes.
 - **More when you want it.** Tasks, Planner, Calendar and My Life are built in and switched off.

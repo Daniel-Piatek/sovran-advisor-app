@@ -13,6 +13,7 @@ import { importSection } from './import-notes.js';
 import { captureSection } from './capture-settings.js';
 import { voiceSection, voiceLogSection } from './voice-settings.js';
 import { everywhereSection } from './everywhere-settings.js';
+import { checkPart } from './ai-check.js';
 
 const permissionsApi = {
   get: () => request('GET', '/api/assistant/permissions'),
@@ -241,15 +242,16 @@ function aiSection() {
       ? `Your assistant runs on your own ${ai.name} (${ai.program}), on this computer.`
       : ai.missing;
   };
+  const check = checkPart();
   const save = async (provider) => {
-    try { show(await request('PUT', '/api/assistant/ai', { provider })); } catch (err) { status.textContent = err.message; }
+    try { show(await request('PUT', '/api/assistant/ai', { provider })); check.reset(); } catch (err) { status.textContent = err.message; }
   };
   request('GET', '/api/assistant/ai').then(show).catch(() => { status.textContent = 'Which AI you use couldn’t be loaded.'; });
   return el('section', { class: 'settings-part', 'aria-label': 'Which AI' },
     el('h2', { class: 'settings-title' }, 'Your assistant’s AI'),
     el('p', { class: 'empty' }, 'Choose the one you have a plan with. It answers in the Assistant and sorts your Inbox in the background. Your notes stay on this computer either way.'),
     el('div', { class: 'library-key', role: 'group', 'aria-label': 'AI' }, ...buttons),
-    status);
+    status, check);
 }
 
 // The Sovran Library (sovran-library.js): the key the student was given, pasted once. Only its last four
