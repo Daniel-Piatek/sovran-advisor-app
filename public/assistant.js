@@ -217,6 +217,33 @@ export async function showAssistant(id) {
   const sendButton = el('button', { type: 'button', class: 'button chat-send', onclick: () => send(input.value) }, 'Send');
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
+  // Model and effort (module ai-pick, ai-pick.js): two choices above the box to ask in, kept for each chat.
+  // Shown while the module is on; the choices are those of the AI that answers now (Claude or ChatGPT).
+  const modelBox = el('select', { class: 'chat-pick-select', 'aria-label': 'Model' });
+  const effortBox = el('select', { class: 'chat-pick-select', 'aria-label': 'Effort' });
+  const pickRow = el('div', { class: 'chat-pick', hidden: true },
+    el('label', { class: 'chat-pick-field' }, el('span', { class: 'chat-pick-label' }, 'Model'), modelBox),
+    el('label', { class: 'chat-pick-field' }, el('span', { class: 'chat-pick-label' }, 'Effort'), effortBox));
+  let pickOn = false;
+  const fillPick = (box, options, value) => box.replaceChildren(...options.map((o) => el('option', {
+    value: o.id, ...(o.id === value ? { selected: true } : {}) }, `${o.label} · ${o.hint}`)));
+  async function drawPick() {
+    try {
+      const state = await request('GET', `/api/assistant/pick${conversation ? `?chat=${conversation.id}` : ''}`);
+      pickOn = state.on;
+      fillPick(modelBox, state.models, state.model);
+      fillPick(effortBox, state.efforts, state.effort);
+    } catch { pickOn = false; }
+    pickRow.hidden = !pickOn;
+  }
+  const savePick = async () => {
+    problem.textContent = '';
+    try {
+      await request('PUT', '/api/assistant/pick', { ...(conversation ? { chat: conversation.id } : {}), model: modelBox.value, effort: effortBox.value });
+    } catch (err) { problem.textContent = err.message; }
+  };
+  modelBox.addEventListener('change', savePick);
+  effortBox.addEventListener('change', savePick);
   const undoPlace = el('div', {});
   // Wide view (2026-11-11, the owner's wish): the conversation in a large window over the page, its size
   // dragged at the corner, closed with the button, Esc or a click beside it. Remembered on this computer.
@@ -257,6 +284,7 @@ export async function showAssistant(id) {
       backdrop,
       el('section', { class: 'chat-pane', 'aria-label': 'Chat' }, el('div', { class: 'chat-pane-bar' }, wideButton), thread,
         call.widget,
+        pickRow,
         el('div', { class: 'chat-composer' }, input, el('span', { class: 'chat-buttons' }, call.button, stopButton, sendButton)), problem)),
     undoPlace,
   );
@@ -311,15 +339,18 @@ export async function showAssistant(id) {
     // A call that went on in writing before anything was said still leaves its line.
     for (const w of written.filter((x) => !messages.length || x.created_at < messages[0].created_at)) nodes.push(writtenLine(w));
     let last = '';
+    let lastWords = ''; // the model named last, so a change of model (ai-pick) gets its line too
     for (const m of messages) {
       if (m.role === 'assistant' && AI_NAMES[m.ai]) {
         const words = aiLabel(m);
         if (!last) nodes.unshift(el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Started with ', aiChip(m.ai, words)));
-        else if (m.ai !== last) {
+        else if (m.ai !== last || (m.model && lastWords && words !== lastWords)) {
           const line = el('p', { class: 'chat-switch', 'data-ai': m.ai }, 'Switched to ', aiChip(m.ai, words));
           const at = nodes.length && nodes.at(-1).dataset.role === 'user' ? nodes.length - 1 : nodes.length;
           nodes.splice(at, 0, line);
         }
+        if (m.model) lastWords = words;
+        else if (m.ai !== last) lastWords = '';
         last = m.ai;
       }
       nodes.push(bubble(m, () => drawThread(), marks[m.id]));
@@ -376,6 +407,7 @@ export async function showAssistant(id) {
     conversation = conversationId ? await assistantApi.get(conversationId) : null;
     drawThread();
     drawList();
+    drawPick();
     setAnswering(Boolean(conversation?.answering));
     if (conversation?.answering) follow();
   }
@@ -399,6 +431,7 @@ export async function showAssistant(id) {
     if (!conversation) {
       conversation = { ...(await assistantApi.create()), messages: [] };
       history.replaceState(null, '', `/assistant/${conversation.id}`);
+      if (pickOn) await savePick(); // the choice made before the chat existed is now this chat's own
     }
     input.value = '';
     const asked = { role: 'user', text: text.trim(), context, created_at: new Date().toISOString(), steps: [] };

@@ -22,6 +22,7 @@ import { localDay } from './entries.js';
 import { moduleOn } from './modules.js';
 import { lifeSummary } from './life.js';
 import { codexArgs, codexEnv, codexModel, lineReader } from './codex.js';
+import { pickArgs } from './ai-pick.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -186,7 +187,7 @@ export const toolsFor = (conversationId) => running.get(conversationId)?.tools ?
 // { type: 'card', card }, then { type: 'done', message }. Resolves with the finished
 // answer. mcp: { url, secret } of the app's tools; context: { path, title } of the page
 // the question was asked on.
-export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, provider = 'claude', send = () => {}, mcp = null, context = null, notes = [], library = null, images = [] }) {
+export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, provider = 'claude', send = () => {}, mcp = null, context = null, notes = [], library = null, images = [], pick = null }) {
   let conversation = getConversation(db, id);
   if (!conversation) throw fail(404, 'There is no such conversation.');
   if (running.has(id)) throw fail(409, 'The assistant is still answering here. Stop it first.');
@@ -246,9 +247,12 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     instructions, sandbox: 'workspace-write', images,
     servers: { ...(mcp ? { app: { url: `${mcp.url}?conversation=${id}`, token: true } } : {}), ...(mcp && library ? { library: { url: library.url } } : {}) },
     resume: sameAI ? codexThread : null,
+    model: pick?.model ?? '', effort: pick?.effort ?? '', // chosen for this chat (ai-pick.js)
   }) : [
     ...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--permission-mode', 'acceptEdits', '--setting-sources', 'user', '--append-system-prompt', instructions, ...mcpArgs,
+    // The model and effort chosen for this chat (ai-pick.js), only while that module is on; none for Usual.
+    ...pickArgs(pick),
     // An allow-list of built-ins, by name (assistant/1): reading, finding, searching and writing its own
     // files. No shell, no web, no slash commands: the app's own tools come over MCP above.
     '--tools=Read,Glob,Grep,Write', '--disable-slash-commands',

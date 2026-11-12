@@ -2737,6 +2737,13 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .chat-buttons { display: flex; gap: var(--space-1); }
 
+/* Model and effort (module ai-pick): two quiet choices above the box to ask in, labels in the menus' font. */
+.chat-pick { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-2); }
+.chat-pick[hidden] { display: none; }
+.chat-pick-field { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.chat-pick-label { font-family: var(--font-ui); font-weight: var(--weight-bold); font-size: var(--text-xs); color: var(--color-text-muted); }
+.chat-pick-select { max-width: 100%; padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); font-family: var(--font-ui); font-weight: var(--weight-medium); font-size: var(--text-sm); }
+
 .question-chip { padding: var(--space-1) var(--space-3); border: var(--line); border-radius: calc(var(--radius-md) * 2); background: none; font: inherit; font-size: var(--text-sm); color: var(--color-text); cursor: pointer; }
 
 .question-chip:hover { background: var(--color-surface); }

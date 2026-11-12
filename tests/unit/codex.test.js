@@ -176,6 +176,9 @@ test('which codex: the one on the PATH first, else on a Mac the one inside the C
   assert.deepEqual(findCodex({ ...mac, isRunnable: has(app) }), [app], 'else the ChatGPT app’s own');
   assert.deepEqual(findCodex({ ...mac, isRunnable: has(mine) }), [mine], 'also in their own Applications folder');
   assert.deepEqual(findCodex({ ...mac, isRunnable: has() }), ['codex'], 'none: plain codex, which reads as not set up');
+  const dock = { platform: 'darwin', home: '/Users/s', env: { PATH: '/usr/bin:/bin' } }; // started from the Dock: a short PATH
+  assert.deepEqual(findCodex({ ...dock, isRunnable: has('/opt/homebrew/bin/codex') }), ['/opt/homebrew/bin/codex'], 'Homebrew’s, though not on the PATH');
+  assert.deepEqual(findCodex({ ...dock, isRunnable: has('/Users/s/.npm-global/bin/codex') }), ['/Users/s/.npm-global/bin/codex'], 'npm’s own folder');
   assert.deepEqual(findCodex({ platform: 'linux', home: '/home/s', env: { PATH: '/usr/bin' }, isRunnable: has(app) }), ['codex'], 'the app’s copy only on a Mac');
   assert.deepEqual(findCodex({ platform: 'win32', env: { PATH: '' }, isRunnable: has(app) }), ['codex'], 'Windows unchanged');
 });
