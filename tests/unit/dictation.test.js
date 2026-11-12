@@ -141,15 +141,18 @@ test('the Dictation API', async (t) => {
   const eleven = await fakeEleven(t);
   const saved = { ...process.env };
   process.env.ELEVENLABS_API_BASE = eleven.base;
+  process.env.VOICE_MODEL_URL = `${eleven.base}/voice-model.tar.bz2`; // never the real download
   delete process.env.ELEVENLABS_API_KEY;
   const app = await startServer({ port: 0, dataDir });
-  t.after(async () => { await app.close(); Object.assign(process.env, saved); if (saved.ELEVENLABS_API_BASE === undefined) delete process.env.ELEVENLABS_API_BASE; fs.rmSync(dataDir, { recursive: true, force: true }); });
+  t.after(async () => { await app.close(); Object.assign(process.env, saved); for (const k of ['ELEVENLABS_API_BASE', 'VOICE_MODEL_URL']) if (saved[k] === undefined) delete process.env[k]; fs.rmSync(dataDir, { recursive: true, force: true }); });
   const send = (method, url, body) => fetch(app.url + url, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
   assert.equal((await send('GET', '/api/dictation/session')).status, 405);
   const none = await send('POST', '/api/dictation/session', {});
-  assert.deepEqual([none.status, (await none.json()).code], [409, 'no_key']);
+  // No key: the free voice model is used, and it is not here yet (its download is refused here).
+  assert.deepEqual([none.status, (await none.json()).code], [409, 'model_not_ready']);
   fs.writeFileSync(path.join(dataDir, 'elevenlabs.key'), 'sk_test');
   const ok = await (await send('POST', '/api/dictation/session', {})).json();
+  assert.equal(ok.engine, 'elevenlabs');
   assert.match(ok.url, /^ws:\/\/127\.0\.0\.1:\d+\/v1\/speech-to-text\/realtime\?.*token=sutkn_test_123/);
   assert.equal((await (await send('GET', '/api/dictation/settings')).json()).has_key, true);
   assert.equal((await send('PUT', '/api/dictation/settings', { hold_key: 'Nope' })).status, 400);

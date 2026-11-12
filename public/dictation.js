@@ -4,7 +4,9 @@
 // as they come (listening), writing, and where they went (done). Its mic button listens hands-free
 // until pressed again. The sound goes to ElevenLabs speech-to-text (Scribe, realtime) over a
 // WebSocket whose address, with a short-lived token, comes from this app's server (the key never
-// leaves it). Every dictation is kept as text; with no field to take it, the words are copied
+// leaves it). With no ElevenLabs key, the free voice model on this computer hears it instead (Whisper,
+// run by this app's server: the sound never leaves the computer); the words come when you let go,
+// and a long dictation is sent in pieces of under 30 seconds. Every dictation is kept as text; with no field to take it, the words are copied
 // to the clipboard and marked Clipboard only.
 
 import { el, icon, request } from './ui.js';
@@ -62,9 +64,14 @@ function rest(after = DONE_MS) {
   doneTimer = setTimeout(() => { if (state === 'done' || state === 'problem') setState('idle'); }, after);
 }
 
-onModulesChanged(draw);
+// With Dictation on and no ElevenLabs key, the free voice model is fetched once, in the background (Settings › Dictation shows how far).
+function prepareModel(s) {
+  if (moduleOn('voice') && s && !s.has_key && (s.local?.state === 'missing' || s.local?.state === 'failed')) request('POST', '/api/dictation/local/prepare', {}).catch(() => {});
+}
+let lastSettings = null;
+onModulesChanged(() => { draw(); prepareModel(lastSettings); });
 draw();
-request('GET', '/api/dictation/settings').then((s) => { holdKey = s.hold_key; draw(); }).catch(() => {});
+request('GET', '/api/dictation/settings').then((s) => { lastSettings = s; holdKey = s.hold_key; draw(); prepareModel(s); }).catch(() => {});
 // Settings changed the hold key.
 document.addEventListener('dictation-settings', (event) => { holdKey = event.detail.hold_key; draw(); });
 
@@ -196,10 +203,14 @@ async function begin({ field, hands }) {
     const session = await request('POST', '/api/dictation/session', {});
     if (mine.cancelled) return;
     mine.fixes = session.fixes ?? [];
-    mine.ws = new WebSocket(session.url);
-    mine.ws.addEventListener('message', (event) => onMessage(mine, event));
-    mine.ws.addEventListener('close', () => { mine.closed = true; mine.finishWait?.(); });
-    mine.ws.addEventListener('error', () => { if (!mine.ready) problem(mine, 'The speech service could not be reached.'); });
+    if (session.engine === 'local') {
+      mine.local = { piece: [], pieceSamples: 0, heard: [], sending: Promise.resolve(), max: (session.max_seconds ?? 30) * SAMPLE_RATE };
+    } else {
+      mine.ws = new WebSocket(session.url);
+      mine.ws.addEventListener('message', (event) => onMessage(mine, event));
+      mine.ws.addEventListener('close', () => { mine.closed = true; mine.finishWait?.(); });
+      mine.ws.addEventListener('error', () => { if (!mine.ready) problem(mine, 'The speech service could not be reached.'); });
+    }
     mine.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     if (mine.cancelled) { teardown(mine); return; }
     mine.context = new AudioContext({ sampleRate: SAMPLE_RATE });
@@ -222,12 +233,44 @@ async function begin({ field, hands }) {
   }
 }
 
+// ---- The free voice model: the sound is kept here and sent in pieces ----
+
+const PIECE_SOON = 22 * SAMPLE_RATE; // after 22 seconds a piece ends at the next quiet moment,
+const QUIET = 0.01; // (a tenth of a second this soft is a pause between words)
+
+function keepLocal(mine, pcm, loudness, commit) {
+  const local = mine.local;
+  local.piece.push(pcm);
+  local.pieceSamples += pcm.length;
+  const full = local.pieceSamples + CHUNK > local.max - SAMPLE_RATE; // and always a second before 30
+  if (commit || full || (local.pieceSamples >= PIECE_SOON && loudness < QUIET)) sendPiece(mine);
+}
+
+function sendPiece(mine) {
+  const local = mine.local;
+  if (!local.pieceSamples) return;
+  const pcm = new Int16Array(local.pieceSamples);
+  let at = 0;
+  for (const part of local.piece) { pcm.set(part, at); at += part.length; }
+  local.piece = [];
+  local.pieceSamples = 0;
+  const index = local.heard.length;
+  local.heard.push('');
+  const asked = request('POST', '/api/dictation/local', { audio: bytesToBase64(new Uint8Array(pcm.buffer)) });
+  // In order: each piece's words are kept in its place, and shown in the pill as they come.
+  local.sending = local.sending.then(() => asked).then((answer) => {
+    local.heard[index] = answer.text ?? '';
+    if (state === 'listening' && run === mine) { words = local.heard.filter(Boolean).join(' '); draw(); }
+  }, (err) => { local.failed = err?.message || 'The free voice model could not hear that.'; });
+}
+
 function sendChunk(mine, samples, commit) {
   let sum = 0;
   const pcm = new Int16Array(samples.length);
   for (let i = 0; i < samples.length; i++) { const s = Math.max(-1, Math.min(1, samples[i])); pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff; sum += s * s; }
   level = Math.sqrt(sum / Math.max(1, samples.length)) * 6;
   draw();
+  if (mine.local) { keepLocal(mine, pcm, Math.sqrt(sum / Math.max(1, samples.length)), commit); return; }
   const message = JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: bytesToBase64(new Uint8Array(pcm.buffer)), commit, sample_rate: SAMPLE_RATE });
   if (mine.ready) mine.ws.send(message); else mine.pending.push(message);
 }
@@ -286,6 +329,16 @@ export async function finish() {
   mine.stream?.getTracks().forEach((track) => track.stop());
   const last = mine.tail?.length ? mine.tail : new Float32Array(CHUNK); // the commit rides on the last chunk (100 ms of silence if none is left)
   sendChunk(mine, last, true);
+  if (mine.local) {
+    await mine.local.sending;
+    if (mine.cancelled || run !== mine) return;
+    if (mine.local.failed) { problem(mine, mine.local.failed); return; }
+    const heard = mine.local.heard.filter(Boolean).join(' ').trim();
+    teardown(mine);
+    run = null;
+    await deliver(mine, heard);
+    return;
+  }
   await new Promise((resolve) => { mine.finishWait = resolve; setTimeout(resolve, COMMIT_WAIT_MS); });
   if (mine.cancelled || run !== mine) return;
   const text = (mine.committed || mine.partial).trim();

@@ -3134,6 +3134,8 @@ button.mic-pill:hover { color: var(--color-text); }
 .lib-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 .dictation-key { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.dictation-local { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.dictation-local .empty { flex: 1 1 var(--card-min-width); margin: 0; }
 
 .dictation-key .detail-input { flex: 1 1 var(--card-min-width); width: auto; }
 

@@ -116,9 +116,11 @@ while the computer is switched on and awake.
 **Speaking instead of typing.** Two ways, both optional:
 - Free, nothing to set up: the microphone key on the phone's own keyboard works in every field.
 - The app's **Dictation** (Settings › Modules): on a computer, hold a key and speak; on a phone,
-  tap "Tap to dictate" at the foot of the page, speak, tap Done. It uses ElevenLabs speech to
-  text, so the person needs their own ElevenLabs account and key (paste it into Settings ›
-  Dictation). The key stays on their computer.
+  tap "Tap to dictate" at the foot of the page, speak, tap Done. It is free: a voice model
+  (Whisper) runs on their own computer, fetched once (about 200 MB) when Dictation is first
+  switched on, and their voice never leaves the computer. Optional: their own ElevenLabs key
+  (paste it into Settings › Dictation) shows the words while they speak; the key stays on their
+  computer.
 
 ## For Claude or Codex: updating it ("update Sovran Advisor")
 

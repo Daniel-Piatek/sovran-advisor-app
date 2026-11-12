@@ -47,7 +47,7 @@ export const MODULES = [
   },
   {
     id: 'voice',
-    starter: false, // off in a new install: it needs your own ElevenLabs key
+    starter: false, // off in a new install. On: the free voice model is fetched once (about 200 MB); an ElevenLabs key is optional
     label: 'Dictation',
     description: 'Hold a key in any field, speak, let go: your words land at the cursor. Every dictation is kept as text in Settings.',
   },

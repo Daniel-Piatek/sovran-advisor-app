@@ -144,17 +144,57 @@ test('no key yet says where to put it; a service that refuses says so; nothing i
   expect(await send(app, 'GET', '/api/dictations')).toEqual([]);
 });
 
-test.describe('without a key', () => {
+test.describe('without a key, with the free voice model', () => {
+  test.use({ elevenKey: '', voiceHears: 'see you at North light' });
+  test('the model on this computer hears it: the words land when you let go, the glossary fixes them, the history keeps them, and ElevenLabs is never asked', async ({ page, app }) => {
+    await send(app, 'POST', '/api/glossary', { term: 'Nordlicht', heard_as: 'North light' });
+    const note = await app.createNote({ title: 'Onboarding call with Lena', body: 'Met Lena.' });
+    let pieces = 0;
+    page.on('request', (r) => { if (r.url().endsWith('/api/dictation/local')) pieces++; });
+    await page.goto(`${app.url}/notes/${note.id}`);
+    const text = page.getByRole('textbox', { name: 'Text', exact: true });
+    await text.click();
+    await page.keyboard.press('Control+End');
+    await hold(page, 1200);
+    await expect(pill(page)).toHaveAttribute('data-state', 'listening');
+    await page.keyboard.up('AltRight');
+    await expect(text).toContainText('Met Lena. see you at Nordlicht');
+    await expect(pill(page)).toContainText('your glossary fixed 1');
+    expect(pieces).toBe(1);
+    const [kept] = await send(app, 'GET', '/api/dictations');
+    expect([kept.text, kept.outcome]).toEqual(['see you at Nordlicht', 'inserted']);
+    expect(app.eleven.asked).toEqual([]);
+    await page.goto(`${app.url}/settings`);
+    const section = page.getByRole('region', { name: 'Dictation' });
+    await expect(section).toContainText('Free voice model: ready. Your voice is turned into words on this computer and never leaves it.');
+    await expect(section).toContainText('Optional: an ElevenLabs key');
+    await expect(section.getByRole('button', { name: 'Get it now' })).toBeHidden();
+  });
+
+  test('the mic in the pill listens hands-free until Done', async ({ page, app }) => {
+    await page.goto(`${app.url}/journal`);
+    await page.getByRole('button', { name: /^Dictate/ }).click();
+    await expect(pill(page)).toContainText('Listening…');
+    await page.waitForTimeout(800);
+    await pill(page).getByRole('button', { name: 'Done' }).click();
+    await expect(pill(page)).toContainText(/copied to the clipboard|Wrote 5 words/);
+    expect((await send(app, 'GET', '/api/dictations')).map((d) => d.text)).toEqual(['see you at North light']);
+  });
+});
+
+test.describe('without a key, before the free voice model is here', () => {
   test.use({ elevenKey: '', expectedConsoleErrors: [/status of 409/] }); // the session is refused, on purpose
-  test('the pill and Settings say where the key goes, and the key is never shown', async ({ page, app }) => {
+  test('the pill says the model is being fetched (or why not), Settings offers to try again, and the key is never shown', async ({ page, app }) => {
     await page.goto(`${app.url}/tasks`);
   await page.keyboard.press('q'); // the quick-add box
     await page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' }).click();
     await hold(page);
-    await expect(pill(page)).toContainText('There is no ElevenLabs key yet. Put it in the file data/elevenlabs.key');
+    await expect(pill(page)).toContainText(/free voice model|voice model could not be downloaded/);
     await page.keyboard.up('AltRight');
     await page.goto(`${app.url}/settings`);
-    await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('No ElevenLabs key yet.');
+    await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('Free voice model: The voice model could not be downloaded (404).');
+    await expect(page.getByRole('region', { name: 'Dictation' }).getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('Optional: an ElevenLabs key');
     // Pasting it once into Settings keeps it; it is never shown again.
     const section = page.getByRole('region', { name: 'Dictation' });
     const field = section.getByLabel('ElevenLabs key');
@@ -163,12 +203,12 @@ test.describe('without a key', () => {
     expect(await field.evaluate((input) => getComputedStyle(input).webkitTextSecurity)).toBe('disc'); // but shown as dots
     await section.getByLabel('ElevenLabs key').fill('sk_pasted_test_key');
     await section.getByRole('button', { name: 'Save key' }).click();
-    await expect(section).toContainText('Speech to text is connected');
+    await expect(section).toContainText('ElevenLabs is connected and used instead of the free model');
     await expect(section.getByLabel('ElevenLabs key')).toHaveValue('');
     expect(await page.content()).not.toContain('sk_pasted_test_key');
     await expect(section.getByRole('button', { name: 'Remove key' })).toBeVisible();
     await section.getByRole('button', { name: 'Remove key' }).click();
-    await expect(section).toContainText('No ElevenLabs key yet.');
+    await expect(section).toContainText('Optional: an ElevenLabs key');
   });
 });
 
