@@ -3289,7 +3289,7 @@ button.mic-pill:hover { color: var(--color-text); }
 .inbox-pile:first-child { margin-top: 0; border-top: 0; }
 
 /* Tasks in depth 8: the Inbox's four views (the Tabs), and a row of Snoozed, Done or Trash with the one button that brings it back. */
-.inbox-views { margin: var(--space-2) 0; flex-wrap: nowrap; }
+.inbox-views { margin: var(--space-2) 0; padding-bottom: var(--space-3); border-bottom: var(--line); flex-wrap: nowrap; } /* a thin line between the views and Inner / Outer */
 
 /* Done and Trash are a symbol (their name is the button's label); the four tabs stay on one line. */
 .inbox-views .tab { display: inline-flex; align-items: center; white-space: nowrap; }
