@@ -215,3 +215,67 @@ export function listDeletedLifeItems(db) {
   return brief(db, `SELECT id, kind, title, deleted_at FROM life_items WHERE deleted_at IS NOT NULL
     ORDER BY deleted_at DESC, rowid DESC`);
 }
+
+// ---- What the assistant knows of My Life (pkm/3, step 4) ----
+
+const KIND_NAMES = { key_element: 'Key Element', goal: 'Goal', project: 'Project', topic: 'Topic', habit: 'Habit' };
+export const kindName = (kind) => KIND_NAMES[kind] ?? kind;
+
+// Why an item exists, from the item up: Project, Goal, Key Element. A Project or Habit
+// that serves several Goals has one chain per Goal; one that serves none goes straight to
+// its home Key Element.
+export function lifeChains(db, id) {
+  const item = getLifeItem(db, id);
+  if (!item) return [];
+  const step = (i) => ({ id: i.id, kind: kindName(i.kind), title: i.title });
+  const homeOf = (i) => (i.home_id ? db.prepare('SELECT id, kind, title FROM life_items WHERE id = ? AND deleted_at IS NULL').get(i.home_id) : null);
+  if (item.kind === 'key_element') return [[step(item)]];
+  const goals = item.serves.filter((g) => g.kind === 'goal');
+  if (!goals.length) {
+    const home = homeOf(item);
+    return [[step(item), ...(home ? [step(home)] : [])]];
+  }
+  return goals.map((goal) => {
+    const home = homeOf(itemRow(db, goal.id));
+    return [step(item), step(goal), ...(home ? [step(home)] : [])];
+  });
+}
+
+// A short summary of My Life for the assistant: the active Key Elements and, under each,
+// its active Goals with what carries them, and its active Projects, Habits and Topics.
+// habits: false leaves Habits out (the My Life in depth module is off); max cuts it at so
+// many characters. Nothing in My Life: ''.
+export function lifeSummary(db, { habits = true, max = Infinity } = {}) {
+  const items = db.prepare(`SELECT id, kind, title, home_id FROM life_items WHERE deleted_at IS NULL AND state = 'active'
+    ${habits ? '' : "AND kind != 'habit'"} ORDER BY title COLLATE NOCASE`).all();
+  if (!items.length) return '';
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const carriers = new Map();
+  for (const row of db.prepare('SELECT item_id, goal_id FROM life_serves WHERE deleted_at IS NULL').all()) {
+    const carrier = byId.get(row.item_id);
+    if (carrier && byId.has(row.goal_id)) carriers.set(row.goal_id, [...(carriers.get(row.goal_id) ?? []), carrier]);
+  }
+  const named = (i) => `${kindName(i.kind)} “${i.title}”`;
+  const lines = [];
+  const section = (home, label) => {
+    const under = items.filter((i) => i.kind !== 'key_element' && (i.home_id ?? null) === home);
+    if (!label && !under.length) return;
+    lines.push(label ?? 'Not under a Key Element:');
+    for (const goal of under.filter((i) => i.kind === 'goal')) {
+      const carried = carriers.get(goal.id) ?? [];
+      lines.push(`  - ${named(goal)}, carried by ${carried.length ? carried.map(named).join(', ') : 'nothing yet'}`);
+    }
+    for (const kind of ['project', 'habit', 'topic']) {
+      const of = under.filter((i) => i.kind === kind);
+      if (of.length) lines.push(`  - ${kindName(kind)}s: ${of.map((i) => `“${i.title}”`).join(', ')}`);
+    }
+  };
+  for (const element of items.filter((i) => i.kind === 'key_element')) section(element.id, `Key Element “${element.title}”:`);
+  section(null, null);
+  // Items whose home is archived or deleted are still active: list them so nothing is hidden.
+  const shown = new Set([null, ...items.filter((i) => i.kind === 'key_element').map((i) => i.id)]);
+  const orphans = items.filter((i) => i.kind !== 'key_element' && !shown.has(i.home_id ?? null));
+  if (orphans.length) lines.push(`Under an archived Key Element: ${orphans.map(named).join(', ')}`);
+  const text = lines.join('\n');
+  return text.length > max ? `${text.slice(0, max)}\n… (the rest: my_life)` : text;
+}
