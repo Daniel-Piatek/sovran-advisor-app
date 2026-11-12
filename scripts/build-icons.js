@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from '@playwright/test';
-import { root, outDir, roundSvg, tileSvg, pngs, icnsSizes, iconsetNames, manifest, ico } from './icons.js';
+import { root, outDir, roundSvg, tileSvg, pngs, icnsSizes, iconsetNames, manifest, quickManifest, ico } from './icons.js';
 
 const svgs = { round: roundSvg(), tile: tileSvg() };
 
@@ -46,9 +46,11 @@ execFileSync('iconutil', ['-c', 'icns', '-o', path.join(outDir, 'app.icns'), ico
 fs.rmSync(path.dirname(iconset), { recursive: true, force: true });
 
 fs.writeFileSync(path.join(root, 'public', 'manifest.webmanifest'), manifest());
+fs.writeFileSync(path.join(root, 'public', 'quick.webmanifest'), quickManifest());
 
 await browser.close();
 for (const file of fs.readdirSync(outDir).sort()) {
   console.log(`public/icons/${file}  ${fs.statSync(path.join(outDir, file)).size} bytes`);
 }
 console.log('public/manifest.webmanifest');
+console.log('public/quick.webmanifest');

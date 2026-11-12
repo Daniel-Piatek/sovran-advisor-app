@@ -286,8 +286,9 @@ export function startRouter(list) {
   document.addEventListener('click', (event) => {
     const link = event.target.closest('a[href^="/"]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
-    // Links inside text being written belong to the editor, and a kept file opens as itself.
-    if (link.closest('[contenteditable="true"]') || link.getAttribute('href').startsWith('/files/')) return;
+    // Links inside text being written belong to the editor, a kept file opens as itself, and a download or a link
+    // to a new tab (Settings › Phone, backups and moving) does what it says.
+    if (link.closest('[contenteditable="true"]') || link.getAttribute('href').startsWith('/files/') || link.hasAttribute('download') || link.target === '_blank') return;
     event.preventDefault();
     navigate(link.getAttribute('href'));
   });

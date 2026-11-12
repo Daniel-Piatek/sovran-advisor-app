@@ -108,6 +108,16 @@ export const MODULES = [
     tools: ['list_comments', 'reply_to_comment'],
   },
   {
+    // The manifest (advanced/everywhere 3, 8 and 11, the Sovran Advisor way: no cloud account, nothing to pay): a capture
+    // page for the phone's home screen, the daily backups each checked, and a moving file for a new computer. Off, the
+    // page and the Settings part are gone; the daily backup itself always runs.
+    id: 'everywhere',
+    starter: false, // off in a new install: switch it on in Settings › Modules
+    label: 'Phone, backups and moving',
+    description: 'A Capture icon for your phone’s home screen that keeps a thought in your Inbox in two taps. Your daily backups, each checked. And one moving file that takes everything to a new computer.',
+    public: ['GET /quick'],
+  },
+  {
     // The manifest (advanced/mail/1): a place after the Inbox, the Google permissions it may ask for, its tables and tools.
     // Off in a new install and dormant: it holds no Google credentials, and its jobs (sync, sending) do nothing while it is off.
     id: 'mail',

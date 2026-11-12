@@ -92,7 +92,8 @@ import { handleMcp } from './mcp.js';
 import { getWelcome, setWelcome } from './welcome.js';
 import { chosenAI, getAssistantChoice, setProvider } from './ai.js';
 import { findCodex } from './codex.js';
-import { startBackups } from './backup.js';
+import { startBackups, listBackups, checkAllBackups } from './backup.js';
+import { writeMoveFile, moveFileName, receiveMoveFile, moveStatus, cancelMove, confirmMove, applyPendingMove } from './move.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
@@ -131,6 +132,9 @@ export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
 } = {}) {
+  // A moving file you said yes to (Settings › Phone, backups and moving) takes the place of what is here, before the
+  // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
+  try { applyPendingMove(dataDir); } catch (err) { console.error(`The moving file could not be brought in: ${err.message}`); }
   const db = openDatabase(dataDir);
   settleAnswers(db);
   settleImports(db);
@@ -1507,6 +1511,59 @@ export function startServer({
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
     }
+    // Phone, backups and moving (module everywhere, myICOR advanced/everywhere 3, 8 and 11; off in a new install):
+    //   GET    /api/backups            the kept daily copies, newest first, each with its check { ok, rows, tables, problem? }
+    //   POST   /api/backups/check {}   checks every kept copy again
+    //   GET    /api/move/file          downloads a moving file: the database and every kept file, in one .tar.gz
+    //   GET    /api/move               what waits to be brought in, and the last move
+    //   POST   /api/move               a moving file as the body (Content-Type: application/x-sovran-move): read, checked, waits
+    //   POST   /api/move/confirm {}    your yes: it takes the place of what is here at the restart that follows
+    //   DELETE /api/move               the moving file that waits is put away; nothing changes
+    //   GET    /api/phone              { addresses }: where a phone opens the Capture page (the private names in data/hosts.txt)
+    if (url.pathname === '/api/phone' || url.pathname === '/api/backups' || url.pathname === '/api/backups/check' || url.pathname.startsWith('/api/move')) {
+      if (!moduleOn(db, 'everywhere')) return sendJson(res, 409, { error: 'Phone, backups and moving is switched off (Settings › Modules).' });
+      if (url.pathname === '/api/phone') {
+        if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+        return sendJson(res, 200, { addresses: hosts.map((h) => `https://${h}/quick`) });
+      }
+      const shown = (list) => list.map(({ day, bytes, check }) => ({ day, bytes, check }));
+      if (url.pathname === '/api/backups') {
+        if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+        return sendJson(res, 200, shown(listBackups(dataDir)));
+      }
+      if (url.pathname === '/api/backups/check') {
+        if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+        await readJson(req);
+        return sendJson(res, 200, shown(checkAllBackups(dataDir)));
+      }
+      if (url.pathname === '/api/move/file') {
+        if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+        res.writeHead(200, { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="${moveFileName()}"`, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        try { await writeMoveFile(db, dataDir, res); } catch { res.destroy(); }
+        return undefined;
+      }
+      if (url.pathname === '/api/move/confirm') {
+        if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+        await readJson(req);
+        const status = confirmMove(dataDir);
+        if (!onRestart) return sendJson(res, 200, { ...status, restarting: false });
+        sendJson(res, 200, { ...status, restarting: true });
+        setTimeout(onRestart, 100);
+        return undefined;
+      }
+      if (url.pathname === '/api/move') {
+        if (req.method === 'GET') return sendJson(res, 200, moveStatus(dataDir));
+        if (req.method === 'DELETE') return sendJson(res, 200, cancelMove(dataDir));
+        if (req.method === 'POST') {
+          // A type another website can't send without asking first (and this server never says yes): only the app's own page.
+          if (req.headers['content-type'] !== 'application/x-sovran-move') return sendJson(res, 415, { error: 'Send the moving file as application/x-sovran-move.' });
+          return sendJson(res, 200, { ...(await receiveMoveFile(dataDir, req)), waiting: true, confirmed: false });
+        }
+        return sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      return sendJson(res, 404, { error: 'Not found' });
+    }
+
     // POST /api/quit {}   stops the app (npm run stop; updating needs it stopped). Only when started as the app itself.
     if (url.pathname === '/api/quit' && onQuit) {
       if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
@@ -1945,6 +2002,17 @@ export function startServer({
         'Cache-Control': 'private, max-age=31536000, immutable',
       });
       return fs.createReadStream(onDisk).pipe(res);
+    }
+
+    // The capture page for a phone's home screen (module everywhere, myICOR advanced/everywhere/8): /quick opens straight
+    // into a box that keeps one thought in the Inbox. While the module is off it says so and points to Settings.
+    if (req.method === 'GET' && url.pathname === '/quick') {
+      const file = path.join(publicDir, moduleOn(db, 'everywhere') ? 'quick.html' : 'quick-off.html');
+      return fs.readFile(file, (err, body) => {
+        if (err) return sendJson(res, 404, { error: 'Not found' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end(body);
+      });
     }
 
     // Static files: only from public/, never from anywhere else. A path without a file
