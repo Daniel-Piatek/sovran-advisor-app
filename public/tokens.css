@@ -26,6 +26,7 @@
   --color-text-muted: #555151;  /* secondary text, empty states */
   --color-text-faint: #7b7777;  /* hints and placeholders only, never your own words (2026-10-26) */
   --color-border: #d4d1d1;      /* lines and outlines */
+  --color-border-strong: #b3afaf; /* an outline just darker than the rest (the Inbox's Inner and Outer) */
   --color-accent: #c71f42;      /* the one accent: brand Crimson, only on the action that matters most on a screen (2026-11-08) */
   --color-accent-text: #fbfbfb; /* text on the accent */
   /* A warning (time/2): the Planner's day when it holds too much. Always with words. */
@@ -170,6 +171,7 @@
   --color-text-muted: #aaa6a6;
   --color-text-faint: #8c8888;
   --color-border: #413d3d;
+  --color-border-strong: #5e5959;
   --color-accent: #ea5575;      /* Crimson, lightened to read on the dark page */
   --color-accent-text: #1f1d1d;
   --color-warning: #e8a33d;

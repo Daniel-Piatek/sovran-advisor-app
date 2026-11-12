@@ -468,8 +468,8 @@ test('the Inbox has four views with their counts; s snoozes, d marks done, l let
   await makeCapture(app, 'Slept badly, a short walk helped', 'inner');
   await page.goto(`${app.url}/inbox`);
   await page.locator('body').click({ position: { x: 5, y: 5 } });
-  await expect(page.getByRole('tablist', { name: 'Inbox views' }).getByRole('tab')).toHaveText([/To sort/, /Snoozed/, /Done/, /Trash/]);
-  await expect(viewTab(page, 'To sort')).toContainText('3');
+  await expect(page.getByRole('tablist', { name: 'Inbox views' }).getByRole('tab')).toHaveText([/Sort/, /Snoozed/, '', '']);
+  await expect(viewTab(page, 'Sort')).toContainText('3');
 
   // s: snooze the one the keys are on (the Inner pile comes first: the idea).
   await items(page).filter({ hasText: 'Idea: a one-page summary' }).click();
@@ -489,25 +489,25 @@ test('the Inbox has four views with their counts; s snoozes, d marks done, l let
   await expect(page.getByText('Nothing waits.')).toBeVisible();
   await page.goto(`${app.url}/inbox`);
   await expect(viewTab(page, 'Trash')).toContainText('1');
-  await expect(viewTab(page, 'To sort')).not.toContainText('1');
+  await expect(viewTab(page, 'Sort')).not.toContainText('1');
 
   await viewTab(page, 'Snoozed').click();
   const row = page.locator('.inbox-other-row');
   await expect(row).toContainText('Idea: a one-page summary');
   await expect(row).toContainText('Back ');
   await row.getByRole('button', { name: 'Wake now' }).click();
-  await expect(viewTab(page, 'To sort')).toContainText('1');
+  await expect(viewTab(page, 'Sort')).toContainText('1');
 
   await viewTab(page, 'Done').click();
   await expect(page.locator('.inbox-other-row')).toContainText('Slept badly');
   await page.locator('.inbox-other-row').getByRole('button', { name: 'Back to the Inbox' }).click();
-  await expect(viewTab(page, 'To sort')).toContainText('2');
+  await expect(viewTab(page, 'Sort')).toContainText('2');
 
   await viewTab(page, 'Trash').click();
   await expect(page.locator('.inbox-other-row')).toContainText('Newsletter: pricing ideas');
   await page.locator('.inbox-other-row').getByRole('button', { name: 'Restore' }).click();
   await expect(page.getByText('The Trash is empty.')).toBeVisible();
-  await viewTab(page, 'To sort').click();
+  await viewTab(page, 'Sort').click();
   await expect(items(page)).toHaveCount(3);
   await expect(page.locator('.inbox-pile')).toHaveText([/Inner World · 2/, /Outer World · 1/]);
 });

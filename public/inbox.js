@@ -79,17 +79,19 @@ export async function showInbox() {
     onclick: () => { worldFilter = worldFilter === name ? null : name; draw(); },
   }, icon(`world_${name}`), name === 'inner' ? 'Inner' : 'Outer'));
   const filters = el('div', { class: 'inbox-worlds', role: 'group', 'aria-label': 'Show one world' }, ...filterButtons);
-  // Tasks in depth 8: four views of the Inbox, each with its count (To sort, Snoozed, Done, Trash).
+  // Tasks in depth 8: four views of the Inbox, each with its count (Sort, Snoozed, Done, Trash).
   let shownView = 'sort';
   let counts = { waiting: 0, snoozed: 0, done: 0, trash: 0 };
-  const VIEWS = [['sort', 'To sort', 'waiting'], ['snoozed', 'Snoozed', 'snoozed'], ['done', 'Done', 'done'], ['trash', 'Trash', 'trash']];
+  // Sort and Snoozed are words; Done is a check mark and Trash a bin (the name stays as its label), so all four sit on one line.
+  const VIEWS = [['sort', 'Sort', 'waiting'], ['snoozed', 'Snoozed', 'snoozed'], ['done', 'Done', 'done', 'check'], ['trash', 'Trash', 'trash', 'trash']];
   const viewTabs = el('div', { class: 'tabs inbox-views', role: 'tablist', 'aria-label': 'Inbox views' });
   const drawViewTabs = () => {
     viewTabs.hidden = !moduleOn('tasks-plus');
-    viewTabs.replaceChildren(...VIEWS.map(([key, name, count]) => el('button', {
-      type: 'button', class: 'tab', role: 'tab', 'aria-selected': String(shownView === key),
+    viewTabs.replaceChildren(...VIEWS.map(([key, name, count, symbol]) => el('button', {
+      type: 'button', class: symbol ? 'tab tab-symbol' : 'tab', role: 'tab', 'aria-selected': String(shownView === key),
+      ...(symbol ? { 'aria-label': name, title: name } : {}),
       onclick: () => { shownView = key; draw(); },
-    }, name, counts[count] ? el('span', { class: 'tab-count' }, String(counts[count])) : null)));
+    }, symbol ? icon(symbol) : name, counts[count] ? el('span', { class: 'tab-count' }, String(counts[count])) : null)));
   };
   const listPanel = el('aside', { class: 'inbox-list-panel' },
     viewTabs, filters, list);
