@@ -39,3 +39,19 @@ test('choose a model and effort for a chat; a line shows the change', async ({ p
   await page.getByRole('link', { name: 'New chat' }).click();
   await expect(model).toHaveValue('haiku');
 });
+
+test('with ChatGPT answering, the choices are ChatGPT’s own, and Claude’s are kept for later', async ({ page, app }) => {
+  const put = (url, body) => fetch(`${app.url}${url}`, { method: url === '/api/modules' ? 'PATCH' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  await put('/api/modules', { id: 'ai-pick', on: true });
+  await put('/api/assistant/pick', { model: 'haiku' });
+  await put('/api/assistant/ai', { provider: 'codex' });
+  await page.goto(`${app.url}/assistant`);
+  const model = page.getByRole('combobox', { name: 'Model' });
+  await expect(model).toHaveValue('');
+  await expect(model.locator('option')).toHaveText(['Usual · ChatGPT’s own choice', 'GPT-6 Luna · quick and light', 'GPT-6.1 Sol · everyday work', 'GPT-6 Astra · most capable, uses your plan fastest']);
+  await model.selectOption('gpt-6-luna');
+  await expect.poll(async () => (await (await fetch(`${app.url}/api/assistant/pick`)).json()).model).toBe('gpt-6-luna');
+  await put('/api/assistant/ai', { provider: 'claude' });
+  await page.reload();
+  await expect(model).toHaveValue('haiku');
+});

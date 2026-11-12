@@ -247,6 +247,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     instructions, sandbox: 'workspace-write', images,
     servers: { ...(mcp ? { app: { url: `${mcp.url}?conversation=${id}`, token: true } } : {}), ...(mcp && library ? { library: { url: library.url } } : {}) },
     resume: sameAI ? codexThread : null,
+    model: pick?.model ?? '', effort: pick?.effort ?? '', // chosen for this chat (ai-pick.js)
   }) : [
     ...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--permission-mode', 'acceptEdits', '--setting-sources', 'user', '--append-system-prompt', instructions, ...mcpArgs,

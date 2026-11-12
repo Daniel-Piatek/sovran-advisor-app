@@ -62,12 +62,14 @@ export function featuresOff(command) {
 const toml = (value) => JSON.stringify(value); // a JSON string or list is a TOML one too
 
 // The arguments for one turn. servers: { name: { url, token? } } (token: the app's secret, sent
-// from the environment); resume: the Codex thread to carry on; images: files to attach.
-export function codexArgs(command, { instructions = '', servers = {}, sandbox = 'read-only', resume = null, images = [], tools = {} } = {}) {
+// from the environment); resume: the Codex thread to carry on; images: files to attach; model and effort: the
+// ones chosen for the chat (ai-pick.js), '' for Codex's own.
+export function codexArgs(command, { instructions = '', servers = {}, sandbox = 'read-only', resume = null, images = [], tools = {}, model = '', effort = '' } = {}) {
   const config = [
     'approval_policy="never"', // nothing to ask: what it may do is set here, and changes wait on the app's cards
     'web_search="disabled"',
     ...(instructions ? [`developer_instructions=${toml(instructions)}`] : []),
+    ...(effort ? [`model_reasoning_effort=${toml(effort)}`] : []),
   ];
   for (const [name, server] of Object.entries(servers)) {
     config.push(`mcp_servers.${name}.url=${toml(server.url)}`);
@@ -78,6 +80,7 @@ export function codexArgs(command, { instructions = '', servers = {}, sandbox = 
   return [
     ...command.slice(1), 'exec', '--json', '--skip-git-repo-check', '--ignore-user-config', '--ignore-rules', '--color', 'never',
     '--sandbox', sandbox,
+    ...(model ? ['--model', model] : []),
     ...featuresOff(command).flatMap((name) => ['--disable', name]),
     ...config.flatMap((c) => ['-c', c]),
     ...(resume ? ['resume', resume] : []),

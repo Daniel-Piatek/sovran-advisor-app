@@ -218,7 +218,7 @@ export async function showAssistant(id) {
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   // Model and effort (module ai-pick, ai-pick.js): two choices above the box to ask in, kept for each chat.
-  // Shown only while the module is on and Claude answers (ChatGPT has its own).
+  // Shown while the module is on; the choices are those of the AI that answers now (Claude or ChatGPT).
   const modelBox = el('select', { class: 'chat-pick-select', 'aria-label': 'Model' });
   const effortBox = el('select', { class: 'chat-pick-select', 'aria-label': 'Effort' });
   const pickRow = el('div', { class: 'chat-pick', hidden: true },
@@ -234,7 +234,7 @@ export async function showAssistant(id) {
       fillPick(modelBox, state.models, state.model);
       fillPick(effortBox, state.efforts, state.effort);
     } catch { pickOn = false; }
-    pickRow.hidden = !pickOn || chosen === 'codex';
+    pickRow.hidden = !pickOn;
   }
   const savePick = async () => {
     problem.textContent = '';
@@ -401,7 +401,6 @@ export async function showAssistant(id) {
   request('GET', '/api/assistant/ai').then((state) => {
     chosen = state.provider;
     input.placeholder = `Ask your assistant (${AI_NAMES[chosen] ?? 'Claude'})`;
-    pickRow.hidden = !pickOn || chosen === 'codex';
   }).catch(() => {});
 
   async function load(conversationId) {
