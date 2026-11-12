@@ -46,8 +46,7 @@ export const MODULES = [
     description: 'Type @ for a person or @@ for a company in any text, a task’s words too. Their page lists every place you named them.',
   },
   {
-    id: 'voice',
-    starter: false, // off in a new install. On: the free voice model is fetched once (about 200 MB); an ElevenLabs key is optional
+    id: 'voice', // on in a new install (2026-11-12, the owner's wish): the free voice model is fetched once (about 200 MB) at the first dictation; an ElevenLabs key is optional
     label: 'Dictation',
     description: 'Hold a key in any field, speak, let go: your words land at the cursor. Every dictation is kept as text in Settings.',
   },
@@ -120,17 +119,15 @@ export const MODULES = [
   {
     // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title
     // that opens it beside the page (public/help.js), and the assistant's docs_read. Off, the "?" and the tool go.
-    id: 'help',
-    starter: false, // off in a new install: switch it on in Settings › Modules
+    id: 'help', // on in a new install (2026-11-12, the owner's wish)
     label: 'Help pages',
     description: 'A “?” after every page’s title opens a short page on what it is for and how to use it. Your assistant reads the same pages when you ask “how does this work?”.',
     tools: ['docs_read'],
   },
   {
     // Model and effort (2026-11-12, the owner's wish): which Claude model answers in a chat and how hard it thinks,
-    // two choices above the box to ask in (ai-pick.js). Off: Claude Code's own choice, as before; the choices stay kept.
-    id: 'ai-pick',
-    starter: false, // off in a new install: switch it on in Settings › Modules
+    // two choices above the box to ask in (ai-pick.js). Off: the AI's own choice, as before; the choices stay kept.
+    id: 'ai-pick', // on in a new install (2026-11-12, the owner's wish); Usual changes nothing until a choice is made
     label: 'Model and effort',
     description: 'Choose, for each chat, which Claude model answers (quick Haiku to the most capable) and how long it thinks before it answers. Usual leaves it to Claude Code.',
   },

@@ -31,6 +31,7 @@ test('star a task and make it today’s Highlight: it is at the top; pick anothe
 
 test('* in the add bar makes a Weekly Goal; the sixth gets a word, never a stop', async ({ page, app }) => {
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q');
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.fill('write the offer * fri');

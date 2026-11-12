@@ -46,8 +46,10 @@ test('off: no flags and no choosing; on: the chat’s choice reaches the claude 
     method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body),
   });
   const chat = await (await send('POST', '/api/conversations', {})).json();
+  assert.equal((await (await send('GET', `/api/assistant/pick?chat=${chat.id}`)).json()).on, true, 'on in a new install');
+  await send('PATCH', '/api/modules', { id: 'ai-pick', on: false });
   const state = await (await send('GET', `/api/assistant/pick?chat=${chat.id}`)).json();
-  assert.equal(state.on, false, 'off in a new install');
+  assert.equal(state.on, false, 'switched off');
   assert.equal((await send('PUT', '/api/assistant/pick', { chat: chat.id, model: 'haiku' })).status, 409);
   await (await send('POST', `/api/conversations/${chat.id}/messages`, { text: 'Hello' })).text();
   let args = lastRun(dataDir, chat).args;

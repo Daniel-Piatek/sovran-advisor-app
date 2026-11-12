@@ -36,6 +36,7 @@ test.describe('a bad address', () => {
   await mod(app, true);
   await page.goto(`${app.url}/settings`);
   const part = page.getByRole('region', { name: 'Course' });
+  await expect(part.getByRole('status')).toContainText('No course page yet'); // the saved address has come in (it would fill over what is typed)
   await part.getByLabel('Course page address').fill('not an address');
   await part.getByRole('button', { name: 'Save' }).click();
   await expect(part.getByRole('status')).toContainText('https://');

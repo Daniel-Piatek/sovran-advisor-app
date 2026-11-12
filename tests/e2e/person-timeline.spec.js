@@ -77,6 +77,7 @@ test('a person with nothing yet says so, and switching People in depth off takes
 
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/people/${lonely.id}?tab=timeline`);
   await expect(page.getByRole('tab')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Notes', level: 2 })).toBeVisible(); // the page as it was

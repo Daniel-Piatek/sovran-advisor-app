@@ -58,6 +58,7 @@ export function selectionAnchor(state) {
 }
 
 export function setComments(view, threads) {
+  if (!view || view.isDestroyed) return; // the comments came in after the note was left: nothing to mark
   view.dispatch(view.state.tr.setMeta(commentKey, { threads }).setMeta('addToHistory', false));
 }
 

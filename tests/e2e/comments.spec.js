@@ -92,6 +92,7 @@ test('with the module off there is no Comment button and no pane', async ({ page
   const note = await app.createNote({ title: 'N', body: BODY });
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${note.id}`);
   await text(page).getByText('Two quiet mornings', { exact: true }).click({ clickCount: 3 });
   await expect(page.getByRole('button', { name: 'Comment on the selected words' })).toHaveCount(0);

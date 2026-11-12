@@ -2,6 +2,7 @@
 // The mailbox and the people are made up (scripts/demo-mail.js).
 import { test, expect } from './fixtures.js';
 import { makeMailbox } from '../../scripts/demo-mail.js';
+const setMail = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'mail', on }) });
 
 const post = (app, url, body) => fetch(app.url + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
 const upload = (app, account, filler) => fetch(`${app.url}/api/mail/import?${new URLSearchParams({ account })}`, {
@@ -151,10 +152,7 @@ test('with Mail switched off the app says so, and the Library shows the Split ta
   await page.goto(`${app.url}/library`);
   await expect(page.getByRole('heading', { name: 'Split tabs', level: 2 })).toBeVisible();
   await expect(page.locator('.mail-splits .tab')).toHaveText([/Inbox/, /Drafts/, /Sent/, /Outbox/, /Done/, /Important/, /Calendar/, /Money/, /Newsletters/, /Other/]);
-  await page.goto(`${app.url}/settings`);
-  const module = page.locator('[data-module="mail"]');
-  await module.getByRole('button', { name: 'Off', exact: true }).click();
-  await expect(module.getByRole('button', { name: 'Off', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await setMail(app, false); // Mail has no row in Settings › Modules yet (modules.js, hidden): it is switched behind the scenes
   await page.goto(`${app.url}/mail`);
   await expect(page.getByText('Mail is switched off.')).toBeVisible();
 });
@@ -278,6 +276,7 @@ test('Cmd K in Mail lists every Mail command with its key; elsewhere it is still
 test('the keys do nothing while typing in a field', async ({ page, app }) => {
   await seed(app);
   await page.goto(`${app.url}/mail?split=important`);
+  await expect(rows(page).first()).toBeVisible(); // the mail's keys work once its list is drawn
   await page.keyboard.press('ControlOrMeta+k');
   await page.getByLabel('Type a command').fill('jjeh?');
   await expect(page.getByLabel('Type a command')).toHaveValue('jjeh?');
@@ -559,6 +558,7 @@ test('New email without “Send mail as you” says so plainly and asks Google; 
 test('a new mail with words is not lost by opening a conversation', async ({ page, app }) => {
   await seed(app);
   await page.goto(`${app.url}/mail?split=important`);
+  await expect(rows(page).first()).toBeVisible(); // the mail's keys work once its list is drawn
   await page.keyboard.press('c');
   await composerOf(page).getByLabel('Subject').fill('Keep me');
   if (await rows(page).first().isVisible()) await rows(page).first().click(); // (on a phone the list is behind the new mail)
@@ -730,17 +730,14 @@ test('Lena’s mail shows who she is and her company; a company’s own domain f
   await expect(section.locator('.mail-subject')).toHaveText(['Onboarding call on Thursday?']);
   await expect(section.locator('.last-touch-chip')).toHaveText(/^Last in touch: .+/);
   await section.getByRole('link').first().click();
-  await expect(page).toHaveURL(/\/mail\?thread=/);
+  await expect(page).toHaveURL(/\/mail\?(split=\w+&)?thread=/);
   await expect(page.locator('.mail-reader-subject')).toHaveText('Onboarding call on Thursday?');
   await expect(page.locator('.mail-message')).toHaveCount(3);
 });
 
 test('with Mail switched off the section leaves a person’s page, and the people stay', async ({ page, app }) => {
   const lena = await post(app, '/api/people', { name: 'Lena Fischer', emails: 'lena@nordlicht.example' });
-  await page.goto(`${app.url}/settings`);
-  const module = page.locator('[data-module="mail"]');
-  await module.getByRole('button', { name: 'Off', exact: true }).click();
-  await expect(module.getByRole('button', { name: 'Off', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await setMail(app, false); // Mail has no row in Settings › Modules yet (modules.js, hidden): it is switched behind the scenes
   await page.goto(`${app.url}/people/${lena.id}`);
   await expect(page.getByRole('heading', { name: 'Notes', level: 2 })).toBeVisible();
   await expect(page.getByRole('region', { name: /Mail with/ })).toHaveCount(0);

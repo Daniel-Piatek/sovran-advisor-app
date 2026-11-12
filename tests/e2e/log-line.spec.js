@@ -85,6 +85,7 @@ test('the Logged chip narrows the Timeline to log lines; with People in depth of
   await expect(rows(page)).toHaveCount(1);
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/people/${jonas.id}?tab=timeline`);
   await expect(page.locator('.log-line')).toHaveCount(0);
   await expect(page.getByRole('tab')).toHaveCount(0);

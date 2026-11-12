@@ -73,6 +73,7 @@ test('with the module off a save is a plain save', async ({ page, app }) => {
   const note = await app.createNote({ title: 'N', body: BODY });
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${note.id}`);
   await tapAtEnd(text(page));
   await page.keyboard.type(' x');

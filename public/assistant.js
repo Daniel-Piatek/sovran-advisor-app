@@ -317,9 +317,11 @@ export async function showAssistant(id) {
     sendButton.hidden = on;
   }
 
+  let renaming = false; // the chat's name is being changed in the list: the list is not drawn over the box
   async function drawList() {
     let chats = [];
     try { chats = await assistantApi.list(); } catch { return; }
+    if (renaming) return;
     list.replaceChildren(
       el('div', { class: 'chat-list-head' }, el('h2', { class: 'chat-list-title' }, 'Chats'), actions),
       ...(chats.length ? chats.map((c) => el('a', {
@@ -376,6 +378,7 @@ export async function showAssistant(id) {
     if (!name || !conversation) return;
     const box = el('input', { type: 'text', class: 'chat-rename', 'aria-label': 'Chat name', maxlength: 80, value: conversation.title || '' });
     let done = false;
+    renaming = true;
     const finish = async (keep) => {
       if (done) return;
       done = true;
@@ -383,6 +386,7 @@ export async function showAssistant(id) {
       if (keep && wanted && wanted !== conversation.title) {
         try { conversation = { ...conversation, title: (await assistantApi.rename(conversation.id, wanted)).title }; } catch (err) { problem.textContent = err.message; }
       }
+      renaming = false;
       drawThread();
       drawList();
     };
@@ -485,7 +489,9 @@ export async function showAssistant(id) {
       if (!left) redraw();
     }
     setAnswering(false);
-    if (!left) { drawThread(); drawList(); if (!call.active()) input.focus(); } // drawn again: the answer now names its model
+    // Drawn again: the answer now names its model. While the chat's name is being changed, the list and the cursor stay
+    // where they are (the box would vanish under the person's typing); the rename draws the list when it is done.
+    if (!left) { drawThread(); if (!renaming) { drawList(); if (!call.active()) input.focus(); } }
     return answer;
   }
 

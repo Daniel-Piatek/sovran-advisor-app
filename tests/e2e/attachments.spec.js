@@ -210,13 +210,13 @@ test('a file dragged onto the notes list is ignored, never opened in place of th
 });
 
 test('Image in the slash menu picks a picture from the computer', async ({ page, app }) => {
+  const chooser = new Promise((resolve) => page.once('filechooser', resolve)); // taken over before the page opens (as below)
   const note = await app.createNote({ title: 'Picked' });
   await page.goto(`${app.url}/notes/${note.id}`);
   await page.getByLabel('Text').click();
   await page.keyboard.type('/image');
   // As a person would: Enter once the menu shows Image chosen (under load Enter came too early).
   await expect(page.getByRole('option', { name: /^Image/ })).toHaveAttribute('aria-selected', 'true');
-  const chooser = page.waitForEvent('filechooser');
   await page.keyboard.press('Enter');
   const picker = await chooser;
   expect(picker.isMultiple()).toBe(true);
@@ -226,13 +226,15 @@ test('Image in the slash menu picks a picture from the computer', async ({ page,
 });
 
 test('File and PDF in the slash menu pick a file too', async ({ page, app }) => {
+  // The file chooser is taken over before the page opens: taken over only just before Enter, the browser
+  // sometimes opens its own (unseen) chooser first and the test waits for nothing.
+  const chooser = new Promise((resolve) => page.once('filechooser', resolve));
   const note = await app.createNote({ title: 'Picked file' });
   await page.goto(`${app.url}/notes/${note.id}`);
   await page.getByLabel('Text').click();
   await page.keyboard.type('/pdf');
   // As a person would: Enter once the menu shows PDF chosen.
   await expect(page.getByRole('option', { name: /^PDF/ })).toHaveAttribute('aria-selected', 'true');
-  const chooser = page.waitForEvent('filechooser');
   await page.keyboard.press('Enter');
   await (await chooser).setFiles({ name: 'plan.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF') });
   await expect(page.getByLabel('Text').locator('.file-card-name')).toHaveText('plan.pdf');
