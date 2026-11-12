@@ -92,7 +92,7 @@ export function checkAdvice(state) {
   const k = keysFor(state.platform);
   const claude = state.provider === 'claude';
   const name = claude ? 'Claude' : 'ChatGPT';
-  const box = (kind, title, ...body) => el('div', { class: 'ai-check-result', 'data-result': kind, role: 'status' },
+  const box = (kind, title, ...body) => el('div', { class: 'ai-check-result', 'data-result': kind, 'aria-live': 'polite' },
     el('p', { class: 'ai-check-title' }, title), ...body);
   switch (state.result) {
     case 'working':
@@ -129,7 +129,7 @@ export function checkAdvice(state) {
 export function checkPart() {
   const result = el('div', { class: 'ai-check-out' });
   const button = el('button', { type: 'button', class: 'button button-quiet' }, 'Check');
-  const note = el('p', { class: 'empty', role: 'status' });
+  const note = el('p', { class: 'empty', 'aria-live': 'polite' });
   button.addEventListener('click', async () => {
     button.disabled = true;
     result.replaceChildren();
