@@ -128,9 +128,8 @@ export const MODULES = [
   },
   {
     // Model and effort (2026-11-12, the owner's wish): which Claude model answers in a chat and how hard it thinks,
-    // two choices above the box to ask in (ai-pick.js). Off: Claude Code's own choice, as before; the choices stay kept.
-    id: 'ai-pick',
-    starter: false, // off in a new install: switch it on in Settings › Modules
+    // two choices above the box to ask in (ai-pick.js). Off: the AI's own choice, as before; the choices stay kept.
+    id: 'ai-pick', // on in a new install (2026-11-12, the owner's wish); Usual changes nothing until a choice is made
     label: 'Model and effort',
     description: 'Choose, for each chat, which Claude model answers (quick Haiku to the most capable) and how long it thinks before it answers. Usual leaves it to Claude Code.',
   },

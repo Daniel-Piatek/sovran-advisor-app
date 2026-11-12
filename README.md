@@ -18,7 +18,7 @@ notes, and an AI assistant that knows them, all on your own computer.
   own, and directions for setting that up will follow, so leave it off for now).
 - **Help pages** (off until you switch them on): a "?" after every page's title opens a short page on
   what it is for and how to use it, and your assistant answers "how does this work?" from the same pages.
-- **Model and effort** (off until you switch it on): for each chat, choose which model answers
+- **Model and effort** (on; switch it off in Settings › Modules): for each chat, choose which model answers
   (Claude: Haiku quick and light, Sonnet balanced, Opus deep thinking, Fable the most capable; ChatGPT:
   GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra) and how long it thinks (Low to Max). **Usual** leaves it to the AI itself.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).

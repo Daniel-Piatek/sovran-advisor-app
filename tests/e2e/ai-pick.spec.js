@@ -1,4 +1,4 @@
-// Model and effort (module ai-pick): off in a new install, so no choices show; switched on, the two choices sit
+// Model and effort (module ai-pick): on in a new install; switched off, no choices show; on, the two choices sit
 // above the box to ask in, the chat keeps them, and a line says when the model changed. The claude command is a
 // stand-in (tests/fake-claude.js) that names the model it was asked for.
 import { test, expect } from './fixtures.js';
@@ -6,6 +6,7 @@ import { test, expect } from './fixtures.js';
 const bubbles = (page, role) => page.locator(`.chat-bubble[data-role="${role}"]`);
 
 test('choose a model and effort for a chat; a line shows the change', async ({ page, app }) => {
+  await fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'ai-pick', on: false }) });
   await page.goto(`${app.url}/assistant`);
   await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Model' })).toBeHidden();

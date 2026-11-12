@@ -1,5 +1,5 @@
 // Model and effort (the owner's wish, 2026-11-12): which model answers in a chat, and how hard it thinks,
-// chosen above the box to ask in. Part of the module `ai-pick` (off in a new install; Settings › Modules).
+// chosen above the box to ask in. Part of the module `ai-pick` (on in a new install; Settings › Modules).
 // Each chat keeps its own choice (a settings row `assistant.pick.<chat id>`); the last choice made is also
 // kept as `assistant.pick`, so a new chat starts with it. Claude and ChatGPT each have their own choice
 // ({ claude: { model, effort }, codex: { model, effort } }), so switching the AI in Settings never mixes them.
