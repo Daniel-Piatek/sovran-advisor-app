@@ -96,6 +96,7 @@ import { startBackups, listBackups, checkAllBackups } from './backup.js';
 import { writeMoveFile, moveFileName, receiveMoveFile, moveStatus, cancelMove, confirmMove, applyPendingMove } from './move.js';
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
+import { listDocs, readDoc } from './docs.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
@@ -1500,6 +1501,19 @@ export function startServer({
         if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
         throw err;
       }
+    }
+    // Help pages (module help, advanced/last/2 and 3; off in a new install):
+    //   GET /api/docs       the pages for the modules that are on: [{ id, title, module, paths }] ([] while Help pages is off)
+    //   GET /api/docs/:id   one page: { id, title, module, paths, markdown }
+    if (url.pathname === '/api/docs') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, listDocs(db).map(({ markdown, ...d }) => d));
+    }
+    const docMatch = url.pathname.match(/^\/api\/docs\/([a-z0-9-]+)$/);
+    if (docMatch) {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      const doc = readDoc(db, docMatch[1]);
+      return doc ? sendJson(res, 200, doc) : sendJson(res, 404, { error: 'There is no such help page, or Help pages is switched off.' });
     }
     if (url.pathname === '/api/modules') {
       if (req.method === 'GET') return sendJson(res, 200, listModules(db));

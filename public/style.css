@@ -251,7 +251,7 @@ h1 {
 /* A page's add button (New note, New entry, New chat…) sits just right of the title, the same place on every
    section's page (2026-11-10, the owner's wish); the rest of the bar keeps to the right. */
 .page-add { flex: none; margin-left: calc(var(--space-12) + var(--space-8)); } /* well apart from the title (2026-11-10, the owner's wish) */
-.top-bar > .top-bar-title + :not(.page-add), .top-bar > .page-add + * { margin-left: auto; }
+.top-bar > .top-bar-title + :not(.page-add):not(.help-button), .top-bar > .help-button + :not(.page-add), .top-bar > .page-add + * { margin-left: auto; }
 
 .switch {
   display: flex;
@@ -4134,3 +4134,65 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .settings-subpart { padding: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .settings-subpart .empty, .settings-subpart p { margin: 0; }
 .settings-subtitle { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-button); }
+
+/* Help pages (module help, advanced/last/2 and 3; public/help.js): the Help button, a small "?" just after a page's
+   title, and the pane it opens beside the page. Flat, a thin line, no accent: the page keeps its one accent. */
+.help-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-6) - var(--space-1));
+  height: calc(var(--space-6) - var(--space-1));
+  margin-left: var(--space-2);
+  padding: 0;
+  border: var(--line);
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.help-button:hover, .help-button[aria-expanded="true"] { color: var(--color-text); border-color: var(--color-border-strong); }
+.help-button:focus-visible { outline: calc(var(--border-width) * 2) solid var(--color-text); outline-offset: var(--border-width); }
+.help-pane {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  width: min(26rem, 100vw);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-6) var(--space-8);
+  border-left: var(--line);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.help-pane[hidden] { display: none; }
+.help-pane-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.help-pane-title, .help-page-title { margin: 0; font-family: var(--font-heading); font-weight: 400; font-size: var(--text-xl); }
+.help-page-title { font-size: var(--text-2xl); margin-bottom: var(--space-4); }
+.help-text { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.55; }
+.help-text h2 { font-family: var(--font-heading); font-weight: 400; font-size: var(--text-lg); color: var(--color-heading); margin: var(--space-4) 0 var(--space-2); }
+.help-text h3 { font-family: var(--font-ui); font-weight: 600; font-size: var(--text-base); margin: var(--space-3) 0 var(--space-1); }
+.help-text p, .help-text ul, .help-text ol { margin: 0 0 var(--space-3); }
+.help-text ul, .help-text ol { padding-left: var(--space-6); }
+.help-text li { margin-bottom: var(--space-1); }
+.help-text code { font-family: var(--font-mono); font-size: var(--text-sm); }
+.help-text kbd { font-family: var(--font-ui); font-size: var(--text-sm); padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); }
+.help-text a { color: var(--color-text); text-decoration: underline; }
+.help-how { margin-top: var(--space-4); padding-top: var(--space-3); border-top: var(--line); }
+.help-how > summary { font-family: var(--font-ui); font-weight: 600; font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; }
+.help-how[open] > summary { margin-bottom: var(--space-2); }
+.help-how .help-text { font-size: var(--text-sm); color: var(--color-text-muted); }
+.help-all { display: inline-block; margin-top: var(--space-6); font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-text-muted); }
+.help-list { list-style: none; margin: 0; padding: 0; max-width: var(--page-width); }
+.help-list li { border-bottom: var(--line); }
+.help-list-link { display: block; padding: var(--space-3) 0; font-family: var(--font-ui); font-weight: 500; color: var(--color-text); text-decoration: none; }
+.help-list-link:hover { text-decoration: underline; }
+.lib-help-title { font-family: var(--font-heading); font-size: var(--text-2xl); }
