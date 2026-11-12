@@ -25,8 +25,8 @@ export const CHATGPT_APP_CODEX = 'ChatGPT.app/Contents/Resources/codex-cli/bin/c
 const runnable = (file) => { try { fs.accessSync(file, fs.constants.X_OK); return fs.statSync(file).isFile(); } catch { return false; } };
 
 // Which codex to start: `codex` when it is on the PATH (as installed with npm or Homebrew), else on a
-// Mac the one inside the ChatGPT app (in /Applications or the owner's own Applications folder), else
-// plain `codex`, which then reads as "not set up yet". Looked up each time, so installing either one
+// Mac the one inside the ChatGPT app (in /Applications or the owner's own Applications folder), else in
+// the folders codex is usually installed in (Homebrew, npm), else plain `codex`, which then reads as "not set up yet". Looked up each time, so installing either one
 // works without restarting the app.
 export function findCodex({ env = process.env, platform = process.platform, home = os.homedir(), isRunnable = runnable } = {}) {
   if (platform === 'win32') return DEFAULT_CODEX_COMMAND;
@@ -36,6 +36,11 @@ export function findCodex({ env = process.env, platform = process.platform, home
     const inApp = [path.join('/Applications', CHATGPT_APP_CODEX), path.join(home, 'Applications', CHATGPT_APP_CODEX)].find(isRunnable);
     if (inApp) return [inApp];
   }
+  // Started from the Dock, the app's PATH is short and misses where codex is usually installed
+  // (2026-11-12: "The codex command is not installed" though it was): those folders are looked in too.
+  const usual = ['/opt/homebrew/bin', '/usr/local/bin', path.join(home, '.local', 'bin'), path.join(home, '.npm-global', 'bin'), path.join(home, '.volta', 'bin')]
+    .map((dir) => path.join(dir, 'codex')).find(isRunnable);
+  if (usual) return [usual];
   return DEFAULT_CODEX_COMMAND;
 }
 export const TOKEN_ENV = 'SOVRAN_APP_TOKEN';

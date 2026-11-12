@@ -48,7 +48,7 @@ test('with ChatGPT answering, the choices are ChatGPT’s own, and Claude’s ar
   await page.goto(`${app.url}/assistant`);
   const model = page.getByRole('combobox', { name: 'Model' });
   await expect(model).toHaveValue('');
-  await expect(model.locator('option')).toHaveText(['Usual · ChatGPT’s own choice', 'GPT-6 Luna · quick and light', 'GPT-6.1 Sol · everyday work', 'GPT-6 Astra · most capable, uses your plan fastest']);
+  await expect(model.locator('option')).toHaveText(['Usual · ChatGPT’s own choice', 'GPT-6 Luna · quick and light', 'GPT-6.1 Terra · balanced', 'GPT-6.1 Sol · everyday work', 'GPT-6 Astra · most capable, uses your plan fastest']);
   await model.selectOption('gpt-6-luna');
   await expect.poll(async () => (await (await fetch(`${app.url}/api/assistant/pick`)).json()).model).toBe('gpt-6-luna');
   await put('/api/assistant/ai', { provider: 'claude' });

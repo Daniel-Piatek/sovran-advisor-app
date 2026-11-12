@@ -20,7 +20,7 @@ notes, and an AI assistant that knows them, all on your own computer.
   what it is for and how to use it, and your assistant answers "how does this work?" from the same pages.
 - **Model and effort** (off until you switch it on): for each chat, choose which model answers
   (Claude: Haiku quick and light, Sonnet balanced, Opus deep thinking, Fable the most capable; ChatGPT:
-  GPT-6 Luna, GPT-6.1 Sol, GPT-6 Astra) and how long it thinks (Low to Max). **Usual** leaves it to the AI itself.
+  GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra) and how long it thinks (Low to Max). **Usual** leaves it to the AI itself.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes

@@ -23,6 +23,7 @@ export const MODELS = {
   codex: [
     { ...USUAL_ROW, hint: 'ChatGPT’s own choice' },
     { id: 'gpt-6-luna', label: 'GPT-6 Luna', hint: 'quick and light' },
+    { id: 'gpt-6.1-terra', label: 'GPT-6.1 Terra', hint: 'balanced' },
     { id: 'gpt-6.1-sol', label: 'GPT-6.1 Sol', hint: 'everyday work' },
     { id: 'gpt-6-astra', label: 'GPT-6 Astra', hint: 'most capable, uses your plan fastest' },
   ],
