@@ -3,6 +3,7 @@
 // A device's token is shown once, when it is made, and is kept only in the system's key store.
 
 import { el, icon, request, timeAgo } from './ui.js';
+import { fold } from './fold.js';
 
 const KIND_WORDS = { browser: 'Browser', phone: 'Phone', other: 'Other app' };
 
@@ -15,6 +16,7 @@ export function bookmarkletFor(address, token) {
 export function captureSection() {
   const address = location.origin;
   const list = el('div', { class: 'capture-devices', role: 'list', 'aria-label': 'Devices' });
+  const folded = fold('capture-devices', 'Devices', list);
   const fresh = el('div', { class: 'capture-fresh', 'aria-live': 'polite' });
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   const name = el('input', { class: 'detail-input', 'aria-label': 'Device name', placeholder: 'A name, like “Phone” or “Work browser”', autocomplete: 'off', maxlength: 60, onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } } });
@@ -24,6 +26,7 @@ export function captureSection() {
   async function load() {
     let devices = [];
     try { devices = await request('GET', '/api/capture/devices'); } catch { list.replaceChildren(el('p', { class: 'empty' }, "The devices couldn't be loaded. Is the app still running?")); return; }
+    folded.say(devices.length, ['device', 'devices']);
     list.replaceChildren(...(devices.length ? devices.map((d) => el('div', { class: 'capture-device', role: 'listitem', 'data-device': d.name },
       el('span', { class: 'capture-device-name' }, el('strong', {}, d.name), ` · ${KIND_WORDS[d.kind]}`),
       el('span', { class: 'capture-device-used' }, d.last_used_at ? `Last used ${timeAgo(d.last_used_at)} · ${d.uses} ${d.uses === 1 ? 'capture' : 'captures'}` : 'Never used'),
@@ -62,6 +65,6 @@ export function captureSection() {
     el('h2', { class: 'settings-title' }, 'Capture from anywhere'),
     el('p', { class: 'empty' }, 'One address takes a capture from outside the app: a bookmarklet in your browser, your phone’s share sheet, any app that can send a line of text. It lands in the Inbox, with the device it came from. Each device has its own token, so you can see which one sent what and revoke a lost one alone.'),
     el('p', {}, 'Address: ', el('code', {}, `${address}/capture`), el('span', { class: 'capture-hint' }, ' · POST, JSON { "text": "…", "link": "https://…" }, header X-Capture-Token. A phone reaches it only through Tailscale, which is off now.')),
-    list, problem, fresh,
+    folded, problem, fresh,
     el('div', { class: 'capture-add' }, name, kind, el('button', { type: 'button', class: 'button', onclick: add }, icon('plus'), 'Add a device')));
 }

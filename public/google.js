@@ -5,6 +5,7 @@
 
 import { el, icon, request, timeAgo } from './ui.js';
 import { face } from './people.js';
+import { fold } from './fold.js';
 
 const HEALTH_WORDS = {
   ok: (a) => `Connected · last checked ${timeAgo(a.health_checked_at)}`,
@@ -98,9 +99,16 @@ export function googleSection() {
         el('button', { type: 'button', class: 'button', onclick: () => act(() => connect()) }, icon('plus'), 'Add a Google account'),
         el('button', { type: 'button', class: 'button button-quiet', onclick: () => act(async () => { draw(await request('DELETE', '/api/google/client')); }) }, 'Remove client')),
       el('p', { class: 'empty' }, 'Your mail comes in under ', el('a', { href: '/mail/import' }, 'Mail › Import and sync'), ': bring your Takeout history in there.'),
-      el('h3', { class: 'settings-title' }, 'Every use'),
-      el('ol', { class: 'activity-log', 'aria-label': 'Google activity' }, ...(s.log.length ? s.log.map((l) => el('li', { class: 'activity-row' },
+      everyUse(s.log));
+  }
+
+  // Every use of Google, folded: one row with how many and the latest; open it for every line.
+  function everyUse(log) {
+    const folded = fold('google-uses', 'Every use',
+      el('ol', { class: 'activity-log', 'aria-label': 'Google activity' }, ...(log.length ? log.map((l) => el('li', { class: 'activity-row' },
         el('span', { class: 'activity-when' }, timeAgo(l.created_at)), el('span', { class: 'activity-what' }, l.what))) : [el('li', { class: 'empty' }, 'Nothing yet.')])));
+    folded.say(log.length, ['use', 'uses'], log[0] ? `latest ${timeAgo(log[0].created_at)}` : '');
+    return folded;
   }
 
   // Health is asked of Google when the page opens, for accounts not checked in the last five minutes.

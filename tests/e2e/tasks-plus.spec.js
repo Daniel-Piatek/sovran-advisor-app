@@ -1,6 +1,6 @@
 // Tasks in depth (advanced/tasks/1): q adds a task in one line; what the estimate makes it, a Speedy (15 minutes or
 // less) or a Task, shows in the chips while typing and as a mark on every row; Settings › Modules switches it off.
-import { test, expect } from './fixtures.js';
+import { test, expect, openFold } from './fixtures.js';
 
 const post = (app, body) => fetch(`${app.url}/api/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
 const allTasks = (app) => fetch(`${app.url}/api/tasks`).then((r) => r.json());
@@ -373,6 +373,8 @@ test('Settings › Capture from anywhere: a device, its token shown once, a book
   expect(href).toMatch(/^javascript:/);
   expect(decodeURIComponent(href)).toContain(`${app.url}/capture`);
   expect(decodeURIComponent(href)).toContain(token);
+  await expect(capture(page).locator('[data-fold="capture-devices"] summary')).toContainText('1 device');
+  await openFold(page, 'capture-devices');
   await expect(capture(page).locator('[data-device="Work browser"]')).toContainText('Never used');
 
   // A page posts with the token: it waits in the Inbox, saying where it came from.

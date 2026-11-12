@@ -3,7 +3,7 @@
 // switched on. Google and the key store are stood in for (tests/fake-google.js): no real Google, no real client.
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect } from './fixtures.js';
+import { test, expect, openFold } from './fixtures.js';
 import { FAKE_CLIENT_ID, FAKE_CLIENT_SECRET, SCOPES } from '../fake-google.js';
 
 const google = (page) => page.getByRole('region', { name: 'Google', exact: true });
@@ -84,6 +84,7 @@ test('sign in, then switch Read your mail on: Google is asked for that one permi
   await expect(send.getByRole('button', { name: 'On' })).toHaveAttribute('aria-pressed', 'true');
   await expect(read.getByRole('button', { name: 'On' })).toHaveAttribute('aria-pressed', 'true');
   expect(app.google.seen.filter((c) => c.path === '/auth').map((c) => c.params.scope.split(' ').slice(2))).toEqual([[], [SCOPES.read], [SCOPES.send]]);
+  await openFold(page, 'google-uses');
   await expect(google(page).getByRole('list', { name: 'Google activity' })).toContainText('work@mypractice.com allowed “Read your mail”');
 });
 

@@ -1,7 +1,7 @@
 // Dictation (advanced/voice/1): hold a key in a field and speak; the words land at the cursor. The
 // microphone is made up (a fake device) and the speech service is stood in for by the page's
 // WebSocket, so no test uses a real service or a real key.
-import { test, expect } from './fixtures.js';
+import { test, expect, openFold } from './fixtures.js';
 
 // A phone has no key to hold: its pill says Tap to dictate (the phone project is a touch screen).
 const touch = () => test.info().project.name === 'phone';
@@ -86,6 +86,8 @@ test('with no field in focus the words are copied to the clipboard and the histo
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('remember the workshop in November');
   await page.goto(`${app.url}/settings`);
   const section = page.getByRole('region', { name: 'Dictation' });
+  await expect(section.locator('[data-fold="dictations"] summary')).toContainText('1 dictation · latest');
+  await openFold(page, 'dictations');
   await expect(section.locator('.dictation-row')).toHaveCount(1);
   await expect(section.locator('.dictation-row')).toContainText('remember the workshop in November · Clipboard only');
   await section.getByLabel('Search your dictations').fill('workshop');
@@ -330,6 +332,7 @@ test.describe('the glossary page', () => {
   await send(app, 'POST', '/api/companies', { name: 'Nordlicht' });
   await page.goto(`${app.url}/settings`);
   const section = page.getByRole('region', { name: 'Glossary' });
+  await openFold(page, 'glossary');
   await expect(section.locator('.glossary-row')).toHaveCount(2);
   await expect(section.locator('.glossary-row').first()).toContainText('Hint');
   await expect(section).toContainText('From People');

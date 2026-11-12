@@ -4,6 +4,7 @@
 
 import { el, request, clockTime, shortDate } from './ui.js';
 import { firstWordWords } from './spoken.js';
+import { fold } from './fold.js';
 
 const SPEEDS = [{ value: 0.85, label: 'Slower' }, { value: 1, label: 'Normal' }, { value: 1.15, label: 'Faster' }];
 const MODEL_WORDS = { ready: 'here', getting: 'getting it', missing: 'not here yet', failed: 'could not be fetched', unavailable: 'can’t run here' };
@@ -63,7 +64,10 @@ const LAYER_WORDS = { voice: 'Voice service', network: 'Network', assistant: 'Yo
 
 export function voiceLogSection() {
   const list = el('ol', { class: 'activity-log', 'aria-label': 'Voice log' });
+  const folded = fold('voice-log', 'Every time', list);
+  folded.say(0, ['time', 'times']);
   request('GET', '/api/voice-log').then((rows) => {
+    folded.say(rows.length, ['time', 'times'], rows[0] ? `latest ${shortDate(rows[0].created_at)} ${clockTime(rows[0].created_at)}` : '');
     list.replaceChildren(...(rows.length ? rows.map((r) => el('li', { class: 'activity-row' },
       el('span', { class: 'activity-when' }, `${shortDate(r.created_at)} ${clockTime(r.created_at)}`),
       el('span', {}, el('strong', {}, LAYER_WORDS[r.layer] ?? r.layer), ` · ${r.what}${r.tried ? ' (tried on purpose)' : ''}`)))
@@ -73,5 +77,5 @@ export function voiceLogSection() {
     el('h2', { class: 'settings-title' }, 'Voice log'),
     el('p', { class: 'empty' }, 'When a part of a call fails (the voice service, the network, your assistant), the call says so and goes on with what still works. Each time is here.'),
     el('p', {}, el('a', { class: 'button', href: '/assistant?try=voice' }, 'Try it: a call where the voice service stops')),
-    list);
+    folded);
 }

@@ -14,6 +14,7 @@ import { captureSection } from './capture-settings.js';
 import { voiceSection, voiceLogSection } from './voice-settings.js';
 import { everywhereSection } from './everywhere-settings.js';
 import { checkPart } from './ai-check.js';
+import { fold } from './fold.js';
 
 const permissionsApi = {
   get: () => request('GET', '/api/assistant/permissions'),
@@ -44,6 +45,7 @@ function glossarySection() {
   const search = el('input', { type: 'search', class: 'search-input', placeholder: 'Search the glossary', 'aria-label': 'Search the glossary', autocomplete: 'off', oninput: () => { clearTimeout(timer); timer = setTimeout(load, 150); } });
   const list = el('div', { class: 'glossary-list', 'aria-live': 'polite' });
   const undoPlace = el('div', {});
+  const folded = fold('glossary', 'Your glossary', search, list);
   let timer = null;
   let run = 0;
 
@@ -65,6 +67,7 @@ function glossarySection() {
       return;
     }
     if (mine !== run) return;
+    if (!search.value.trim()) folded.say(rows.length, ['word', 'words'], `${rows.filter((g) => g.kind === 'fix').length} fixes`);
     list.replaceChildren(...(rows.length ? rows.map((g) => glossaryRow(g, {
       onDelete: async () => {
         await request('DELETE', `/api/glossary/${g.id}`);
@@ -79,7 +82,7 @@ function glossarySection() {
     el('h2', { class: 'settings-title' }, 'Glossary'),
     el('p', { class: 'empty' }, 'Your names and terms, given to the speech to text with every dictation. A hint makes it expect a word; a fix rewrites what it keeps getting wrong (“North light” → Nordlicht). Correct a word you just dictated and the app offers to learn it.'),
     el('div', { class: 'glossary-add' }, heard, el('span', { 'aria-hidden': 'true' }, '→'), written, el('button', { type: 'button', class: 'button', onclick: add }, icon('plus'), 'Add')),
-    problem, search, list, undoPlace);
+    problem, undoPlace, folded);
 }
 
 // Your assistant and mail (advanced/mail/11): the limits it is held to, read only. They are in code, not in a prompt, so there is nothing to switch.
@@ -103,6 +106,7 @@ function dictationSection() {
   const keys = el('div', { class: 'switch', role: 'group', 'aria-label': 'Hold key' });
   const search = el('input', { type: 'search', class: 'search-input', placeholder: 'Search your dictations', 'aria-label': 'Search your dictations', autocomplete: 'off', oninput: () => { clearTimeout(timer); timer = setTimeout(load, 150); } });
   const list = el('div', { class: 'dictation-list', 'aria-live': 'polite' });
+  const folded = fold('dictations', 'Your dictations', search, list);
   let timer = null;
   let run = 0;
 
@@ -171,6 +175,7 @@ function dictationSection() {
       return;
     }
     if (mine !== run) return;
+    if (!search.value.trim()) folded.say(rows.length, ['dictation', 'dictations'], rows[0] ? `latest ${shortDate(rows[0].created_at)} ${clockTime(rows[0].created_at)}` : '');
     list.replaceChildren(...(rows.length ? rows.map((d) => el('div', { class: 'dictation-row', 'data-outcome': d.outcome },
       el('span', { class: 'dictation-when' }, `${shortDate(d.created_at)} ${clockTime(d.created_at)}`),
       el('span', { class: 'dictation-text' }, d.text,
@@ -196,7 +201,7 @@ function dictationSection() {
       el('div', { class: 'dictation-key' }, keyInput, el('button', { type: 'button', class: 'button', onclick: saveKeyNow }, 'Save key'), removeButton)),
     keyProblem,
     el('div', { class: 'permission-row' }, el('span', { class: 'permission-name' }, 'Hold key'), keys),
-    el('h3', { class: 'settings-title' }, 'Your dictations'), search, list);
+    folded);
 }
 
 // Calendar timings (Calendar in depth 10): the last actions of the Calendar and the Planner with how long each took to be on screen.
@@ -214,9 +219,16 @@ function timingsSection() {
         return el('div', { class: 'permission-row', 'data-timing': name },
           el('span', { class: 'permission-name' }, name, el('span', { class: 'permission-what' }, `${mine.length} ${mine.length === 1 ? 'time' : 'times'} · usually ${median(mine)} ms · slowest ${Math.max(...mine)} ms${Math.max(...mine) >= BUDGET_MS ? ` · over ${BUDGET_MS} ms at least once` : ''}`)));
       }),
-      el('h3', { class: 'shutdown-title' }, 'The last actions'),
-      ...[...list].reverse().slice(0, 12).map((t) => el('p', { class: 'permission-what timing-row' }, `${shortDate(t.at)} ${clockTime(t.at)} · ${t.name} · ${t.ms} ms${t.ms >= BUDGET_MS ? ` · over ${BUDGET_MS} ms` : ''}`)))
+      lastActions(list))
       : el('p', { class: 'empty' }, 'Nothing measured yet in this browser: move an event or switch the Planner’s lens, then come back.'));
+}
+
+function lastActions(list) {
+  const last = [...list].reverse().slice(0, 12);
+  const folded = fold('timings', 'The last actions',
+    ...last.map((t) => el('p', { class: 'permission-what timing-row' }, `${shortDate(t.at)} ${clockTime(t.at)} · ${t.name} · ${t.ms} ms${t.ms >= BUDGET_MS ? ` · over ${BUDGET_MS} ms` : ''}`)));
+  folded.say(last.length, ['action', 'actions'], `${last.filter((t) => t.ms >= BUDGET_MS).length} over ${BUDGET_MS} ms`);
+  return folded;
 }
 
 // Which AI answers (ai.js): your own Claude, or your own ChatGPT. Each runs on this computer, signed in
@@ -335,6 +347,8 @@ export async function showSettings() {
   const log = el('ol', { class: 'activity-log', 'aria-label': 'Activity' });
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
   const allowedList = el('ul', { class: 'allowed-list' });
+  const allowedFold = fold('always-allowed', 'Kinds of step', allowedList);
+  const logFold = fold('activity', 'Every step', log);
   const moduleRows = el('div', { class: 'permission-rows' });
   // The Dictation part is there while the module is on (it follows the switch above).
   const dictationPlace = el('div', {});
@@ -435,12 +449,16 @@ export async function showSettings() {
     el('section', { class: 'settings-part', 'aria-label': 'Always allowed' },
       el('h2', { class: 'settings-title' }, 'Always allowed'),
       el('p', { class: 'empty' }, 'Kinds of step you chose “Always allow” for on a card. They no longer ask. Deleting and the floor always do.'),
-      allowedList),
+      allowedFold),
     el('section', { class: 'settings-part', 'aria-label': 'Activity' },
-      el('h2', { class: 'settings-title' }, 'Activity'), log),
+      el('h2', { class: 'settings-title' }, 'Activity'),
+      el('p', { class: 'empty' }, 'Every switch you changed and every step your assistant took, asked for or was refused, newest first.'),
+      logFold),
   );
 
   function draw({ permissions, allowed = [], activity }) {
+    allowedFold.say(allowed.length, ['kind of step', 'kinds of step']);
+    logFold.say(activity.length, ['step', 'steps'], activity[0] ? `latest ${shortDate(activity[0].created_at)} ${clockTime(activity[0].created_at)}` : '');
     allowedList.replaceChildren(...(allowed.length ? allowed.map((a) => el('li', { class: 'allowed-row' },
       el('span', {}, a.label),
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': `Remove: ${a.label}`, onclick: async () => {
