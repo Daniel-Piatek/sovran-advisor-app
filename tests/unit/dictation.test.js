@@ -121,7 +121,7 @@ test('a key typed into Settings is kept in data/elevenlabs.key for this user onl
 });
 
 test('Dictation is a module, off in a new install until switched on', () => {
-  assert.deepEqual(listModules(emptyDb()).map((m) => [m.id, m.label, m.on]), [['tasks', 'Tasks', false], ['planner', 'Planner', false], ['calendar', 'Calendar', false], ['life', 'My Life', false], ['course', 'Course', false], ['people-plus', 'People in depth', true], ['voice', 'Dictation', false], ['tasks-plus', 'Tasks in depth', true], ['calendar-links', 'Calendar links', true], ['calendar-plus', 'Calendar in depth', true], ['mylife-plus', 'My Life in depth', false], ['calendar-google', 'Google Calendar', false], ['writing', 'Writing and thinking', true], ['everywhere', 'Phone, backups and moving', false], ['help', 'Help pages', false], ['ai-pick', 'Model and effort', true], ['mail', 'Mail', false]]);
+  assert.deepEqual(listModules(emptyDb()).map((m) => [m.id, m.label, m.on]), [['tasks', 'Tasks', false], ['planner', 'Planner', false], ['calendar', 'Calendar', false], ['life', 'My Life', false], ['course', 'Course', false], ['people-plus', 'People in depth', true], ['voice', 'Dictation', true], ['tasks-plus', 'Tasks in depth', true], ['calendar-links', 'Calendar links', true], ['calendar-plus', 'Calendar in depth', true], ['mylife-plus', 'My Life in depth', false], ['calendar-google', 'Google Calendar', false], ['writing', 'Writing and thinking', true], ['everywhere', 'Phone, backups and moving', false], ['help', 'Help pages', true], ['ai-pick', 'Model and effort', true], ['mail', 'Mail', false]]);
 });
 
 test('a database from before Dictation keeps everything and takes the table', () => {

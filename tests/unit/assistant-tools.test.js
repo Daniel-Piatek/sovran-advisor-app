@@ -141,7 +141,7 @@ test('MCP: only with the app’s secret; tools listed and called; the stand-in C
   assert.ok(run.args.includes('--strict-mcp-config') && run.args.includes('mcp__app'));
   const listed = await (await post('/api/mcp', { jsonrpc: '2.0', id: 2, method: 'tools/list' }, config.headers)).json();
   assert.deepEqual(listed.result.tools.map((tool) => tool.name),
-    ['search_notes', 'read_note', 'list_tasks', 'list_inbox', 'add_task', 'reconnect_list', 'log_interaction', 'calendar_list', 'calendar_propose', 'board_read', 'board_draw', 'list_comments', 'reply_to_comment', 'add_note', 'append_to_journal', 'propose_note_edit', 'approve_step', 'read_week', 'read_day', 'propose_plan', 'propose_close_day', 'propose_task_change']);
+    ['search_notes', 'read_note', 'docs_read', 'list_tasks', 'list_inbox', 'add_task', 'reconnect_list', 'log_interaction', 'calendar_list', 'calendar_propose', 'board_read', 'board_draw', 'list_comments', 'reply_to_comment', 'add_note', 'append_to_journal', 'propose_note_edit', 'approve_step', 'read_week', 'read_day', 'propose_plan', 'propose_close_day', 'propose_task_change']);
 
   await fetch(`${app.url}/api/assistant/permissions`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'add_task', mode: 'alone' }) });
   const { lines, message: added } = await ask('Add a task: call the venue on 2026-10-30');

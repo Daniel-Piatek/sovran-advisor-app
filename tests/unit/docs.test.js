@@ -52,9 +52,10 @@ test('a page without a title is not a page; the header is read', () => {
   assert.deepEqual(parseDoc('x', '---\ntitle: X\nmodule: tasks\npaths: ^/x$\n---\nWords'), { id: 'x', title: 'X', module: 'tasks', paths: '^/x$', markdown: 'Words' });
 });
 
-test('off in a new install: no pages and no docs_read; on, only the pages of modules that are on', () => {
+test('on in a new install; off: no pages and no docs_read; on, only the pages of modules that are on', () => {
   const db = emptyDb();
-  assert.equal(MODULES.find((m) => m.id === 'help').starter, false);
+  assert.notEqual(MODULES.find((m) => m.id === 'help').starter, false, 'on in a new install (2026-11-12, the owner’s wish)');
+  setModule(db, 'help', false);
   assert.deepEqual(listDocs(db), []);
   assert.equal(readDoc(db, 'notes'), null);
   assert.ok(!offeredTools(db).some((t) => t.name === 'docs_read'));
