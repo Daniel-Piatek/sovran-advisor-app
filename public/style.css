@@ -2992,6 +2992,9 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 .capture-worlds, .inbox-worlds { display: inline-flex; gap: var(--space-1); }
 .capture-worlds .chip, .inbox-worlds .chip { display: inline-flex; align-items: center; gap: var(--space-1); }
 .inbox-worlds { margin-bottom: var(--space-3); }
+
+/* Inner and Outer: an outline a little darker than the rest, so they read as a different kind of control. */
+.inbox-worlds .chip { border-color: var(--color-border-strong); }
 .inbox-item-line .icon { vertical-align: middle; margin-right: var(--space-1); }
 .allowed-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
 .allowed-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; border-top: var(--line); font-size: var(--text-sm); }
@@ -3286,7 +3289,12 @@ button.mic-pill:hover { color: var(--color-text); }
 .inbox-pile:first-child { margin-top: 0; border-top: 0; }
 
 /* Tasks in depth 8: the Inbox's four views (the Tabs), and a row of Snoozed, Done or Trash with the one button that brings it back. */
-.inbox-views { margin: var(--space-2) 0; }
+.inbox-views { margin: var(--space-2) 0; flex-wrap: nowrap; }
+
+/* Done and Trash are a symbol (their name is the button's label); the four tabs stay on one line. */
+.inbox-views .tab { display: inline-flex; align-items: center; white-space: nowrap; }
+
+.tab-symbol .icon { margin-right: 0; vertical-align: middle; }
 
 .inbox-other-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) var(--space-1); border-top: var(--line); align-items: baseline; }
 
