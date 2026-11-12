@@ -76,7 +76,7 @@ export function showLibrary() {
     part('Text', 'Main text, secondary text, and hints that are never your own words.',
       el('div', { class: 'lib-row' }, swatch('--color-text', null, { text: true }), swatch('--color-text-muted', null, { text: true }), swatch('--color-text-faint', null, { text: true }))),
     part('Lines', 'Surfaces are flat and divided by one thin line. No shadows.',
-      el('div', { class: 'lib-row' }, swatch('--color-border'), el('div', { class: 'lib-swatch' }, el('div', { class: 'lib-chip lib-line' }), el('span', { class: 'lib-name' }, '--line'), valueOf('--border-width')))),
+      el('div', { class: 'lib-row' }, swatch('--color-border'), swatch('--color-border-strong'), el('div', { class: 'lib-swatch' }, el('div', { class: 'lib-chip lib-line' }), el('span', { class: 'lib-name' }, '--line'), valueOf('--border-width')))),
     part('Accent', 'One accent on one thing per screen: the action that matters most. This page’s is the button below.',
       el('div', { class: 'lib-row' },
         el('div', { class: 'lib-swatch' }, el('button', { type: 'button', class: 'button button-primary' }, 'Main action'),
