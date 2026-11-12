@@ -18,6 +18,7 @@
 //   /mail               your mail: one list, six splits, a reader  (public/mail-app.js)
 //   /mail/import        import a Takeout .mbox, fill from Gmail, Live with Gmail  (public/mail.js)
 //   /welcome            the first screen of a new install  (public/welcome.js)
+//   /help, /help/:id    the help pages (module help), every one or one  (public/help.js)
 //   /library            the design library: every token and piece, with its live value  (public/library.js)
 // The frame around every screen (sidebar, bottom bar, moving between screens) is in
 // public/shell.js; small shared pieces are in public/ui.js.
@@ -40,6 +41,7 @@ import { loadModules } from './modules.js';
 import { showWelcome, welcomeState } from './welcome.js';
 import { showMailImport } from './mail.js';
 import { showMailApp } from './mail-app.js';
+import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
 
@@ -58,6 +60,7 @@ startRouter([
   { path: /^\/boards\/([0-9a-f-]{36})$/, show: showBoard },
   { path: /^\/settings$/, show: showSettings },
   { path: /^\/library$/, show: showLibrary },
+  { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },
   { path: /^\/mail$/, show: showMailApp },

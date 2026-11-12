@@ -118,6 +118,15 @@ export const MODULES = [
     public: ['GET /quick'],
   },
   {
+    // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title
+    // that opens it beside the page (public/help.js), and the assistant's docs_read. Off, the "?" and the tool go.
+    id: 'help',
+    starter: false, // off in a new install: switch it on in Settings › Modules
+    label: 'Help pages',
+    description: 'A “?” after every page’s title opens a short page on what it is for and how to use it. Your assistant reads the same pages when you ask “how does this work?”.',
+    tools: ['docs_read'],
+  },
+  {
     // The manifest (advanced/mail/1): a place after the Inbox, the Google permissions it may ask for, its tables and tools.
     // Off in a new install and dormant: it holds no Google credentials, and its jobs (sync, sending) do nothing while it is off.
     id: 'mail',

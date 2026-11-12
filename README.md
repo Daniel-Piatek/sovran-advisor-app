@@ -16,6 +16,8 @@ notes, and an AI assistant that knows them, all on your own computer.
   Also off until you switch them on: **My Life in depth** (Habits, a rhythm you keep, such as
   "Run 3× a week") and **Mail** (your own mail kept in the app; it needs a Google sign-in of your
   own, and directions for setting that up will follow, so leave it off for now).
+- **Help pages** (off until you switch them on): a "?" after every page's title opens a short page on
+  what it is for and how to use it, and your assistant answers "how does this work?" from the same pages.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes

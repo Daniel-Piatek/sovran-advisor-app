@@ -28,6 +28,7 @@ import { getLifeItem, lifeSummary, lifeChains, kindName } from './life.js';
 import { waitingCaptures } from './captures.js';
 import { listTasks, createTask, changeTask, getTask, deleteTask, checkTaskInput } from './tasks.js';
 import { moduleOn } from './modules.js';
+import { findDocs } from './docs.js';
 import { listThreads, getThread } from './mail.js';
 import { checkDraft, mailToTask, draftsToday, LIMITS } from './mail-assistant.js';
 import { composeSend, undoSend } from './mail-send.js';
@@ -53,7 +54,7 @@ export const PATHS = {
 };
 
 // A tool that belongs to a module is offered, and runs, while the module is on.
-const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus', my_life: 'life', read_life_item: 'life' };
+const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus', my_life: 'life', read_life_item: 'life', docs_read: 'help' };
 export const offeredTools = (db) => TOOLS.filter((tool) => !MODULE_TOOLS[tool.name] || moduleOn(db, MODULE_TOOLS[tool.name]));
 
 export const TOOLS = [
@@ -76,6 +77,11 @@ export const TOOLS = [
     name: 'read_life_item',
     description: 'Read one My Life item (a Key Element, Goal, Project, Habit or Topic) by its id: its fields, its chain (why it exists: Project, Goal, Key Element), what stands under it, its thinking space and its open tasks. Reading only.',
     inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'docs_read',
+    description: 'Read the app’s own help pages, to answer how a part of this app works (“how does the Inbox work?”, “what is a Speedy?”). Give a view (like planner, inbox, tasks) or some words; it returns the best one or two pages with their link. Only for how the app works: for the owner’s own notes, journal and tasks use the other tools. Reading only.',
+    inputSchema: { type: 'object', properties: { view: { type: 'string', description: 'A view of the app, like planner or inbox' }, words: { type: 'string', description: 'Words to look for in the help pages' } } },
   },
   {
     name: 'list_tasks',
@@ -430,7 +436,7 @@ async function approveStep(db, args, run) {
 }
 
 // The tools that only read: all the Inbox reader may use (assistant/3).
-export const READ_TOOLS = ['search_notes', 'read_note', 'my_life', 'read_life_item', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
+export const READ_TOOLS = ['docs_read', 'search_notes', 'read_note', 'my_life', 'read_life_item', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
 
 // Runs one tool. run: { conversationId, messageId, folder, read(page), card(card), readOnly }
 // for the answer under way. Returns text for the assistant (or a promise of it).
@@ -456,6 +462,12 @@ export function runTool(db, name, args = {}, run = {}) {
     if (!item) throw fail(404, 'There is no My Life item with that id.');
     run.read?.({ id: item.id, kind: item.kind, title: item.title, path: item.path });
     return text(item);
+  }
+  if (name === 'docs_read') {
+    if (!moduleOn(db, 'help')) throw fail(403, 'Help pages is switched off in Settings › Modules.');
+    const found = findDocs(db, { view: args.view ?? '', words: args.words ?? '' });
+    if (!found.length) return 'No help page for that. Say so, and do not guess how the app works.';
+    return found.map((d) => `# ${d.title} (cite it as [${d.title} help](/help/${d.id}))\n\n${d.markdown}`).join('\n\n---\n\n');
   }
   if (name === 'list_tasks') {
     const tasks = tasksFor(db, args.when);
