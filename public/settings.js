@@ -11,6 +11,7 @@ import { googleSection, googleCalendarSection } from './google.js';
 import { readTimings, BUDGET_MS } from './timings.js';
 import { importSection } from './import-notes.js';
 import { captureSection } from './capture-settings.js';
+import { voiceSection, voiceLogSection } from './voice-settings.js';
 
 const permissionsApi = {
   get: () => request('GET', '/api/assistant/permissions'),
@@ -336,7 +337,7 @@ export async function showSettings() {
   const dictationPlace = el('div', {});
   const drawDictation = () => {
     const there = dictationPlace.childElementCount > 0;
-    if (moduleOn('voice') && !there) dictationPlace.replaceChildren(dictationSection(), glossarySection());
+    if (moduleOn('voice') && !there) dictationPlace.replaceChildren(dictationSection(), glossarySection(), voiceSection(), voiceLogSection());
     else if (!moduleOn('voice') && there) dictationPlace.replaceChildren();
   };
   // The Google part is there while Mail or Google Calendar is on (the sign-in is the shared piece); the Mail limits with Mail, the

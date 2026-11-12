@@ -121,6 +121,10 @@ while the computer is switched on and awake.
   switched on, and their voice never leaves the computer. Optional: their own ElevenLabs key
   (paste it into Settings › Dictation) shows the words while they speak; the key stays on their
   computer.
+- **Calls with the assistant** (with Dictation on): press Call in the Assistant's chat, talk,
+  and it answers out loud; every turn is kept in the chat. Free: it listens with the same voice
+  model and speaks with a free voice (Alba, British English, about 70 MB, fetched once the first
+  time the chat opens). With an ElevenLabs key, calls listen and speak with ElevenLabs instead.
 
 ## For Claude or Codex: updating it ("update Sovran Advisor")
 

@@ -172,6 +172,8 @@ const icons = {
   mail: svg('<rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M2 4.5l6 4.5 6-4.5"/>'),
   mic: svg('<rect x="6" y="1.5" width="4" height="8" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5M5.5 14.5h5"/>'),
   log: svg('<path d="M3 4.5h10M3 8h10M3 11.5h6"/>'),
+  // A telephone handset: a voice call with your assistant (advanced/voice/3).
+  phone: svg('<path d="M4.5 2h2l1 3-1.5 1a7 7 0 0 0 3.5 3.5l1-1.5 3 1v2a1.5 1.5 0 0 1-1.5 1.5A10.5 10.5 0 0 1 3 3.5 1.5 1.5 0 0 1 4.5 2z"/>'),
   timeline: svg('<path d="M4.5 2v12"/><circle cx="4.5" cy="4.5" r="1.6"/><circle cx="4.5" cy="11.5" r="1.6"/><path d="M8.5 4.5h5M8.5 11.5h5"/>'),
   // A mortarboard: the course (course.js).
   course: svg('<path d="M1.5 6L8 3l6.5 3L8 9z"/><path d="M4.5 7.4v3.4c1 .9 2.2 1.4 3.5 1.4s2.5-.5 3.5-1.4V7.4M14.5 6v3.5"/>'),

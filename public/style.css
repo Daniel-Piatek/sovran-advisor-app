@@ -4077,3 +4077,30 @@ html[data-section] .page.mail-app-page { border-top: 0; }
 .welcome-step { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); color: inherit; text-decoration: none; }
 .welcome-step:hover { background: var(--color-surface); }
 .welcome-step-words { display: flex; flex-direction: column; gap: var(--space-1); }
+
+/* Voice calls with your assistant (advanced/voice/3-7, public/call.js) */
+.call-button { display: inline-flex; align-items: center; gap: var(--space-1); }
+.call-button[hidden] { display: none; }
+/* The dot on Call: hollow while the call warms up, filled when it is ready (advanced/voice/5). */
+.call-dot { width: var(--space-2); height: var(--space-2); border-radius: 50%; border: var(--line); }
+.call-dot[data-warm="cold"] { display: none; }
+.call-dot[data-warm="ready"] { background: var(--color-text); border-color: var(--color-text); }
+/* The Call widget: a strip above the message box. */
+.call-widget { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); }
+.call-widget[hidden] { display: none; }
+.call-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+.call-state { font-family: var(--font-ui); }
+.call-who { color: var(--color-text-muted); }
+.call-words { flex: 1 1 var(--space-12); min-width: 0; color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.call-line .button { margin-left: auto; }
+/* The Hand-off line (advanced/voice/4) and the Fallback notice (advanced/voice/7). */
+.call-handoff, .call-notice { margin: 0; font-size: var(--text-sm); }
+.call-handoff[hidden], .call-notice[hidden] { display: none; }
+.call-notice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* Under a turn of a call in the chat: said on a call, where the answer came from, the Metric chip. */
+.chat-call-mark { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.metric-chip { display: inline-block; padding: 0 var(--space-2); border: var(--line); border-radius: var(--space-12); font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
+/* Settings › Voice: a small bar per call, its height the time to the first word. */
+.call-bars { display: flex; align-items: flex-end; gap: var(--space-1); height: var(--space-12); margin: var(--space-2) 0; }
+.call-bar { width: var(--space-2); background: var(--color-text-muted); border-radius: var(--space-1) var(--space-1) 0 0; }
+.call-bar.is-last { background: var(--color-text); }

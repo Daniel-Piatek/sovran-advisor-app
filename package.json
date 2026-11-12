@@ -39,6 +39,6 @@
     "prosemirror-view": "1.42.8"
   },
   "optionalDependencies": {
-    "sherpa-onnx-node": "2.0.1"
+    "sherpa-onnx-node": "1.13.8"
   }
 }

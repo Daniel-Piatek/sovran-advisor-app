@@ -192,7 +192,7 @@ test.describe('without a key, before the free voice model is here', () => {
     await expect(pill(page)).toContainText(/free voice model|voice model could not be downloaded/);
     await page.keyboard.up('AltRight');
     await page.goto(`${app.url}/settings`);
-    await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('Free voice model: The voice model could not be downloaded (404).');
+    await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('Free voice model: The free voice model could not be downloaded (404).');
     await expect(page.getByRole('region', { name: 'Dictation' }).getByRole('button', { name: 'Try again' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Dictation' })).toContainText('Optional: an ElevenLabs key');
     // Pasting it once into Settings keeps it; it is never shown again.
