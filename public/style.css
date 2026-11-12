@@ -4222,3 +4222,4 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .ai-check-result kbd { display: inline-block; padding: 0 var(--space-1); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font-family: var(--font-ui); font-size: var(--text-xs); line-height: 1.5; }
 .ai-check-result code { font-family: var(--font-mono); }
 .ai-check-said { font-style: italic; }
+.ai-check-result a { color: var(--color-text); font-weight: var(--weight-bold); text-decoration: underline; }

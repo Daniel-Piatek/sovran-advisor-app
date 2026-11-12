@@ -56,16 +56,30 @@ function signInLine(state) {
 
 // Signing in, from opening Terminal to pressing Check again.
 function signInSteps(state, k) {
-  const claude = state.provider === 'claude';
+  return state.provider === 'codex' ? codexSignInSteps(state, k) : claudeSignInSteps(state, k);
+}
+
+function claudeSignInSteps(state, k) {
   return el('ol', { class: 'ai-check-steps' },
     step(k.open),
     step(`**Type this line exactly and press ${k.enter}.** Or press **Copy**, click inside the ${k.shell} window, paste with ${k.paste}, and press ${k.enter}.`, typeLine(signInLine(state))),
-    ...(claude ? [step(`If ${k.shell} says it doesn’t know \`auth\` (an older Claude Code), type \`claude\` instead and press ${k.enter}. Press ${k.enter} to accept its setup questions, and when it asks how to sign in, choose **Claude account with subscription**.`)] : []),
-    claude
-      ? step(`**Your web browser opens a Claude page.** Sign in with the Claude account that has your paid plan (Pro or higher), and press **Authorize**. If the browser doesn’t open by itself, ${k.shell} shows a long web address starting with https: ${k.click}, or copy it into your browser.`)
-      : step(`**Your web browser opens a ChatGPT page.** Sign in with your ChatGPT account and allow Codex to use it (press the button to continue). If the browser doesn’t open by itself, ${k.shell} shows a long web address starting with https: ${k.click}, or copy it into your browser.`),
-    ...(claude ? [step(`**If the page shows a code instead,** press its Copy button, click inside the ${k.shell} window where it says “Paste code here”, paste with ${k.paste}, and press ${k.enter}.`)] : []),
-    step(`**${k.shell} says the sign-in worked** (“Login successful”). ${k.close} It doesn’t need to stay open${claude ? ', and neither does the Claude app' : ''}. You only do this once.`),
+    step(`If ${k.shell} says it doesn’t know \`auth\` (an older Claude Code), type \`claude\` instead and press ${k.enter}. Press ${k.enter} to accept its setup questions, and when it asks how to sign in, choose **Claude account with subscription**.`),
+    step(`**Your web browser opens a Claude page.** Sign in with the Claude account that has your paid plan (Pro or higher), and press **Authorize**. If the browser doesn’t open by itself, ${k.shell} shows a long web address starting with https: ${k.click}, or copy it into your browser.`),
+    step(`**If the page shows a code instead,** press its Copy button, click inside the ${k.shell} window where it says “Paste code here”, paste with ${k.paste}, and press ${k.enter}.`),
+    step(`**${k.shell} says the sign-in worked** (“Login successful”). ${k.close} It doesn’t need to stay open, and neither does the Claude app. You only do this once.`),
+    step('**Come back to this page and press Check again** (the button just above these steps). It should now say your assistant works.'));
+}
+
+// ChatGPT: Codex signs in with the ChatGPT account (any plan; Plus or higher is best). The words are Codex’s own
+// (codex login, Codex 0.167): “Signed in to Codex” in the browser, “Successfully logged in” in Terminal.
+function codexSignInSteps(state, k) {
+  const line = signInLine(state);
+  return el('ol', { class: 'ai-check-steps' },
+    step(k.open),
+    step(`**Type this line exactly and press ${k.enter}.** Or press **Copy**, click inside the ${k.shell} window, paste with ${k.paste}, and press ${k.enter}.`, typeLine(line)),
+    step(`**Your web browser opens an OpenAI sign-in page.** Sign in with your ChatGPT account (the same one you use in the ChatGPT app), and press **Continue** if it asks you to allow Codex. When the page says **Signed in to Codex**, you can close that browser tab. If the browser doesn’t open by itself, ${k.shell} says “If your browser did not open, navigate to this URL” with a long web address under it: ${k.click}, or copy it into your browser.`),
+    step(`**If signing in in the browser doesn’t work** (the page hangs or shows an error): click inside the ${k.shell} window, press [control] + [C] to stop, then type this line and press ${k.enter}. ${k.shell} shows a link and a one-time code: open the link, sign in to ChatGPT, and type the code there. The code works for 15 minutes.`, typeLine(`${line} --device-auth`)),
+    step(`**${k.shell} says “Successfully logged in”.** ${k.close} It doesn’t need to stay open, and neither does the ChatGPT app. You only do this once.`),
     step('**Come back to this page and press Check again** (the button just above these steps). It should now say your assistant works.'));
 }
 
@@ -74,9 +88,8 @@ function installSteps(state, k) {
   if (!claude && !k.mac) {
     return el('p', {}, ...rich('ChatGPT on Windows isn’t ready yet (it hasn’t been tested there). Press **Claude** above to use Claude instead, or wait: everything else in the app works without it.'));
   }
-  const install = claude
-    ? (k.mac ? 'curl -fsSL https://claude.ai/install.sh | bash' : 'irm https://claude.ai/install.ps1 | iex')
-    : 'npm install -g @openai/codex';
+  if (!claude) return codexInstallSteps(state, k);
+  const install = k.mac ? 'curl -fsSL https://claude.ai/install.sh | bash' : 'irm https://claude.ai/install.ps1 | iex';
   return el('ol', { class: 'ai-check-steps' },
     step(k.open),
     step(`**Type this line exactly and press ${k.enter}.** Or press **Copy**, click inside the ${k.shell} window, paste with ${k.paste}, and press ${k.enter}.${k.mac ? ' If it asks for your Mac password, type it (nothing shows while you type) and press [return].' : ''}`, typeLine(install)),
@@ -85,6 +98,19 @@ function installSteps(state, k) {
     step(`When ${k.shell} says the sign-in worked, close it. ${k.close}`),
     step('**Restart Sovran Advisor** so it finds the new program: press **Restart the app** lower down on this page.'),
     step('**Come back here and press Check again.**'));
+}
+
+// ChatGPT on a Mac: Codex comes inside OpenAI’s ChatGPT app (the install guide’s way), so the app first; Codex on
+// its own (npm, next to Node.js, which Sovran Advisor already uses) only if the app still can’t find it.
+function codexInstallSteps(state, k) {
+  return el('ol', { class: 'ai-check-steps' },
+    step('**Get the ChatGPT app** if it isn’t on this Mac yet. Press this link and choose the **Mac** download.',
+      el('a', { href: 'https://openai.com/chatgpt/download/', target: '_blank', rel: 'noopener' }, 'Open the ChatGPT download')),
+    step('**Open the download.** Click the downloaded file (it ends in **.dmg**) in your **Downloads** folder. In the small window that opens, drag the **ChatGPT** icon onto the **Applications** folder.'),
+    step('**Open ChatGPT.** Press [⌘ command] + [space], type **ChatGPT**, and press [return]. If your Mac asks “Are you sure you want to open it?”, press **Open**. Sign in with your ChatGPT account.'),
+    step('**Restart Sovran Advisor** so it finds Codex inside the ChatGPT app: press **Restart the app** lower down on this page.'),
+    step('**Come back here and press Check again.** If it now says Codex isn’t signed in, follow the steps it shows.'),
+    step(`**If it still says Codex isn’t found,** install Codex on its own. ${k.open.replace('**Open Terminal.**', 'Open Terminal:')} Type this line and press [return] (if it asks for your Mac password, type it: nothing shows while you type). Wait until you can type again, then restart Sovran Advisor and press Check again.`, typeLine('npm install -g @openai/codex')));
 }
 
 // What a result says, and what to do: one block.
@@ -103,7 +129,7 @@ export function checkAdvice(state) {
         installSteps(state, k), el('p', { class: 'empty' }, HELP_LINE));
     case 'signed_out':
       return box('signed_out', `${state.program} isn’t signed in to your ${name} account.`,
-        el('p', {}, `Sign in once, in ${k.shell}. It takes about two minutes.`),
+        el('p', {}, `Sign in once, in ${k.shell}. It takes about two minutes.${claude ? '' : ' Any ChatGPT plan works; Plus or higher is best, Free and Go are for light use.'}`),
         signInSteps(state, k), el('p', { class: 'empty' }, HELP_LINE));
     case 'free':
       return box('free', 'Your Claude account is on the Free plan.',
@@ -118,7 +144,7 @@ export function checkAdvice(state) {
         ...(state.detail ? [el('p', {}, 'It said: ', el('q', { class: 'ai-check-said' }, state.detail))] : []),
         el('ol', { class: 'ai-check-steps' },
           step('**Check that this computer is online:** open any web page.'),
-          step('**If it mentions a limit** (for example “usage limit” or “hit your limit”), your plan’s allowance is used up for now. It says when it starts again: wait until then.'),
+          step(`**If it mentions a limit** (for example “usage limit” or “hit your limit”), your plan’s allowance is used up for now. It says when it starts again: wait until then.${claude ? '' : ' On ChatGPT Free or Go the allowance is small; Plus or higher gives much more.'}`),
           step('**Restart Sovran Advisor:** press **Restart the app** lower down on this page.'),
           step('**Press Check again.**')),
         el('p', { class: 'empty' }, HELP_LINE));

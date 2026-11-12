@@ -43,3 +43,35 @@ test('a Free plan: upgrade, then sign in again', async ({ page, app }) => {
   await expect(result.getByRole('link', { name: 'Open Claude’s plans page' })).toHaveAttribute('href', 'https://claude.com/pricing');
   await expect(result).toContainText('Authorize');
 });
+
+test('ChatGPT not signed in: every step for Codex, with the line to type and the one-time code way', async ({ page, app }) => {
+  fs.writeFileSync(path.join(app.dataDir, 'fake-codex-auth.json'), JSON.stringify({ loggedIn: false }));
+  await page.goto(`${app.url}/settings`);
+  await part(page).getByRole('button', { name: 'ChatGPT' }).click();
+  await part(page).getByRole('button', { name: 'Check', exact: true }).click();
+  const result = part(page).locator('.ai-check-result');
+  await expect(result).toHaveAttribute('data-result', 'signed_out');
+  await expect(result.locator('.ai-check-title')).toHaveText('Codex isn’t signed in to your ChatGPT account.');
+  await expect(result).toContainText('Open Terminal');
+  await expect(result).toContainText('Signed in to Codex');
+  await expect(result).toContainText('Successfully logged in');
+  await expect(result.locator('.ai-check-line code').first()).toHaveText(/ login$/);
+  await expect(result.locator('.ai-check-line code').nth(1)).toHaveText(/ login --device-auth$/);
+  await part(page).screenshot({ path: test.info().outputPath('chatgpt-signed-out.png') });
+
+  fs.rmSync(path.join(app.dataDir, 'fake-codex-auth.json'));
+  await part(page).getByRole('button', { name: 'Check again' }).click();
+  await expect(result).toHaveAttribute('data-result', 'working');
+});
+
+test('ChatGPT not found on a Mac: the ChatGPT app first, then Codex on its own', async ({ page, app }) => {
+  await page.route('**/api/assistant/check', (route) => route.fulfill({ json: { provider: 'codex', program: 'Codex', platform: 'darwin', command: 'codex', plan: '', result: 'missing', detail: '' } }));
+  await page.goto(`${app.url}/settings`);
+  await part(page).getByRole('button', { name: 'Check', exact: true }).click();
+  const result = part(page).locator('.ai-check-result');
+  await expect(result).toHaveAttribute('data-result', 'missing');
+  await expect(result.getByRole('link', { name: 'Open the ChatGPT download' })).toHaveAttribute('href', 'https://openai.com/chatgpt/download/');
+  await expect(result).toContainText('Restart the app');
+  await expect(result.locator('.ai-check-line code')).toHaveText('npm install -g @openai/codex');
+  await part(page).screenshot({ path: test.info().outputPath('chatgpt-missing.png') });
+});
