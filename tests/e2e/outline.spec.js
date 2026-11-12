@@ -117,6 +117,7 @@ test('switched off, every note is its plain indented text again and the bullets 
   const row = page.locator('[data-module="writing"]');
   await expect(row).toContainText('Writing and thinking');
   await row.getByRole('button', { name: 'Off' }).click();
+  await expect(row.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${note.id}`);
   await expect(text(page)).toContainText('Intro line');
   await expect(page.locator('.fold-toggle')).toHaveCount(0);

@@ -76,6 +76,7 @@ test('a Google CSV is read too; a file that is not contacts says so; with People
   await page.keyboard.press('Escape');
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/people`);
   await expect(page.getByRole('button', { name: 'Import' })).toHaveCount(0);
 });

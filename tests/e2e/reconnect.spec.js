@@ -37,6 +37,7 @@ test('People opens on Reconnect: the most overdue first, Remind me only for who 
   await expect(rows.nth(0)).toContainText('Added “Reconnect with Jonas” for tomorrow.');
   await expect(rows.nth(0).getByRole('button', { name: 'Reminded' })).toBeDisabled();
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('2'); // Upcoming
   await expect(page.locator('.task-row .task-words').filter({ hasText: 'Reconnect with Jonas' })).toHaveCount(1);
   expect((await send(app, 'GET', '/api/tasks'))[0].due).toBe(daysFromNow(1));
@@ -95,6 +96,7 @@ test('with People in depth off there is no chip and no Reconnect list; and the a
 
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="people-plus"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/people`);
   await expect(page.getByRole('region', { name: 'Reconnect' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Everyone' })).toHaveCount(0);

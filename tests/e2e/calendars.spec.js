@@ -143,6 +143,7 @@ test('Calendar links is a module: off, the pane and its events go and the rows s
   // On again: the calendar and its events come back, nothing lost.
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="calendar-links"]').getByRole('button', { name: 'On' }).click();
+  await expect(page.locator('[data-module="calendar-links"]').getByRole('button', { name: 'On' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/calendar?view=day`);
   await expect(panel.locator('.cal-calendar-name')).toHaveText(['My events', 'Work']);
   await expect(page.getByRole('button', { name: /Team meeting, .*Work/ })).toBeVisible();

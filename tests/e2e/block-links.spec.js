@@ -69,6 +69,7 @@ test('switched off, the address stays as plain text and (( opens nothing', async
   await app.updateNote(proposal.id, { body: `((${pack.id}))` });
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${proposal.id}`);
   await expect(text(page)).toContainText(`((${pack.id}))`);
   await expect(text(page).locator('.block-ref')).toHaveCount(0);

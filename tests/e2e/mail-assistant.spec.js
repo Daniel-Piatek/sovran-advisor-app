@@ -64,7 +64,7 @@ test('t on the invoice opens the task pop-up with the subject, the sender and th
   const chip = page.locator('.mail-chip').first();
   await expect(chip).toHaveText(/Mail/);
   await chip.click();
-  await expect(page).toHaveURL(/\/mail\?thread=/);
+  await expect(page).toHaveURL(/\/mail\?(split=\w+&)?thread=/);
   await expect(page.locator('.mail-reader-subject')).toHaveText('Invoice 2026-114');
 });
 

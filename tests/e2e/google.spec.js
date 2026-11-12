@@ -1,4 +1,4 @@
-// Google (advanced/mail/1): Settings › Modules has a Mail row; Settings › Google takes the owner's own
+// Google (advanced/mail/1): Mail is not offered in Settings › Modules yet (switched behind the scenes); Settings › Google takes the owner's own
 // client, signs an account in, and gives each permission a switch that asks Google only when it is
 // switched on. Google and the key store are stood in for (tests/fake-google.js): no real Google, no real client.
 import fs from 'node:fs';
@@ -18,22 +18,25 @@ async function signedIn(page, app) {
   await expect(account(page)).toContainText('work@mypractice.com');
 }
 
-test('Mail has its row in Modules, switched on, and Google follows it: it stays while Google Calendar is on, and goes when both are off', async ({ page, app }) => {
+const setMail = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'mail', on }) });
+
+test('Mail has no row in Modules yet; Google follows it: it stays while Google Calendar is on, and goes when both are off', async ({ page, app }) => {
   await page.goto(`${app.url}/settings`);
-  const row = page.locator('[data-module="mail"]');
   const calendarRow = page.locator('[data-module="calendar-google"]');
-  await expect(row).toContainText('Mail');
-  await expect(row.getByRole('button', { name: 'On', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(calendarRow).toBeVisible();
+  await expect(page.locator('[data-module="mail"]')).toHaveCount(0);
   await expect(google(page)).toBeVisible();
 
   // Mail off: the sign-in is the shared piece and stays for Google Calendar; the Mail limits go.
-  await row.getByRole('button', { name: 'Off', exact: true }).click();
+  await setMail(app, false);
+  await page.reload();
   await expect(google(page)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Your assistant and mail' })).toHaveCount(0);
   // Both off: it goes.
   await calendarRow.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(google(page)).toHaveCount(0);
-  await row.getByRole('button', { name: 'On', exact: true }).click();
+  await setMail(app, true);
+  await page.reload();
   await expect(google(page)).toBeVisible();
 });
 

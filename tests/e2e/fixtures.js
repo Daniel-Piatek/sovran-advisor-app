@@ -68,6 +68,8 @@ export const test = base.extend({
     };
     // A new install starts with some sections switched off (modules.js, starter: false); the tests start with everything on.
     for (const id of ['tasks', 'planner', 'calendar', 'life', 'voice', 'calendar-google', 'mylife-plus', 'mail']) await send('PATCH', '/api/modules', { id, on: true });
+    // Help pages are on in a new install, but their "?" sits in every page title: the tests start with it off (help.spec.js switches it on).
+    await send('PATCH', '/api/modules', { id: 'help', on: false });
     await send('PATCH', '/api/welcome', { seen: true }); // the welcome has its own test
     const createNote = (note = {}) => send('POST', '/api/notes', note);
     const updateNote = (id, changes) => send('PATCH', `/api/notes/${id}`, changes);

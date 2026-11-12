@@ -48,6 +48,7 @@ test('switched off there is no clock', async ({ page, app }) => {
   const note = await app.createNote({ title: 'N', body: 'a' });
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${note.id}`);
   await expect(page.getByLabel('Text')).toHaveText('a');
   await expect(clock(page)).toHaveCount(0);

@@ -9,6 +9,7 @@ const allTasks = (app) => fetch(`${app.url}/api/tasks`).then((r) => r.json());
 test('@ in the add bar: pick Lena, Enter adds the task, the row shows her as a face and a name, and her page lists it', async ({ page, app }) => {
   const lena = await send(app, 'POST', '/api/people', { name: 'Lena Fischer' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q');
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.focus();
@@ -47,6 +48,7 @@ test('@@ in a task’s edit strip adds a company, and Escape closes the menu bef
   await send(app, 'POST', '/api/companies', { name: 'Nordlicht Studio' });
   await send(app, 'POST', '/api/tasks', { text: 'Send the offer' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('7'); // All
   await page.locator('.task-row .task-words').filter({ hasText: 'Send the offer' }).click();
   const edit = page.getByLabel('The task’s words');
@@ -88,6 +90,7 @@ test('Settings › Modules: switching People in depth off takes away the @ menu 
 
   // The task's row: her name as plain words.
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('7');
   const words = page.locator('.task-row .task-words').filter({ hasText: 'Ring Lena Fischer' });
   await expect(words).toHaveText('Ring Lena Fischer');
@@ -112,6 +115,7 @@ test('Settings › Modules: switching People in depth off takes away the @ menu 
   await row.getByRole('button', { name: 'On' }).click();
   await expect(row.getByRole('button', { name: 'On' })).toHaveAttribute('aria-pressed', 'true');
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('7');
   await expect(page.locator('.task-row .task-words .mention-chip')).toHaveText('LFLena Fischer');
 });

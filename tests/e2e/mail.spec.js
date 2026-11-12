@@ -6,12 +6,20 @@ import path from 'node:path';
 import { test, expect } from './fixtures.js';
 import { makeMailbox } from '../../scripts/demo-mail.js';
 
+// The file goes in a folder of plain letters: a test's own output folder is named after its title, and a title with
+// curly quotes in it makes a path the browser's file chooser does not take on Linux (the file is never chosen).
+const plainPath = (testInfo, name) => {
+  const dir = path.join(testInfo.project.outputDir, 'mbox', testInfo.testId);
+  fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, name);
+};
 const mailbox = (testInfo, filler = 40) => {
-  const file = testInfo.outputPath('takeout.mbox');
+  const file = plainPath(testInfo, 'takeout.mbox');
   fs.writeFileSync(file, makeMailbox({ filler }).text);
   return file;
 };
 const section = (page, name) => page.getByRole('region', { name, exact: true });
+const setMail = (app, on) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'mail', on }) });
 const get = (app, url) => fetch(app.url + url).then((r) => r.json());
 
 async function importFile(page, file, address = 'demo@example.com') {
@@ -134,15 +142,13 @@ test('with Mail switched off the screen and its place go, and every message is s
   await importFile(page, mailbox(testInfo));
   await expect(section(page, 'Your mail')).toContainText('48 messages');
 
-  await page.goto(`${app.url}/settings`);
-  await page.locator('[data-module="mail"]').getByRole('button', { name: 'Off', exact: true }).click();
+  await setMail(app, false); // Mail has no row in Settings › Modules yet (modules.js, hidden): it is switched behind the scenes
   await page.goto(`${app.url}/mail`);
   await expect(page.getByText('Mail is switched off. Everything it kept is still here.')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'Mail' })).toBeHidden();
   expect((await get(app, '/api/mail')).messages).toBe(48);
 
-  await page.goto(`${app.url}/settings`);
-  await page.locator('[data-module="mail"]').getByRole('button', { name: 'On', exact: true }).click();
+  await setMail(app, true);
   await page.goto(`${app.url}/mail`);
   await expect(page.getByRole('tab', { name: /Important/ })).toBeVisible();
   await page.goto(`${app.url}/mail/import`);
@@ -164,7 +170,7 @@ async function withGmail(app, testInfo, { newest = 17 } = {}) {
   await follow(await post(app, '/api/google/connect', {}));
   const [account] = (await fetch(`${app.url}/api/google`).then((r) => r.json())).accounts;
   await follow(await fetch(`${app.url}/api/google/accounts/${account.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permission: 'mail.read', on: true }) }).then((r) => r.json()));
-  const file = testInfo.outputPath('export.mbox');
+  const file = plainPath(testInfo, 'export.mbox');
   fs.writeFileSync(file, mailboxOf(everything.slice(0, everything.length - newest)));
   return file;
 }

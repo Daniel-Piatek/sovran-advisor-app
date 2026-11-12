@@ -111,6 +111,7 @@ test('switched off, the board line stays a plain link and there is no Whiteboard
   const { note } = await noteWithBoard(app);
   await page.goto(`${app.url}/settings`);
   await page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' }).click();
+  await expect(page.locator('[data-module="writing"]').getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true'); // saved before the page is left
   await page.goto(`${app.url}/notes/${note.id}`);
   await expect(text(page).getByRole('link', { name: 'Workshop flow' })).toBeVisible();
   await expect(page.getByRole('region', { name: /^Board:/ })).toHaveCount(0);

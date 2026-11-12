@@ -63,6 +63,7 @@ test('hold Right Option in a note, speak, let go: the words land at the cursor, 
 test('it works in a plain field too, at the cursor in the middle of a word list', async ({ page, app }) => {
   await standIn(page, { final: 'the dentist' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.fill('call  tomorrow');
@@ -136,6 +137,7 @@ test('Escape while listening throws the dictation away; silence says it heard no
 test('no key yet says where to put it; a service that refuses says so; nothing is kept', async ({ page, app }) => {
   await standIn(page, { error: 'You have used up your quota' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   await page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' }).click();
   await hold(page);
@@ -186,6 +188,7 @@ test.describe('without a key, before the free voice model is here', () => {
   test.use({ elevenKey: '', expectedConsoleErrors: [/status of 409/] }); // the session is refused, on purpose
   test('the pill says the model is being fetched (or why not), Settings offers to try again, and the key is never shown', async ({ page, app }) => {
     await page.goto(`${app.url}/tasks`);
+    await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
     await page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' }).click();
     await hold(page);
@@ -220,6 +223,7 @@ test('the hold key is a setting; with Dictation switched off there is no pill, n
   await section.getByRole('button', { name: 'Right Control (^)' }).click();
   await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : 'Hold Right ^ to dictate');
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.click();
@@ -234,6 +238,7 @@ test('the hold key is a setting; with Dictation switched off there is no pill, n
   await expect(page.getByRole('region', { name: 'Dictation' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Dictate/ })).toBeHidden();
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   await page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' }).click();
   seen.url = null;
@@ -249,6 +254,7 @@ test('the glossary fixes what is heard, hands People’s names to the speech ser
   await send(app, 'POST', '/api/glossary', { term: 'Nordlicht', heard_as: 'North light' });
   const seen = await standIn(page, { final: 'met north light and Lena today' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.click();
@@ -289,6 +295,7 @@ test('correct a word you just dictated and the app offers to learn it; Add, and 
 test('Not now learns nothing; a number or a rewritten sentence is never proposed; it works in a note too', async ({ page, app }) => {
   await standIn(page, { final: 'Pay 120 euros' });
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
   const bar = page.getByRole('dialog', { name: 'Add a task' }).getByRole('textbox', { name: 'Add a task' });
   await bar.click();

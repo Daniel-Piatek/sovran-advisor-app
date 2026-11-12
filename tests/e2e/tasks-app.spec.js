@@ -21,6 +21,7 @@ test('q from anywhere: "call the dentist tomorrow ~10m" is a Speedy called "call
 test('the q box: chips while typing, a home, and what is said fills the boxes', async ({ page, app }) => {
   const workshop = await fetch(`${app.url}/api/life`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'project', title: 'Autumn workshop' }) }).then((r) => r.json());
   await page.goto(`${app.url}/tasks`);
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q');
   const box = page.getByRole('dialog', { name: 'Add a task' });
   const bar = box.getByRole('textbox', { name: 'Add a task' });

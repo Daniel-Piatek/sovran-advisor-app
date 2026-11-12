@@ -1,4 +1,4 @@
-// Help pages (module help, myICOR advanced/last/2 and 3): off in a new install; on, a "?" after
+// Help pages (module help, myICOR advanced/last/2 and 3): on in a new install (the test copy starts with it off); on, a "?" after
 // every page title opens that page's help beside it, and /help lists every page.
 import { test, expect } from './fixtures.js';
 
@@ -7,7 +7,7 @@ const switchOn = async (page, app) => {
   await page.locator('[data-module="help"]').getByRole('button', { name: 'On' }).click();
 };
 
-test('off in a new install: no "?" after a title', async ({ page, app }) => {
+test('switched off: no "?" after a title', async ({ page, app }) => {
   await page.goto(`${app.url}/`);
   await expect(page.getByRole('heading', { name: 'Notes', level: 1 })).toBeVisible();
   await expect(page.locator('.help-button')).toHaveCount(0);

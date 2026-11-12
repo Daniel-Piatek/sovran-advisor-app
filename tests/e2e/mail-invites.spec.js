@@ -90,6 +90,7 @@ test('without “Send mail as you” the meeting is on your day and the card say
 test('the keys are in the palette and the panel; the Library draws the card', async ({ page, app }) => {
   await setUp(app);
   await page.goto(`${app.url}/mail?split=calendar`);
+  await expect(rows(page).first()).toBeVisible(); // the mail's keys work once its list is drawn
   await page.keyboard.press('ControlOrMeta+k');
   for (const name of [/Invitation: Yes/, /Invitation: Maybe/, /Invitation: No/]) await expect(page.getByRole('option', { name })).toBeVisible();
   await page.keyboard.press('Escape');
