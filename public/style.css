@@ -251,7 +251,7 @@ h1 {
 /* A page's add button (New note, New entry, New chat…) sits just right of the title, the same place on every
    section's page (2026-11-10, the owner's wish); the rest of the bar keeps to the right. */
 .page-add { flex: none; margin-left: calc(var(--space-12) + var(--space-8)); } /* well apart from the title (2026-11-10, the owner's wish) */
-.top-bar > .top-bar-title + :not(.page-add):not(.help-button), .top-bar > .help-button + :not(.page-add), .top-bar > .page-add + * { margin-left: auto; }
+.top-bar > .top-bar-title + :not(.page-add), .top-bar > .page-add + * { margin-left: auto; }
 
 .switch {
   display: flex;
@@ -4144,10 +4144,12 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
   justify-content: center;
   width: calc(var(--space-6) - var(--space-1));
   height: calc(var(--space-6) - var(--space-1));
-  margin-left: var(--space-2);
+  margin-left: var(--space-3);
   padding: 0;
   border: var(--line);
   border-radius: 50%;
+  position: relative;
+  top: calc(var(--space-1) * -1); /* level with the middle of the title's letters */
   background: var(--color-bg);
   color: var(--color-text-muted);
   font-family: var(--font-ui);

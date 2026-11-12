@@ -71,17 +71,18 @@ document.addEventListener('click', (event) => { if (!pane.hidden && event.target
 const TITLES = 'h1.top-bar-title';
 function placeButtons() {
   const doc = docForPath(location.pathname);
+  // The "?" sits inside the title, after its words, so the page's header keeps its own layout (2026-11-12, the
+  // owner's report: beside the title it took a column of its own on My Life, Mail and the Assistant).
   for (const title of document.querySelectorAll(`#app ${TITLES}`)) {
-    const next = title.nextElementSibling;
-    const has = next?.classList.contains('help-button');
-    if (!doc) { if (has) next.remove(); continue; }
-    if (has && next.dataset.doc === doc.id) continue;
-    if (has) next.remove();
+    const has = title.querySelector(':scope > .help-button');
+    if (!doc) { has?.remove(); continue; }
+    if (has?.dataset.doc === doc.id) continue;
+    has?.remove();
     const button = el('button', {
       type: 'button', class: 'help-button', 'data-doc': doc.id, 'aria-label': `Help: ${doc.title}`, title: `Help: ${doc.title}`, 'aria-expanded': 'false',
     }, '?');
-    button.addEventListener('click', () => openPane(doc, button));
-    title.after(button);
+    button.addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); openPane(doc, button); });
+    title.append(button);
   }
 }
 new MutationObserver(() => { if (docs.length || document.querySelector('#app .help-button')) placeButtons(); })
