@@ -24,7 +24,7 @@ import { eventsBetween } from './events.js';
 import { calendarEventsBetween, ownEvent } from './calendars.js';
 import { searchEntries, getEntry, createEntry, deleteEntry, localDay } from './entries.js';
 import { listPeople, listCompanies, getPerson, getCompany } from './people.js';
-import { getLifeItem } from './life.js';
+import { getLifeItem, lifeSummary, lifeChains, kindName } from './life.js';
 import { waitingCaptures } from './captures.js';
 import { listTasks, createTask, changeTask, getTask, deleteTask, checkTaskInput } from './tasks.js';
 import { moduleOn } from './modules.js';
@@ -53,7 +53,7 @@ export const PATHS = {
 };
 
 // A tool that belongs to a module is offered, and runs, while the module is on.
-const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus' };
+const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus', my_life: 'life', read_life_item: 'life' };
 export const offeredTools = (db) => TOOLS.filter((tool) => !MODULE_TOOLS[tool.name] || moduleOn(db, MODULE_TOOLS[tool.name]));
 
 export const TOOLS = [
@@ -65,6 +65,16 @@ export const TOOLS = [
   {
     name: 'read_note',
     description: 'Read one page in full by its id: a note, a journal entry, a person, a company or a My Life item.',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'my_life',
+    description: 'A short summary of the owner’s My Life: their Key Elements (the parts of life they permanently maintain) and, under each, the active Goals with the Projects and Habits that carry them, and the active Projects, Habits and Topics. Use it for “which Goals am I working on?” or “what matters to me?”. Each item’s id is found with search_notes; read one with read_life_item. Reading only.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'read_life_item',
+    description: 'Read one My Life item (a Key Element, Goal, Project, Habit or Topic) by its id: its fields, its chain (why it exists: Project, Goal, Key Element), what stands under it, its thinking space and its open tasks. Reading only.',
     inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
   },
   {
@@ -243,6 +253,29 @@ export function findPage(db, id) {
   return null;
 }
 
+// One My Life item as the assistant reads it: the fields that are filled in, its chain,
+// what stands under it, its thinking space and its open tasks (those in notes at home here too).
+const LIFE_FIELDS = ['description', 'not_this', 'statement', 'horizon', 'shipped_means', 'why', 'outcome', 'done_means',
+  'starts_on', 'ends_on', 'pulse', 'depth', 'done_when'];
+export function readLifeItem(db, id) {
+  const item = getLifeItem(db, id);
+  if (!item) return null;
+  const fields = Object.fromEntries(LIFE_FIELDS.filter((f) => item[f]).map((f) => [f, item[f]]));
+  if (item.kind === 'habit') fields.cadence = `${item.cadence_times} a ${item.cadence_per}`;
+  const brief = (i) => ({ id: i.id, kind: kindName(i.kind), title: i.title, state: i.state });
+  const tasks = listTasks(db, { home: id }).filter((t) => !t.done);
+  return {
+    id, kind: kindName(item.kind), title: item.title, state: item.state, path: PATHS.life(id), ...fields,
+    chain: lifeChains(db, id).map((chain) => chain.map((s) => `${s.kind} “${s.title}”`).join(' → ')),
+    ...(item.home ? { home: brief(item.home) } : {}),
+    ...(item.serves.length ? { serves: item.serves.map(brief) } : {}),
+    ...(item.under.length ? { under: item.under.map(brief) } : {}),
+    thinking_space: item.body || '',
+    open_tasks: tasks.slice(0, 50).map((t) => ({ id: t.id, text: t.text, due: t.due || 'no date', flag: t.flag || undefined })),
+    open_tasks_count: tasks.length,
+  };
+}
+
 function tasksFor(db, when = 'all', today = localDay()) {
   const pick = {
     all: (t) => !t.done,
@@ -397,7 +430,7 @@ async function approveStep(db, args, run) {
 }
 
 // The tools that only read: all the Inbox reader may use (assistant/3).
-export const READ_TOOLS = ['search_notes', 'read_note', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
+export const READ_TOOLS = ['search_notes', 'read_note', 'my_life', 'read_life_item', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
 
 // Runs one tool. run: { conversationId, messageId, folder, read(page), card(card), readOnly }
 // for the answer under way. Returns text for the assistant (or a promise of it).
@@ -413,6 +446,16 @@ export function runTool(db, name, args = {}, run = {}) {
     if (!page) throw fail(404, 'There is no page with that id.');
     run.read?.(page);
     return text(page);
+  }
+  if (name === 'my_life' || name === 'read_life_item') {
+    if (!moduleOn(db, 'life')) throw fail(403, 'My Life is switched off in Settings › Modules.');
+    if (name === 'my_life') {
+      return lifeSummary(db, { habits: moduleOn(db, 'mylife-plus') }) || 'My Life is empty: no active Key Elements, Goals, Projects or Topics yet.';
+    }
+    const item = readLifeItem(db, String(args.id ?? ''));
+    if (!item) throw fail(404, 'There is no My Life item with that id.');
+    run.read?.({ id: item.id, kind: item.kind, title: item.title, path: item.path });
+    return text(item);
   }
   if (name === 'list_tasks') {
     const tasks = tasksFor(db, args.when);

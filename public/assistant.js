@@ -116,7 +116,7 @@ export function cardNode(card, changed) {
 const STEP_NAMES = {
   Write: 'Wrote', Edit: 'Changed', MultiEdit: 'Changed', Read: 'Read', Bash: 'Ran', Glob: 'Looked for', Grep: 'Searched for', LS: 'Listed',
   WebFetch: 'Opened', WebSearch: 'Searched the web for', ToolSearch: 'Got its tools ready',
-  mcp__app__search_notes: 'Searched your notes for', mcp__app__read_note: 'Read', mcp__app__list_tasks: 'Looked at your tasks',
+  mcp__app__search_notes: 'Searched your notes for', mcp__app__read_note: 'Read', mcp__app__list_tasks: 'Looked at your tasks', mcp__app__my_life: 'Looked at My Life', mcp__app__read_life_item: 'Read',
   mcp__app__add_task: 'Added a task', mcp__app__append_to_journal: 'Wrote in your journal', mcp__app__log_interaction: 'Logged an interaction', mcp__app__reconnect_list: 'Looked at who is due to reconnect',
   mcp__app__calendar_list: 'Looked at your calendar', mcp__app__calendar_propose: 'Proposed an event', mcp__app__board_read: 'Read a board', mcp__app__board_draw: 'Drew on a board', mcp__app__list_comments: 'Looked at the comments left for it', mcp__app__reply_to_comment: 'Answered a comment', mcp__app__mail_search: 'Searched your mail for', mcp__app__mail_read: 'Read a conversation', mcp__app__mail_draft: 'Drafted a mail', mcp__app__mail_to_task: 'Made a task of a mail',
   mcp__app__propose_note_edit: 'Proposed a change to a note', mcp__app__propose_task_change: 'Proposed a change to a task',

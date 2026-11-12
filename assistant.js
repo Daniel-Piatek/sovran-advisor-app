@@ -19,6 +19,8 @@ import { fileURLToPath } from 'node:url';
 import { actionsOf, findPage, cancelWaits } from './assistant-tools.js';
 import { NEVER_TOOLS, judgeStep, logActivity } from './permissions.js';
 import { localDay } from './entries.js';
+import { moduleOn } from './modules.js';
+import { lifeSummary } from './life.js';
 import { codexArgs, codexEnv, codexModel, lineReader } from './codex.js';
 
 const now = () => new Date().toISOString();
@@ -52,6 +54,16 @@ export const guide = () => [
   'when both changed the very same lines, Claude stops and they choose keep mine, take the new one, combine them, or not now (which undoes the update). Saying “undo the last Sovran Advisor update” puts the app back. Their notes are never part of any of it.',
   `The whole guide is ${path.join(APP_DIR, 'CUSTOMISING.md')}: read it when they want more.`,
 ].join(' ');
+
+// What matters to the owner (pkm/3, step 4): the short My Life summary, read fresh on every
+// turn while My Life is on, so the assistant knows it without asking. Off or empty: nothing.
+export function lifeContext(db) {
+  if (!moduleOn(db, 'life')) return '';
+  const summary = lifeSummary(db, { habits: moduleOn(db, 'mylife-plus'), max: 3000 });
+  if (!summary) return '';
+  return ['', '', 'The owner’s My Life as it stands now (their Key Elements and, under each, the active Goals with what carries them, and the active Projects, Habits and Topics).',
+    'Use it to know what matters to them; my_life gives the whole summary and read_life_item one item with its chain and open tasks.', summary].join('\n');
+}
 
 const CONVERSATION_COLUMNS = 'id, title, folder, session_id, started, created_at, updated_at, deleted_at';
 const MESSAGE_COLUMNS = 'id, conversation_id, role, text, steps, sources, context, state, ai, model, created_at, updated_at';
@@ -217,13 +229,14 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     ? `(Note from the app: this conversation began with the owner’s other assistant. What was said so far:)\n${earlier.map((m) => `${m.role === 'user' ? 'Owner' : 'Assistant'}: ${m.text.slice(0, 2000)}`).join('\n')}\n\n${noted}`
     : noted;
 
+  const instructions = `${guide()}${lifeContext(db)}`;
   const args = provider === 'codex' ? codexArgs(command, {
-    instructions: guide(), sandbox: 'workspace-write', images,
+    instructions, sandbox: 'workspace-write', images,
     servers: { ...(mcp ? { app: { url: `${mcp.url}?conversation=${id}`, token: true } } : {}), ...(mcp && library ? { library: { url: library.url } } : {}) },
     resume: sameAI ? codexThread : null,
   }) : [
     ...command.slice(1), '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
-    '--permission-mode', 'acceptEdits', '--setting-sources', 'user', '--append-system-prompt', guide(), ...mcpArgs,
+    '--permission-mode', 'acceptEdits', '--setting-sources', 'user', '--append-system-prompt', instructions, ...mcpArgs,
     // An allow-list of built-ins, by name (assistant/1): reading, finding, searching and writing its own
     // files. No shell, no web, no slash commands: the app's own tools come over MCP above.
     '--tools=Read,Glob,Grep,Write', '--disable-slash-commands',
@@ -250,7 +263,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
         read: (page) => {
           read.set(page.id, page);
           // The step that read it names the page, not its id.
-          const step = steps.findLast((s) => s.tool === 'mcp__app__read_note' && !s.detail);
+          const step = steps.findLast((s) => ['mcp__app__read_note', 'mcp__app__read_life_item'].includes(s.tool) && !s.detail);
           if (step) step.detail = page.title;
         },
         card: (card) => send({ type: 'card', card }),
