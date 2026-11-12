@@ -58,7 +58,8 @@ import { timeline, checkTimelineQuery } from './timeline.js';
 import { importContacts } from './import-contacts.js';
 import { importObsidian, importDayOne, listRuns } from './import-notes.js';
 import { keyterms, fixes, listGlossary, addGlossary, deleteGlossary, restoreGlossary, checkGlossaryInput } from './glossary.js';
-import { startSession, getDictationSettings, setHoldKey, saveKey, removeKey, checkDictationInput, addDictation, listDictations } from './dictation.js';
+import { localStatus, prepareLocal, hearPiece, samplesOf } from './voice-local.js';
+import { startSession, hasKey, getDictationSettings, setHoldKey, saveKey, removeKey, checkDictationInput, addDictation, listDictations } from './dictation.js';
 import { findDuplicates, dismissDuplicate, mergePeople } from './merge-people.js';
 import { reconnectList, remindToReconnect } from './reconnect.js';
 import { checkInteractionInput, logInteraction, deleteInteraction, restoreInteraction } from './interactions.js';
@@ -948,16 +949,44 @@ export function startServer({
         before: url.searchParams.get('before') ?? '', ...(url.searchParams.get('limit') ? { limit: Number(url.searchParams.get('limit')) } : {}),
       }));
     }
-    // POST /api/dictation/session               a short-lived WebSocket address for one dictation (the key stays here)
-    // GET / PUT /api/dictation/settings         the hold key ({ hold_key }) and whether there is a key
+    // POST /api/dictation/session               a short-lived WebSocket address for one dictation (the key stays here);
+    //                                            with no ElevenLabs key: { engine: 'local' } (the free voice model on this computer)
+    // POST /api/dictation/local { audio }        the words in a piece of sound (base64 16-bit, 16 kHz, at most 30 s), heard here
+    // POST /api/dictation/local/prepare          get the free voice model now (once); GET /api/dictation/settings says how far it is
+    // GET / PUT /api/dictation/settings         the hold key ({ hold_key }), whether there is a key, and the free model's state
     // GET /api/dictations?q=&before=&limit=      the history, newest first;  POST /api/dictations { text, went_to?, outcome }
     if (url.pathname === '/api/dictation/session') {
       if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
       await readJson(req);
-      try { return sendJson(res, 200, { ...(await startSession(dataDir, { keyterms: keyterms(db) })), fixes: fixes(db) }); } catch (err) {
+      if (!hasKey(dataDir)) {
+        const local = localStatus(dataDir);
+        if (local.state === 'ready') return sendJson(res, 200, { engine: 'local', sample_rate: 16000, max_seconds: 30, fixes: fixes(db) });
+        if (local.state === 'missing' || local.state === 'failed') prepareLocal(dataDir).catch(() => {});
+        const now = localStatus(dataDir);
+        return sendJson(res, 409, {
+          code: 'model_not_ready',
+          error: now.state === 'getting' ? `Getting the free voice model, once (about 200 MB, ${now.percent}% so far). Dictation works when it is done.` : now.message ?? 'The free voice model is not ready.',
+        });
+      }
+      try { return sendJson(res, 200, { engine: 'elevenlabs', ...(await startSession(dataDir, { keyterms: keyterms(db) })), fixes: fixes(db) }); } catch (err) {
         if (err.code) return sendJson(res, err.status, { error: err.message, code: err.code });
         throw err;
       }
+    }
+    if (url.pathname === '/api/dictation/local') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = await readJson(req);
+      try { return sendJson(res, 200, { text: await hearPiece(dataDir, samplesOf(input?.audio)) }); } catch (err) {
+        if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+        console.error('The free voice model could not hear that:', err.message);
+        return sendJson(res, 500, { error: 'The free voice model could not hear that.' });
+      }
+    }
+    if (url.pathname === '/api/dictation/local/prepare') {
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      await readJson(req);
+      prepareLocal(dataDir).catch(() => {});
+      return sendJson(res, 200, localStatus(dataDir));
     }
     if (url.pathname === '/api/dictation/settings') {
       if (req.method === 'PUT') {

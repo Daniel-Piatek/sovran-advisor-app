@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { localStatus } from './voice-local.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message, code) => Object.assign(new Error(message), { status, ...(code ? { code } : {}) });
@@ -70,7 +71,7 @@ export function getDictationSettings(db, dataDir, env) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ? AND deleted_at IS NULL').get(HOLD_SETTING);
   let code = 'AltRight';
   try { if (HOLD_KEYS.some((k) => k.code === JSON.parse(row?.value ?? 'null'))) code = JSON.parse(row.value); } catch { /* the default */ }
-  return { hold_key: code, hold_keys: HOLD_KEYS, has_key: hasKey(dataDir, env), key_source: keySource(dataDir, env) };
+  return { hold_key: code, hold_keys: HOLD_KEYS, has_key: hasKey(dataDir, env), key_source: keySource(dataDir, env), local: localStatus(dataDir, env) };
 }
 
 export function setHoldKey(db, code) {

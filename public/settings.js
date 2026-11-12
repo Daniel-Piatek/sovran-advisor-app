@@ -120,10 +120,35 @@ function dictationSection() {
     } catch (err) { keyProblem.textContent = err.message; }
   }
 
+  // The free voice model on this computer: used whenever there is no ElevenLabs key.
+  const localLine = el('p', { class: 'empty', role: 'status', 'aria-label': 'Free voice model' });
+  const getButton = el('button', { type: 'button', class: 'button', onclick: async () => { drawLocal(await request('POST', '/api/dictation/local/prepare', {})); } }, 'Get it now');
+  let poll = null;
+  function drawLocal(local, hasKey) {
+    clearTimeout(poll);
+    const lines = {
+      ready: 'Free voice model: ready. Your voice is turned into words on this computer and never leaves it.',
+      getting: `Free voice model: getting it, once (about 200 MB): ${local.percent ?? 0}%. Dictation works when it is done.`,
+      missing: 'Free voice model: not on this computer yet (about 200 MB, fetched once).',
+      failed: `Free voice model: ${local.message ?? 'it could not be fetched.'}`,
+      unavailable: local.message ?? 'The free voice model can’t run on this computer.',
+    };
+    localLine.textContent = (lines[local.state] ?? '') + (hasKey ? ' It is not used while there is an ElevenLabs key.' : '');
+    getButton.hidden = !['missing', 'failed'].includes(local.state);
+    getButton.textContent = local.state === 'failed' ? 'Try again' : 'Get it now';
+    if (local.state === 'getting') {
+      poll = setTimeout(async () => {
+        if (!localLine.isConnected) return;
+        try { const next = await request('GET', '/api/dictation/settings'); drawLocal(next.local, next.has_key); } catch { /* the next look will say */ }
+      }, 1500);
+    }
+  }
+
   function drawSettings(s) {
+    if (s.local) drawLocal(s.local, s.has_key);
     status.textContent = s.has_key
-      ? `Speech to text is connected (the key is ${s.key_source === 'env' ? 'in this app’s environment' : 'kept in data/elevenlabs.key, on this computer only'}; it is never shown). Your voice goes to ElevenLabs only while you dictate.`
-      : 'No ElevenLabs key yet. Paste it below once; it is kept in data/elevenlabs.key on this computer and never shown again.';
+      ? `ElevenLabs is connected and used instead of the free model: your words show as you speak (the key is ${s.key_source === 'env' ? 'in this app’s environment' : 'kept in data/elevenlabs.key, on this computer only'}; it is never shown). Your voice goes to ElevenLabs only while you dictate.`
+      : 'Optional: an ElevenLabs key (a paid service) shows your words as you speak. Paste it below once; it is kept in data/elevenlabs.key on this computer and never shown again.';
     removeButton.hidden = s.key_source !== 'file';
     keys.replaceChildren(...s.hold_keys.map((k) => el('button', {
       type: 'button', class: 'switch-button switch-button-text', 'aria-pressed': String(k.code === s.hold_key),
@@ -162,6 +187,7 @@ function dictationSection() {
   return el('section', { class: 'settings-part', 'aria-label': 'Dictation' },
     el('h2', { class: 'settings-title' }, 'Dictation'),
     el('p', { class: 'empty' }, 'Hold the key in any field, speak, let go: your words land at the cursor. The mic in the pill at the foot of the page listens hands-free.'),
+    el('div', { class: 'dictation-local' }, localLine, getButton),
     status,
     el('div', { class: 'permission-row' }, el('span', { class: 'permission-name' }, 'ElevenLabs key'),
       el('div', { class: 'dictation-key' }, keyInput, el('button', { type: 'button', class: 'button', onclick: saveKeyNow }, 'Save key'), removeButton)),

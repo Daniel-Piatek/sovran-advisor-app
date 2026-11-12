@@ -19,9 +19,12 @@ export const test = base.extend({
   // The ElevenLabs key of the test copy ('' means there is none): Dictation tests use a stand-in for the
   // token service (no real service, no real key) and the page's WebSocket is stood in for in the test.
   elevenKey: ['test-key', { option: true }],
-  app: async ({ elevenKey }, use, testInfo) => {
+  // What the free voice model "hears" (null: no stand-in, and the model is not on the computer; it is never really fetched).
+  voiceHears: [null, { option: true }],
+  app: async ({ elevenKey, voiceHears }, use, testInfo) => {
     const dataDir = testInfo.outputPath('data');
     const eleven = http.createServer((req, res) => {
+      if (req.url.startsWith('/voice-model')) { res.writeHead(404); res.end(); return; } // the free voice model's download: not here
       eleven.asked.push({ url: req.url, key: req.headers['xi-api-key'] });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ token: 'sutkn_test' }));
@@ -34,7 +37,7 @@ export const test = base.extend({
     const gcal = await startFakeGcal(); // Google Calendar's own API, stood in for; a test fills its `events`
     await new Promise((resolve) => eleven.listen(0, '127.0.0.1', resolve));
     const child = spawn(process.execPath, [serverFile], {
-      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), CODEX_HOME: path.join(dataDir, '.codex-home'), FAKE_LINK_TITLES: '1', ...google.env, ...gmail.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
+      env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ELEVENLABS_API_KEY: elevenKey, ELEVENLABS_API_BASE: `http://127.0.0.1:${eleven.address().port}`, VOICE_MODEL_URL: `http://127.0.0.1:${eleven.address().port}/voice-model.tar.bz2`, ...(voiceHears === null ? {} : { VOICE_FAKE_TRANSCRIPT: voiceHears }), ASSISTANT_COMMAND: JSON.stringify([process.execPath, fakeClaude]), CODEX_COMMAND: JSON.stringify([process.execPath, fakeClaude.replace('fake-claude.js', 'fake-codex.js')]), CODEX_HOME: path.join(dataDir, '.codex-home'), FAKE_LINK_TITLES: '1', ...google.env, ...gmail.env, ...gcal.env, GOOGLE_KEY_STORE_DIR: keyStoreDir },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
