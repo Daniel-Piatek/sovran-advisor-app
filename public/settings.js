@@ -316,21 +316,33 @@ function courseSection() {
     status);
 }
 
+// A button that was pressed says so on itself (a turning ring and what it is doing), and its message shows right under it.
+function working(button, label) {
+  const before = button.textContent;
+  button.classList.add('is-working');
+  button.textContent = label;
+  return () => { button.classList.remove('is-working'); button.textContent = before; };
+}
+
 // Restart: after an update, or when something asks for it, without the Terminal. The app stops, starts again
 // by itself (a changed database is moved forward with a whole copy kept first), and this page comes back.
 function restartSection() {
-  const status = el('p', { class: 'empty', role: 'status' });
+  const status = el('p', { class: 'action-status', role: 'status', 'aria-live': 'polite' });
   const button = el('button', { type: 'button', class: 'button' }, 'Restart the app');
   button.addEventListener('click', async () => {
     button.disabled = true;
-    status.textContent = 'Restarting…';
-    try { await request('POST', '/api/restart', {}); } catch { status.textContent = 'This copy of the app cannot restart itself. Close it and open it again.'; button.disabled = false; return; }
+    const done = working(button, 'Restarting…');
+    status.dataset.kind = 'working';
+    status.textContent = 'Restarting now: this page comes back by itself in a moment.';
+    try { await request('POST', '/api/restart', {}); } catch { done(); status.dataset.kind = 'problem'; status.textContent = 'This copy of the app cannot restart itself. Close it and open it again.'; button.disabled = false; return; }
     const alive = async () => { try { await fetch('/api/health', { signal: AbortSignal.timeout(800) }); return true; } catch { return false; } };
     for (let i = 0; i < 40 && await alive(); i++) await new Promise((resolve) => setTimeout(resolve, 250)); // wait for it to go
     for (let i = 0; i < 120; i++) {
       if (await alive()) { location.reload(); return; }
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
+    done();
+    status.dataset.kind = 'problem';
     status.textContent = 'It did not come back. Open the app from its icon, or ask Claude for help.';
     button.disabled = false;
   });

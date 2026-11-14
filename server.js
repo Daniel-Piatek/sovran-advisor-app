@@ -1286,7 +1286,7 @@ export function startServer({
       try { return sendJson(res, 200, setImagesOk(db, input.email, input.load_images)); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     // Writing mail (Mail 8). Needs the Google switch “Send mail as you”; every send waits ten seconds (Undo), or until you say.
-    // GET  /api/mail/threads/:id/reply                    who a reply goes to, and its subject
+    // GET  /api/mail/threads/:id/reply?message=&all=1     who a reply goes to, and its subject (message: answer that mail, quoted; all: Reply all)
     // POST /api/mail/sends { account_id, thread_id?, to, cc?, subject, body, when?: now | tomorrow | ISO time, remind_days?, delay_seconds? }
     // GET  /api/mail/sends?account=                        what was written, and where each is: waiting, sending, sent, undone, failed
     // POST /api/mail/sends/:id/undo                        take it back (only while it has not been claimed); answers its words
@@ -1294,7 +1294,7 @@ export function startServer({
     const replyMatch = url.pathname.match(/^\/api\/mail\/threads\/([0-9a-f-]{36})\/reply$/);
     if (replyMatch) {
       if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
-      try { return sendJson(res, 200, replyDraft(db, replyMatch[1])); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+      try { return sendJson(res, 200, replyDraft(db, replyMatch[1], { messageId: url.searchParams.get('message') ?? '', all: url.searchParams.get('all') === '1' })); } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     if (url.pathname === '/api/mail/sends') {
       if (req.method === 'GET') return sendJson(res, 200, listSends(db, { account: url.searchParams.get('account') ?? '', limit: Number(url.searchParams.get('limit') ?? 20) }));

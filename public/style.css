@@ -3420,6 +3420,12 @@ button.mic-pill:hover { color: var(--color-text); }
 .mail-message-head { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; }
 
 .mail-message-when, .mail-message-to { font-size: var(--text-sm); color: var(--color-text-muted); }
+/* Reply and Reply all on each mail (2026-11-12): at the right of its head; the mail being answered gets a crimson edge. */
+.mail-message-actions { margin-left: auto; display: inline-flex; gap: var(--space-1); }
+.mail-message-head .mail-message-actions + .mail-message-to { flex-basis: 100%; } /* the To line under the name, the date and the keys */
+.mail-message.is-replying { border-left: 3px solid var(--color-accent); padding-left: var(--space-3); }
+.mail-replying-to { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.mail-replying-to strong { color: var(--color-text); }
 
 .mail-message-to { flex-basis: 100%; overflow-wrap: anywhere; }
 
@@ -4216,6 +4222,16 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .fold-note { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 .fold-head:hover .fold-label { text-decoration: underline; }
 .fold-body { padding: 0 0 var(--space-2); }
+/* A pressed button that is working (Restart): a turning ring on it, its message right under it. */
+.button.is-working { display: inline-flex; align-items: center; gap: var(--space-1); }
+.button.is-working::before { content: ''; width: 0.9em; height: 0.9em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: working-turn 0.8s linear infinite; }
+@keyframes working-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .button.is-working::before { animation: none; } }
+.action-status { margin: var(--space-1) 0 var(--space-2); font-size: var(--text-sm); }
+.action-status:empty { display: none; }
+.action-status[data-kind="working"], .action-status[data-kind="done"] { font-weight: 600; }
+.action-status[data-kind="problem"] { color: var(--color-warning); font-weight: 600; }
+.mail-order.is-oldest svg { transform: rotate(180deg); } /* Oldest first: the arrow points up */
 .fold-body > .activity-log { margin-top: 0; }
 
 /* The Check button under Your assistant's AI (ai-check.js): one result, with every step to put it right. */

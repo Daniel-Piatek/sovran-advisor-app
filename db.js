@@ -431,6 +431,19 @@ function ensureGeneralJournal(db) {
     .run(randomUUID(), time, time);
 }
 
+// The whole copies made before a schema move (app.db.before-v<N>.bak): only the 3 with the highest numbers are kept,
+// after a move has gone through. Copies with any other name (before-restart, before-mail-restore…) are left alone.
+export const UPGRADE_COPIES_KEPT = 3;
+export function pruneUpgradeCopies(dir, base = 'app.db', keep = UPGRADE_COPIES_KEPT) {
+  const pattern = new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.before-v(\\d+)\\.bak$`);
+  let names;
+  try { names = fs.readdirSync(dir); } catch { return []; }
+  const copies = names.map((name) => ({ name, n: Number(name.match(pattern)?.[1]) })).filter((c) => Number.isInteger(c.n)).sort((a, b) => b.n - a.n);
+  const removed = [];
+  for (const c of copies.slice(keep)) { fs.rmSync(path.join(dir, c.name), { force: true }); removed.push(c.name); }
+  return removed;
+}
+
 export function prepareDatabase(db, { file } = {}) {
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
@@ -458,6 +471,7 @@ export function prepareDatabase(db, { file } = {}) {
     } finally {
       db.exec('PRAGMA foreign_keys = ON');
     }
+    if (file) pruneUpgradeCopies(path.dirname(file), path.basename(file));
   } else {
     db.exec(schema);
     if (version < SCHEMA_VERSION) db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);

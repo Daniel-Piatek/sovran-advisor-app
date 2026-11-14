@@ -437,7 +437,7 @@ test('r opens the composer under the conversation, to and subject set; Send wait
   await expect(page.locator('.mail-sending')).toContainText(/Sending in \d+ s/);
   expect(app.gmail.outgoing.length).toBe(0);
   await page.locator('.mail-sending').getByRole('button', { name: 'Undo' }).click();
-  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue('See you at 10.'); // the words are back
+  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue(/^See you at 10\./); // the words are back (the quote under them)
   expect((await fetch(`${app.url}/api/mail/sends`).then((r) => r.json()))[0].state).toBe('undone');
   expect(app.gmail.outgoing.length).toBe(0);
   await page.keyboard.press('Escape');
@@ -487,7 +487,7 @@ test('the first send asks Google for the one permission, then the words are back
   await expect(form.getByRole('button', { name: 'Send', exact: true })).toBeDisabled();
   await form.getByRole('button', { name: 'Allow sending' }).click();
   await expect(page).toHaveURL(/\/mail\?/); // Google answered at once (the stand-in) and sent the browser back
-  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue('A first answer.');
+  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue(/^A first answer\.\n\nOn .+ wrote:/); // the quote of her mail stays under it
   await expect(composerOf(page).getByRole('button', { name: 'Send', exact: true })).toBeEnabled();
   const [account] = (await fetch(`${app.url}/api/google`).then((r) => r.json())).accounts;
   expect(account.permissions.find((p) => p.id === 'mail.send').on).toBe(true);
@@ -891,11 +891,56 @@ test('a reply’s draft stays with its conversation: closed, it shows there; r c
   await expect(page.locator('.mail-draft-line')).toContainText('Half an answer');
   expect((await fetch(`${app.url}/api/mail/inbox?split=drafts`).then((r) => r.json())).counts.drafts).toBe(1);
   await page.keyboard.press('r');
-  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue('Half an answer');
+  await expect(composerOf(page).getByLabel('Your answer')).toHaveValue(/^Half an answer\n\nOn .+ wrote:/);
   await expect(composerOf(page).getByLabel('Subject')).toHaveValue('Re: Onboarding call on Thursday?');
   await composerOf(page).getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.locator('.mail-sending')).toHaveText('Sent.', { timeout: 25_000 });
   const view = await fetch(`${app.url}/api/mail/inbox?split=outbox`).then((r) => r.json());
   expect([view.outbox.drafts.length, view.counts.outbox]).toEqual([0, 0]);
   expect(app.gmail.outgoing.length).toBe(1);
+});
+
+test('each mail in a conversation has Reply: the answer is to that mail, says whose it is and when, quotes it, and marks it', async ({ page, app }) => {
+  await writer(app, { send: true });
+  await openLena(page, app);
+  const lenas = page.locator('.mail-message').filter({ has: page.locator('.mail-message-head strong', { hasText: /Lena/ }) });
+  const first = lenas.first();
+  await first.getByRole('button', { name: /^Reply to / }).click();
+  const form = composerOf(page);
+  await expect(form).toBeVisible();
+  await expect(form.locator('.mail-replying-to')).toContainText(/Replying to .*Lena/);
+  await expect(form.getByLabel('To')).toHaveValue('lena@nordlicht.example');
+  await expect(form.getByLabel('Subject')).toHaveValue(/^Re: /);
+  await expect(form.getByLabel('Your answer')).toHaveValue(/^\n\nOn .+ wrote:\n> /);
+  await expect(form.getByLabel('Your answer')).toBeFocused();
+  await expect(first).toHaveClass(/is-replying/);
+  await expect(page.locator('.mail-message.is-replying')).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('reply-on-a-mail.png'), fullPage: true });
+  // Once you have written, another Reply does not throw your words away.
+  await page.keyboard.type('Thank you.');
+  await page.locator('.mail-reply-top').click();
+  await expect(form.getByLabel('Your answer')).toHaveValue(/^Thank you\./);
+  await expect(form.locator('.capture-problem')).toContainText('You are writing an answer already');
+  await page.keyboard.press('Escape');
+  await expect(composerOf(page)).toHaveCount(0);
+  await expect(page.locator('.mail-message.is-replying')).toHaveCount(0);
+  expect(app.gmail.outgoing.length).toBe(0);
+});
+
+test('a conversation shows the newest mail first; one press turns it to oldest first, and that is kept after a reload', async ({ page, app }) => {
+  await writer(app, { send: true });
+  await openLena(page, app);
+  const heads = page.locator('.mail-message .mail-message-when');
+  await expect(heads.first()).toContainText('5:00');
+  await expect(page.getByRole('button', { name: /^Newest first/ })).toBeVisible();
+  await page.locator('.mail-message').first().getByRole('button', { name: /^Reply to / }).click();
+  await expect(page.locator('.mail-reader .mail-compose-place + .mail-message')).toHaveCount(1); // newest first: the composer above the mails
+  await page.screenshot({ path: test.info().outputPath('newest-first.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.locator('.mail-order').click();
+  await expect(heads.first()).toContainText('10:00');
+  await expect(page.getByRole('button', { name: /^Oldest first/ })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.mail-message .mail-message-when').first()).toContainText('10:00');
+  expect(app.gmail.outgoing.length).toBe(0);
 });

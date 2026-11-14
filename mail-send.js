@@ -106,15 +106,42 @@ export const listSends = (db, { account = '', limit = 20 } = {}) => db.prepare(`
   ORDER BY created_at DESC, rowid DESC LIMIT ?`).all(...(account ? [account] : []), Math.max(1, Math.min(100, Math.trunc(limit) || 20))).map(rowOf);
 
 // What a reply to this conversation starts with: who it goes to, and the subject.
-export function replyDraft(db, threadId) {
+// messageId: answer that one mail of the conversation (its sender; your own mail goes back to whom you wrote), with its words quoted
+// under a line that says whose they are and when. all: Reply all, everyone else on that mail is in Cc. Without messageId: the
+// last mail someone else wrote, as before.
+const quoteDate = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+const plainOf = (html) => String(html ?? '').replace(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|tr|h\d)>/gi, '\n')
+  .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n');
+export function quoteOf(m) {
+  const words = (String(m.body_text ?? '').trim() || plainOf(m.body_html).trim()).slice(0, 20_000);
+  const who = m.from_name ? `${m.from_name} <${m.from_email}>` : m.from_email;
+  return `\n\nOn ${quoteDate(m.sent_at)}, ${who} wrote:\n${words.split(/\r?\n/).map((l) => (l ? `> ${l}` : '>')).join('\n')}\n`;
+}
+export function replyDraft(db, threadId, { messageId = '', all = false } = {}) {
   const thread = db.prepare('SELECT t.*, a.email AS account_email FROM mail_threads t JOIN mail_accounts a ON a.id = t.account_id WHERE t.id = ? AND t.deleted_at IS NULL').get(threadId);
   if (!thread) throw fail(404, 'No such conversation.');
+  const me = String(thread.account_email ?? '').toLowerCase();
+  const pixel_ready = Boolean(pixelBase(db));
+  if (messageId) {
+    const m = db.prepare('SELECT * FROM mail_messages WHERE id = ? AND thread_id = ? AND deleted_at IS NULL').get(messageId, threadId);
+    if (!m) throw fail(404, 'That mail is not in this conversation.');
+    const mine = String(m.from_email).toLowerCase() === me;
+    const emails = (v) => list(v).map((a) => String(a.email ?? '').toLowerCase()).filter(Boolean);
+    const to = mine ? emails(m.to_addrs).slice(0, all ? 50 : 1) : [String(m.from_email).toLowerCase()];
+    const cc = all ? [...new Set([...(mine ? [] : emails(m.to_addrs)), ...emails(m.cc_addrs)])].filter((a) => a !== me && !to.includes(a)) : [];
+    const base = (m.subject || thread.subject || '').trim();
+    return {
+      account_id: thread.account_id, thread_id: threadId, to, ...(all ? { cc } : {}), subject: /^re:/i.test(base) ? base : `Re: ${base}`, body: quoteOf(m),
+      replying_to: { id: m.id, name: m.from_name || m.from_email, email: m.from_email, sent_at: m.sent_at, all: Boolean(all) },
+      confirm: defaultFor(db, to), pixel_ready,
+    };
+  }
   const last = db.prepare(`SELECT from_email, to_addrs, subject FROM mail_messages WHERE thread_id = ? AND deleted_at IS NULL AND lower(from_email) <> lower(?)
     ORDER BY sent_at DESC, rowid DESC LIMIT 1`).get(threadId, thread.account_email);
   const mine = db.prepare('SELECT to_addrs, subject FROM mail_messages WHERE thread_id = ? AND deleted_at IS NULL ORDER BY sent_at DESC, rowid DESC LIMIT 1').get(threadId);
   const to = last ? [last.from_email] : list(mine?.to_addrs).map((a) => a.email).slice(0, 1);
   const base = (last?.subject || mine?.subject || thread.subject || '').trim();
-  return { account_id: thread.account_id, thread_id: threadId, to, subject: /^re:/i.test(base) ? base : `Re: ${base}`, confirm: defaultFor(db, to), pixel_ready: Boolean(pixelBase(db)) };
+  return { account_id: thread.account_id, thread_id: threadId, to, subject: /^re:/i.test(base) ? base : `Re: ${base}`, confirm: defaultFor(db, to), pixel_ready };
 }
 
 // ---- The sender ----

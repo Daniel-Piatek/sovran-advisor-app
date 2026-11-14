@@ -9,9 +9,11 @@ test('Settings > Restart: the app restarts itself with the same data, and the pa
   const part = page.getByRole('region', { name: 'Restart' });
   await expect(part).toBeVisible();
   await part.getByRole('button', { name: 'Restart the app' }).click();
-  await expect(part.getByRole('status')).toHaveText('Restarting…');
-  // The page reloads itself once the app answers again: the status is empty and the button usable.
-  await expect(part.getByRole('status')).toHaveText('', { timeout: 30_000 });
+  // The button says so on itself, and its message is right under it.
+  await expect(part.getByRole('button', { name: 'Restarting…' })).toBeDisabled();
+  await expect(part.getByRole('status')).toHaveText('Restarting now: this page comes back by itself in a moment.');
+  // The page reloads itself once the app answers again: the message is gone and the button usable.
+  await expect(part.getByRole('status')).toBeHidden({ timeout: 30_000 });
   await expect(part.getByRole('button', { name: 'Restart the app' })).toBeEnabled();
   const notes = await fetch(`${app.url}/api/notes`).then((r) => r.json());
   expect(notes.map((n) => n.title)).toContain('Kept through a restart');
