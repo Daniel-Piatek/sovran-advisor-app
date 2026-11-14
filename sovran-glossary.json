@@ -19,5 +19,5 @@
     { "heard_as": "astro decode", "term": "AstroDecode" },
     { "heard_as": "GK decode", "term": "GKDecode" }
   ],
-  "terms": ["Sovran", "Live Sovran", "Sovran Advisor", "Sovran Library", "ICOR", "myICOR", "AstroDecode", "GKDecode", "HDDecode", "Daniel Piatek"]
+  "terms": ["Sovran", "Live Sovran", "Sovran Advisor", "Sovran Library", "ICOR", "myICOR", "AstroDecode", "GKDecode", "HDDecode", "Daniel Piatek", "siddhi"]
 }
