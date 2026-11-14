@@ -207,3 +207,20 @@ test('the API: the Outbox rides with every split, its count and failures; Send n
   assert.equal((await ctx.json('POST', `/api/mail/sends/${made.id}/retry`, {})).status, 409);
   assert.equal((await ctx.json('POST', `/api/mail/outbox/${made.id}/send-now`, {})).status, 404);
 });
+
+test('Reply on one mail answers that mail: its sender, Re:, its words quoted under who and when; Reply all puts the others in Cc', async (t) => {
+  const ctx = await setup(t);
+  const thread = (await ctx.json('GET', `/api/mail/threads/${ctx.lenaThread}`)).body;
+  const m = thread.messages.find((x) => x.from.email.toLowerCase() !== EMAIL);
+  const mine = thread.messages.find((x) => x.from.email.toLowerCase() === EMAIL);
+  if (mine) assert.deepEqual((await ctx.json('GET', `/api/mail/threads/${ctx.lenaThread}/reply?message=${mine.id}`)).body.to, [mine.to[0].email.toLowerCase()], 'your own mail: the answer goes again to whom you wrote');
+  const one = (await ctx.json('GET', `/api/mail/threads/${ctx.lenaThread}/reply?message=${m.id}`)).body;
+  assert.deepEqual([one.to, one.cc, one.replying_to.id, one.replying_to.email], [[m.from.email.toLowerCase()], undefined, m.id, m.from.email]);
+  assert.match(one.subject, /^Re: /);
+  assert.match(one.body, /^\n\nOn .+, .+ wrote:\n> /);
+  const all = (await ctx.json('GET', `/api/mail/threads/${ctx.lenaThread}/reply?message=${m.id}&all=1`)).body;
+  assert.ok(Array.isArray(all.cc) && !all.cc.includes(EMAIL) && !all.cc.includes(all.to[0]), 'Cc: everyone else, never you, never twice');
+  assert.equal(all.replying_to.all, true);
+  assert.equal((await ctx.json('GET', `/api/mail/threads/${ctx.lenaThread}/reply?message=00000000-0000-0000-0000-000000000000`)).status, 404);
+  assert.equal(ctx.gmail.outgoing.length, 0);
+});

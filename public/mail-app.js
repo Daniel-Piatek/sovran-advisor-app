@@ -43,7 +43,7 @@ export function sealedFrame(html, { images = false, onLink = (href) => window.op
 // A new mail (no conversation) also has Cc, and From when there is more than one account (`accounts`); `suggest` is a list of
 // addresses from People, offered as you type To and Cc.
 // onChange: called on every change (drafts save as you type); onDiscard: then the composer has Close (keeps the draft in Drafts) and Discard.
-export function composer(draft = {}, { onSend = () => {}, onLater = () => {}, onCancel = () => {}, canSend = true, onAllow = () => {}, accent = true, accounts = null, suggest = [], label = 'Your answer', onChange = null, onDiscard = null } = {}) {
+export function composer(draft = {}, { onSend = () => {}, onLater = () => {}, onCancel = () => {}, canSend = true, onAllow = () => {}, accent = true, accounts = null, suggest = [], label = 'Your answer', onChange = null, onDiscard = null, replyingTo = null } = {}) {
   const listId = suggest.length ? `mail-addresses-${Math.random().toString(36).slice(2, 8)}` : null;
   const addressBox = (name, value) => el('input', { class: 'detail-input', 'aria-label': name, value, autocomplete: 'off', spellcheck: 'false', ...(listId ? { list: listId } : {}) });
   const to = addressBox('To', (draft.to ?? []).join(', '));
@@ -67,7 +67,10 @@ export function composer(draft = {}, { onSend = () => {}, onLater = () => {}, on
   const laterButton = el('button', { type: 'button', class: 'button', onclick: () => onLater(values(), problem) }, 'Send later · tomorrow 08:00');
   const allowed = (ok) => { allow.hidden = ok; sendButton.disabled = !ok; laterButton.disabled = !ok; };
   if (from) from.addEventListener('change', () => allowed(Boolean(accounts.find((a) => a.id === from.value)?.can_send)));
+  const startWords = body.value;
   const form = el('form', { class: 'mail-composer', 'aria-label': 'Write a mail', onsubmit: (event) => { event.preventDefault(); if (!sendButton.disabled) onSend(values(), problem); } },
+    ...(replyingTo ? [el('p', { class: 'mail-replying-to', role: 'status' }, icon('back'), ' ', replyingTo.all ? 'Replying to all on the mail from ' : 'Replying to ',
+      el('strong', {}, replyingTo.name), replyingTo.sent_at ? ` · ${shortDate(replyingTo.sent_at)} ${clockTime(replyingTo.sent_at)}` : '')] : []),
     ...(from ? [el('label', { class: 'detail-label' }, 'From'), from] : []),
     el('label', { class: 'detail-label' }, 'To'), to, ...(cc ? [el('label', { class: 'detail-label' }, 'Cc'), cc] : []),
     el('label', { class: 'detail-label' }, 'Subject'), subject, body,
@@ -89,10 +92,11 @@ export function composer(draft = {}, { onSend = () => {}, onLater = () => {}, on
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onCancel(); } else if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); form.requestSubmit(); }
   });
   form.values = values;
-  form.focusBody = () => body.focus();
+  form.focusBody = () => { body.focus(); body.setSelectionRange?.(0, 0); body.scrollTop = 0; }; // a quoted mail waits below: you write above it
   form.focusTo = () => to.focus();
   form.isEmpty = () => !to.value.trim() && !subject.value.trim() && !body.value.trim();
   form.hasWords = () => Boolean(body.value.trim());
+  form.changed = () => body.value !== startWords; // you wrote something (more than the quote it started with)
   return form;
 }
 
@@ -271,7 +275,8 @@ export async function showMailApp() {
   const composePlace = el('div', { class: 'mail-compose-place' }); // outside the reader, which is drawn again when a conversation loads
   const layout = el('div', { class: 'mail-layout' });
   const divider = listDivider(layout);
-  layout.append(el('div', { class: 'mail-list-panel' }, switchBar, tabs, list), divider, el('div', { class: 'mail-reader-col' }, reader, composePlace));
+  const readerCol = el('div', { class: 'mail-reader-col' }, reader, composePlace);
+  layout.append(el('div', { class: 'mail-list-panel' }, switchBar, tabs, list), divider, readerCol);
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Mail'),
       el('button', { type: 'button', class: 'button button-primary page-add', title: 'New email (c)', onclick: () => composeNew() }, icon('plus'), 'New email'),
@@ -322,7 +327,7 @@ export async function showMailApp() {
 
   // Drafts: every mail being written, kept as you type (in this database only). The latest list comes with every refresh.
   let drafts = [];
-  const draftBase = (d) => ({ draft_id: d.id, account_id: d.account_id, thread_id: d.thread_id, to: d.to, ...(d.thread_id ? {} : { cc: d.cc }), subject: d.subject, body: d.body, remind_days: d.remind_days, confirm: d.confirm });
+  const draftBase = (d) => ({ draft_id: d.id, account_id: d.account_id, thread_id: d.thread_id, to: d.to, ...(d.thread_id && !String(d.cc ?? '').trim() ? {} : { cc: d.cc }), subject: d.subject, body: d.body, remind_days: d.remind_days, confirm: d.confirm });
   async function continueDraft(d) {
     if (composerNode) { await composerNode.settle?.(); closeComposer(); }
     if (d.thread_id) { openId = d.thread_id; keep(); await open(openId); await compose(draftBase(d)); } else await composeNew({ ...draftBase(d), fresh: true });
@@ -509,9 +514,14 @@ export async function showMailApp() {
     closeComposer();
     return true;
   }
+  // The mail being answered has a crimson edge, so it is plain which one of the conversation the answer is to.
+  function markReplying(messageId) {
+    reader.querySelectorAll('.mail-message').forEach((a) => a.classList.toggle('is-replying', Boolean(messageId) && a.dataset.message === messageId));
+  }
   function closeComposer() {
     composerNode?.remove();
     composerNode = null;
+    markReplying('');
     if (newMail) {
       newMail = false;
       if (!openId) { layout.classList.remove('is-open'); reader.replaceChildren(el('p', { class: 'empty' }, 'Open a conversation to read it. The line above it says why it is where it is.')); }
@@ -533,9 +543,15 @@ export async function showMailApp() {
     await compose(draft ?? { fresh: true });
   }
 
-  async function compose(draft = null) {
+  // pick: { message, all }: the Reply / Reply all on one mail of the conversation; its words come quoted, and the composer says whose.
+  async function compose(draft = null, pick = null) {
     const fresh = Boolean(draft?.fresh) || (newMail && !openId);
     const id = fresh ? '' : openId;
+    if (pick && composerNode && !fresh) {
+      if (composerNode.changed?.()) { composerNode.querySelector('.capture-problem')?.replaceChildren('You are writing an answer already: send it, or Close it first (it waits in Drafts).'); composerNode.focusBody(); return; }
+      if (composing) return;
+      closeComposer();
+    }
     if ((!id && !fresh) || composerNode || composing) return;
     composing = true;
     let mailAccounts;
@@ -554,13 +570,15 @@ export async function showMailApp() {
     } else {
       // r on a conversation that has a draft continues it.
       const kept = draft ? null : drafts.find((d) => d.thread_id === id) ?? (await request('GET', '/api/mail/unsent').catch(() => [])).find((d) => d.thread_id === id);
-      try { base = draft ?? (kept ? draftBase(kept) : await request('GET', `/api/mail/threads/${id}/reply`)); } catch { composing = false; return; }
+      const ask = pick ? `?${new URLSearchParams({ message: pick.message, ...(pick.all ? { all: '1' } : {}) })}` : '';
+      try { base = draft ?? (kept ? draftBase(kept) : await request('GET', `/api/mail/threads/${id}/reply${ask}`)); } catch { composing = false; return; }
       if (kept) base.pixel_ready = (await request('GET', `/api/mail/threads/${id}/reply`).catch(() => ({}))).pixel_ready;
     }
     let saved = null;
     try { saved = JSON.parse(sessionStorage.getItem(draftKey(id)) ?? 'null'); sessionStorage.removeItem(draftKey(id)); } catch { /* none */ }
     const words = (v) => (Array.isArray(v) ? v : String(v ?? '').split(/[,\s]+/).filter(Boolean));
-    const start = { ...base, ...(saved ?? {}), to: words(saved ? saved.to : base.to), ...(fresh ? { cc: words(saved ? saved.cc : base.cc) } : {}) };
+    const withCc = fresh || base.cc !== undefined;
+    const start = { ...base, ...(saved ?? {}), to: words(saved ? saved.to : base.to), ...(withCc ? { cc: words(saved ? saved.cc : base.cc) } : {}) };
     const accountOf = (values) => values.account_id || start.account_id;
     const mailAccount = mailAccounts.find((a) => a.id === start.account_id);
     // The draft: saved as you type (a short pause after the last key), one save at a time, so nothing typed is lost on a reload.
@@ -584,7 +602,7 @@ export async function showMailApp() {
     const settle = async () => { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await saveNow(node.values()); } await saving; };
     const put = async (values, when) => {
       await settle();
-      return request('POST', '/api/mail/sends', { account_id: accountOf(values), ...(fresh ? { cc: values.cc } : { thread_id: id }), to: values.to, subject: values.subject, body: values.body, remind_days: values.remind_days, confirm: values.confirm, ...(base.card_id ? { card_id: base.card_id } : {}), ...(draftId ? { draft_id: draftId } : {}), when });
+      return request('POST', '/api/mail/sends', { account_id: accountOf(values), cc: values.cc ?? '', ...(fresh ? {} : { thread_id: id }), to: values.to, subject: values.subject, body: values.body, remind_days: values.remind_days, confirm: values.confirm, ...(base.card_id ? { card_id: base.card_id } : {}), ...(draftId ? { draft_id: draftId } : {}), when });
     };
     let node = null;
     composerNode = node = composer(start, {
@@ -593,6 +611,7 @@ export async function showMailApp() {
       accounts: fresh ? mailAccounts : null,
       suggest: fresh ? await addressSuggestions() : [],
       label: fresh ? 'Your mail' : 'Your answer',
+      replyingTo: fresh ? null : base.replying_to ?? null,
       onChange: () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; saveNow(node.values()); }, 600); },
       // Close (or Escape): the draft is kept and waits in Drafts.
       onCancel: async () => { await settle(); if (composerNode === node) closeComposer(); countsAgain(); },
@@ -660,6 +679,9 @@ export async function showMailApp() {
     node.settle = settle;
     composing = false;
     composePlace.replaceChildren(composerNode);
+    placeCompose();
+    composerNode.replyingId = fresh ? '' : base.replying_to?.id ?? '';
+    markReplying(composerNode.replyingId);
     if (fresh && !start.to.length) composerNode.focusTo(); else composerNode.focusBody();
     composerNode.scrollIntoView?.({ block: 'nearest' });
   }
@@ -725,6 +747,14 @@ export async function showMailApp() {
 
   // Task (t, the Task button or Cmd K): the task pop-up opens with the subject (without Re:/Fwd:) as its title, who wrote
   // and when in its details, and the conversation linked; from Money it is due in two weeks. Nothing is made until Add task.
+  // Reply (r, the Reply at the top): the newest mail in the conversation someone else wrote (else the newest), quoted.
+  function replyLatest(all = false) {
+    const t = openThreadData?.id === openId ? openThreadData : null;
+    const me = new Set(accounts.map((a) => a.email.toLowerCase()));
+    const m = t ? ([...t.messages].reverse().find((x) => !me.has(String(x.from.email).toLowerCase())) ?? t.messages.at(-1)) : null;
+    if (!m) { compose(); return; }
+    compose(null, { message: m.id, all });
+  }
   function makeTask() {
     const current = shown[indexOfOpen()] ?? (openThreadData?.id === openId ? openThreadData : null);
     if (!current || !openId || document.querySelector('dialog.task-modal')) return;
@@ -757,7 +787,7 @@ export async function showMailApp() {
   }
   function run(id) {
     closeDialog();
-    if (id === 'next') move(1); else if (id === 'previous') move(-1); else if (id === 'done') done(); else if (id === 'delete') trash(); else if (id === 'remind') remind(); else if (id === 'times') timesPanel(); else if (id === 'reply') compose(); else if (id === 'new') composeNew(); else if (id === 'task') makeTask(); else if (id === 'yes' || id === 'maybe' || id === 'no') answerInvite(id); else if (id === 'addsender') { const c = openThreadData?.people?.find((x) => !x.person); if (c) addToPeople(c, openThreadData); }
+    if (id === 'next') move(1); else if (id === 'previous') move(-1); else if (id === 'done') done(); else if (id === 'delete') trash(); else if (id === 'remind') remind(); else if (id === 'times') timesPanel(); else if (id === 'reply') replyLatest(); else if (id === 'new') composeNew(); else if (id === 'task') makeTask(); else if (id === 'yes' || id === 'maybe' || id === 'no') answerInvite(id); else if (id === 'addsender') { const c = openThreadData?.people?.find((x) => !x.person); if (c) addToPeople(c, openThreadData); }
   }
   function openPalette() {
     closeDialog();
@@ -808,7 +838,7 @@ export async function showMailApp() {
       return;
     }
     const key = event.key;
-    if (key === 'j' || key === 'ArrowDown') { event.preventDefault(); move(1); } else if (key === 'k' || key === 'ArrowUp') { event.preventDefault(); move(-1); } else if (key === 'e') { event.preventDefault(); done(); } else if (key === '#' || key === 'd') { event.preventDefault(); trash(); } else if (key === 'h') { event.preventDefault(); remind(); } else if (key === 'r') { event.preventDefault(); compose(); } else if (key === 'c') { event.preventDefault(); composeNew(); } else if (key === 't') { event.preventDefault(); makeTask(); } else if (key === 'y' || key === 'Y' || key === 'n') { event.preventDefault(); answerInvite(key === 'y' ? 'yes' : key === 'Y' ? 'maybe' : 'no'); } else if (key === 'P') { event.preventDefault(); const c = openThreadData?.id === openId ? openThreadData.people?.find((x) => !x.person) : null; if (c) addToPeople(c, openThreadData); } else if (key === '?') { event.preventDefault(); timesPanel(); }
+    if (key === 'j' || key === 'ArrowDown') { event.preventDefault(); move(1); } else if (key === 'k' || key === 'ArrowUp') { event.preventDefault(); move(-1); } else if (key === 'e') { event.preventDefault(); done(); } else if (key === '#' || key === 'd') { event.preventDefault(); trash(); } else if (key === 'h') { event.preventDefault(); remind(); } else if (key === 'r') { event.preventDefault(); replyLatest(); } else if (key === 'c') { event.preventDefault(); composeNew(); } else if (key === 't') { event.preventDefault(); makeTask(); } else if (key === 'y' || key === 'Y' || key === 'n') { event.preventDefault(); answerInvite(key === 'y' ? 'yes' : key === 'Y' ? 'maybe' : 'no'); } else if (key === 'P') { event.preventDefault(); const c = openThreadData?.id === openId ? openThreadData.people?.find((x) => !x.person) : null; if (c) addToPeople(c, openThreadData); } else if (key === '?') { event.preventDefault(); timesPanel(); }
   };
   const onPalette = (event) => {
     if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'k') { event.preventDefault(); event.stopImmediatePropagation(); openPalette(); }
@@ -841,6 +871,35 @@ export async function showMailApp() {
     return [place];
   }
 
+  // Reply and Reply all on each mail: the answer is to that mail, and says so. Reply all only when more than one other person is on it.
+  function replyButtons(m) {
+    const me = new Set(accounts.map((a) => a.email.toLowerCase()));
+    const others = new Set([m.from, ...m.to, ...m.cc].map((a) => String(a?.email ?? '').toLowerCase()).filter((e) => e && !me.has(e)));
+    const who = m.from.name || m.from.email;
+    return el('span', { class: 'mail-message-actions' },
+      el('button', { type: 'button', class: 'button button-quiet mail-reply', 'aria-label': `Reply to ${who}`, title: `Reply to this mail from ${who}`, onclick: () => compose(null, { message: m.id }) }, icon('back'), ' Reply'),
+      ...(others.size > 1 ? [el('button', { type: 'button', class: 'button button-quiet mail-reply-all', 'aria-label': `Reply all, to this mail from ${who}`, title: 'Reply to everyone on this mail', onclick: () => compose(null, { message: m.id, all: true }) }, 'Reply all')] : []));
+  }
+
+  // The order of a conversation (2026-11-12, the owner's wish): newest first by default, the newest mail at the top and older ones
+  // further down; one press turns it back to oldest first. Kept in this browser. Newest first, the composer sits above the mails.
+  const ORDER_KEY = 'mail.order';
+  let newestFirst = true;
+  try { newestFirst = localStorage.getItem(ORDER_KEY) !== 'oldest'; } catch { /* newest first */ }
+  function placeCompose() {
+    const anchor = reader.querySelector('.mail-compose-anchor');
+    if (newestFirst && anchor) anchor.replaceWith(composePlace);
+    else if (newestFirst && reader.contains(composePlace)) { /* in place, above the mails */ } else if (composePlace.parentNode !== readerCol || composePlace.previousSibling !== reader) reader.after(composePlace);
+  }
+  function orderButton() {
+    return el('button', { type: 'button', class: `button button-quiet mail-order${newestFirst ? '' : ' is-oldest'}`, title: 'Change the order of the mails in a conversation', 'aria-label': newestFirst ? 'Newest first: show oldest first' : 'Oldest first: show newest first',
+      onclick: async () => {
+        newestFirst = !newestFirst;
+        try { localStorage.setItem(ORDER_KEY, newestFirst ? 'newest' : 'oldest'); } catch { /* this time only */ }
+        if (openId) await open(openId);
+      } }, icon('down'), newestFirst ? ' Newest first' : ' Oldest first');
+  }
+
   // One conversation, as plain text (a mail's own html is never shown here), with the rule that put it in its split.
   async function open(id) {
     let thread;
@@ -852,6 +911,8 @@ export async function showMailApp() {
       el('p', { class: 'mail-rule', role: 'status' }, icon('task'), ` ${thread.rule.why}`),
       el('div', { class: 'mail-reader-head' },
         el('h2', { class: 'mail-reader-subject' }, thread.subject || '(no subject)'),
+        orderButton(),
+        el('button', { type: 'button', class: 'button button-quiet mail-reply-top', title: 'Reply to the newest mail (r)', onclick: () => replyLatest() }, icon('back'), ' Reply'),
         el('button', { type: 'button', class: 'button button-quiet mail-task', title: 'Make a task of it (t)', onclick: () => makeTask() }, icon('task'), ' Task'),
         el('button', { type: 'button', class: 'button button-quiet mail-delete', 'aria-label': 'Delete', title: 'Delete (# or d): to Gmail’s Trash', onclick: () => trash() }, icon('trash'))),
       invitePlace,
@@ -861,9 +922,11 @@ export async function showMailApp() {
       ...(thread.tasks?.length ? [el('ul', { class: 'mail-tasks', 'aria-label': 'Tasks from this conversation' }, ...thread.tasks.map((t) => el('li', { class: t.done ? 'is-done' : '' }, icon('task'), ` Task: `, el('a', { href: '/tasks' }, t.text), t.due ? ` · due ${t.due}` : '', t.done ? ' · done' : '')))] : []),
       ...(thread.people?.length ? [peopleCards(thread.people, { onAdd: (c) => addToPeople(c, thread) })] : []),
       ...(thread.confirmations?.length ? [el('div', { class: 'confirm-rows', role: 'list', 'aria-label': 'Read confirmations' }, ...thread.confirmations.map(openedChip))] : []),
-      ...thread.messages.map((m) => el('article', { class: 'mail-message' },
+      ...(newestFirst ? [el('div', { class: 'mail-compose-anchor' })] : []),
+      ...(newestFirst ? [...thread.messages].reverse() : thread.messages).map((m) => el('article', { class: 'mail-message', 'data-message': m.id },
         el('header', { class: 'mail-message-head' },
           el('strong', {}, m.from.name || m.from.email), el('span', { class: 'mail-message-when' }, m.sent_at ? `${shortDate(m.sent_at)} ${clockTime(m.sent_at)}` : ''),
+          replyButtons(m),
           el('span', { class: 'mail-message-to' }, `To ${m.to.map(address).join(', ') || '—'}${m.cc.length ? ` · Cc ${m.cc.map(address).join(', ')}` : ''}`)),
         ...mailBody(m),
         ...(m.attachments.length ? [el('p', { class: 'mail-attachments' }, icon('link'), ' ', ...m.attachments.flatMap((name, i) => {
@@ -871,6 +934,8 @@ export async function showMailApp() {
           return [i ? ', ' : '', file ? el('a', { href: `/files/${file.sha256}`, download: file.name }, name) : name];
         }))] : []))));
     drawInvites(thread);
+    placeCompose();
+    if (composerNode) markReplying(composerNode.replyingId ?? '');
   }
 
   try { accounts = (await request('GET', '/api/mail')).accounts; } catch { accounts = []; }

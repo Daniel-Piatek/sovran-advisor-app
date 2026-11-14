@@ -40,8 +40,12 @@ const RULES = {
 };
 
 export function getSettings(db) {
-  const stored = Object.fromEntries(db.prepare('SELECT key, value FROM settings WHERE deleted_at IS NULL').all()
-    .map((row) => [row.key, JSON.parse(row.value)]));
+  // Only the Planner's own keys, and a row that isn't JSON is skipped (its default is used), never the whole screen.
+  const stored = {};
+  for (const row of db.prepare('SELECT key, value FROM settings WHERE deleted_at IS NULL').all()) {
+    if (!(row.key in DEFAULTS)) continue;
+    try { stored[row.key] = JSON.parse(row.value); } catch { /* the default */ }
+  }
   return Object.fromEntries(Object.entries(DEFAULTS).map(([key, value]) => [key, key in stored && RULES[key](stored[key]) ? stored[key] : value]));
 }
 
