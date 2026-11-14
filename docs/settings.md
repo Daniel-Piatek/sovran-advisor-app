@@ -12,7 +12,7 @@ Settings is where you decide how the app works for you.
 - **Updates** gets the newest version with one press (**Check for updates**, then **Update now**), with a whole copy of your notes first and a tick for each step; **Go back to the version before** undoes it. It says **Update ready** when the app's daily look finds a new version. See the Updating help page.
 - **Sovran Library** is where you paste your library key, if you were given one.
 - **Restart** restarts the app, for example after an update.
-- Other parts show here while their module is on, such as Dictation or Phone, backups and moving.
+- Other parts show here while their module is on, such as Dictation, Phone capture, or Phone, backups and moving.
 
 ## How it works
 

@@ -102,6 +102,8 @@ import { listDocs, readDoc } from './docs.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
+import { phoneDropState, linkPhone, unlinkPhone, startPhoneDrop } from './phone-drop.js';
+import qrcode from 'qrcode-generator';
 import { randomBytes } from 'node:crypto';
 import {
   checkPersonInput, checkCompanyInput, createPerson, getPerson, listPeople, updatePerson, createCompany, getCompany,
@@ -135,6 +137,7 @@ export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
   updateCheckEvery = 0, updateGit = undefined, updateNpm = undefined, updateAppDir = appDir,
+  phoneDropEvery = 60_000, phoneDropFetch = fetch,
 } = {}) {
   // A moving file you said yes to (Settings › Phone, backups and moving) takes the place of what is here, before the
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
@@ -157,6 +160,8 @@ export function startServer({
     : { read: () => {}, catchUp: () => {}, stop: () => {} };
   // A long task gets a few words from your assistant, in the background (short-titles.js).
   const titler = writeTitles ? startTitler({ db, dataDir, ai }) : { catchUp: () => {}, soon: () => {}, stop: () => {} };
+  // Phone capture (phone-drop.js): what the phone left in the Sovran drop box comes into the Inbox, about once a minute.
+  const phoneDrop = startPhoneDrop(db, { every: phoneDropEvery, fetcher: phoneDropFetch, isOn: () => moduleOn(db, 'phone-drop'), onNew: () => reader.catchUp() });
   let ownHosts = [];
   // Google (google.js): the key store, the sign-ins under way, and a problem to tell the page once. Tests give stand-ins.
   const googleEnv = google.env ?? process.env;
@@ -1531,7 +1536,36 @@ export function startServer({
         const input = await readJson(req);
         const problem = checkModuleInput(input);
         if (problem) return sendJson(res, 400, { error: problem });
-        return sendJson(res, 200, setModule(db, input.id, input.on));
+        const modules = setModule(db, input.id, input.on);
+        if (input.id === 'phone-drop' && !input.on) unlinkPhone(db, { fetcher: phoneDropFetch }).catch(() => {}); // the box in the cloud goes too
+        return sendJson(res, 200, modules);
+      }
+      return sendJson(res, 405, { error: 'Method not allowed' });
+    }
+    // Phone capture (module phone-drop; off in a new install), phone-drop.js:
+    //   GET  /api/phone-drop              { linked, link?, made_at?, last_collected_at?, collected?, problem? }
+    //   POST /api/phone-drop/link {fresh} makes this computer's box (fresh: true closes the old one: its link stops)
+    //   GET  /api/phone-drop/qr.svg       the link as a code for the phone's camera
+    //   POST /api/phone-drop/check {}     collects what waits now: { collected }
+    if (url.pathname === '/api/phone-drop' || url.pathname.startsWith('/api/phone-drop/')) {
+      if (!moduleOn(db, 'phone-drop')) return sendJson(res, 409, { error: 'Phone capture is switched off (Settings › Modules).' });
+      if (url.pathname === '/api/phone-drop' && req.method === 'GET') return sendJson(res, 200, phoneDropState(db));
+      if (url.pathname === '/api/phone-drop/link' && req.method === 'POST') {
+        const input = await readJson(req);
+        return sendJson(res, 200, await linkPhone(db, { fetcher: phoneDropFetch, fresh: input?.fresh === true }));
+      }
+      if (url.pathname === '/api/phone-drop/qr.svg' && req.method === 'GET') {
+        const state = phoneDropState(db);
+        if (!state.linked) return sendJson(res, 404, { error: 'No phone link yet.' });
+        const qr = qrcode(0, 'M');
+        qr.addData(state.link);
+        qr.make();
+        res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' });
+        return res.end(qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true }));
+      }
+      if (url.pathname === '/api/phone-drop/check' && req.method === 'POST') {
+        const collected = await phoneDrop.now();
+        return sendJson(res, 200, { collected, ...phoneDropState(db) });
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
     }
@@ -2134,6 +2168,7 @@ export function startServer({
         googleCalendarSend?.stop();
         mailSender?.stop();
         backups?.stop();
+        phoneDrop.stop();
         clearTimeout(updateTimer);
         reader.stop();
         titler.stop();

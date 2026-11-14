@@ -117,6 +117,15 @@ export const MODULES = [
     public: ['GET /quick'],
   },
   {
+    // Phone capture through the Sovran drop box (phone-drop.js, phone/, cloud/). A Capture icon with the crown on an
+    // iPhone or Android phone: what you say or type there is sealed on the phone, waits in the drop box and comes into
+    // the Inbox here. Off, the box in the cloud is closed and the Settings part is gone.
+    id: 'phone-drop',
+    starter: false, // off in a new install: switch it on in Settings › Modules
+    label: 'Phone capture',
+    description: 'A Capture app with the crown icon on your iPhone or Android phone. Speak or type a thought there and it lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
+  },
+  {
     // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title
     // that opens it beside the page (public/help.js), and the assistant's docs_read. Off, the "?" and the tool go.
     id: 'help', // on in a new install (2026-11-12, the owner's wish)

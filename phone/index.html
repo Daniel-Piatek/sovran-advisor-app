@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <title>Capture</title>
+  <meta name="description" content="Sovran Advisor Capture: a thought from your phone to the Inbox on your computer.">
+  <meta name="apple-mobile-web-app-title" content="Capture">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#fbfbfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1f1d1d" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="icons/favicon-32.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="phone.css">
+  <script type="module" src="phone.js"></script>
+</head>
+<body>
+  <main class="page">
+    <form class="form" id="form" hidden>
+      <h1 class="title">Capture</h1>
+      <textarea id="text" class="text" aria-label="Your thought" placeholder="What’s on your mind? Tap the microphone on your keyboard to speak." maxlength="4000"></textarea>
+      <div class="switch" role="group" aria-label="Whose is it">
+        <button type="button" class="switch-button" data-world="inner" aria-pressed="true">My own thought</button>
+        <button type="button" class="switch-button" data-world="outer" aria-pressed="false">From someone else</button>
+      </div>
+      <button type="submit" class="keep">Keep in Inbox</button>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <section class="setup" id="setup" hidden>
+      <h1 class="title">Add Capture to your home screen</h1>
+      <p>So it opens like any other app, with the crown icon:</p>
+      <ol class="steps" id="steps-ios" hidden>
+        <li>Tap the <strong>Share</strong> button (the square with an arrow) at the bottom of Safari.</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+        <li>Tap <strong>Add</strong>. Then open <strong>Capture</strong> from your home screen.</li>
+      </ol>
+      <ol class="steps" id="steps-android" hidden>
+        <li>Tap <strong id="install-button-words">Install</strong> below, or the <strong>⋮</strong> menu at the top right of Chrome.</li>
+        <li>Choose <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
+        <li>Then open <strong>Capture</strong> from your home screen.</li>
+      </ol>
+      <button type="button" class="keep" id="install" hidden>Install</button>
+      <p><a href="#" id="use-here">Use it here for now</a></p>
+    </section>
+
+    <section class="setup" id="nolink" hidden>
+      <h1 class="title">Capture</h1>
+      <p>This phone isn’t linked yet. On your computer, open Sovran Advisor, then <strong>Settings › Phone capture</strong>, and scan the code with this phone’s camera.</p>
+    </section>
+
+    <p class="foot">Your words are scrambled on this phone before they leave it. Only your computer can read them.</p>
+  </main>
+</body>
+</html>

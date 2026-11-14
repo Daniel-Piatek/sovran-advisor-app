@@ -26,6 +26,10 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes
   everything to a new computer. No cloud account, nothing to pay.
+- **Phone capture** (off until you switch it on): a Capture app with the crown icon on your iPhone or
+  Android phone. Speak (with the keyboard's microphone) or type a thought anywhere; it lands in your
+  Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
+  unreadable, in the Sovran drop box only until your computer collects it, then it is deleted.
 
 ## Before you start
 

@@ -4269,3 +4269,11 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .update-last { margin-top: var(--space-3); padding-top: var(--space-3); border-top: var(--line); }
 .update-subtitle { margin: 0 0 var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-bold); }
 .update-detail { margin: 0 0 var(--space-2); padding: var(--space-2); overflow-x: auto; border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font-family: var(--font-mono); font-size: var(--text-xs); white-space: pre-wrap; }
+
+/* ---- Settings › Phone capture (module phone-drop) ---- */
+
+.phone-drop { display: flex; flex-direction: column; gap: var(--space-3); }
+.phone-drop-pair { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
+.phone-drop-code { width: 220px; height: 220px; flex: none; border: var(--line); border-radius: var(--radius-md); } /* the code brings its own white ground, in dark mode too: a camera reads dark on light */
+.phone-drop-steps { margin: 0; padding-left: 1.25em; flex: 1 1 16rem; display: flex; flex-direction: column; gap: var(--space-2); }
+.phone-drop-privacy { font-size: var(--text-sm); }
