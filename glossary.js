@@ -7,6 +7,25 @@
 // Deleting only sets deleted_at (Undo brings it back); a seeded hint you removed stays removed.
 
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// The Sovran glossary (sovran-glossary.json, kept by the course): fixes and terms every student's app knows, on top
+// of each student's own. Read once; a broken file is no glossary rather than a broken app.
+const SHARED_FILE = fileURLToPath(new URL('./sovran-glossary.json', import.meta.url));
+let shared = null;
+export function sharedGlossary() {
+  if (shared) return shared;
+  try {
+    const json = JSON.parse(fs.readFileSync(SHARED_FILE, 'utf8'));
+    const ok = (t) => typeof t === 'string' && t.trim() && t.length <= 80;
+    shared = {
+      fixes: (json.fixes ?? []).filter((f) => ok(f?.heard_as) && ok(f?.term)).map((f) => ({ heard_as: f.heard_as.trim(), term: f.term.trim() })),
+      terms: (json.terms ?? []).filter(ok).map((t) => t.trim()),
+    };
+  } catch { shared = { fixes: [], terms: [] }; }
+  return shared;
+}
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -98,10 +117,20 @@ export function keyterms(db) {
     terms.push(r.term);
     if (terms.length >= MAX_KEYTERMS) break;
   }
+  for (const term of [...sharedGlossary().fixes.map((f) => f.term), ...sharedGlossary().terms]) { // the Sovran words, while there is room
+    if (terms.length >= MAX_KEYTERMS || seen.has(term.toLowerCase())) continue;
+    seen.add(term.toLowerCase());
+    terms.push(term);
+  }
   return terms;
 }
 
-export const fixes = (db) => listGlossary(db, { limit: 1000 }).filter((r) => r.kind === 'fix').map((r) => ({ heard_as: r.heard_as, term: r.term }));
+// Your own fixes, then the Sovran ones for what you have not fixed yourself.
+export function fixes(db) {
+  const mine = listGlossary(db, { limit: 1000 }).filter((r) => r.kind === 'fix').map((r) => ({ heard_as: r.heard_as, term: r.term }));
+  const have = new Set(mine.map((f) => f.heard_as.toLowerCase()));
+  return [...mine, ...sharedGlossary().fixes.filter((f) => !have.has(f.heard_as.toLowerCase()))];
+}
 
 // What a dictation says after the fixes: the same rule the page uses (public/glossary-learn.js).
 export { applyFixes } from './public/glossary-learn.js';

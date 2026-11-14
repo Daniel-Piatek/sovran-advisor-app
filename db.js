@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 70;
+export const SCHEMA_VERSION = 71;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -373,6 +373,8 @@ const steps = {
   69() {},
   // 70: voice calls (advanced/voice/3-7): call_turns and voice_log are new (made from schema.sql). Nothing else changes.
   70() {},
+  // 71: phone notes tidied (Phone capture, tidy.js): capture_tidy is new (made from schema.sql). Nothing else changes.
+  71() {},
 };
 
 // life_items takes the kind habit and its three columns. SQLite can't change a CHECK in place, so the table is made again and the rows

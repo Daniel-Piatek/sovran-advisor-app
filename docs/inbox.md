@@ -12,7 +12,7 @@ The Inbox holds every thought you captured quickly and have not sorted yet. Empt
   - **D** marks it done when it needed nothing, **Backspace** deletes it.
 - After each choice the next capture opens, and **Undo** takes the choice back.
 - Your assistant reads each capture and may suggest where it goes. **Accept** takes the suggestion.
-- **From your phone** (Settings › Modules › **Phone capture**): scan the code in Settings › Phone capture, add Capture to the phone's home screen, then speak or type there. What you keep arrives here within a minute of this app being open.
+- **From your phone** (Settings › Modules › **Phone capture**): scan the code in Settings › Phone capture, add Capture to the phone's home screen, then speak or type there. What you keep arrives here within a minute of this app being open. Your own glossary and the Sovran glossary fix the spelling of names and course words at once, and your assistant then adds commas and full stops; **From your phone, tidied** shows the words as you said them.
 - **Snoozed** shows the ones you put off until a later day. **Inner** and **Outer** separate your own thoughts from things that came from others.
 
 ## How it works

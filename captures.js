@@ -19,7 +19,8 @@ const fail = (status, message) => Object.assign(new Error(message), { status });
 const plain = (rows) => rows.map((row) => ({ ...row }));
 
 const COLUMNS = `id, body, captured_at, state, sorted_at, sorted_into, sorted_id, home_id, snoozed_until, world, link_url, link_title, origin, created_at, updated_at, deleted_at,
-  device_id, (SELECT name FROM capture_devices d WHERE d.id = captures.device_id) AS shared_from`;
+  device_id, (SELECT name FROM capture_devices d WHERE d.id = captures.device_id) AS shared_from,
+  (SELECT spoken FROM capture_tidy t WHERE t.capture_id = captures.id) AS spoken`; // a phone note's words as said (tidy.js)
 
 export const WORLDS = ['inner', 'outer'];
 

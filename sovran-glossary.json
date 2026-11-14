@@ -1,0 +1,23 @@
+{
+  "about": "The Sovran glossary: words every Sovran Advisor knows, kept by the course (tidy.js, glossary.js). fixes: what speech to text writes (heard_as) and how it is spelled (term), whole words, any case. terms: words to spell exactly as written. Each student's own glossary (Settings › Dictation) comes on top.",
+  "fixes": [
+    { "heard_as": "Sovereign Advisor", "term": "Sovran Advisor" },
+    { "heard_as": "Sovereign Library", "term": "Sovran Library" },
+    { "heard_as": "Live Sovereign", "term": "Live Sovran" },
+    { "heard_as": "sovereign self", "term": "Sovran Self" },
+    { "heard_as": "sovereign profile", "term": "Sovran Profile" },
+    { "heard_as": "sovereign quest", "term": "Sovran Quest" },
+    { "heard_as": "sovereign pattern", "term": "Sovran Pattern" },
+    { "heard_as": "sovereign leadership", "term": "Sovran Leadership" },
+    { "heard_as": "sovereign authority", "term": "Sovran Authority" },
+    { "heard_as": "sovran authority", "term": "Sovran Authority" },
+    { "heard_as": "sovereign operating system", "term": "Sovran Operating System" },
+    { "heard_as": "iron core", "term": "ICOR" },
+    { "heard_as": "eye core", "term": "ICOR" },
+    { "heard_as": "my ICOR", "term": "myICOR" },
+    { "heard_as": "HDD code", "term": "HDDecode" },
+    { "heard_as": "astro decode", "term": "AstroDecode" },
+    { "heard_as": "GK decode", "term": "GKDecode" }
+  ],
+  "terms": ["Sovran", "Live Sovran", "Sovran Advisor", "Sovran Library", "ICOR", "myICOR", "AstroDecode", "GKDecode", "HDDecode", "Daniel Piatek", "siddhi"]
+}

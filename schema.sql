@@ -595,6 +595,23 @@ CREATE INDEX IF NOT EXISTS assistant_actions_by_message ON assistant_actions (me
 --   state     reading, ready or failed (tries: how often it was tried)
 --   kind      task, note, journal or let_go; day (a task's), home_id (a My Life item)
 --   connects  JSON: the pages it connects to; why: one line
+-- A phone note's tidy-up (Phone capture, tidy.js): what was said on the phone (spoken), the same words after the
+-- glossary's fixes (fixed, which the capture holds until the assistant has added punctuation), and how far it got:
+-- waiting (the assistant has not done it yet), done (the capture now holds the punctuated words), kept (the words
+-- stay as they were: the assistant was not available, or its answer changed more than punctuation).
+CREATE TABLE IF NOT EXISTS capture_tidy (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'captured' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  capture_id TEXT NOT NULL UNIQUE REFERENCES captures (id),
+  spoken TEXT NOT NULL,
+  fixed TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'waiting' CHECK (state IN ('waiting', 'done', 'kept')),
+  tries INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS capture_suggestions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

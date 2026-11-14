@@ -10,6 +10,7 @@
 import crypto from 'node:crypto';
 import { unseal, randomB64 } from './phone/seal.js';
 import { createCapture, WORLDS } from './captures.js';
+import { fixPhoneWords, rememberSpoken } from './tidy.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -87,7 +88,12 @@ export async function collect(db, { fetcher = fetch } = {}) {
       try {
         const note = await unseal(box.key, n.sealed);
         const body = String(note.body ?? '').trim().slice(0, MAX_PHONE_TEXT);
-        if (body) { createCapture(db, { body, world: WORLDS.includes(note.world) ? note.world : 'inner' }); total++; }
+        if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
+          const words = fixPhoneWords(db, body);
+          const made = createCapture(db, { body: words.fixed, world: WORLDS.includes(note.world) ? note.world : 'inner' });
+          rememberSpoken(db, made.id, words);
+          total++;
+        }
       } catch { /* not sealed with this key: dropped */ }
       done.push(n.id);
     }
