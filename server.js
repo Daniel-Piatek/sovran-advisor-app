@@ -41,6 +41,7 @@ import { peopleOfThread, addSender, mailWith } from './mail-people.js';
 import { createBoard, getBoard, renameBoard, setBackground, addItem, changeItem, removeItem } from './boards.js';
 import { addStroke, removeStroke, strokesToText } from './ink.js';
 import { listVersions, getVersion, compareVersions, latestVersion } from './versions.js';
+import { makeUpdater, updateStatus, checkForUpdate, readState as readUpdateState, CHECK_EVERY_MS } from './app-update.js';
 import { saveWithMerge, listClashes, resolveClash, takeClashNotes } from './merge.js';
 import { createComment, replyTo, listThreads as listCommentThreads, changeComment, deleteComment, getComment, askText } from './comments.js';
 import { listBlocks, setFolded, searchBullets, bulletDetail, usedIn } from './blocks.js';
@@ -133,6 +134,7 @@ const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
+  updateCheckEvery = 0, updateGit = undefined, updateNpm = undefined, updateAppDir = appDir,
 } = {}) {
   // A moving file you said yes to (Settings › Phone, backups and moving) takes the place of what is here, before the
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
@@ -172,6 +174,11 @@ export function startServer({
   let googleCalendar = null; // the Google Calendar read (Calendar in depth 7)
   let googleCalendarSend = null; // the sender of changes to Google events (Calendar in depth 8)
   let mailSender = null; // sends what is due (Mail 8)
+  // Settings › Updates (app-update.js): one update or going back at a time; the daily look only looks, never installs.
+  const updater = makeUpdater({ appDir: updateAppDir, dataDir, db, gitPath: updateGit, npm: updateNpm, onRestart: (beforeStart) => onRestart?.(beforeStart) });
+  let updateLooking = null; // a look for a new version under way
+  const lookForUpdate = () => (updateLooking ??= checkForUpdate({ appDir: updateAppDir, dataDir, gitPath: updateGit }).finally(() => { updateLooking = null; }));
+  let updateTimer = null;
 
   // The app's data, as JSON:
   //   GET    /api/notes                 every note, last edited first (title and the start of the text)
@@ -1589,6 +1596,27 @@ export function startServer({
       setTimeout(onQuit, 100);
       return undefined;
     }
+    // Settings › Updates (app-update.js):
+    //   GET  /api/update        → { can, why?, message?, check: { checked_at, behind, news, db_upgrade }, last, undo, progress }
+    //   POST /api/update/check  looks for a newer version now → the same
+    //   POST /api/update {}     brings in the newest version (backup, own changes kept, mark, merge, install, restart) → { started }
+    //   POST /api/update/undo {} goes back to the version before the last update → { started }
+    if (url.pathname === '/api/update' || url.pathname === '/api/update/check' || url.pathname === '/api/update/undo') {
+      const status = async () => ({ ...(await updateStatus({ appDir: updateAppDir, dataDir, gitPath: updateGit, canRestart: Boolean(onRestart) })), progress: updater.progress });
+      if (url.pathname === '/api/update' && req.method === 'GET') return sendJson(res, 200, await status());
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      await readJson(req);
+      if (url.pathname === '/api/update/check') {
+        try { await lookForUpdate(); } catch (err) { return sendJson(res, 200, { ...(await status()), problem: err.message }); }
+        return sendJson(res, 200, await status());
+      }
+      const now = await status();
+      if (!now.can) return sendJson(res, 409, { error: now.message });
+      if (updater.running()) return sendJson(res, 409, { error: 'An update is already under way.' });
+      if (url.pathname === '/api/update/undo' && !now.undo?.can) return sendJson(res, 409, { error: 'There is no update this app can go back from by itself.' });
+      if (url.pathname === '/api/update') updater.start(); else updater.startUndo();
+      return sendJson(res, 202, { started: true, progress: updater.progress });
+    }
     // POST /api/restart {}   stops the app and starts it again (Settings > Restart), so an update or a changed
     // database takes effect without the Terminal. Only when started as the app itself.
     if (url.pathname === '/api/restart' && onRestart) {
@@ -1799,7 +1827,8 @@ export function startServer({
     // Settings › Background jobs: each job with how often it runs and when it last did.
     if (url.pathname === '/api/jobs') {
       if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
-      return sendJson(res, 200, [calendarJob(db, readCalendarsEvery), googleCalendarJob(db, googleCalendarEvery), googleCalendarSendJob(db, googleCalendarSendEvery)]);
+      return sendJson(res, 200, [calendarJob(db, readCalendarsEvery), googleCalendarJob(db, googleCalendarEvery), googleCalendarSendJob(db, googleCalendarSendEvery),
+        ...(updateCheckEvery ? [{ id: 'update-check', label: 'Look for a new version (it never installs by itself)', every_minutes: Math.round(updateCheckEvery / 60_000), last_run: readUpdateState(dataDir).check?.checked_at ?? null, on: true }] : [])]);
     }
     if (url.pathname === '/api/calendars') {
       if (req.method === 'GET') return sendJson(res, 200, listCalendars(db));
@@ -2085,6 +2114,14 @@ export function startServer({
       googleCalendar = startGoogleCalendarRead(db, keyStore, { env: googleEnv, fetcher: googleFetch, every: googleCalendarEvery }); // each account with “Read your calendar” on, every minute
       googleCalendarSend = startGoogleCalendarSend(db, keyStore, { env: googleEnv, fetcher: googleFetch, every: googleCalendarSendEvery }); // what waits goes, with its etag
       backups = startBackups(db, dataDir, { every: backupEvery }); // a whole copy of the database each day (backup.js)
+      // The daily look for a new version (the owner's choice, 2026-11-14): two minutes after the start, then each hour it
+      // looks only when the last look is a day old. It only looks; installing waits for a press in Settings › Updates.
+      if (updateCheckEvery) {
+        const due = () => { const at = readUpdateState(dataDir).check?.checked_at; return !at || Date.now() - Date.parse(at) >= updateCheckEvery; };
+        const look = () => { if (due() && !updater.running()) lookForUpdate().catch(() => { /* offline or not a git copy: the next hour tries again */ }); };
+        updateTimer = setTimeout(function again() { look(); updateTimer = setTimeout(again, Math.min(updateCheckEvery, 60 * 60 * 1000)); }, 2 * 60 * 1000);
+        updateTimer.unref?.();
+      }
       reader.catchUp(); // what waits and was never read (the assistant was away, or the app stopped)
       titler.catchUp();
       // Your other calendars are read now and every ten minutes, while the app runs.
@@ -2097,6 +2134,7 @@ export function startServer({
         googleCalendarSend?.stop();
         mailSender?.stop();
         backups?.stop();
+        clearTimeout(updateTimer);
         reader.stop();
         titler.stop();
         await stopAll();
@@ -2155,6 +2193,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
+  let app = null; // set once started: going back from an update closes it before the version before starts
   const { url, close } = await startServer({
     port: Number(process.env.PORT ?? 3300), // 3300: never the same address as APP Daniel (3000) on one Mac
     dataDir: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : undefined,
@@ -2170,11 +2209,20 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     ...(process.env.READ_CALENDARS === 'off' ? { readCalendarsEvery: 0 } : {}),
     onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js)
     // Settings > Restart: the same command again (same folder, same settings), on its own, then this one stops.
-    onRestart: () => {
+    // beforeStart (going back from an update, app-update.js): this app lets go of the database first, then it runs, then the
+    // version before starts.
+    onRestart: async (beforeStart) => {
+      if (beforeStart) {
+        try { await app.close(); } catch { /* closing is best effort: what is saved is saved */ }
+        beforeStart();
+      }
       spawn(process.execPath, process.argv.slice(1), { cwd: process.cwd(), env: { ...process.env, PORT: new URL(url).port, RESTART_WAIT: '1' }, detached: true, stdio: 'ignore', windowsHide: true }).unref();
+      if (beforeStart) process.exit(0);
       process.kill(process.pid, 'SIGTERM');
     },
+    updateCheckEvery: process.env.UPDATE_CHECK === 'off' ? 0 : CHECK_EVERY_MS, // Settings › Updates: the daily look
   });
+  app = { close };
   console.log(`Listening on ${url}`);
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.on(signal, async () => {

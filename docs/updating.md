@@ -2,22 +2,27 @@
 title: Updating Sovran Advisor
 paths: ^/help/updating$
 ---
-To get the newest version of Sovran Advisor (an update, an upgrade, a new version), you ask Claude Code to do it for you. It takes one line.
+To get the newest version of Sovran Advisor (an update, an upgrade, a new version), press one button in Settings.
 
 ## How you use it
 
-1. Open **Claude Code** on your computer, the same way you did when you installed Sovran Advisor. If you use ChatGPT, open **OpenAI's Codex app** instead.
-2. Start a new chat there, paste this one line and press Enter:
-
-   > Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
-
-3. That is all. It finds the app by itself, so you do not need to open the app's folder first. If it asks you a question before a step, answer it, then wait until it says it is done.
-4. Reload this page in your browser.
+1. Open **Settings** and find **Updates** near the top. When a new version is out, it says **Update ready** beside the title. The app looks once a day by itself; it never installs anything without you.
+2. To look now, press **Check for updates**. You see what is new, in a short list.
+3. Press **Update now**. Each step gets a tick as it goes: a whole copy of your notes, your own changes to the app kept, a mark to come back to, the new version, what it needs, and starting again. It takes a minute or two.
+4. The app restarts and the page comes back by itself, showing what came in.
 
 What is kept: everything you wrote (notes, journal, people, tasks), your settings, and any changes you made to your own copy. A newer version upgrades your database by itself, after keeping a whole copy of it.
 
-If nothing new is out yet, it simply says the app is already up to date. To go back to the version before, paste "Undo the last Sovran Advisor update" the same way.
+**To go back** to the version before, press **Go back to the version before** under "Updated". If the update also moved your notes forward, it says so first: your notes then go back to how they were just before the update, and anything you wrote since is kept in a copy in your backups folder, so nothing is lost.
+
+**If the button can't do it** (for example the update clashes with a change you made to the app yourself, or your copy was installed from a zip), it puts everything back as it was and shows this one line. Open **Claude Code** (with ChatGPT: **OpenAI's Codex app**), start a new chat, paste it and press Enter:
+
+> Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
+
+Claude Code then does the update with you and asks before combining your change with the new one. To go back that way, paste "Undo the last Sovran Advisor update".
+
+**Mac and Windows.** The button is made for both. It has not been tried on Windows yet, so if anything looks wrong there, use the Claude Code line above.
 
 ## How it works
 
-The update steps are the section "For Claude or Codex: updating it" in `INSTALL.md`: stop the app, save your own changes as their own step, mark the spot so it can be undone, bring in the new version with git, and start it again. Your data lives in the `data/` folder, which an update never touches. Changes you made to the app are kept too, with a list of them (see `CUSTOMISING.md`).
+Settings › Updates is `public/update-settings.js`; the steps are `app-update.js`, the same as the section "For Claude or Codex: updating it" in `INSTALL.md`. The copy of your notes is `data/backups/before-update-<time>.db` (the newest three are kept), your own changes are saved as their own git step, the mark is a tag `before-update-<day>`, and the new version comes in with `git merge` (a clash is undone with `git merge --abort`). `npm install` runs only when what the app needs changed. The daily look (`git fetch`) is listed under Settings › Background jobs. What it knows is kept in a small file, update.json, in the data folder. Your data lives in the `data/` folder, which an update never touches.

@@ -48,11 +48,12 @@ export const guide = () => [
   'With the Sovran Library connected (mcp__library__…), it holds the teaching of the owner’s mentor and, for a client, their own decodes: search it for questions about the Sovran teaching or their decodes, follow any reading note it gives, and say when an answer comes from the library.',
   'When the owner asks how a part of this app works (a view, a button, a key), and docs_read is offered, read the help page with docs_read, answer from it in a few sentences and cite it as the link it gives; never guess how the app works.',
   // Updating (2026-11-12, the owner's wish): always known, Help pages on or off, so "how do I update?" gets the exact steps.
-  'When the owner asks how to update this app (a newer or new version, an upgrade, getting the latest), you cannot do it from here, because the app runs this chat. Give them these steps, plainly and numbered:',
+  'When the owner asks how to update this app (a newer or new version, an upgrade, getting the latest), you cannot do it from here, but they can with one button: Settings › Updates › Check for updates, then Update now. It keeps a whole copy of their notes first, keeps their own changes, ticks off each step and restarts the app; Go back to the version before undoes it. The app also looks once a day by itself and shows Update ready, never installing without them.',
+  'If the button says it cannot (a clash with their own change to the app, a copy installed from a zip, or anything else), give them these steps, plainly and numbered:',
   'open Claude Code, the same way they installed Sovran Advisor (with ChatGPT: OpenAI’s Codex app); start a new chat there, paste this one line and press Enter:',
   `“${UPDATE_LINE}”. That is all: it finds the app by itself (they need not open its folder first), stops it, brings in the new version and starts it again; if it asks a question, they answer it.`,
   'Their notes, journal, people, tasks, settings and their own changes to the app are kept. When it says it is done, they reload this page. If nothing new is out, it says the app is already up to date.',
-  'To go back, they paste “Undo the last Sovran Advisor update” the same way. If docs_read is offered, the Updating Sovran Advisor help page says the same: cite it.',
+  'To go back that way, they paste “Undo the last Sovran Advisor update” the same way. If docs_read is offered, the Updating Sovran Advisor help page says the same: cite it.',
   'When you use a page, cite it as a Markdown link to its path, like [Bank call](/notes/<id>). Quote the owner’s words when they ask what they wrote.',
   'The owner chooses which AI answers here (Claude or ChatGPT) in Settings › Your assistant’s AI; you cannot switch it yourself, so point them there when they ask.',
   // Making the app their own (CUSTOMISING.md): the assistant in the app cannot change the app, so it walks the owner through it.

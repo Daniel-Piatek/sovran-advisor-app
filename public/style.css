@@ -4235,3 +4235,21 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .ai-check-result code { font-family: var(--font-mono); }
 .ai-check-said { font-style: italic; }
 .ai-check-result a { color: var(--color-text); font-weight: var(--weight-bold); text-decoration: underline; }
+
+/* ---- Settings › Updates (update-settings.js, 2026-11-14) ---- */
+/* "Update ready": a gold mark beside the title (brand Gold as a dot, never a fill behind words). */
+.update-ready { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: var(--space-2); padding: 0 var(--space-2); border: 1px solid var(--kind-goal); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text); vertical-align: middle; }
+.update-ready::before { content: ''; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--kind-goal); }
+.update-news { margin: var(--space-1) 0 var(--space-3); padding-left: var(--space-6); }
+.update-news li { margin: 0 0 var(--space-1); }
+.update-more { list-style: none; color: var(--color-text-muted); }
+.update-steps { list-style: none; margin: var(--space-2) 0 var(--space-3); padding: 0; }
+.update-steps li { display: flex; gap: var(--space-2); align-items: baseline; margin: 0 0 var(--space-1); color: var(--color-text-muted); }
+.update-steps li[data-state="doing"], .update-steps li[data-state="done"] { color: var(--color-text); }
+.update-steps li[data-state="doing"] { font-weight: var(--weight-bold); }
+.update-mark { flex: 0 0 1.25em; text-align: center; }
+.update-steps li[data-state="done"] .update-mark { color: var(--kind-life); font-weight: var(--weight-bold); }
+.update-steps li[data-state="failed"] .update-mark { color: var(--color-accent); font-weight: var(--weight-bold); }
+.update-last { margin-top: var(--space-3); padding-top: var(--space-3); border-top: var(--line); }
+.update-subtitle { margin: 0 0 var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-bold); }
+.update-detail { margin: 0 0 var(--space-2); padding: var(--space-2); overflow-x: auto; border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font-family: var(--font-mono); font-size: var(--text-xs); white-space: pre-wrap; }

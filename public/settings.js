@@ -15,6 +15,7 @@ import { voiceSection, voiceLogSection } from './voice-settings.js';
 import { everywhereSection } from './everywhere-settings.js';
 import { checkPart } from './ai-check.js';
 import { fold } from './fold.js';
+import { updatesSection } from './update-settings.js';
 
 const permissionsApi = {
   get: () => request('GET', '/api/assistant/permissions'),
@@ -421,6 +422,7 @@ export async function showSettings() {
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
     aiSection(),
+    updatesSection(),
     librarySection(),
     ...(moduleOn('course') ? [courseSection()] : []),
     el('section', { class: 'settings-part', 'aria-label': 'Your assistant' },

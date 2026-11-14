@@ -149,6 +149,11 @@ Only when the person asks. Nothing goes through a cloud account.
 
 ## For Claude or Codex: updating it ("update Sovran Advisor")
 
+The person can also update with one button: Settings › Updates › **Update now** (`app-update.js`, the same steps
+as below, done by the app). You are here because they chose you, or the button sent them (a clash with their own
+change, a copy installed from a zip, or another problem). Its copy of their notes is in
+`data/backups/before-update-<time>.db`, and `data/update.json` says what it last did.
+
 The person may have changed their own copy (see `CUSTOMISING.md`). Their changes must survive
 the update. Never use `git reset --hard`, `git checkout -- <file>`, `git stash drop`,
 `git clean` or a fresh download over the folder to get past a problem, unless the person has
