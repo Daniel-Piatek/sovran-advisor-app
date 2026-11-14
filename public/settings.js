@@ -13,6 +13,7 @@ import { importSection } from './import-notes.js';
 import { captureSection } from './capture-settings.js';
 import { voiceSection, voiceLogSection } from './voice-settings.js';
 import { everywhereSection } from './everywhere-settings.js';
+import { phoneDropSection } from './phone-drop-settings.js';
 import { checkPart } from './ai-check.js';
 import { fold } from './fold.js';
 import { updatesSection } from './update-settings.js';
@@ -401,6 +402,13 @@ export async function showSettings() {
     if (moduleOn('everywhere') && !there) everywherePlace.replaceChildren(everywhereSection());
     else if (!moduleOn('everywhere') && there) everywherePlace.replaceChildren();
   };
+  // Phone capture: there while its module is on.
+  const phoneDropPlace = el('div', {});
+  const drawPhoneDrop = () => {
+    const there = phoneDropPlace.childElementCount > 0;
+    if (moduleOn('phone-drop') && !there) phoneDropPlace.replaceChildren(phoneDropSection());
+    else if (!moduleOn('phone-drop') && there) phoneDropPlace.replaceChildren();
+  };
   const moduleProblem = el('p', { class: 'capture-problem', role: 'alert' });
 
   // One row a module: its name and what it does, and an On · Off switch.
@@ -411,7 +419,7 @@ export async function showSettings() {
         ...[[true, 'On'], [false, 'Off']].map(([on, label]) => el('button', {
           type: 'button', class: 'switch-button switch-button-text', 'aria-pressed': String(m.on === on),
           onclick: async () => {
-            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); } catch (err) { moduleProblem.textContent = err.message; }
+            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); drawPhoneDrop(); } catch (err) { moduleProblem.textContent = err.message; }
           },
         }, label))))));
   }
@@ -431,6 +439,7 @@ export async function showSettings() {
   drawCapture();
   drawImport();
   drawEverywhere();
+  drawPhoneDrop();
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
     aiSection(),
@@ -455,6 +464,7 @@ export async function showSettings() {
       jobRows),
     ...(moduleOn('calendar-plus') ? [timingsSection()] : []),
     capturePlace,
+    phoneDropPlace,
     everywherePlace,
     importPlace,
     googlePlace,

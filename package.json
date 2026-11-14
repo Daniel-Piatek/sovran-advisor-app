@@ -36,7 +36,8 @@
     "prosemirror-schema-list": "1.5.1",
     "prosemirror-state": "1.4.4",
     "prosemirror-transform": "1.12.4",
-    "prosemirror-view": "1.42.8"
+    "prosemirror-view": "1.42.8",
+    "qrcode-generator": "2.0.4"
   },
   "optionalDependencies": {
     "sherpa-onnx-node": "1.13.8"
