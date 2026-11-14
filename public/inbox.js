@@ -282,6 +282,9 @@ export async function showInbox() {
         })),
         place,
         ...(capture.shared_from ? [el('p', { class: 'capture-hint inbox-shared' }, icon('link'), ` Shared from ${capture.shared_from}`)] : []),
+        // A phone note tidied (Phone capture, tidy.js): the words as they were said, one click away.
+        ...(capture.spoken && capture.spoken !== capture.body ? [el('details', { class: 'capture-hint inbox-spoken' },
+          el('summary', {}, 'From your phone, tidied. As you said it'), el('p', {}, capture.spoken))] : []),
         ...(capture.link_title ? [el('div', { class: 'citations' }, el('a', {
           class: 'citation', href: capture.link_url, target: '_blank', rel: 'noopener noreferrer',
         }, icon('link'), el('span', { class: 'citation-title' }, capture.link_title), el('span', { class: 'citation-kind' }, new URL(capture.link_url).hostname)))] : []),

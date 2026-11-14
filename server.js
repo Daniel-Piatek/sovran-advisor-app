@@ -103,6 +103,7 @@ import { getPermissions, setPermission, recentActivity, allowedRules, removeRule
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
 import { phoneDropState, linkPhone, unlinkPhone, startPhoneDrop } from './phone-drop.js';
+import { startTidier } from './tidy.js';
 import qrcode from 'qrcode-generator';
 import { randomBytes } from 'node:crypto';
 import {
@@ -137,7 +138,7 @@ export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
   updateCheckEvery = 0, updateGit = undefined, updateNpm = undefined, updateAppDir = appDir,
-  phoneDropEvery = 60_000, phoneDropFetch = fetch,
+  phoneDropEvery = 60_000, phoneDropFetch = fetch, tidyNotes = true,
 } = {}) {
   // A moving file you said yes to (Settings › Phone, backups and moving) takes the place of what is here, before the
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
@@ -161,7 +162,9 @@ export function startServer({
   // A long task gets a few words from your assistant, in the background (short-titles.js).
   const titler = writeTitles ? startTitler({ db, dataDir, ai }) : { catchUp: () => {}, soon: () => {}, stop: () => {} };
   // Phone capture (phone-drop.js): what the phone left in the Sovran drop box comes into the Inbox, about once a minute.
-  const phoneDrop = startPhoneDrop(db, { every: phoneDropEvery, fetcher: phoneDropFetch, isOn: () => moduleOn(db, 'phone-drop'), onNew: () => reader.catchUp() });
+  // A phone note gets its punctuation from your assistant, in the background (tidy.js).
+  const tidier = tidyNotes ? startTidier({ db, dataDir, ai, onDone: () => reader.catchUp() }) : { catchUp: () => {}, soon: () => {}, stop: () => {} };
+  const phoneDrop = startPhoneDrop(db, { every: phoneDropEvery, fetcher: phoneDropFetch, isOn: () => moduleOn(db, 'phone-drop'), onNew: () => { reader.catchUp(); tidier.soon(); } });
   let ownHosts = [];
   // Google (google.js): the key store, the sign-ins under way, and a problem to tell the page once. Tests give stand-ins.
   const googleEnv = google.env ?? process.env;
@@ -2158,6 +2161,7 @@ export function startServer({
       }
       reader.catchUp(); // what waits and was never read (the assistant was away, or the app stopped)
       titler.catchUp();
+      tidier.catchUp(); // phone notes that came in before the app last stopped
       // Your other calendars are read now and every ten minutes, while the app runs.
       const reading = readCalendarsEvery ? setInterval(() => readAllCalendars(db).catch(() => {}), readCalendarsEvery) : null;
       if (readCalendarsEvery) readAllCalendars(db).catch(() => {});
@@ -2172,6 +2176,7 @@ export function startServer({
         clearTimeout(updateTimer);
         reader.stop();
         titler.stop();
+        tidier.stop();
         await stopAll();
         await new Promise((done) => { server.close(() => { db.close(); done(); }); server.closeAllConnections(); }); // a kept-open connection must not hold the app up
       };

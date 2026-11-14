@@ -21,6 +21,8 @@
 //   "read the file PATH" / "run COMMAND"   asks approve_step first, as Claude Code does
 //                                (a command is never really run)
 // and as the short-title writer: "Write a short title for this task" → its first three words;
+// and as the phone-note tidier (tidy.js): "This was dictated on a phone" → a capital, a full stop after "so" and at the
+// end ("rewrite" in the words: it answers with other words, which the app must refuse);
 // and as the Inbox reader (assistant/3): it looks up what the capture names, then answers
 // with JSON: a task for "book/call/send/buy/fix/pay/ask …" (tomorrow if it says so), the
 // journal for "slept/felt/today …", let it go for "spam …", else a note; a home whose
@@ -63,6 +65,15 @@ if (titleFor) {
   const words = titleFor[1].trim().split(/\s+/).slice(0, 3).join(' ');
   out({ type: 'system', subtype: 'init', cwd: process.cwd(), apiKeySource: 'none' });
   out({ type: 'result', subtype: 'success', is_error: false, result: words[0].toUpperCase() + words.slice(1) });
+  process.exit(0);
+}
+const tidyFor = /This was dictated on a phone[\s\S]*?"""\n([\s\S]*?)\n"""/.exec(prompt);
+if (tidyFor) {
+  const words = tidyFor[1].trim();
+  const tidied = /rewrite/i.test(words) ? 'Here is a nicer version of your thought, with different words.'
+    : `${words[0].toUpperCase()}${words.slice(1)}`.replace(/ so /, ' so. ').replace(/[.!?]?$/, '.');
+  out({ type: 'system', subtype: 'init', cwd: process.cwd(), apiKeySource: 'none' });
+  out({ type: 'result', subtype: 'success', is_error: false, result: tidied });
   process.exit(0);
 }
 if (after('--resume') && !fs.existsSync(memory)) {

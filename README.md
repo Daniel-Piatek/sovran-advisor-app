@@ -30,6 +30,8 @@ notes, and an AI assistant that knows them, all on your own computer.
   Android phone. Speak (with the keyboard's microphone) or type a thought anywhere; it lands in your
   Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
   unreadable, in the Sovran drop box only until your computer collects it, then it is deleted.
+  On your computer it is tidied: names and course words spelled right (your glossary and the Sovran
+  glossary, `sovran-glossary.json`), and commas and full stops added by your own assistant.
 
 ## Before you start
 

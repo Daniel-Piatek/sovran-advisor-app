@@ -1,0 +1,13 @@
+{
+  "about": "The Sovran glossary: words every Sovran Advisor knows, kept by the course (tidy.js, glossary.js). fixes: what speech to text writes (heard_as) and how it is spelled (term), whole words, any case. terms: words to spell exactly as written. Each student's own glossary (Settings › Dictation) comes on top.",
+  "fixes": [
+    { "heard_as": "Sovereign Advisor", "term": "Sovran Advisor" },
+    { "heard_as": "Sovereign Library", "term": "Sovran Library" },
+    { "heard_as": "Live Sovereign", "term": "Live Sovran" },
+    { "heard_as": "whisper flow", "term": "Wispr Flow" },
+    { "heard_as": "my ICOR", "term": "myICOR" },
+    { "heard_as": "my icor", "term": "myICOR" },
+    { "heard_as": "eye core", "term": "ICOR" }
+  ],
+  "terms": ["Sovran", "Live Sovran", "Sovran Advisor", "Sovran Library", "ICOR", "myICOR", "Wispr Flow"]
+}

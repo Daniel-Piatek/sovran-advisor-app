@@ -4277,3 +4277,8 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .phone-drop-code { width: 220px; height: 220px; flex: none; border: var(--line); border-radius: var(--radius-md); } /* the code brings its own white ground, in dark mode too: a camera reads dark on light */
 .phone-drop-steps { margin: 0; padding-left: 1.25em; flex: 1 1 16rem; display: flex; flex-direction: column; gap: var(--space-2); }
 .phone-drop-privacy { font-size: var(--text-sm); }
+
+/* A phone note tidied: the words as said, folded (Inbox, tidy.js). */
+.inbox-spoken { margin: 0; }
+.inbox-spoken summary { cursor: pointer; }
+.inbox-spoken p { margin: var(--space-1) 0 0; white-space: pre-wrap; }

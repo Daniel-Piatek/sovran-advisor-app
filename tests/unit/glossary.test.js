@@ -9,7 +9,11 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { prepareDatabase, openDatabase, SCHEMA_VERSION } from '../../db.js';
 import { createPerson, createCompany, deleteContact } from '../../people.js';
-import { listGlossary, addGlossary, deleteGlossary, restoreGlossary, keyterms, fixes, applyFixes, checkGlossaryInput, seedGlossary } from '../../glossary.js';
+import { listGlossary, addGlossary, deleteGlossary, restoreGlossary, keyterms, fixes, applyFixes, checkGlossaryInput, seedGlossary, sharedGlossary } from '../../glossary.js';
+
+// The Sovran glossary (sovran-glossary.json) comes after each student's own words.
+const sharedFixes = sharedGlossary().fixes;
+const sharedTerms = [...new Set([...sharedFixes.map((f) => f.term), ...sharedGlossary().terms].map((t) => t))].filter((t, i, all) => all.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
 import { startServer } from '../../server.js';
 
 const emptyDb = () => prepareDatabase(new DatabaseSync(':memory:'));
@@ -73,10 +77,18 @@ test('the speech to text is given every term once (fixes first), at most 100', (
   createPerson(db, { name: 'Lena Fischer' });
   addGlossary(db, { term: 'Nordlicht', heard_as: 'North light' });
   addGlossary(db, { term: 'Nordlicht' }); // a hint of a fix's own word: said once
-  assert.deepEqual(keyterms(db), ['Nordlicht', 'Lena Fischer']);
-  assert.deepEqual(fixes(db), [{ heard_as: 'North light', term: 'Nordlicht' }]);
+  assert.deepEqual(keyterms(db), ['Nordlicht', 'Lena Fischer', ...sharedTerms]);
+  assert.deepEqual(fixes(db), [{ heard_as: 'North light', term: 'Nordlicht' }, ...sharedFixes]);
   for (let i = 0; i < 120; i++) addGlossary(db, { term: `Term ${i}` });
   assert.equal(keyterms(db).length, 100);
+});
+
+test('the Sovran glossary is read from sovran-glossary.json, and your own fix of the same words wins', () => {
+  assert.ok(sharedFixes.some((f) => f.term === 'Sovran Advisor'));
+  assert.equal(applyFixes('the sovereign advisor on my phone', sharedFixes).text, 'the Sovran Advisor on my phone');
+  const db = emptyDb();
+  addGlossary(db, { term: 'Sovereign Advisor Ltd', heard_as: 'Sovereign Advisor' });
+  assert.deepEqual(fixes(db).filter((f) => f.heard_as.toLowerCase() === 'sovereign advisor'), [{ heard_as: 'Sovereign Advisor', term: 'Sovereign Advisor Ltd' }]);
 });
 
 test('a dictation says what the fixes make of it: whole words, any case, counted', () => {
@@ -124,11 +136,11 @@ test('the glossary API, and the session hands the speech service the terms and t
   const fix = await (await send('POST', '/api/glossary', { term: 'Nordlicht', heard_as: 'North light', learned: true })).json();
   assert.deepEqual([fix.kind, fix.source], ['fix', 'learned']);
   const session = await (await send('POST', '/api/dictation/session', {})).json();
-  assert.deepEqual(session.fixes, [{ heard_as: 'North light', term: 'Nordlicht' }]);
-  assert.deepEqual(new URL(session.url).searchParams.getAll('keyterms'), ['Nordlicht', 'Lena Fischer']);
+  assert.deepEqual(session.fixes, [{ heard_as: 'North light', term: 'Nordlicht' }, ...sharedFixes]);
+  assert.deepEqual(new URL(session.url).searchParams.getAll('keyterms'), ['Nordlicht', 'Lena Fischer', ...sharedTerms]);
   assert.ok(asked.includes('single-use-token'));
   assert.equal((await send('DELETE', `/api/glossary/${fix.id}`)).status, 200);
-  assert.deepEqual((await (await send('POST', '/api/dictation/session', {})).json()).fixes, []);
+  assert.deepEqual((await (await send('POST', '/api/dictation/session', {})).json()).fixes, sharedFixes);
   assert.equal((await send('POST', `/api/glossary/${fix.id}/restore`, {})).status, 200);
   assert.equal((await send('DELETE', '/api/glossary/00000000000000000000000000000000')).status, 404);
 });
