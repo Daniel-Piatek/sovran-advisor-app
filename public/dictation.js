@@ -19,7 +19,14 @@ const CHUNK = 1600; // 100 ms
 const HOLD_MS = 180; // a tap on the key is not a dictation
 const COMMIT_WAIT_MS = 6000;
 const DONE_MS = 4500;
-const KEY_WORDS = { AltRight: 'Right ⌥', MetaRight: 'Right ⌘', ControlRight: 'Right ^' };
+// The hold key's name as the keyboard in front of you prints it: Mac symbols on a Mac, the PC words on Windows (and Linux).
+export const onMac = /Mac|iPhone|iPad/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent || '');
+const KEY_WORDS = onMac
+  ? { AltRight: 'Right ⌥', MetaRight: 'Right ⌘', ControlRight: 'Right ^' }
+  : { AltRight: 'Right Alt', MetaRight: 'Right Windows key', ControlRight: 'Right Ctrl' };
+// Settings › Dictation's choices: the Mac names come from the server, the PC names from here.
+const PC_LABELS = { AltRight: 'Right Alt (AltGr)', MetaRight: 'Right Windows key', ControlRight: 'Right Ctrl' };
+export const holdKeyLabel = (key) => (onMac ? key.label : PC_LABELS[key.code] ?? key.label);
 
 let holdKey = 'AltRight';
 let state = 'idle'; // idle · listening · writing · done · problem
@@ -381,12 +388,16 @@ function toggleHandsFree() {
 document.addEventListener('keydown', (event) => {
   if (!moduleOn('voice')) return;
   if (event.code === holdKey) {
+    // On a PC, Alt alone would move the browser's focus to its menu when let go: the hold key is ours.
+    if (!onMac) event.preventDefault();
     if (event.repeat || state === 'listening' || state === 'writing') return;
     const field = editableOf(document.activeElement);
     clearTimeout(holdTimer);
     holdTimer = setTimeout(() => { holdTimer = null; holding = true; begin({ field, hands: false }); }, HOLD_MS);
     return;
   }
+  // AltGr on a PC keyboard sends a left Ctrl with the right Alt (and repeats it while held): that is the hold key, not another key.
+  if (!onMac && holdKey === 'AltRight' && event.code === 'ControlLeft' && (holdTimer || holding || event.getModifierState?.('AltGraph'))) return;
   // Another key while it is held: that was a key combination (Option and a letter), not a dictation.
   if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
   if (holding && state === 'listening') { holding = false; cancel(); return; }
@@ -395,6 +406,7 @@ document.addEventListener('keydown', (event) => {
 
 document.addEventListener('keyup', (event) => {
   if (event.code !== holdKey) return;
+  if (!onMac) event.preventDefault();
   if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; return; }
   if (holding) { holding = false; finish(); }
 }, true);

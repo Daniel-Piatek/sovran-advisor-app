@@ -36,7 +36,7 @@ test('hold Right Option in a note, speak, let go: the words land at the cursor, 
   const seen = await standIn(page);
   await page.goto(`${app.url}/notes/${note.id}`);
   const text = page.getByRole('textbox', { name: 'Text', exact: true });
-  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : 'Hold Right ⌥ to dictate');
+  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : /Hold Right (⌥|Alt) to dictate/);
   await text.click();
   await page.keyboard.press('Control+End');
   await hold(page);
@@ -221,9 +221,12 @@ test('the hold key is a setting; with Dictation switched off there is no pill, n
   const seen = await standIn(page);
   await page.goto(`${app.url}/settings`);
   const section = page.getByRole('region', { name: 'Dictation' });
-  await expect(section.getByRole('group', { name: 'Hold key' }).getByRole('button')).toHaveText(['Right Option (⌥)', 'Right Command (⌘)', 'Right Control (^)']);
-  await section.getByRole('button', { name: 'Right Control (^)' }).click();
-  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : 'Hold Right ^ to dictate');
+  // The keys are named as the keyboard prints them: Mac symbols on a Mac, PC words on Windows and Linux.
+  const mac = await page.evaluate(() => /Mac|iPhone|iPad/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent || ''));
+  await expect(section.getByRole('group', { name: 'Hold key' }).getByRole('button')).toHaveText(mac
+    ? ['Right Option (⌥)', 'Right Command (⌘)', 'Right Control (^)'] : ['Right Alt (AltGr)', 'Right Windows key', 'Right Ctrl']);
+  await section.getByRole('button', { name: mac ? 'Right Control (^)' : 'Right Ctrl' }).click();
+  await expect(page.getByRole('button', { name: /^Dictate/ })).toContainText(touch() ? 'Tap to dictate' : mac ? 'Hold Right ^ to dictate' : 'Hold Right Ctrl to dictate');
   await page.goto(`${app.url}/tasks`);
   await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible(); // the keys work once the page is drawn
   await page.keyboard.press('q'); // the quick-add box
