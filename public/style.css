@@ -4291,3 +4291,8 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .sidebar-link:has(.sidebar-update:not([hidden])) { flex-wrap: wrap; row-gap: var(--space-1); }
 .sidebar-link:has(.sidebar-update:not([hidden])) .sidebar-update { flex-basis: 100%; max-width: max-content; margin-left: calc(1em + var(--space-2)); }
 .sidebar-update[hidden] { display: none; }
+
+/* Calendar › Your calendars: how to find a Google Calendar link, folded */
+.cal-add-how { margin: var(--space-2) 0; font-size: var(--text-sm); }
+.cal-add-how > summary { cursor: pointer; font-weight: 600; }
+.cal-add-how ol { margin: var(--space-2) 0; padding-left: 1.4em; display: grid; gap: var(--space-1); }

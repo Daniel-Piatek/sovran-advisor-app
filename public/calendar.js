@@ -207,7 +207,9 @@ export async function showCalendar(dayParam) {
         el('button', { type: 'button', class: 'button', 'aria-label': 'Later', onclick: () => { day = addDays(day, step()); go(); } }, icon('right')),
         el('button', { type: 'button', class: 'button', onclick: () => { day = today(); go(); } }, 'Today')),
       viewSwitch,
-      ...(moduleOn('calendar-plus') ? [el('button', { type: 'button', class: 'button', title: 'Type it as you would say it (⌘K)', onclick: () => openWords() }, 'In words')] : [])),
+      ...(moduleOn('calendar-plus') ? [el('button', { type: 'button', class: 'button', title: 'Type it as you would say it (⌘K)', onclick: () => openWords() }, 'In words')] : []),
+      // Add a calendar: the form sits under the days, so this takes you there (Google Calendar by its private link).
+      ...(moduleOn('calendar-links') ? [el('button', { type: 'button', class: 'button', title: 'Show your Google, Outlook or iCloud calendar here', onclick: () => showAddForm() }, 'Add a calendar')] : [])),
     status,
     grid,
     extra,
@@ -688,8 +690,20 @@ export async function showCalendar(dayParam) {
       el('label', { class: 'search' }, icon('plus'), link),
       el('label', { class: 'search' }, linkName),
       el('button', { type: 'button', class: 'button', onclick: addCalendar }, 'Add calendar')),
-    el('p', { class: 'capture-hint' }, 'Paste a calendar’s private iCal link (Google: Settings › your calendar › Secret address in iCal format; Outlook and iCloud: share or publish it). It is read every ten minutes, shown read only, and never written to.'),
+    el('p', { class: 'capture-hint' }, 'Paste a calendar’s private iCal link. It is read every ten minutes, shown read only, and never written to.'),
+    el('details', { class: 'cal-add-how' },
+      el('summary', {}, 'How to find your Google Calendar link'),
+      el('ol', {},
+        el('li', {}, 'On a computer, open calendar.google.com and sign in.'),
+        el('li', {}, 'On the left, under My calendars, point at your calendar, press the three dots, then Settings and sharing.'),
+        el('li', {}, 'Scroll down to Secret address in iCal format and press the copy button next to it.'),
+        el('li', {}, 'Paste it in the box above and press Add calendar.')),
+      el('p', { class: 'capture-hint' }, 'Keep this link private: anyone who has it can see your calendar. Outlook and iCloud: share or publish the calendar and paste its link the same way.')),
     added);
+  function showAddForm() {
+    addForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    link.focus({ preventScroll: true });
+  }
   async function addCalendar() {
     if (!link.value.trim()) { link.focus(); return; }
     added.textContent = 'Reading it…';
