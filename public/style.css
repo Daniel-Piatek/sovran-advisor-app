@@ -4282,3 +4282,7 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .inbox-spoken { margin: 0; }
 .inbox-spoken summary { cursor: pointer; }
 .inbox-spoken p { margin: var(--space-1) 0 0; white-space: pre-wrap; }
+
+/* The update nudge (public/update-nudge.js, 2026-11-15): Settings › Updates' "Update ready" mark, short, beside Settings in the sidebar. */
+.sidebar-update { margin-left: auto; white-space: nowrap; }
+.sidebar-update[hidden] { display: none; }
