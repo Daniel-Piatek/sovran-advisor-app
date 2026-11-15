@@ -2904,6 +2904,13 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .plan-dialog-steps { padding-left: 0; }
 
+/* The Task window of a board: Plan my day's look, with a search box and a list that scrolls. */
+.board-task-picker { width: min(36rem, calc(100vw - var(--space-6))); margin: auto; max-height: calc(100vh - var(--space-6)); }
+.board-task-picker .search { margin-bottom: var(--space-2); }
+.board-task-picker-list { max-height: min(55vh, 32rem); overflow-y: auto; padding-right: var(--space-1); }
+.board-task-picker-count { font-weight: var(--weight-regular); }
+.board-task-picker .plan-dialog-row.is-there { color: var(--color-text-muted); cursor: default; }
+
 /* ---- The day in hours (public/planner.js): Morning and Afternoon as bands of hours ---- */
 
 .plan-hours { position: relative; margin-top: var(--space-1); }
@@ -3649,6 +3656,128 @@ button.mic-pill:hover { color: var(--color-text); }
 .import-report-counts dt { color: var(--color-text-muted); }
 .import-report-counts dd { margin: 0; font-weight: 700; }
 .import-report-note { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* Boards of their own (the Boards tab of Notes, 2026-11-15): an endless whiteboard filling the page, the list to bring things on at its left,
+   an opened card at its right. Flat, as everywhere: lines and the surface colour, no shadows. Group colours come from the kind tokens. */
+.notes-tabs { margin: calc(var(--space-6) * -1 + var(--space-2)) 0 var(--space-4); }
+.notes-tabs .tab { text-decoration: none; }
+.page.page-board { --page-width: none; padding: var(--space-4) var(--space-4) var(--space-4); }
+.board-own-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.board-view-tools { display: inline-flex; gap: var(--space-1); }
+/* Full screen: the board, the notes list and an opened card fill the screen, over the sidebar and the page. */
+.board-layout.is-full { position: fixed; inset: 0; z-index: 30; margin: 0; padding: var(--space-3); max-width: none; background: var(--color-bg); align-items: stretch; }
+html.board-is-full { overflow: hidden; }
+.board-layout.is-full .board-frame.is-endless { height: calc(100vh - 4.5rem); }
+.board-layout.is-full .board-sources, .board-layout.is-full .board-peek { max-height: calc(100vh - var(--space-3) * 2); }
+.page-board .title-field, .page-board .note-title { margin-bottom: var(--space-2); }
+.board-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: stretch; }
+.board-layout.has-sources { grid-template-columns: 17rem minmax(0, 1fr); }
+.board-layout:has(> .board-peek:not([hidden])) { grid-template-columns: minmax(0, 1fr) 26rem; }
+.board-layout.has-sources:has(> .board-peek:not([hidden])) { grid-template-columns: 17rem minmax(0, 1fr) 26rem; }
+.board-host-own { min-width: 0; }
+.board.is-endless { gap: var(--space-2); }
+.board.is-endless .board-bar .button { padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
+.board-frame.is-endless { height: calc(100vh - 13rem); min-height: 22rem; cursor: grab; touch-action: none; background: var(--color-bg); }
+.board-frame.is-endless.is-moving { cursor: grabbing; }
+.board-frame.is-endless:focus-visible { outline: var(--space-1) solid var(--color-border-strong); outline-offset: calc(var(--space-1) * -1); }
+.board-frame.is-endless .board-card { font-size: var(--text-base); padding: var(--space-3); } /* drawn at its true size: the zoom makes it larger or smaller */
+.board-frame.is-endless .board-card-kind, .board-frame.is-endless .board-tag { font-size: var(--text-xs); }
+.board-frame.is-endless .board-card-sub { font-size: var(--text-sm); }
+.board-frame.is-endless .board-card.is-card:not(.is-live) { background: var(--kind-assistant-wash); border-color: var(--kind-assistant); } /* a quick card: a sticky note, the gold lightened */
+.board-card.is-journal { border-left: var(--space-1) solid var(--kind-journal); }
+.board-card.is-inbox { border-left: var(--space-1) solid var(--color-border-strong); }
+.board-card.is-note { border-left: var(--space-1) solid var(--kind-notes); }
+.board-card.is-task { border-left: var(--space-1) solid var(--kind-tasks); }
+.board-card.is-person { border-left: var(--space-1) solid var(--kind-people); }
+.board-zoom { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.board-zoom-value { min-width: 3.5em; text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.board-to-note { position: absolute; top: var(--space-1); right: calc(var(--space-8) + var(--space-2)); width: var(--space-8); height: var(--space-8); padding: 0; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; }
+.board-card:hover .board-to-note, .board-card:focus-within .board-to-note { opacity: 1; }
+@media (pointer: coarse) { .board-to-note { opacity: 1; } }
+textarea.board-edit { resize: none; font-family: var(--font-body); }
+
+/* A group: a coloured box with a name, under the cards. Its colours are the kinds' (gold, green, blue, violet, orange) or grey. */
+.board-group { position: absolute; box-sizing: border-box; border: var(--border-width) solid var(--kind-goal); border-radius: var(--radius-md); background: color-mix(in srgb, var(--kind-goal) 14%, var(--color-bg)); }
+.board-group.is-goal { border-color: var(--kind-goal); background: color-mix(in srgb, var(--kind-goal) 14%, var(--color-bg)); }
+.board-group.is-goal .board-group-corner { border-color: var(--kind-goal); }
+.board-swatch.is-goal { background: var(--kind-goal); }
+.board-group.is-life { border-color: var(--kind-life); background: color-mix(in srgb, var(--kind-life) 12%, var(--color-bg)); }
+.board-group.is-life .board-group-corner { border-color: var(--kind-life); }
+.board-swatch.is-life { background: var(--kind-life); }
+.board-group.is-notes { border-color: var(--kind-notes); background: color-mix(in srgb, var(--kind-notes) 10%, var(--color-bg)); }
+.board-group.is-notes .board-group-corner { border-color: var(--kind-notes); }
+.board-swatch.is-notes { background: var(--kind-notes); }
+.board-group.is-people { border-color: var(--kind-people); background: color-mix(in srgb, var(--kind-people) 10%, var(--color-bg)); }
+.board-group.is-people .board-group-corner { border-color: var(--kind-people); }
+.board-swatch.is-people { background: var(--kind-people); }
+.board-group.is-tasks { border-color: var(--kind-tasks); background: color-mix(in srgb, var(--kind-tasks) 12%, var(--color-bg)); }
+.board-group.is-tasks .board-group-corner { border-color: var(--kind-tasks); }
+.board-swatch.is-tasks { background: var(--kind-tasks); }
+.board-group.is-plain { border-color: var(--color-border-strong); background: var(--color-surface); }
+.board-group.is-plain .board-group-corner { border-color: var(--color-border-strong); }
+.board-swatch.is-plain { background: var(--color-border-strong); }
+.board-group-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); cursor: move; font-family: var(--font-ui); font-weight: var(--weight-bold); color: var(--color-text); }
+.board-group-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.board-group-colours { display: inline-flex; gap: var(--space-1); opacity: 0; }
+.board-group-head .board-remove { position: static; }
+.board-group:hover .board-group-colours, .board-group:focus-within .board-group-colours, .board-group:hover .board-remove, .board-group:focus-within .board-remove { opacity: 1; }
+@media (pointer: coarse) { .board-group-colours { opacity: 1; } }
+.board-swatch { width: var(--space-4); height: var(--space-4); padding: 0; border: var(--line); border-radius: 50%; cursor: pointer; }
+.board-swatch[aria-pressed="true"] { border: var(--space-1) solid var(--color-text); }
+.board-group-corner { position: absolute; right: 0; bottom: 0; width: var(--space-6); height: var(--space-6); cursor: nwse-resize; border-right: var(--space-1) solid; border-bottom: var(--space-1) solid; border-bottom-right-radius: var(--radius-md); }
+
+/* The list beside the board: notes, journal entries and Inbox items to bring on. */
+.board-sources { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; max-height: calc(100vh - 13rem + 3rem); overflow-y: auto; padding-right: var(--space-1); }
+.board-sources[hidden] { display: none; }
+.board-sources .search { flex: none; margin: 0; max-width: none; }
+.page-board .note-title { font-size: var(--text-xl); }
+.board-sources-hint { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.board-sources-part { display: grid; gap: var(--space-1); }
+.board-sources-title { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-2) 0 0; font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-heading); }
+.board-sources-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.board-source { display: flex; align-items: flex-start; gap: var(--space-1); padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); cursor: grab; }
+.board-source:hover { border-color: var(--color-border-strong); }
+.board-source.is-there { background: var(--color-surface); }
+.board-source-words { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.board-source-title { font-size: var(--text-sm); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.board-source-sub { font-size: var(--text-xs); color: var(--color-text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.board-source-there { font-size: var(--text-xs); color: var(--color-text-muted); font-style: italic; }
+.board-source-add { flex: none; padding: var(--space-1); }
+
+/* An opened card, beside the board. */
+.board-peek { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; max-height: calc(100vh - 13rem + 3rem); overflow-y: auto; padding: var(--space-3); border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); }
+.board-peek[hidden] { display: none; }
+.board-peek-head { display: flex; align-items: center; gap: var(--space-2); }
+.board-peek-kind { font-family: var(--font-ui); font-weight: var(--weight-bold); color: var(--color-heading); }
+.board-peek-status { flex: 1; font-size: var(--text-xs); color: var(--color-text-muted); }
+.board-peek-head .button { padding: var(--space-1) var(--space-2); }
+.board-peek-when { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+.board-peek-capture { width: 100%; box-sizing: border-box; font: inherit; padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); color: var(--color-text); resize: vertical; }
+
+/* The Boards tab: a grid of tiles, then the boards that sit in notes. */
+.boards-grid { margin-bottom: var(--space-6); }
+.board-tile { position: relative; }
+.board-tile-link { display: grid; align-content: start; gap: var(--space-2); min-height: var(--card-min-height); padding: var(--space-4); border: var(--line); border-radius: var(--radius-md); background: var(--color-surface); color: inherit; text-decoration: none; box-sizing: border-box; height: 100%; }
+.board-tile-link:hover { border-color: var(--color-text-muted); }
+.board-tile-link > * { min-width: 0; }
+.board-tile-link .note-card-title { margin: 0; padding-right: var(--space-8); }
+.board-tile-names { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.board-tile-names li { font-size: var(--text-xs); padding: 2px var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-tile-empty { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+.board-tile-meta { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.board-tile-delete { position: absolute; top: var(--space-2); right: var(--space-2); padding: var(--space-1); opacity: 0; }
+.board-tile:hover .board-tile-delete, .board-tile:focus-within .board-tile-delete { opacity: 1; }
+@media (pointer: coarse) { .board-tile-delete { opacity: 1; } }
+.boards-empty { max-width: 40rem; }
+.boards-in-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.boards-in-notes a { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+@media (max-width: 899px) {
+  .board-layout.has-sources, .board-layout:has(> .board-peek:not([hidden])), .board-layout.has-sources:has(> .board-peek:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
+  .board-sources { max-height: 16rem; }
+  .board-peek { order: -1; max-height: 60vh; }
+  .board-frame.is-endless { height: 62vh; }
+}
 
 /* The pen (Writing 8): ink in its own layer over the board, faded once it has become words, and a page lying under the board. */
 .board-page { position: absolute; left: 0; top: 0; width: 1200px; height: 700px; object-fit: contain; pointer-events: none; opacity: 0.9; }

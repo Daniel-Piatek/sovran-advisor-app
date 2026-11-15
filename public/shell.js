@@ -16,7 +16,7 @@ export const screen = el('div');
 // phone, the sections marked `more` (People, My Life, Assistant, Settings, Library) sit under a More button instead.
 
 const sections = [
-  { name: 'Notes', href: '/', icon: 'notes', owns: (path) => path === '/' || path.startsWith('/notes/') },
+  { name: 'Notes', href: '/', icon: 'notes', owns: (path) => path === '/' || path.startsWith('/notes/') || path.startsWith('/boards') },
   { name: 'Journal', href: '/journal', icon: 'journal', owns: (path) => path === '/journal' || path.startsWith('/journal/') },
   { name: 'Tasks', module: 'tasks', href: '/tasks', icon: 'task', owns: (path) => path === '/tasks' },
   { name: 'Planner', module: 'planner', href: '/planner', icon: 'planner', owns: (path) => /^\/planner(\/|$)/.test(path) },

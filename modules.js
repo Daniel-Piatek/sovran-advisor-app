@@ -107,6 +107,15 @@ export const MODULES = [
     tools: ['list_comments', 'reply_to_comment'],
   },
   {
+    // Boards of their own (2026-11-15, from APP Daniel): the Boards tab of Notes, endless whiteboards to bring notes, journal entries and
+    // Inbox items onto (boards.endless, schema 72). Needs Writing and thinking. Off until switched on (the owner's rule: new parts ship off).
+    // Off: the tab is gone and no new one can be made; the boards are kept, and boards inside notes are not touched.
+    id: 'boards',
+    label: 'Boards',
+    description: 'A Boards tab in Notes: endless whiteboards to bring your notes, journal entries and Inbox items onto, with quick cards, arrows, a pen and coloured groups. Needs Writing and thinking.',
+    starter: false,
+  },
+  {
     // The manifest (advanced/everywhere 3, 8 and 11, the Sovran Advisor way: no cloud account, nothing to pay): a capture
     // page for the phone's home screen, the daily backups each checked, and a moving file for a new computer. Off, the
     // page and the Settings part are gone; the daily backup itself always runs.

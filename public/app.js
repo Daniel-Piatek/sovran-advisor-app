@@ -14,6 +14,7 @@
 //   /life               My Life: Key Elements, Goals, Projects, Topics; /life/:id one item  (public/life.js)
 //   /assistant          a chat with your assistant; /assistant/:id one conversation  (public/assistant.js)
 //   /settings           what your assistant may do alone, and its activity  (public/settings.js)
+//   /boards             the Boards tab of Notes: boards of their own  (public/boards-list.js; module boards, off until switched on)
 //   /boards/:id         a board opened large  (public/board-screen.js)
 //   /mail               your mail: one list, six splits, a reader  (public/mail-app.js)
 //   /mail/import        import a Takeout .mbox, fill from Gmail, Live with Gmail  (public/mail.js)
@@ -31,6 +32,7 @@ import { showAssistant } from './assistant.js';
 import { showSettings } from './settings.js';
 import { showLibrary } from './library.js';
 import { showBoard } from './board-screen.js';
+import { showBoards } from './boards-list.js';
 import { showPeople, showContact } from './people.js';
 import { showLife } from './life.js';
 import { showTasks } from './tasks.js';
@@ -58,6 +60,7 @@ startRouter([
   { path: /^\/journal(?:\/(\d{4}-\d{2}-\d{2}))?$/, show: showJournalDay },
   { path: /^\/deleted$/, show: showDeleted },
   { path: /^\/inbox$/, show: showInbox },
+  { path: /^\/boards$/, show: showBoards },
   { path: /^\/boards\/([0-9a-f-]{36})$/, show: showBoard },
   { path: /^\/settings$/, show: showSettings },
   { path: /^\/library$/, show: showLibrary },

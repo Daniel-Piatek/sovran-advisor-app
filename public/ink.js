@@ -34,10 +34,13 @@ export function strokePath(points, { min = MIN_WIDTH, max = MAX_WIDTH } = {}) {
 }
 
 // The ink layer: an svg over the board. onStroke(points) runs for each stroke drawn while the pen is on.
-export function inkLayer({ strokes = [], onStroke = () => {} } = {}) {
+// width, height: the board's canvas (an endless board is larger than a board in a note).
+export function inkLayer({ strokes = [], onStroke = () => {}, width = 1200, height = 700 } = {}) {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'board-ink');
-  svg.setAttribute('viewBox', '0 0 1200 700');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.style.width = `${width}px`;
+  svg.style.height = `${height}px`;
   svg.setAttribute('aria-label', 'Ink');
   const group = document.createElementNS(NS, 'g');
   svg.append(group);
@@ -57,7 +60,7 @@ export function inkLayer({ strokes = [], onStroke = () => {} } = {}) {
   let live = null;
   const at = (event) => {
     const box = svg.getBoundingClientRect();
-    const k = box.width ? 1200 / box.width : 1;
+    const k = box.width ? width / box.width : 1;
     return [Math.round((event.clientX - box.left) * k * 10) / 10, Math.round((event.clientY - box.top) * k * 10) / 10];
   };
   svg.addEventListener('pointerdown', (event) => {
@@ -97,7 +100,7 @@ export function inkLayer({ strokes = [], onStroke = () => {} } = {}) {
 }
 
 // The strokes as a picture, to be read as words: black ink on the page colour, cropped to where it was drawn. Returns { dataUrl, x, y } or null.
-export function renderStrokes(strokes) {
+export function renderStrokes(strokes, { width = 1200, height = 700 } = {}) {
   const points = strokes.flatMap((s) => s.points);
   if (!points.length) return null;
   const xs = points.map((p) => p[0]);
@@ -105,8 +108,8 @@ export function renderStrokes(strokes) {
   const pad = MAX_WIDTH;
   const x = Math.max(0, Math.min(...xs) - pad);
   const y = Math.max(0, Math.min(...ys) - pad);
-  const w = Math.min(1200, Math.max(...xs) + pad) - x;
-  const h = Math.min(700, Math.max(...ys) + pad) - y;
+  const w = Math.min(width, Math.max(...xs) + pad) - x;
+  const h = Math.min(height, Math.max(...ys) + pad) - y;
   const scale = Math.min(3, 1200 / Math.max(w, 1));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(w * scale));
