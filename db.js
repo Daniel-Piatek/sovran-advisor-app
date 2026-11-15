@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 71;
+export const SCHEMA_VERSION = 72;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -375,7 +375,27 @@ const steps = {
   70() {},
   // 71: phone notes tidied (Phone capture, tidy.js): capture_tidy is new (made from schema.sql). Nothing else changes.
   71() {},
+  // 72: Boards of their own (the Boards tab of Notes; APP Daniel's step 75): a board can be endless (boards.endless); board_items takes the
+  // kind group, its colour, and cards that point at a journal entry or an Inbox item (made again: a CHECK can't change in place; nothing points at it).
+  72(db) {
+    const columns = db.prepare("SELECT name FROM pragma_table_info('boards')").all().map((c) => c.name);
+    if (columns.length && !columns.includes('endless')) db.exec('ALTER TABLE boards ADD COLUMN endless INTEGER NOT NULL DEFAULT 0 CHECK (endless IN (0, 1))');
+    remakeBoardItems(db);
+  },
 };
+
+// board_items as schema.sql has it now, every row kept. No table points at it.
+function remakeBoardItems(db) {
+  const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'board_items'").get();
+  if (!table || table.sql.includes("'group'")) return;
+  db.exec('ALTER TABLE board_items RENAME TO board_items_before');
+  db.exec('DROP INDEX IF EXISTS board_items_by_board');
+  const start = schema.indexOf('CREATE TABLE IF NOT EXISTS board_items');
+  db.exec(schema.slice(start, schema.indexOf(');', start) + 2));
+  const columns = db.prepare("SELECT name FROM pragma_table_info('board_items_before')").all().map((c) => c.name).join(', ');
+  db.exec(`INSERT INTO board_items (${columns}) SELECT ${columns} FROM board_items_before`);
+  db.exec('DROP TABLE board_items_before');
+}
 
 // life_items takes the kind habit and its three columns. SQLite can't change a CHECK in place, so the table is made again and the rows
 // copied. Other tables point at life_items (notes, tasks, captures, life_serves) by its name, which the new table takes: prepareDatabase

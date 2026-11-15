@@ -1160,6 +1160,9 @@ CREATE INDEX IF NOT EXISTS note_clashes_by_note ON note_clashes (note_id, state)
 --   kind        card (a box with words, or pointing at a note, person or task), text (words on the canvas), arrow (from_id to to_id)
 --   x, y, w, h  where it is on the canvas, in canvas units (the canvas is 1200 wide)
 --   change_id   the one change your assistant drew it in (Writing 7), so Undo takes the whole change back; origin assistant marks it as its own
+-- Boards of their own (schema 75, the Boards tab of Notes): a board with no note is `endless`, a canvas 20000 by 20000 units you move
+-- around and zoom in; a card can also point at a journal entry or an Inbox item (ref_table journal_entries, captures); a `group` is a
+-- coloured box (`color`) with a name (`text`) that the cards inside it move with.
 CREATE TABLE IF NOT EXISTS boards (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,
@@ -1170,7 +1173,8 @@ CREATE TABLE IF NOT EXISTS boards (
   title TEXT NOT NULL DEFAULT '',
   background_file TEXT,                  -- a page from a paper tablet or a scan (a kept file, by its sha256) that lies under the board (Writing 8)
   background_name TEXT NOT NULL DEFAULT '',
-  background_type TEXT NOT NULL DEFAULT ''
+  background_type TEXT NOT NULL DEFAULT '',
+  endless INTEGER NOT NULL DEFAULT 0 CHECK (endless IN (0, 1))
 );
 
 CREATE TABLE IF NOT EXISTS board_items (
@@ -1180,8 +1184,8 @@ CREATE TABLE IF NOT EXISTS board_items (
   deleted_at TEXT,
   origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
   board_id TEXT NOT NULL REFERENCES boards (id),
-  kind TEXT NOT NULL CHECK (kind IN ('card', 'text', 'arrow')),
-  ref_table TEXT CHECK (ref_table IN ('notes', 'people', 'tasks')),
+  kind TEXT NOT NULL CHECK (kind IN ('card', 'text', 'arrow', 'group')),
+  ref_table TEXT CHECK (ref_table IN ('notes', 'people', 'tasks', 'journal_entries', 'captures')),
   ref_id TEXT,
   text TEXT NOT NULL DEFAULT '',
   x REAL NOT NULL DEFAULT 0,
@@ -1191,7 +1195,8 @@ CREATE TABLE IF NOT EXISTS board_items (
   from_id TEXT,
   to_id TEXT,
   label TEXT NOT NULL DEFAULT '',
-  change_id TEXT
+  change_id TEXT,
+  color TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS board_items_by_board ON board_items (board_id);

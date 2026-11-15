@@ -27,6 +27,14 @@ function rememberView(view) {
   try { localStorage.setItem(VIEW_KEY, view); } catch { /* not kept: fine */ }
 }
 
+// ---- The tabs over the notes list: All notes and Boards (2026-11-15, the owner's wish; while Boards and Writing and thinking are on) ----
+
+export function notesTabs(current) {
+  if (!moduleOn('writing') || !moduleOn('boards')) return el('div', { hidden: true });
+  const tab = (id, name, href) => el('a', { class: 'tab', role: 'tab', href, 'aria-selected': String(current === id), 'data-tab': id }, name);
+  return el('nav', { class: 'tabs notes-tabs', role: 'tablist', 'aria-label': 'Notes views' }, tab('notes', 'All notes', '/'), tab('boards', 'Boards', '/boards'));
+}
+
 // ---- The notes list ----
 
 const SEARCH_AFTER_MS = 120;
@@ -110,6 +118,7 @@ export async function showList() {
       newNote,
       el('label', { class: 'search' }, icon('search'), search),
       viewSwitch),
+    notesTabs('notes'),
     content,
     journalResults,
     ...(deleted?.kind === 'note'

@@ -38,7 +38,7 @@ import { fillFromGmail, countCheck, canRead } from './gmail.js';
 import { inboxView, explainThread, describeSplits, SPLIT_IDS } from './mail-splits.js';
 import { saveDraft, listDrafts, getDraft, discardDraft, restoreDraft } from './mail-drafts.js';
 import { peopleOfThread, addSender, mailWith } from './mail-people.js';
-import { createBoard, getBoard, renameBoard, setBackground, addItem, changeItem, removeItem } from './boards.js';
+import { createBoard, getBoard, renameBoard, setBackground, addItem, changeItem, removeItem, listOwnBoards, listNoteBoards, deleteBoard, restoreBoard, cardToNote, boardSources } from './boards.js';
 import { addStroke, removeStroke, strokesToText } from './ink.js';
 import { listVersions, getVersion, compareVersions, latestVersion } from './versions.js';
 import { makeUpdater, updateStatus, checkForUpdate, readState as readUpdateState, CHECK_EVERY_MS } from './app-update.js';
@@ -211,30 +211,51 @@ export function startServer({
     //   GET   /api/boards/:id              the board with its items; a card that points at a note, person or task carries it live
     //   PATCH /api/boards/:id              { title }
     //   POST  /api/boards/:id/items        { kind: card | text | arrow, text?, ref_table?, ref_id?, x?, y?, from_id?, to_id?, label? }
-    //   PATCH /api/board-items/:id         { x?, y?, text?, label? }:  DELETE takes it off the board (with the arrows that joined it)
+    //   PATCH /api/board-items/:id         { x?, y?, text?, label?, w?, h?, color?, carry? }:  DELETE takes it off the board (with the arrows that joined it)
+    // Boards of their own (schema 75, the Boards tab of Notes):
+    //   GET   /api/boards                  { own: the boards of their own, newest change first; in_notes: the boards that sit in a note }
+    //   POST  /api/boards                  { endless: true, title? }: a board of its own, endless
+    //   DELETE /api/boards/:id             marks it deleted;  POST /api/boards/:id/restore brings it back
+    //   POST  /api/board-items/:id/to-note a quick card's words become a real note, and the card points at it
+    //   GET   /api/board-sources?q=        notes, journal entries and Inbox items to bring onto a board, found by their words
     const boardsRoot = url.pathname === '/api/boards';
-    const boardMatch = url.pathname.match(/^\/api\/boards\/([0-9a-f-]{36})(\/items)?$/);
-    const boardItem = url.pathname.match(/^\/api\/board-items\/([0-9a-f-]{36})$/);
+    const boardMatch = url.pathname.match(/^\/api\/boards\/([0-9a-f-]{36})(\/items|\/restore)?$/);
+    const boardItem = url.pathname.match(/^\/api\/board-items\/([0-9a-f-]{36})(\/to-note)?$/);
+    if (url.pathname === '/api/board-sources') {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      return sendJson(res, 200, boardSources(db, url.searchParams.get('q') ?? ''));
+    }
     if (boardsRoot || boardMatch || boardItem) {
       const input = req.method === 'POST' || req.method === 'PATCH' ? ((await readJson(req)) ?? {}) : {};
       try {
         if (boardsRoot) {
+          if (req.method === 'GET') return sendJson(res, 200, { own: listOwnBoards(db), in_notes: listNoteBoards(db) });
           if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
           if (!moduleOn(db, 'writing')) return sendJson(res, 409, { error: 'Writing and thinking is switched off.' });
-          return sendJson(res, 201, createBoard(db, { note_id: input.note_id ?? null, title: input.title ?? '' }));
+          if (input.endless === true && !moduleOn(db, 'boards')) return sendJson(res, 409, { error: 'Boards is switched off (Settings › Modules).' });
+          return sendJson(res, 201, createBoard(db, { note_id: input.note_id ?? null, title: input.title ?? '', endless: input.endless === true }));
         }
         if (boardMatch) {
-          const [, boardId, items] = boardMatch;
-          if (items) {
+          const [, boardId, more] = boardMatch;
+          if (more === '/items') {
             if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
             return sendJson(res, 201, addItem(db, boardId, input));
+          }
+          if (more === '/restore') {
+            if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+            return sendJson(res, 200, restoreBoard(db, boardId));
           }
           if (req.method === 'GET') { const board = getBoard(db, boardId); return board ? sendJson(res, 200, board) : sendJson(res, 404, { error: 'No such board' }); }
           if (req.method === 'PATCH') {
             if ('background' in input) return sendJson(res, 200, setBackground(db, boardId, input.background));
             return sendJson(res, 200, renameBoard(db, boardId, input.title));
           }
+          if (req.method === 'DELETE') return sendJson(res, 200, deleteBoard(db, boardId));
           return sendJson(res, 405, { error: 'Method not allowed' });
+        }
+        if (boardItem[2]) {
+          if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+          return sendJson(res, 201, cardToNote(db, boardItem[1]));
         }
         if (req.method === 'PATCH') return sendJson(res, 200, changeItem(db, boardItem[1], input));
         if (req.method === 'DELETE') return sendJson(res, 200, removeItem(db, boardItem[1]));

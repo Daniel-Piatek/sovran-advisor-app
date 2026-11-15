@@ -4,7 +4,7 @@
 // board as an ordinary text item; the ink is never deleted, only faded below the words, and your corrections to the words win.
 
 import { randomUUID } from 'node:crypto';
-import { addItem, getBoard, CANVAS_WIDTH, CANVAS_HEIGHT } from './boards.js';
+import { addItem, getBoard, boardSize, CANVAS_WIDTH, CANVAS_HEIGHT } from './boards.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -12,19 +12,20 @@ export const MAX_POINTS = 5000;
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
 // A stroke as it is kept: numbers only, on the canvas, pressure 0 to 1 (0.5 for a mouse), time in ms from the first point.
-export function cleanPoints(points) {
+// size: the board's canvas (an endless board is larger).
+export function cleanPoints(points, { width = CANVAS_WIDTH, height = CANVAS_HEIGHT } = {}) {
   if (!Array.isArray(points) || points.length < 1) throw fail(400, 'A stroke is a list of points: [x, y, pressure, ms].');
   if (points.length > MAX_POINTS) throw fail(413, `A stroke has at most ${MAX_POINTS} points.`);
   return points.map((p) => {
     if (!Array.isArray(p) || p.length < 2 || p.some((v) => v !== undefined && !Number.isFinite(Number(v)))) throw fail(400, 'Each point is [x, y, pressure, ms], all numbers.');
     const [x, y, pressure = 0.5, ms = 0] = p.map(Number);
-    return [Math.round(clamp(x, 0, CANVAS_WIDTH) * 10) / 10, Math.round(clamp(y, 0, CANVAS_HEIGHT) * 10) / 10, Math.round(clamp(pressure, 0, 1) * 100) / 100, Math.max(0, Math.round(ms))];
+    return [Math.round(clamp(x, 0, width) * 10) / 10, Math.round(clamp(y, 0, height) * 10) / 10, Math.round(clamp(pressure, 0, 1) * 100) / 100, Math.max(0, Math.round(ms))];
   });
 }
 
 export function addStroke(db, boardId, points, { origin = 'typed' } = {}) {
   if (!db.prepare('SELECT 1 FROM boards WHERE id = ? AND deleted_at IS NULL').get(boardId)) throw fail(404, 'No such board.');
-  const clean = cleanPoints(points);
+  const clean = cleanPoints(points, boardSize(db, boardId));
   const id = randomUUID();
   const time = now();
   db.prepare('INSERT INTO ink_strokes (id, created_at, updated_at, origin, board_id, points) VALUES (?, ?, ?, ?, ?, ?)').run(id, time, time, origin, boardId, JSON.stringify(clean));

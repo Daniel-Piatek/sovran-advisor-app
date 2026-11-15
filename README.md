@@ -22,6 +22,9 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Model and effort** (on; switch it off in Settings › Modules): for each chat, choose which model answers
   (Claude: Haiku quick and light, Sonnet balanced, Opus deep thinking, Fable the most capable; ChatGPT:
   GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra) and how long it thinks (Low to Max). **Usual** leaves it to the AI itself.
+- **Boards** (off until you switch it on): a Boards tab in Notes. Each board is an endless whiteboard: bring your
+  notes, journal entries and Inbox items onto it from a list beside it, add quick cards (and make one a real note),
+  join cards with arrows, draw with the pen, and put cards in coloured groups that move together.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes

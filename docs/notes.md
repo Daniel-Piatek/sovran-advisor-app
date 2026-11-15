@@ -1,6 +1,6 @@
 ---
 title: Notes
-paths: ^/($|notes/|deleted$)
+paths: ^/($|notes/|deleted$|boards)
 ---
 Your notes: anything you want to keep and find again, each on its own page.
 
@@ -15,6 +15,22 @@ Your notes: anything you want to keep and find again, each on its own page.
 - **Delete** moves a note to **Recently deleted** (at the bottom of the list). Nothing is ever really gone: open it there and put it back.
 - The **Ask your notes** box at the bottom of every page asks your assistant about what you are looking at.
 
+## Boards
+
+The **Boards** tab (next to **All notes**) holds whiteboards of their own, each an endless space to work through ideas.
+
+- **New board** makes one and opens it. Give it a name at the top.
+- On the left is a list of your **notes**, **journal entries** and **Inbox items**. Search it, then drag one onto the board, or press its **+**. The card stays linked: change the note and the card changes too. A thing already on the board says *On the board*.
+- **Card** adds a quick card of your own words (a sticky note). Hover it and press the note button to **make it a real note**; the card then points at that new note.
+- **Double-click** a note, journal or Inbox card to open it on the right, read it and change it without leaving the board. **Open the page** goes to its own page.
+- **Text** puts words straight on the board, **Arrow** joins two cards (press the first, then the second), and **Pen** draws by hand (**To text** asks your assistant to read the handwriting).
+- **Group** adds a coloured box with a name. Drag its name bar and the cards inside move with it; drag its corner to make it larger or smaller; hover it to change its colour.
+- Move around by dragging the empty space, or by scrolling. Zoom with **−** and **+**, or hold Ctrl (Cmd on a Mac) and scroll. **Show all** brings everything into view.
+- A board's tile in the Boards tab has a bin to delete it, with **Undo**.
+- Boards you made inside a note (**/board**) stay in their note; they are listed under the tiles.
+
 ## How it works
 
 Every note is one row in the `notes` table of your database (`schema.sql`), kept on your own computer in the `data` folder. The list and the note page are drawn by `public/notes-screens.js`; the editor every page shares is `public/editor.js`, and the / menu is `public/slash-menu.js`. Notes are stored as Markdown. Search uses the database's own full-text index. Deleting only marks a note as deleted, so it can always come back. Links are kept in `links.js`; files you add are kept once in `data/files` by `files.js`.
+
+Boards are the `boards` and `board_items` tables, kept by `boards.js`. A board of its own has `endless` set: its canvas is 20000 by 20000 units, and the page shows a window onto it that you move and zoom (`public/board.js`; where you were is remembered in this browser). A card that points at a note, a journal entry (`journal_entries`) or an Inbox item (`captures`) only keeps which one; its words are read live every time. A group is an item of kind `group` with a `color`; moving it moves the cards whose middle is inside it, in one step on the server. The Boards tab is `public/boards-list.js`, a board's page `public/board-screen.js` (with the list on the left), and the opened card on the right `public/board-peek.js`. Boards have their own switch, **Boards** in Settings › Modules (off until you switch it on), and need Writing and thinking on too.
