@@ -4284,3 +4284,10 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .inbox-spoken { margin: 0; }
 .inbox-spoken summary { cursor: pointer; }
 .inbox-spoken p { margin: var(--space-1) 0 0; white-space: pre-wrap; }
+
+/* The update nudge (public/update-nudge.js, 2026-11-15): Settings › Updates' "Update ready" mark, short, beside Settings in the sidebar. */
+.sidebar-update { margin: 0 0 0 auto; padding: 0 var(--space-1); white-space: nowrap; font-size: 0.7rem; line-height: 1.5; }
+/* The sidebar is narrow: the mark goes on its own line under the word Settings. */
+.sidebar-link:has(.sidebar-update:not([hidden])) { flex-wrap: wrap; row-gap: var(--space-1); }
+.sidebar-link:has(.sidebar-update:not([hidden])) .sidebar-update { flex-basis: 100%; max-width: max-content; margin-left: calc(1em + var(--space-2)); }
+.sidebar-update[hidden] { display: none; }
