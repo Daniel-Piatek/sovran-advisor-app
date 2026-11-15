@@ -289,10 +289,10 @@ function librarySection() {
   request('GET', '/api/library').then(show).catch(() => { status.textContent = "The library's state couldn't be loaded."; });
   return el('section', { class: 'settings-part', 'aria-label': 'Sovran Library' },
     el('h2', { class: 'settings-title' }, 'Sovran Library'),
+    status,
     el('p', { class: 'empty' }, 'Paste the key you were given. Your assistant then reads the Sovran teaching and, if you have them, your own decodes. The key stays on this computer.'),
     el('form', { class: 'library-key', onsubmit: (event) => { event.preventDefault(); if (input.value.trim()) save(input.value); } },
-      input, el('button', { type: 'submit', class: 'button' }, 'Connect'), remove),
-    status);
+      input, el('button', { type: 'submit', class: 'button' }, 'Connect'), remove));
 }
 
 // The course page (course.js): the address the Course link opens. The app may come with one; another can be
