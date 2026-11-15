@@ -12,7 +12,8 @@ The Calendar shows what is fixed in your days: meetings, calls and appointments.
 - Drag an event to move it, or select it and use the arrow keys: up and down move it a quarter of an hour, left and right a day.
 - A thin line shows now.
 - With **Calendar links** on (Settings › Modules) you can add your other calendars by their iCal link. They show beside your own, read only, each in its colour.
+- **Add a calendar** (at the top) takes you to the box for a link. To show your Google Calendar, open calendar.google.com on a computer, go to your calendar's **Settings and sharing**, copy the **Secret address in iCal format** and paste it there. Keep that link private.
 
 ## How it works
 
-Your own events are rows in the `events` table (`schema.sql`), kept by `events.js`. Other calendars read by link are kept by `calendars.js` and refreshed every hour. The page is `public/calendar.js`.
+Your own events are rows in the `events` table (`schema.sql`), kept by `events.js`. Other calendars read by link are kept by `calendars.js` and refreshed every ten minutes. The page is `public/calendar.js`.

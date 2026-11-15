@@ -53,6 +53,17 @@ test('paste a calendar’s link: its meetings appear, read only, in its colour',
   await expect(page.getByRole('button', { name: /Team meeting, 10:00/ })).toBeVisible();
 });
 
+test('Add a calendar at the top takes you to the link box, with the Google steps folded under it', async ({ page, app }) => {
+  await page.goto(`${app.url}/calendar?view=week`);
+  await page.getByRole('button', { name: 'Add a calendar' }).click();
+  await expect(page.getByLabel('Calendar link')).toBeFocused();
+  await expect(page.getByLabel('Calendar link')).toBeInViewport();
+  const how = page.locator('.cal-add-how');
+  await expect(how.getByText('Secret address in iCal format')).toBeHidden();
+  await how.getByText('How to find your Google Calendar link').click();
+  await expect(how.getByText(/Secret address in iCal format/)).toBeVisible();
+});
+
 test('a calendar can change colour, and be removed with Undo', async ({ page, app }, testInfo) => {
   await fetch(`${app.url}/api/calendars`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: testInfo.icsUrl, name: 'Team' }) });
   await page.goto(`${app.url}/calendar?view=day`);
