@@ -25,6 +25,7 @@ The **Boards** tab (next to **All notes**) holds whiteboards of their own, each 
 - **Double-click** a note, journal or Inbox card to open it on the right, read it and change it without leaving the board. **Open the page** goes to its own page.
 - **Text** puts words straight on the board, **Arrow** joins two cards (press the first, then the second), and **Pen** draws by hand (**To text** asks your assistant to read the handwriting).
 - **Group** adds a coloured box with a name. Drag its name bar and the cards inside move with it; drag its corner to make it larger or smaller; hover it to change its colour.
+- **Hide notes** folds the list away so the board gets the whole width (**Show notes** brings it back; it is remembered). **Full screen** fills the whole screen with the board; **Exit full screen** or Esc goes back.
 - Move around by dragging the empty space, or by scrolling. Zoom with **−** and **+**, or hold Ctrl (Cmd on a Mac) and scroll. **Show all** brings everything into view.
 - A board's tile in the Boards tab has a bin to delete it, with **Undo**.
 - Boards you made inside a note (**/board**) stay in their note; they are listed under the tiles.

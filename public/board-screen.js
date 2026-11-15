@@ -95,19 +95,42 @@ async function showOwnBoard(id, board, title) {
   let mounted = null;
   const peek = boardPeek({ onClosed: () => mounted?.refresh() });
   const sources = sourcesPane({ onAdd: (f) => mounted?.addAt({ kind: 'card', ref_table: f.ref_table, ref_id: f.ref_id }) });
-  // The list is open on a large screen and closed on a phone; the choice is remembered in this browser.
+  // The notes list: open on a large screen and closed on a phone at first; Hide notes / Show notes, remembered in this browser.
   let listOpen = (() => { try { const kept = localStorage.getItem(SOURCES_KEY); return kept ? kept === 'open' : window.matchMedia('(min-width: 900px)').matches; } catch { return true; } })();
-  const toggle = el('button', { type: 'button', class: 'button button-quiet board-sources-toggle' }, icon('notes'), 'Notes to add');
+  const toggle = el('button', { type: 'button', class: 'button button-quiet board-sources-toggle' });
   const layout = el('div', { class: 'board-layout' }, sources.element, host, peek.element);
   const showList = () => {
     sources.element.hidden = !listOpen;
     layout.classList.toggle('has-sources', listOpen);
-    toggle.setAttribute('aria-pressed', String(listOpen));
+    toggle.setAttribute('aria-expanded', String(listOpen));
+    toggle.replaceChildren(icon('notes'), listOpen ? 'Hide notes' : 'Show notes');
   };
   toggle.addEventListener('click', () => { listOpen = !listOpen; try { localStorage.setItem(SOURCES_KEY, listOpen ? 'open' : 'closed'); } catch { /* not kept */ } showList(); });
   showList();
+
+  // Full screen: the board (with the notes list and an opened card, if shown) fills the whole screen, over the sidebar and the page.
+  // The browser's own full screen where it has one; Esc or Exit full screen goes back.
+  const fullButton = el('button', { type: 'button', class: 'button button-quiet board-full-toggle' });
+  const isFull = () => layout.classList.contains('is-full');
+  const drawFull = () => fullButton.replaceChildren(isFull() ? 'Exit full screen' : 'Full screen');
+  const setFull = async (on) => {
+    layout.classList.toggle('is-full', on);
+    document.documentElement.classList.toggle('board-is-full', on);
+    drawFull();
+    try {
+      if (on && !document.fullscreenElement) await layout.requestFullscreen?.();
+      else if (!on && document.fullscreenElement) await document.exitFullscreen();
+    } catch { /* the browser said no: the board still fills the window */ }
+  };
+  fullButton.addEventListener('click', () => void setFull(!isFull()));
+  const onFullChange = () => { if (!document.fullscreenElement && isFull()) void setFull(false); };
+  const onKey = (event) => { if (event.key === 'Escape' && isFull() && !event.defaultPrevented) void setFull(false); };
+  document.addEventListener('fullscreenchange', onFullChange);
+  document.addEventListener('keydown', onKey);
+  drawFull();
+
   screen.replaceChildren(
-    el('header', { class: 'note-bar board-own-bar' }, el('a', { class: 'back-link', href: '/boards' }, icon('back'), 'Boards'), toggle),
+    el('header', { class: 'note-bar board-own-bar' }, el('a', { class: 'back-link', href: '/boards' }, icon('back'), 'Boards')),
     title.field,
     layout,
   );
@@ -117,8 +140,15 @@ async function showOwnBoard(id, board, title) {
     large: true,
     onPeek: (item) => void peek.open(item),
     onChange: (next) => sources.setBoard(next),
+    tools: [el('div', { class: 'board-view-tools', role: 'group', 'aria-label': 'View' }, toggle, fullButton)],
   });
   // A new board starts with its name.
   if (!board.title.trim() && !board.items.length) title.field.focus();
-  onLeave(async () => { await peek.close(); mounted.destroy(); });
+  onLeave(async () => {
+    document.removeEventListener('fullscreenchange', onFullChange);
+    document.removeEventListener('keydown', onKey);
+    if (isFull()) await setFull(false);
+    await peek.close();
+    mounted.destroy();
+  });
 }

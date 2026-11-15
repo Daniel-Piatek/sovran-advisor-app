@@ -3656,7 +3656,12 @@ button.mic-pill:hover { color: var(--color-text); }
 .notes-tabs .tab { text-decoration: none; }
 .page.page-board { --page-width: none; padding: var(--space-4) var(--space-4) var(--space-4); }
 .board-own-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.board-sources-toggle[aria-pressed="true"] { background: var(--color-surface); }
+.board-view-tools { display: inline-flex; gap: var(--space-1); }
+/* Full screen: the board, the notes list and an opened card fill the screen, over the sidebar and the page. */
+.board-layout.is-full { position: fixed; inset: 0; z-index: 30; margin: 0; padding: var(--space-3); max-width: none; background: var(--color-bg); align-items: stretch; }
+html.board-is-full { overflow: hidden; }
+.board-layout.is-full .board-frame.is-endless { height: calc(100vh - 4.5rem); }
+.board-layout.is-full .board-sources, .board-layout.is-full .board-peek { max-height: calc(100vh - var(--space-3) * 2); }
 .page-board .title-field, .page-board .note-title { margin-bottom: var(--space-2); }
 .board-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: stretch; }
 .board-layout.has-sources { grid-template-columns: 17rem minmax(0, 1fr); }

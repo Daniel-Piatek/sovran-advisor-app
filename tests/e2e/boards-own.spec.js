@@ -19,8 +19,8 @@ async function things(app) {
 
 // The list of notes to add is open on a computer and folded on a phone.
 async function openList(page) {
-  const toggle = page.getByRole('button', { name: 'Notes to add' });
-  if ((await toggle.getAttribute('aria-pressed')) !== 'true') await toggle.click();
+  const toggle = page.locator('.board-sources-toggle');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
 }
 
 test('the Boards tab: New board opens an endless board; a note, a journal entry and an Inbox item go on with +, live; the tile lists them', async ({ page, app }) => {
@@ -180,4 +180,34 @@ test('Boards switched off (Settings › Modules): no Boards tab and no new board
   expect(refused.status).toBe(409);
   const inNote = await send(app, 'POST', '/api/boards', { note_id: note.id, title: 'Still works' });
   expect(inNote.endless).toBe(false);
+});
+
+test('Hide notes gives the board the width; Full screen fills the screen with the board, and Exit full screen (or Esc) goes back', async ({ page, app }) => {
+  test.skip(isPhone(page), 'on a phone the list starts hidden and the board already fills the width');
+  const board = await send(app, 'POST', '/api/boards', { endless: true, title: 'Room' });
+  await page.goto(`${app.url}/boards/${board.id}`);
+  const frame = page.locator('.board-frame');
+  const list = page.getByRole('complementary', { name: 'Put on the board' });
+  await expect(list).toBeVisible();
+  const narrow = (await frame.boundingBox()).width;
+  await page.getByRole('button', { name: 'Hide notes' }).click();
+  await expect(list).toBeHidden();
+  expect((await frame.boundingBox()).width).toBeGreaterThan(narrow + 200);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Show notes' })).toBeVisible();
+  await expect(list).toBeHidden();
+
+  await page.getByRole('button', { name: 'Full screen' }).click();
+  await expect(page.locator('.board-layout')).toHaveClass(/is-full/);
+  const full = await frame.boundingBox();
+  const screenSize = page.viewportSize();
+  expect(full.width).toBeGreaterThan(screenSize.width - 60);
+  expect(full.height).toBeGreaterThan(screenSize.height - 120);
+  await page.getByRole('button', { name: 'Show notes' }).click();
+  await expect(list).toBeVisible();
+  await page.getByRole('button', { name: 'Exit full screen' }).click();
+  await expect(page.locator('.board-layout')).not.toHaveClass(/is-full/);
+  await page.getByRole('button', { name: 'Full screen' }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.board-layout')).not.toHaveClass(/is-full/);
 });

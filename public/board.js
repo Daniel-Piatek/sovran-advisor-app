@@ -71,8 +71,8 @@ async function candidates(kind, text) {
 }
 
 // Mounts the board in `host`. large: opened on its own page. onPeek(item): a card that points at something was double-clicked.
-// onChange(board): after every load. Returns { refresh, destroy, addAt, root }.
-export async function mountBoard(host, boardId, { large = false, onOpen = null, onPeek = null, onChange = null } = {}) {
+// onChange(board): after every load. tools: more buttons for the end of the bar (the page's own, such as Full screen). Returns { refresh, destroy, addAt, root }.
+export async function mountBoard(host, boardId, { large = false, onOpen = null, onPeek = null, onChange = null, tools = [] } = {}) {
   let board;
   try { board = await request('GET', `/api/boards/${boardId}`); } catch {
     host.replaceChildren(el('p', { class: 'empty' }, 'This board is not here any more.'));
@@ -427,7 +427,7 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       zoomLabel,
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Zoom in', onclick: () => zoomAt(view.k * 1.25) }, '+'),
       el('button', { type: 'button', class: 'button button-quiet', onclick: showAll }, 'Show all'))] : [];
-    bar.replaceChildren(...(endless ? [] : [el('span', { class: 'board-title' }, icon('board'), el('strong', {}, board.title || 'Untitled board'))]), addMenu, ...zoom,
+    bar.replaceChildren(...(endless ? [] : [el('span', { class: 'board-title' }, icon('board'), el('strong', {}, board.title || 'Untitled board'))]), addMenu, ...zoom, ...tools,
       ...(!large && onOpen ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => onOpen(board) }, 'Open')] : []));
   }
 
