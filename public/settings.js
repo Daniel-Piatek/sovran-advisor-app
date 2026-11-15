@@ -16,6 +16,7 @@ import { everywhereSection } from './everywhere-settings.js';
 import { phoneDropSection } from './phone-drop-settings.js';
 import { checkPart } from './ai-check.js';
 import { fold } from './fold.js';
+import { holdKeyLabel } from './dictation.js';
 import { updatesSection } from './update-settings.js';
 
 const permissionsApi = {
@@ -166,7 +167,7 @@ function dictationSection() {
         document.dispatchEvent(new CustomEvent('dictation-settings', { detail: next }));
         drawSettings(next);
       },
-    }, k.label)));
+    }, holdKeyLabel(k))));
   }
 
   async function load() {
