@@ -12,7 +12,7 @@ import { createTask } from '../../tasks.js';
 import { createBoard, getBoard, renameBoard, addItem, changeItem, removeItem, boardText, listOwnBoards, listNoteBoards, deleteBoard, restoreBoard, cardToNote, boardSources, ENDLESS_SIZE } from '../../boards.js';
 import { createEntry } from '../../entries.js';
 import { createCapture } from '../../captures.js';
-import { addStroke } from '../../ink.js';
+import { addStroke, clearStrokes, restoreStrokes, listStrokes } from '../../ink.js';
 
 const emptyDb = () => prepareDatabase(new DatabaseSync(':memory:'));
 
@@ -207,4 +207,21 @@ test('schema 72 moves an older database: boards can be endless, board items take
   assert.deepEqual([read.endless, read.items.map((i) => [i.id, i.text, i.color])], [false, [[card.id, 'Old card', '']]]);
   assert.equal(addItem(db, board.id, { kind: 'group', text: 'New' }).kind, 'group');
   db.close();
+});
+
+test('Clear drawing takes every stroke of the board away (marked); Undo brings back only those', () => {
+  const db = emptyDb();
+  const board = createBoard(db, { endless: true });
+  const other = createBoard(db, { endless: true });
+  addStroke(db, board.id, [[1, 1], [5, 5]]);
+  addStroke(db, board.id, [[9, 9], [20, 20]]);
+  addStroke(db, other.id, [[1, 1], [2, 2]]);
+  const { removed } = clearStrokes(db, board.id);
+  assert.equal(removed.length, 2);
+  assert.equal(listStrokes(db, board.id).length, 0);
+  assert.equal(listStrokes(db, other.id).length, 1);
+  assert.equal(restoreStrokes(db, other.id, removed).restored, 0);
+  assert.equal(restoreStrokes(db, board.id, removed).restored, 2);
+  assert.equal(listStrokes(db, board.id).length, 2);
+  assert.throws(() => clearStrokes(db, '00000000-0000-4000-8000-000000000000'), (e) => e.status === 404);
 });

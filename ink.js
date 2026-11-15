@@ -43,6 +43,22 @@ export function removeStroke(db, id) {
   return { removed: true };
 }
 
+// Clears a board's ink: every stroke on it is taken away (marked, as everywhere). Returns the ids, for Undo.
+export function clearStrokes(db, boardId) {
+  if (!db.prepare('SELECT 1 FROM boards WHERE id = ? AND deleted_at IS NULL').get(boardId)) throw fail(404, 'No such board.');
+  const ids = db.prepare('SELECT id FROM ink_strokes WHERE board_id = ? AND deleted_at IS NULL').all(boardId).map((r) => r.id);
+  db.prepare('UPDATE ink_strokes SET deleted_at = ? WHERE board_id = ? AND deleted_at IS NULL').run(now(), boardId);
+  return { removed: ids };
+}
+
+// Undo of a clear: those strokes of this board come back.
+export function restoreStrokes(db, boardId, ids) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).map(String))];
+  if (!list.length) return { restored: 0 };
+  const done = db.prepare(`UPDATE ink_strokes SET deleted_at = NULL, updated_at = ? WHERE board_id = ? AND deleted_at IS NOT NULL AND id IN (${list.map(() => '?').join(',')})`).run(now(), boardId, ...list);
+  return { restored: done.changes };
+}
+
 // The words of a group of strokes, as an ordinary text item under which the ink fades. x and y: where the group was drawn.
 export function strokesToText(db, boardId, strokeIds, words, { x = 40, y = 40 } = {}) {
   const board = getBoard(db, boardId);

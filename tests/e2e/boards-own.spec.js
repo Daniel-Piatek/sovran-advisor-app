@@ -211,3 +211,46 @@ test('Hide notes gives the board the width; Full screen fills the screen with th
   await page.keyboard.press('Escape');
   await expect(page.locator('.board-layout')).not.toHaveClass(/is-full/);
 });
+
+test('Task opens a window of every open task, grouped by when; tick several and they go on the board; one there already says so', async ({ page, app }) => {
+  const day = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  await send(app, 'POST', '/api/tasks', { text: 'Call the printer', due: day(0), estimate: 30, flag: 'must' });
+  await send(app, 'POST', '/api/tasks', { text: 'Write the brochure', due: day(3) });
+  await send(app, 'POST', '/api/tasks', { text: 'Book the venue' });
+  const board = await send(app, 'POST', '/api/boards', { endless: true, title: 'Workshop' });
+  await page.goto(`${app.url}/boards/${board.id}`);
+  await page.getByRole('button', { name: 'Task', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Put tasks on the board' });
+  await expect(picker.getByRole('heading', { name: /Today/ })).toBeVisible();
+  await expect(picker.getByRole('heading', { name: /Upcoming/ })).toBeVisible();
+  await expect(picker.getByRole('heading', { name: /No date/ })).toBeVisible();
+  await expect(picker.locator('.plan-dialog-row').filter({ hasText: 'Call the printer' })).toContainText('30 min · Must');
+  await picker.getByLabel('Find a task').fill('brochure');
+  await expect(picker.locator('.plan-dialog-row')).toHaveCount(1);
+  await picker.getByLabel('Write the brochure').check();
+  await picker.getByLabel('Find a task').fill('');
+  await picker.getByLabel('Book the venue').check();
+  await picker.getByRole('button', { name: 'Put 2 on the board' }).click();
+  await expect(page.getByRole('group', { name: 'Card: Write the brochure' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Card: Book the venue' })).toBeVisible();
+  expect((await boardOf(app, board.id)).items.filter((i) => i.ref_table === 'tasks')).toHaveLength(2);
+
+  await page.getByRole('button', { name: 'Task', exact: true }).click();
+  await expect(picker.getByLabel('Book the venue')).toBeDisabled();
+  await expect(picker.locator('.plan-dialog-row').filter({ hasText: 'Book the venue' })).toContainText('On the board');
+  await page.keyboard.press('Escape');
+  await expect(picker).toHaveCount(0);
+});
+
+test('Clear drawing takes away all the ink; Undo brings it back', async ({ page, app }) => {
+  const board = await send(app, 'POST', '/api/boards', { endless: true, title: 'Sketch' });
+  await send(app, 'POST', `/api/boards/${board.id}/strokes`, { points: [[100, 100], [200, 150]] });
+  await send(app, 'POST', `/api/boards/${board.id}/strokes`, { points: [[300, 100], [320, 250]] });
+  await page.goto(`${app.url}/boards/${board.id}`);
+  await page.getByRole('button', { name: 'Clear drawing' }).click();
+  await expect.poll(async () => (await boardOf(app, board.id)).strokes.length).toBe(0);
+  await expect(page.getByRole('button', { name: 'Clear drawing' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect.poll(async () => (await boardOf(app, board.id)).strokes.length).toBe(2);
+  await expect(page.getByRole('button', { name: 'Clear drawing' })).toBeVisible();
+});

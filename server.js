@@ -39,7 +39,7 @@ import { inboxView, explainThread, describeSplits, SPLIT_IDS } from './mail-spli
 import { saveDraft, listDrafts, getDraft, discardDraft, restoreDraft } from './mail-drafts.js';
 import { peopleOfThread, addSender, mailWith } from './mail-people.js';
 import { createBoard, getBoard, renameBoard, setBackground, addItem, changeItem, removeItem, listOwnBoards, listNoteBoards, deleteBoard, restoreBoard, cardToNote, boardSources } from './boards.js';
-import { addStroke, removeStroke, strokesToText } from './ink.js';
+import { addStroke, removeStroke, strokesToText, clearStrokes, restoreStrokes } from './ink.js';
 import { listVersions, getVersion, compareVersions, latestVersion } from './versions.js';
 import { makeUpdater, updateStatus, checkForUpdate, readState as readUpdateState, CHECK_EVERY_MS } from './app-update.js';
 import { saveWithMerge, listClashes, resolveClash, takeClashNotes } from './merge.js';
@@ -265,10 +265,12 @@ export function startServer({
     // The pen (Writing 8):
     //   POST   /api/boards/:id/strokes       { points: [[x, y, pressure, ms], ...] }: one stroke of ink, kept as drawn
     //   DELETE /api/strokes/:id              take a stroke away (marked)
+    //   DELETE /api/boards/:id/strokes       clear the drawing: every stroke on the board, marked; answers { removed: [ids] }
+    //   POST   /api/boards/:id/strokes/restore { ids }: Undo of a clear
     //   POST   /api/boards/:id/ink-to-text   { stroke_ids, image (a PNG data address of them), x?, y? }: your assistant reads the handwriting, the words
     //                                        become a text item on the board and the ink fades below them
     //   PATCH  /api/boards/:id               { background: { sha256 } | null }: a kept picture or PDF under the board
-    const strokesMatch = url.pathname.match(/^\/api\/boards\/([0-9a-f-]{36})\/(strokes|ink-to-text)$/);
+    const strokesMatch = url.pathname.match(/^\/api\/boards\/([0-9a-f-]{36})\/(strokes|strokes\/restore|ink-to-text)$/);
     const strokeMatch = url.pathname.match(/^\/api\/strokes\/([0-9a-f-]{36})$/);
     if (strokesMatch || strokeMatch) {
       try {
@@ -276,8 +278,10 @@ export function startServer({
           if (req.method !== 'DELETE') return sendJson(res, 405, { error: 'Method not allowed' });
           return sendJson(res, 200, removeStroke(db, strokeMatch[1]));
         }
+        if (strokesMatch[2] === 'strokes' && req.method === 'DELETE') return sendJson(res, 200, clearStrokes(db, strokesMatch[1]));
         if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
         const input = (await readJson(req)) ?? {};
+        if (strokesMatch[2] === 'strokes/restore') return sendJson(res, 200, restoreStrokes(db, strokesMatch[1], input.ids));
         if (strokesMatch[2] === 'strokes') return sendJson(res, 201, addStroke(db, strokesMatch[1], input.points));
         // To text: the picture goes into a chat folder of its own; your assistant reads it with its Read tool (your own Claude plan, no key).
         const picture = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(String(input.image ?? ''));

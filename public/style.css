@@ -2904,6 +2904,13 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 
 .plan-dialog-steps { padding-left: 0; }
 
+/* The Task window of a board: Plan my day's look, with a search box and a list that scrolls. */
+.board-task-picker { width: min(36rem, calc(100vw - var(--space-6))); margin: auto; max-height: calc(100vh - var(--space-6)); }
+.board-task-picker .search { margin-bottom: var(--space-2); }
+.board-task-picker-list { max-height: min(55vh, 32rem); overflow-y: auto; padding-right: var(--space-1); }
+.board-task-picker-count { font-weight: var(--weight-regular); }
+.board-task-picker .plan-dialog-row.is-there { color: var(--color-text-muted); cursor: default; }
+
 /* ---- The day in hours (public/planner.js): Morning and Afternoon as bands of hours ---- */
 
 .plan-hours { position: relative; margin-top: var(--space-1); }

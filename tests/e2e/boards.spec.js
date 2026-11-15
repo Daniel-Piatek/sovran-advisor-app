@@ -102,7 +102,10 @@ test('a card of a person and a task is found by its name and shown live', async 
   await region.getByRole('button', { name: 'Lena Fischer' }).click();
   await expect(region.getByRole('group', { name: 'Card: Lena Fischer' })).toContainText('Person');
   await region.getByRole('button', { name: 'Task', exact: true }).click();
-  await region.getByRole('button', { name: 'Send the agenda' }).click();
+  const picker = page.getByRole('dialog', { name: 'Put tasks on the board' });
+  await picker.getByLabel('Send the agenda').check();
+  await picker.getByRole('button', { name: 'Put it on the board' }).click();
+  await expect(picker).toHaveCount(0);
   await expect(region.getByRole('group', { name: 'Card: Send the agenda' })).toContainText('Task');
   expect((await boardOf(app, board.id)).items.map((i) => i.ref_table).sort()).toEqual(['people', 'tasks']);
 });

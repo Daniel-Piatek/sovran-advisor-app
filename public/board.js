@@ -6,8 +6,9 @@
 // It also has groups (a coloured box with a name, the cards inside it move with it), quick cards that can become a note, and journal and
 // Inbox cards; a double click on a card that points at something calls onPeek, which opens it beside the board (public/board-peek.js).
 
-import { el, icon, request, api } from './ui.js';
+import { el, icon, request, api, undoBar } from './ui.js';
 import { inkLayer, renderStrokes } from './ink.js';
+import { openTaskPicker } from './board-task-picker.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -58,13 +59,9 @@ export function boardCard(item, { selected = false, onRemove = null } = {}) {
   return node;
 }
 
-// The pick-something form for a card that points at a note, a person or a task.
+// The pick-something form for a card that points at a note or a person (a task has its own window: board-task-picker.js).
 async function candidates(kind, text) {
   const q = text.trim();
-  if (kind === 'task') {
-    const tasks = await request('GET', '/api/tasks');
-    return tasks.filter((t) => !q || t.text.toLowerCase().includes(q.toLowerCase())).slice(0, 8).map((t) => ({ ref_table: 'tasks', ref_id: t.id, label: t.text }));
-  }
   if (!q && kind === 'person') return [];
   const found = await api.suggestLinks(q, kind === 'person' ? 'person' : undefined);
   return found.filter((f) => f.kind === (kind === 'person' ? 'person' : 'note')).slice(0, 8).map((f) => ({ ref_table: kind === 'person' ? 'people' : 'notes', ref_id: f.id, label: f.label }));
@@ -387,6 +384,17 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
     input.focus();
   }
 
+  // Clear drawing: all the ink goes; Undo brings it back.
+  async function clearDrawing() {
+    const { removed } = await request('DELETE', `/api/boards/${boardId}/strokes`);
+    await refresh();
+    formPlace.replaceChildren(undoBar('The drawing is cleared.', async () => {
+      await request('POST', `/api/boards/${boardId}/strokes/restore`, { ids: removed });
+      formPlace.replaceChildren();
+      await refresh();
+    }));
+  }
+
   function refForm(kind) {
     const input = el('input', { class: 'search-input', 'aria-label': `Find a ${kind}`, placeholder: `Find a ${kind}`, autocomplete: 'off' });
     const results = el('ul', { class: 'board-results', 'aria-label': 'Found' });
@@ -415,13 +423,14 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       ...(endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => wordsForm('group') }, 'Group')] : []),
       ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('note') }, 'Note')]),
       el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('person') }, 'Person'),
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('task') }, 'Task'),
-      el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(penOn), onclick: () => { penOn = !penOn; if (penOn) arrowMode = false; arrowFrom = null; say(penOn ? 'Draw with the pen. Press Pen again to move cards.' : ''); draw(); } }, 'Pen'),
-      ...((board.strokes ?? []).some((s) => !s.faded) ? [el('button', { type: 'button', class: 'button button-quiet', onclick: guard(toText) }, 'To text')] : []),
+      el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openTaskPicker({ onBoard: new Set(board.items.filter((i) => i.ref_table === 'tasks').map((i) => i.ref_id)), onAdd: guard(async (tasks) => { formPlace.replaceChildren(); for (const t of tasks) await addAt({ kind: 'card', ref_table: 'tasks', ref_id: t.id }); if (tasks.length) say(tasks.length === 1 ? 'The task is on the board.' : `${tasks.length} tasks are on the board.`); }) }) }, 'Task'),
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(penOn), title: 'Draw on the board by hand', onclick: () => { penOn = !penOn; if (penOn) arrowMode = false; arrowFrom = null; say(penOn ? 'Draw with the pen. Press Pen again to move cards.' : ''); draw(); } }, 'Pen'),
+      ...((board.strokes ?? []).some((s) => !s.faded) ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Turns what you wrote with the Pen into typed words on the board', onclick: guard(toText) }, 'To text')] : []),
+      ...((board.strokes ?? []).length ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Takes away everything drawn with the Pen (Undo brings it back)', onclick: guard(clearDrawing) }, 'Clear drawing')] : []),
       ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', onclick: () => pageFile.click() }, 'Page')]),
       ...(board.background && !endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: guard(async () => { await request('PATCH', `/api/boards/${boardId}`, { background: null }); await refresh(); }) }, 'No page')] : []),
       pageFile,
-      el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(arrowMode), onclick: () => { arrowMode = !arrowMode; arrowFrom = null; say(arrowMode ? 'Press the card the arrow starts at.' : ''); draw(); } }, 'Arrow'));
+      el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(arrowMode), title: 'Joins two cards: press the card it starts from, then the card it points to', onclick: () => { arrowMode = !arrowMode; arrowFrom = null; say(arrowMode ? 'Press the card the arrow starts at.' : ''); draw(); } }, 'Arrow'));
     const zoom = endless ? [el('div', { class: 'board-zoom', role: 'group', 'aria-label': 'Zoom' },
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Zoom out', onclick: () => zoomAt(view.k / 1.25) }, '−'),
       zoomLabel,
