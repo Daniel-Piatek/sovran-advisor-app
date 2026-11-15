@@ -254,3 +254,31 @@ test('Clear drawing takes away all the ink; Undo brings it back', async ({ page,
   await expect.poll(async () => (await boardOf(app, board.id)).strokes.length).toBe(2);
   await expect(page.getByRole('button', { name: 'Clear drawing' })).toBeVisible();
 });
+
+test('Inbox opens a window of the Inbox items to tick; Hide notes comes first in the bar; no Pen on a board of its own; task and person cards have their colour bar', async ({ page, app }) => {
+  await send(app, 'POST', '/api/captures', { body: 'Idea: a price for groups\nmaybe five or more' });
+  await send(app, 'POST', '/api/captures', { body: 'Ring the venue' });
+  const task = await send(app, 'POST', '/api/tasks', { text: 'Book the venue' });
+  const person = await send(app, 'POST', '/api/people', { name: 'Lena Fischer' });
+  const board = await send(app, 'POST', '/api/boards', { endless: true, title: 'Workshop' });
+  await send(app, 'POST', `/api/boards/${board.id}/items`, { kind: 'card', ref_table: 'tasks', ref_id: task.id, x: 100, y: 100 });
+  await send(app, 'POST', `/api/boards/${board.id}/items`, { kind: 'card', ref_table: 'people', ref_id: person.id, x: 400, y: 100 });
+  await page.goto(`${app.url}/boards/${board.id}`);
+  const bar = page.locator('.board-bar');
+  await expect(bar.getByRole('button', { name: 'Card', exact: true })).toBeVisible();
+  const names = await bar.getByRole('button').allTextContents();
+  expect(names.findIndex((n) => /notes/.test(n))).toBeLessThan(names.indexOf('Card'));
+  await expect(page.getByRole('button', { name: 'Pen', exact: true })).toHaveCount(0);
+  const border = (name) => page.getByRole('group', { name }).evaluate((n) => getComputedStyle(n).borderLeftColor);
+  expect(await border('Card: Book the venue')).toBe('rgb(240, 122, 33)');
+  expect(await border('Card: Lena Fischer')).toBe('rgb(115, 59, 196)');
+
+  await page.getByRole('button', { name: 'Inbox', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Put Inbox items on the board' });
+  await expect(picker.locator('.plan-dialog-row').filter({ hasText: 'Idea: a price for groups' })).toContainText('maybe five or more');
+  await picker.getByLabel('Find in the Inbox').fill('venue');
+  await picker.getByLabel('Ring the venue').check();
+  await picker.getByRole('button', { name: 'Put it on the board' }).click();
+  await expect(page.getByRole('group', { name: 'Card: Ring the venue' })).toBeVisible();
+  expect((await boardOf(app, board.id)).items.filter((i) => i.ref_table === 'captures')).toHaveLength(1);
+});

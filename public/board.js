@@ -8,7 +8,7 @@
 
 import { el, icon, request, api, undoBar } from './ui.js';
 import { inkLayer, renderStrokes } from './ink.js';
-import { openTaskPicker } from './board-task-picker.js';
+import { openTaskPicker, openInboxPicker } from './board-task-picker.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -68,8 +68,8 @@ async function candidates(kind, text) {
 }
 
 // Mounts the board in `host`. large: opened on its own page. onPeek(item): a card that points at something was double-clicked.
-// onChange(board): after every load. tools: more buttons for the end of the bar (the page's own, such as Full screen). Returns { refresh, destroy, addAt, root }.
-export async function mountBoard(host, boardId, { large = false, onOpen = null, onPeek = null, onChange = null, tools = [] } = {}) {
+// onChange(board): after every load. tools: more buttons for the end of the bar (the page's own, such as Full screen); leadTools: for its start (Hide notes). Returns { refresh, destroy, addAt, root }.
+export async function mountBoard(host, boardId, { large = false, onOpen = null, onPeek = null, onChange = null, tools = [], leadTools = [] } = {}) {
   let board;
   try { board = await request('GET', `/api/boards/${boardId}`); } catch {
     host.replaceChildren(el('p', { class: 'empty' }, 'This board is not here any more.'));
@@ -395,6 +395,9 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
     }));
   }
 
+  // Which things of a table are on the board now (the Task and Inbox windows say so).
+  const refsOn = (table) => new Set(board.items.filter((i) => i.ref_table === table).map((i) => i.ref_id));
+
   function refForm(kind) {
     const input = el('input', { class: 'search-input', 'aria-label': `Find a ${kind}`, placeholder: `Find a ${kind}`, autocomplete: 'off' });
     const results = el('ul', { class: 'board-results', 'aria-label': 'Found' });
@@ -423,8 +426,9 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       ...(endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => wordsForm('group') }, 'Group')] : []),
       ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('note') }, 'Note')]),
       el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('person') }, 'Person'),
-      el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openTaskPicker({ onBoard: new Set(board.items.filter((i) => i.ref_table === 'tasks').map((i) => i.ref_id)), onAdd: guard(async (tasks) => { formPlace.replaceChildren(); for (const t of tasks) await addAt({ kind: 'card', ref_table: 'tasks', ref_id: t.id }); if (tasks.length) say(tasks.length === 1 ? 'The task is on the board.' : `${tasks.length} tasks are on the board.`); }) }) }, 'Task'),
-      el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(penOn), title: 'Draw on the board by hand', onclick: () => { penOn = !penOn; if (penOn) arrowMode = false; arrowFrom = null; say(penOn ? 'Draw with the pen. Press Pen again to move cards.' : ''); draw(); } }, 'Pen'),
+      el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openTaskPicker({ onBoard: refsOn('tasks'), onAdd: guard(async (tasks) => { formPlace.replaceChildren(); for (const t of tasks) await addAt({ kind: 'card', ref_table: 'tasks', ref_id: t.id }); if (tasks.length) say(tasks.length === 1 ? 'The task is on the board.' : `${tasks.length} tasks are on the board.`); }) }) }, 'Task'),
+      ...(endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openInboxPicker({ onBoard: refsOn('captures'), onAdd: guard(async (items) => { formPlace.replaceChildren(); for (const c of items) await addAt({ kind: 'card', ref_table: 'captures', ref_id: c.id }); if (items.length) say(items.length === 1 ? 'The Inbox item is on the board.' : `${items.length} Inbox items are on the board.`); }) }) }, 'Inbox')] : []),
+      ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(penOn), title: 'Draw on the board by hand', onclick: () => { penOn = !penOn; if (penOn) arrowMode = false; arrowFrom = null; say(penOn ? 'Draw with the pen. Press Pen again to move cards.' : ''); draw(); } }, 'Pen')]),
       ...((board.strokes ?? []).some((s) => !s.faded) ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Turns what you wrote with the Pen into typed words on the board', onclick: guard(toText) }, 'To text')] : []),
       ...((board.strokes ?? []).length ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Takes away everything drawn with the Pen (Undo brings it back)', onclick: guard(clearDrawing) }, 'Clear drawing')] : []),
       ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', onclick: () => pageFile.click() }, 'Page')]),
@@ -436,7 +440,7 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       zoomLabel,
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Zoom in', onclick: () => zoomAt(view.k * 1.25) }, '+'),
       el('button', { type: 'button', class: 'button button-quiet', onclick: showAll }, 'Show all'))] : [];
-    bar.replaceChildren(...(endless ? [] : [el('span', { class: 'board-title' }, icon('board'), el('strong', {}, board.title || 'Untitled board'))]), addMenu, ...zoom, ...tools,
+    bar.replaceChildren(...(endless ? [] : [el('span', { class: 'board-title' }, icon('board'), el('strong', {}, board.title || 'Untitled board'))]), ...leadTools, addMenu, ...zoom, ...tools,
       ...(!large && onOpen ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => onOpen(board) }, 'Open')] : []));
   }
 

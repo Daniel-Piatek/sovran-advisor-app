@@ -23,9 +23,11 @@ The **Boards** tab (next to **All notes**) holds whiteboards of their own, each 
 - On the left is a list of your **notes**, **journal entries** and **Inbox items**. Search it, then drag one onto the board, or press its **+**. The card stays linked: change the note and the card changes too. A thing already on the board says *On the board*.
 - **Card** adds a quick card of your own words (a sticky note). Hover it and press the note button to **make it a real note**; the card then points at that new note.
 - **Double-click** a note, journal or Inbox card to open it on the right, read it and change it without leaving the board. **Open the page** goes to its own page.
+- **Inbox** opens a window with your Inbox items (waiting and snoozed). Tick one or several and press **Put them on the board**; they stay in your Inbox.
 - **Task** opens a window with all your open tasks, grouped by **Missed**, **Today**, **Upcoming**, **No date** and **Someday**, with their time, *Must* and where they live. Search it, tick one or several and press **Put them on the board**.
 - **Text** puts words straight on the board. **Arrow** joins two cards with a line: press Arrow, then the card it starts from, then the card it points to.
-- **Pen** draws by hand. **To text** turns what you wrote into typed words (your assistant reads the handwriting; the ink fades below the words). **Clear drawing** takes all the ink away, with **Undo**.
+- On a board inside a note, **Pen** draws by hand (a board of its own has no Pen). **To text** turns what you wrote into typed words (your assistant reads the handwriting; the ink fades below the words). **Clear drawing** takes all the ink away, with **Undo**.
+- Cards show what they are by a coloured bar on the left: blue for a note, yellow for a journal entry, orange for a task, violet for a person, grey for an Inbox item.
 - **Group** adds a coloured box with a name. Drag its name bar and the cards inside move with it; drag its corner to make it larger or smaller; hover it to change its colour.
 - **Hide notes** folds the list away so the board gets the whole width (**Show notes** brings it back; it is remembered). **Full screen** fills the whole screen with the board; **Exit full screen** or Esc goes back.
 - Move around by dragging the empty space, or by scrolling. Zoom with **−** and **+**, or hold Ctrl (Cmd on a Mac) and scroll. **Show all** brings everything into view.

@@ -140,7 +140,8 @@ async function showOwnBoard(id, board, title) {
     large: true,
     onPeek: (item) => void peek.open(item),
     onChange: (next) => sources.setBoard(next),
-    tools: [el('div', { class: 'board-view-tools', role: 'group', 'aria-label': 'View' }, toggle, fullButton)],
+    leadTools: [toggle],
+    tools: [el('div', { class: 'board-view-tools', role: 'group', 'aria-label': 'View' }, fullButton)],
   });
   // A new board starts with its name.
   if (!board.title.trim() && !board.items.length) title.field.focus();

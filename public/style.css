@@ -3687,6 +3687,8 @@ html.board-is-full { overflow: hidden; }
 .board-card.is-journal { border-left: var(--space-1) solid var(--kind-journal); }
 .board-card.is-inbox { border-left: var(--space-1) solid var(--color-border-strong); }
 .board-card.is-note { border-left: var(--space-1) solid var(--kind-notes); }
+.board-card.is-task { border-left: var(--space-1) solid var(--kind-tasks); }
+.board-card.is-person { border-left: var(--space-1) solid var(--kind-people); }
 .board-zoom { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: auto; }
 .board-zoom-value { min-width: 3.5em; text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 .board-to-note { position: absolute; top: var(--space-1); right: calc(var(--space-8) + var(--space-2)); width: var(--space-8); height: var(--space-8); padding: 0; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; }
