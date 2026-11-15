@@ -4047,6 +4047,8 @@ html[data-section] .page.mail-app-page { border-top: 0; }
 /* The Sovran Library key (public/settings.js) */
 .library-key { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .library-key .detail-input { flex: 1 1 240px; }
+/* Connected: the confirmation stands out in bold Crimson (D, 2026-11-15); a problem stays in plain grey text. */
+.library-status.is-connected { color: var(--color-accent); font-weight: var(--weight-bold); }
 
 /* Which AI gave an answer (Claude or ChatGPT): a small chip in its own colour; a line where a chat changed AI. */
 .chat-ai { display: inline-block; padding: 0 var(--space-1); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-bold); line-height: 1.5; }

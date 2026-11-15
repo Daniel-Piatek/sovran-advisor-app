@@ -272,17 +272,18 @@ function aiSection() {
 // The Sovran Library (sovran-library.js): the key the student was given, pasted once. Only its last four
 // characters ever come back to the page.
 function librarySection() {
-  const status = el('p', { class: 'empty', role: 'status' });
+  const status = el('p', { class: 'empty library-status', role: 'status' });
   const input = el('input', { type: 'password', class: 'detail-input', 'aria-label': 'Library key', placeholder: 'Paste your library key', autocomplete: 'off' });
   const remove = el('button', { type: 'button', class: 'button button-quiet', hidden: true }, 'Disconnect');
   const show = (state) => {
     status.textContent = state.connected
       ? `Connected (key ending ${state.key_end}). Your assistant can now search the Sovran teaching and your own decodes.`
       : 'Not connected. The app works fully without it.';
+    status.classList.toggle('is-connected', Boolean(state.connected));
     remove.hidden = !state.connected;
   };
   const save = async (key) => {
-    try { show(await request('PUT', '/api/library', { key })); input.value = ''; } catch (err) { status.textContent = err.message; }
+    try { show(await request('PUT', '/api/library', { key })); input.value = ''; } catch (err) { status.classList.remove('is-connected'); status.textContent = err.message; }
   };
   remove.addEventListener('click', () => save(''));
   request('GET', '/api/library').then(show).catch(() => { status.textContent = "The library's state couldn't be loaded."; });
