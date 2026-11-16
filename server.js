@@ -23,6 +23,7 @@ import {
   entriesOfDay, entriesBefore, entryDays, updateEntry, deleteEntry, restoreEntry, listDeletedEntries, searchEntries,
 } from './entries.js';
 import { storeFile, getFile, filesDir, showsInline } from './files.js';
+import { listTaskFiles, addTaskFile, removeTaskFile } from './task-files.js';
 import {
   checkCaptureInput, createCapture, getCapture, waitingCaptures, waitingCount, updateCapture, sortCapture, letGo,
   undoCapture, listDeletedCaptures, checkCaptureChange, homeOf, snoozeCapture, setWorld, snoozedCaptures, doneCaptures, captureCounts,
@@ -650,6 +651,8 @@ export function startServer({
     //   POST   /api/tasks              add one of its own: { text, due?, flag?, estimate?, repeat?, home_id?, remind_time?, details?, mail_thread_id? (made from a mail, linked back) }
     //   PATCH  /api/tasks/:id          { done?, due?, flag?, estimate?, home_id?, text? (its own) }
     //   DELETE /api/tasks/:id,  POST /api/tasks/:id/restore   (a task of its own)
+    //   GET    /api/tasks/:id/files    the files on a task;  POST { sha256 } puts a kept file (POST /api/files) on it
+    //   DELETE /api/task-files/:id     takes a file off its task (the file itself stays)
     //   GET    /api/reminders/due      reminders whose time has come
     //   GET    /api/reminders?state=waiting|done   every alarm in that state, with its task
     //   PATCH  /api/reminders/:id      { snooze?: minutes or "tomorrow", done?: true }  (done ends the alarm; the task stays open)
@@ -669,6 +672,22 @@ export function startServer({
         return sendJson(res, 201, createTask(db, input));
       }
       return sendJson(res, 405, { error: 'Method not allowed' });
+    }
+    const taskFiles = url.pathname.match(/^\/api\/tasks\/([0-9a-f-]{36})\/files$/);
+    if (taskFiles) {
+      if (req.method === 'GET') return sendJson(res, 200, listTaskFiles(db, taskFiles[1]));
+      if (req.method === 'POST') {
+        const input = await readJson(req);
+        if (!/^[0-9a-f]{64}$/.test(input?.sha256 ?? '')) return sendJson(res, 400, { error: 'Send the file’s sha256.' });
+        const files = addTaskFile(db, taskFiles[1], input.sha256);
+        return files ? sendJson(res, 200, files) : sendJson(res, 404, { error: 'No such task or file.' });
+      }
+      return sendJson(res, 405, { error: 'Method not allowed' });
+    }
+    const taskFile = url.pathname.match(/^\/api\/task-files\/([0-9a-f-]{36})$/);
+    if (taskFile) {
+      if (req.method !== 'DELETE') return sendJson(res, 405, { error: 'Method not allowed' });
+      return removeTaskFile(db, taskFile[1]) ? sendJson(res, 200, { ok: true }) : sendJson(res, 404, { error: 'Not found' });
     }
     const taskMatch = url.pathname.match(/^\/api\/tasks\/([0-9a-f-]{36})(\/restore)?$/);
     if (taskMatch) {

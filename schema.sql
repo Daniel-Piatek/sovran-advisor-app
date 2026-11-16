@@ -1321,3 +1321,16 @@ CREATE TABLE IF NOT EXISTS google_calendars (
   is_primary INTEGER NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX IF NOT EXISTS google_calendars_by_key ON google_calendars (account_id, calendar_id);
+
+-- Files on a task (task-files.js): a PDF, screenshot or other file added in the task pop-up. The file itself is a row in
+-- files, kept on this computer like a file pasted into a note; this only says which task it belongs to.
+CREATE TABLE IF NOT EXISTS task_files (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  task_id TEXT NOT NULL REFERENCES tasks (id),
+  sha256 TEXT NOT NULL REFERENCES files (sha256)
+);
+CREATE INDEX IF NOT EXISTS task_files_by_task ON task_files (task_id);
