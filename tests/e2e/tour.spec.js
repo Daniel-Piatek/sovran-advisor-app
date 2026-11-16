@@ -2,7 +2,7 @@
 // switch on, in the owner's order, each with its own short film and "Switch it on".
 import { test, expect } from './fixtures.js';
 
-const ORDER = ['Phone capture', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
+const ORDER = ['Phone Capture', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
 
 test('Tour sits just above Settings, and opens the films', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
@@ -17,7 +17,7 @@ test('Tour sits just above Settings, and opens the films', async ({ page, app })
   }
   await expect(page).toHaveURL(/\/tour$/);
   await expect(page.getByRole('heading', { name: 'Tour', level: 1 })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'The basics' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The Basics' })).toBeVisible();
   await expect(page.locator('.tour-card-title')).toHaveText(ORDER);
   await expect(page.getByText('Your Sovran Library')).toBeVisible();
 });
@@ -34,17 +34,17 @@ test('Switch it on switches the part on, and its card offers to open it', async 
   if (test.info().project.name !== 'phone') await expect(page.locator('.sidebar-link[data-section="Tasks"]')).toBeVisible();
 });
 
-test('a film plays inside the app, without its own title, and All videos and Back to all videos go back', async ({ page, app }) => {
+test('a film plays inside the app, without its own title, and All Videos and Back to All Videos go back', async ({ page, app }) => {
   await page.goto(`${app.url}/tour`);
   await page.locator('.tour-card[data-film="planner"]').getByRole('link', { name: 'Watch' }).click();
   await expect(page).toHaveURL(/\/tour\?film=planner$/);
   await expect(page.getByRole('heading', { name: 'Planner', level: 1 })).toBeVisible();
   const film = page.frameLocator('.tour-frame');
-  await expect(film.locator('#caph')).toHaveText('Switch on Planner');
+  await expect(film.locator('#caph')).toHaveText('Switch On Planner');
   await expect(film.locator('html')).toHaveClass(/in-app/);
   await expect(film.locator('.wrap > h1')).toBeHidden();
-  await expect(page.getByRole('link', { name: 'All videos', exact: true })).toBeVisible();
-  await film.getByRole('link', { name: '← Back to all videos' }).click();
+  await expect(page.getByRole('link', { name: 'All Videos', exact: true })).toBeVisible();
+  await film.getByRole('link', { name: '← Back to All Videos' }).click();
   await expect(page.locator('.tour-card')).toHaveCount(6);
 });
 
@@ -68,13 +68,13 @@ test('the Sovran Library line opens Settings at the key box, ready to paste', as
 test('the next and previous chapter buttons and the arrow keys move a chapter, within that video', async ({ page, app }) => {
   await page.goto(`${app.url}/tour?film=planner`);
   const film = page.frameLocator('.tour-frame');
-  await expect(film.locator('#caph')).toHaveText('Switch on Planner');
+  await expect(film.locator('#caph')).toHaveText('Switch On Planner');
   await film.getByRole('button', { name: 'Next chapter' }).click();
-  await expect(film.locator('#caph')).toHaveText('Plan your day');
+  await expect(film.locator('#caph')).toHaveText('Plan Your Day');
   await film.locator('body').press('ArrowRight');
-  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await expect(film.locator('#caph')).toHaveText('A Highlight, and Closing the Day');
   await film.getByRole('button', { name: 'Next chapter' }).click(); // the last chapter of this video: it stays
-  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await expect(film.locator('#caph')).toHaveText('A Highlight, and Closing the Day');
   await film.getByRole('button', { name: 'Previous chapter' }).click();
-  await expect(film.locator('#caph')).toHaveText('Plan your day');
+  await expect(film.locator('#caph')).toHaveText('Plan Your Day');
 });

@@ -2,7 +2,7 @@
 // sidebar, just above Settings. First the basics (everything that works straight after you install),
 // then one short film for each part you can switch on, each card with its own "Switch it on".
 //   /tour               the films, as cards
-//   /tour?film=<id>     one video playing, with "All videos" above it and "Back to all videos" beside Start again
+//   /tour?film=<id>     one video playing, with "All Videos" above it and "Back to All Videos" beside Start Again
 // The films themselves are pages in public/tour/ (basics.html, extras.html) with the owner's voice as
 // mp3 files in public/tour/voice/. They are made from the published films by build-app-films.py in the
 // project files (student-guide/tour/); inside the app they hide their own title and follow Light/Dark.
@@ -13,7 +13,7 @@ import { moduleOn, switchModule } from './modules.js';
 
 // The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life.
 const EXTRAS = [
-  { id: 'phone', module: 'phone-drop', title: 'Phone capture', kind: 'people', open: '/settings', openLabel: 'Open Settings',
+  { id: 'phone', module: 'phone-drop', title: 'Phone Capture', kind: 'people', open: '/settings', openLabel: 'Open Settings',
     text: 'A Capture app on your phone. Speak or type, and it lands in your Inbox.' },
   { id: 'tasks', module: 'tasks', title: 'Tasks', kind: 'tasks', open: '/tasks', openLabel: 'Open Tasks',
     text: 'Today, Upcoming and Someday. Press q anywhere to add one in a line.' },
@@ -27,7 +27,7 @@ const EXTRAS = [
     text: 'Your Key Elements, Goals, Projects and Topics.' },
 ];
 
-const filmOf = (id) => (id === 'basics' ? { id, title: 'The basics', src: '/tour/basics.html' }
+const filmOf = (id) => (id === 'basics' ? { id, title: 'The Basics', src: '/tour/basics.html' }
   : EXTRAS.find((x) => x.id === id) && { ...EXTRAS.find((x) => x.id === id), src: `/tour/extras.html#${id}` });
 
 // A still of the app, drawn: the play button sits on it.
@@ -58,11 +58,11 @@ function stateOf(extra) {
 function showList() {
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Tour')),
-    el('section', { class: 'tour-hero', 'aria-label': 'The basics' },
-      el('a', { class: 'tour-hero-still', href: '/tour?film=basics', 'aria-label': 'Watch The basics' }, still('10 scenes · about 6 minutes')),
+    el('section', { class: 'tour-hero', 'aria-label': 'The Basics' },
+      el('a', { class: 'tour-hero-still', href: '/tour?film=basics', 'aria-label': 'Watch The Basics' }, still('10 scenes · about 6 minutes')),
       el('div', { class: 'tour-hero-text' },
         el('span', { class: 'tour-label' }, 'Start here'),
-        el('h2', { class: 'tour-hero-title' }, 'The basics'),
+        el('h2', { class: 'tour-hero-title' }, 'The Basics'),
         el('p', {}, 'What each part of Sovran Advisor is for, how they fit together, and what to try first. Everything in it works straight after you install.'),
         el('a', { class: 'button button-primary', href: '/tour?film=basics' }, icon('play'), 'Watch'))),
     // The Library key first (2026-11-17, the owner's wish): most people will do this before the six below. Gold, a little raised.
@@ -92,11 +92,11 @@ function showFilm(film) {
   });
   const extra = EXTRAS.find((x) => x.id === film.id);
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All videos')),
+    el('header', { class: 'top-bar' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All Videos')),
     el('div', { class: 'tour-film-head' },
       el('h1', { class: 'top-bar-title' }, film.title),
       extra ? stateOf(extra) : null),
-    frame); // the video's own "Back to all videos" sits beside its Start again (build-app-films.py)
+    frame); // the video's own "Back to All Videos" sits beside its Start Again (build-app-films.py)
 }
 
 export function showTour() {
