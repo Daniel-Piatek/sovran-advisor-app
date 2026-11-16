@@ -64,3 +64,17 @@ test('the Sovran Library line opens Settings at the key box, ready to paste', as
   await expect(page.getByRole('textbox', { name: 'Library key' })).toBeFocused();
   await expect(page.getByRole('textbox', { name: 'Library key' })).toBeInViewport();
 });
+
+test('the next and previous chapter buttons and the arrow keys move a chapter, within that video', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour?film=planner`);
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#caph')).toHaveText('Switch on Planner');
+  await film.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(film.locator('#caph')).toHaveText('Plan your day');
+  await film.locator('body').press('ArrowRight');
+  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await film.getByRole('button', { name: 'Next chapter' }).click(); // the last chapter of this video: it stays
+  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await film.getByRole('button', { name: 'Previous chapter' }).click();
+  await expect(film.locator('#caph')).toHaveText('Plan your day');
+});

@@ -20,6 +20,7 @@ html.in-app .back-all { display: inline-block; }
    then a line across, then Start again and a red Back to all videos. */
 html.in-app #ends { order: 9; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 6px; }
 html.in-app #scenes { gap: 6px; }
+.pp.pp-sm { width: 28px; height: 28px; font-size: 11px; }
 html.in-app #scenes::before { content: "Video chapters"; font-family: var(--ui); font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 html.in-app #scenes .scene { font-size: .62rem; padding: 2px 8px; }
 html.in-app .back-all { background: var(--crimson); border-color: var(--crimson); color: var(--crimson-ink); margin-left: 0; }
@@ -289,8 +290,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
     <p id="capp"></p>
   </div>
   <div class="now">
-    <button class="pp" type="button" id="pp" aria-label="Pause">❚❚</button>
-    <span class="say" id="pplabel">Pause</span><span class="hint2">or click the screen, or press the space bar</span>
+    <button class="pp pp-sm" type="button" id="prevch" aria-label="Previous chapter" title="Previous chapter (←)">⏮</button><button class="pp" type="button" id="pp" aria-label="Pause">❚❚</button><button class="pp pp-sm" type="button" id="nextch" aria-label="Next chapter" title="Next chapter (→)">⏭</button>
+    <span class="say" id="pplabel">Pause</span><span class="hint2">or click the screen · space bar pauses · ← → chapters</span>
     <div class="sound" id="sound" hidden><button class="sbtn" type="button" id="snd" aria-pressed="false">🔊 Sound on</button></div>
   </div>
 
@@ -725,6 +726,11 @@ pp.addEventListener('click', () => setPaused(!paused));
 stage.addEventListener('click', () => setPaused(!paused));
 document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.target.closest?.('button')) { e.preventDefault(); setPaused(!paused); } });
 $('back-all').addEventListener('click', (e) => { try { window.parent.document.dispatchEvent(new CustomEvent('app-navigate', { detail: '/tour' })); e.preventDefault(); } catch { /* the link goes there itself */ } });
+const mineOf = (i) => scenes.map((s, k) => k).filter((k) => !scenes[k].film || scenes[k].film === scenes[i].film);
+function hop(d) { const mine = mineOf(cur), at = mine.indexOf(cur); go(mine[Math.min(mine.length - 1, Math.max(0, at + d))]); }
+$('prevch').addEventListener('click', () => hop(-1));
+$('nextch').addEventListener('click', () => hop(1));
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); hop(-1); } if (e.key === 'ArrowRight') { e.preventDefault(); hop(1); } });
 $('again').addEventListener('click', () => go(0));
 const snd = $('snd');
 if (Object.keys(CLIPS).length) $('sound').hidden = false;
