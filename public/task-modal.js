@@ -1,5 +1,6 @@
 // A task in a pop-up: the one place a task is opened, made or changed, wherever it shows (the Tasks page, the
-// Planner). Title, Details (its own words, apart from the title), a date, a flag, its home, Delete and Close.
+// Planner). Title, Details (its own words, apart from the title), a date, a flag, its home, Delete and Close, and for a
+// task that already exists its Files box (task-files.js: files kept on this computer, on the task).
 // Opened on a task it saves what changed when it closes (Close, Escape, Enter in the title, a click beside it);
 // opened on nothing it makes a new task with Add task, and Escape or a click beside it makes nothing.
 import { api, el, icon, undoBar } from './ui.js';
@@ -7,6 +8,7 @@ import { todayDay, parseQuickAdd, weekOf } from './due.js';
 import { homeChip } from './home.js';
 import { mentionField } from './mentions.js';
 import { moduleOn } from './modules.js';
+import { taskFilesSection } from './task-files.js';
 
 const isDay = (due) => /^\d{4}-\d{2}-\d{2}$/.test(due ?? '');
 
@@ -167,7 +169,8 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
   problem,
   mailLink(making ? (defaults.mail?.thread_id ? defaults.mail : null) : (task.mail_thread_id ? { thread_id: task.mail_thread_id } : null)),
   !making && task.capture ? el('p', { class: 'task-capture' },
-    el('span', { class: 'task-capture-when' }, `From the Inbox, captured ${new Date(task.capture.captured_at).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`)) : null);
+    el('span', { class: 'task-capture-when' }, `From the Inbox, captured ${new Date(task.capture.captured_at).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`)) : null,
+  !making && task.id ? taskFilesSection(task.id) : null);
   document.body.append(dialog);
   dialog.showModal();
   if (own) { words.focus(); words.setSelectionRange(words.value.length, words.value.length); } else detailsBox.focus();

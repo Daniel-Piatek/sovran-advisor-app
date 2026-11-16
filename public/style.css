@@ -4101,6 +4101,19 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .task-modal-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
 .task-modal-foot .home-chip, .task-modal-foot > :first-child { margin-right: auto; }
 .task-modal .task-capture { margin-top: var(--space-3); }
+/* The Files box in the task pop-up (public/task-files.js): files kept on this computer. */
+.task-files { margin-top: var(--space-4); padding-top: var(--space-3); border-top: var(--line); }
+.task-files.task-files-drop { outline: 2px dashed var(--color-text-muted); outline-offset: var(--space-1); }
+.task-files-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
+.task-files-list { display: flex; flex-direction: column; }
+.task-files-empty { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+.task-file { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-1); border-top: var(--line); font-size: var(--text-sm); line-height: 1.36; }
+.task-file-name { font-weight: var(--weight-bold); color: inherit; overflow-wrap: anywhere; margin-right: auto; }
+.task-file-size { color: var(--color-text-muted); }
+.task-file-small { font-size: var(--text-xs, var(--text-sm)); }
+.task-files-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.task-files-hint { color: var(--color-text-muted); font-size: var(--text-sm); }
+.task-files-note { color: var(--color-text-muted); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
 
 /* The chats column: "Chats" with its small Rename and Delete beside it (2026-11-11, the owner's wish). */
 .chat-list-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }

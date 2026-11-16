@@ -294,3 +294,27 @@ test('search finds a task by its words, its home or its page, open or done, what
   await expect(page.locator('.task-row .task-words')).toHaveText([/Write the offer/]);
   await expect(page).toHaveURL(/\/tasks$/);
 });
+
+// Files on a task (the owner's ask, 2026-11-16): the task pop-up's Files box keeps a file on this computer and opens it.
+test('a task’s Files box: Add file puts a file on the task, its name opens it, Remove takes it off', async ({ page, app }) => {
+  const task = await fetch(`${app.url}/api/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Send the workshop brochure' }) }).then((r) => r.json());
+  await page.goto(`${app.url}/tasks`);
+  await page.getByRole('tab', { name: /^All/ }).click();
+  await page.getByText('Send the workshop brochure').first().click();
+  const modal = page.getByRole('dialog', { name: 'Task' });
+  const box = modal.getByRole('region', { name: 'Files' });
+  await expect(box.getByText('No files yet.')).toBeVisible();
+  await box.getByLabel('Choose files to add').setInputFiles({ name: 'Brochure.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 brochure') });
+  await expect(box.getByRole('heading')).toHaveText('Files · 1');
+  await expect(box.getByRole('link', { name: 'Brochure.pdf' })).toHaveAttribute('href', /^\/files\/[0-9a-f]{64}$/);
+  await expect(modal).toBeVisible();
+  if (process.env.SHOT) await modal.screenshot({ path: process.env.SHOT });
+  expect((await fetch(`${app.url}/api/tasks/${task.id}/files`).then((r) => r.json())).map((f) => f.name)).toEqual(['Brochure.pdf']);
+
+  await modal.getByRole('button', { name: 'Close' }).click();
+  await expect(modal).toBeHidden();
+  await page.getByText('Send the workshop brochure').first().click();
+  await expect(box.getByRole('link', { name: 'Brochure.pdf' })).toBeVisible();
+  await box.getByRole('button', { name: 'Remove from this task' }).click();
+  await expect(box.getByText('No files yet.')).toBeVisible();
+});

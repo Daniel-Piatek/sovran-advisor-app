@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 72;
+export const SCHEMA_VERSION = 73;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -382,6 +382,8 @@ const steps = {
     if (columns.length && !columns.includes('endless')) db.exec('ALTER TABLE boards ADD COLUMN endless INTEGER NOT NULL DEFAULT 0 CHECK (endless IN (0, 1))');
     remakeBoardItems(db);
   },
+  // 73: files on a task (the task pop-up's Files box): task_files is new (made from schema.sql). Nothing else changes.
+  73() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.
