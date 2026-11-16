@@ -14,8 +14,13 @@
 html.in-app .eyebrow, html.in-app .wrap > h1, html.in-app .intro, html.in-app #films { display: none; }
 html.in-app .wrap { padding-block: 4px 24px; }
 html.in-app body { background: transparent; }
-.back-all { display: none; text-decoration: none; margin-left: 8px; border-color: var(--ink); }
+.back-all { display: none; text-decoration: none; }
 html.in-app .back-all { display: inline-block; }
+/* Inside the app (2026-11-16, the owner's wish): the scene buttons are the video's chapters, small, first;
+   then a line across, then Start again and a red Back to all videos. */
+html.in-app #ends { order: 9; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 6px; }
+html.in-app #scenes .scene { font-size: .72rem; padding: 2px 9px; }
+html.in-app .back-all { background: var(--crimson); border-color: var(--crimson); color: var(--crimson-ink); margin-left: 0; }
 </style>
 <script>
 // Inside the app's Tour page: say so to the page's CSS, and follow the app's Light/Dark.
@@ -373,7 +378,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 
   <div class="below">
     <div class="bar" aria-hidden="true"><span id="bar"></span></div>
-    <div class="ctrl"><button class="btn" type="button" id="again">Start again</button><a class="btn back-all" id="back-all" href="/tour" target="_top">← Back to all videos</a></div>
+    <div class="ctrl" id="ends"><button class="btn" type="button" id="again">Start again</button><a class="btn back-all" id="back-all" href="/tour" target="_top">← Back to all videos</a></div>
     <div class="ctrl" id="films" role="group" aria-label="Films"><span class="small" style="font-weight:700">Films:</span></div>
     <div class="ctrl" id="scenes" role="group" aria-label="Scenes"></div>
   </div>
