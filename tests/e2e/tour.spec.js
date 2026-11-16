@@ -44,7 +44,7 @@ test('a film plays inside the app, without its own title, and All videos and Bac
   await expect(film.locator('html')).toHaveClass(/in-app/);
   await expect(film.locator('.wrap > h1')).toBeHidden();
   await expect(page.getByRole('link', { name: 'All videos', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Back to all videos' }).click();
+  await film.getByRole('link', { name: '← Back to all videos' }).click();
   await expect(page.locator('.tour-card')).toHaveCount(6);
 });
 

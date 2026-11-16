@@ -14,6 +14,8 @@
 html.in-app .eyebrow, html.in-app .wrap > h1, html.in-app .intro, html.in-app #films { display: none; }
 html.in-app .wrap { padding-block: 4px 24px; }
 html.in-app body { background: transparent; }
+.back-all { display: none; text-decoration: none; margin-left: 8px; border-color: var(--ink); }
+html.in-app .back-all { display: inline-block; }
 </style>
 <script>
 // Inside the app's Tour page: say so to the page's CSS, and follow the app's Light/Dark.
@@ -307,7 +309,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 
   <div class="below">
     <div class="bar" aria-hidden="true"><span id="bar"></span></div>
-    <div class="ctrl"><button class="btn" type="button" id="again">Start again</button></div>
+    <div class="ctrl"><button class="btn" type="button" id="again">Start again</button><a class="btn back-all" id="back-all" href="/tour" target="_top">← Back to all videos</a></div>
     <div class="ctrl" id="scenes" role="group" aria-label="Scenes"></div>
   </div>
 </div>
@@ -715,6 +717,7 @@ function go(i) { setPaused(false); loop(i); }
 pp.addEventListener('click', () => setPaused(!paused));
 stage.addEventListener('click', () => setPaused(!paused));
 document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.target.closest?.('button')) { e.preventDefault(); setPaused(!paused); } });
+$('back-all').addEventListener('click', (e) => { try { window.parent.document.dispatchEvent(new CustomEvent('app-navigate', { detail: '/tour' })); e.preventDefault(); } catch { /* the link goes there itself */ } });
 $('again').addEventListener('click', () => go(0));
 const snd = $('snd');
 if (Object.keys(CLIPS).length) $('sound').hidden = false;

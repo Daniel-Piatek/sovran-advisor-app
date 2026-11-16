@@ -2,7 +2,7 @@
 // sidebar, just above Settings. First the basics (everything that works straight after you install),
 // then one short film for each part you can switch on, each card with its own "Switch it on".
 //   /tour               the films, as cards
-//   /tour?film=<id>     one video playing, with "All videos" above it and "Back to all videos" below
+//   /tour?film=<id>     one video playing, with "All videos" above it and "Back to all videos" beside Start again
 // The films themselves are pages in public/tour/ (basics.html, extras.html) with the owner's voice as
 // mp3 files in public/tour/voice/. They are made from the published films by build-app-films.py in the
 // project files (student-guide/tour/); inside the app they hide their own title and follow Light/Dark.
@@ -94,9 +94,7 @@ function showFilm(film) {
     el('div', { class: 'tour-film-head' },
       el('h1', { class: 'top-bar-title' }, film.title),
       extra ? stateOf(extra) : null),
-    frame,
-    // After a video: a clear way back to the others (2026-11-16, the owner's wish).
-    el('p', { class: 'tour-after' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'Back to all videos')));
+    frame); // the video's own "Back to all videos" sits beside its Start again (build-app-films.py)
 }
 
 export function showTour() {
