@@ -65,6 +65,11 @@ function showList() {
         el('h2', { class: 'tour-hero-title' }, 'The basics'),
         el('p', {}, 'What each part of Sovran Advisor is for, how they fit together, and what to try first. Everything in it works straight after you install.'),
         el('a', { class: 'button button-primary', href: '/tour?film=basics' }, icon('play'), 'Watch'))),
+    // The Library key first (2026-11-17, the owner's wish): most people will do this before the six below. Gold, a little raised.
+    el('p', { class: 'tour-libline' }, el('span', { class: 'tour-label tour-libline-label' }, el('i', { class: 'tour-dot' }), 'Do this first'),
+      el('b', {}, 'Your Sovran Library'),
+      ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
+      el('a', { class: 'button tour-libline-go', href: '/settings#sovran-library' }, 'Paste your key →')),
     el('h2', { class: 'tour-label tour-extras-label' }, 'More you can switch on · one short video each'),
     el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, style: `--tour-kind: var(--kind-${extra.kind})` },
       el('h3', { class: 'tour-card-title' }, extra.title),
@@ -72,9 +77,6 @@ function showList() {
       el('div', { class: 'tour-card-foot' },
         el('a', { class: 'tour-watch', href: `/tour?film=${extra.id}` }, el('span', { class: 'tour-play-sm' }, icon('play')), 'Watch'),
         stateOf(extra))))),
-    el('p', { class: 'tour-libline' }, el('i', { class: 'tour-dot' }), el('b', {}, 'Your Sovran Library'),
-      ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
-      el('a', { class: 'tour-open', href: '/settings#sovran-library' }, 'Paste your key →')),
   );
 }
 
