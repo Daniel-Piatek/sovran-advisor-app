@@ -9,7 +9,7 @@ Reports is where you read your own Sovran reports: the Sovran Pattern now, later
 
 - Open **Reports** in the sidebar. Each report is a card with its version, the day it was approved, its length and its sections.
 - Press a card to read the report. It opens on its own ivory page, in the look of the printed report: the crown, the title and the Live Sovran wordmark at the top, a gold label on each part. **Contents** takes you to any section, and the downloads are at the top.
-- **Download the PDF** saves the report as a white PDF, made for printing. **Download the file for your AI** saves a text file you can give to any AI you use: a short note on how to read the report, then the whole report.
+- **PDF download**, the small link under the title, saves the report as a white PDF, made for printing. Reading here comes first: this is where you highlight and comment.
 - **Highlight and comment.** Select some words in a report: a small bar offers **Highlight** or **Comment**. Highlights show in soft gold; your comments sit beside the section (under it on a phone). Press a highlight to change its comment or remove it (with Undo). **Your highlights** at the top lists them all.
 - Your highlights and comments stay only in this app. The report in your Sovran Library is never changed, so you always keep a clean copy.
 - Ask your assistant about a report ("what does my Pattern say about my gifts?"): it reads your reports too, with your highlights and comments, so you can ask about what struck you.

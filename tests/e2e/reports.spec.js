@@ -50,15 +50,15 @@ test('the list, then a report to read with its contents and its downloads', asyn
   await expect(page.locator('.report-part-label')).toHaveText(['Part One', 'Part Two']);
   await expect(page.locator('#section-before-you-begin .report-part-label')).toHaveCount(0);
   await expect(page.locator('#section-your-gifts .report-text > p.report-lede')).toHaveCount(1);
-  await expect(page.locator('.report-cover .report-file')).toHaveText([/Download the PDF/, /Download the file for your AI/]);
+  await expect(page.locator('.report-cover .report-file')).toHaveText([/PDF download/]); // only the white PDF; no file for your AI
   const contents = page.getByRole('navigation', { name: 'Contents' });
   await expect(contents.getByRole('button')).toHaveText(['Before You Begin', 'Your Gifts', 'The Door That Opens']);
   await contents.getByRole('button', { name: 'The Door That Opens' }).click();
   await expect(page.locator('#section-the-door-that-opens')).toBeInViewport();
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download the PDF' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'PDF download' }).click()]);
   expect(download.suggestedFilename()).toBe('Your-Pattern.pdf');
-  await expect(page.getByRole('link', { name: 'Download the file for your AI' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /for your AI/ })).toHaveCount(0);
 });
 
 test.describe(() => {

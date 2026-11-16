@@ -3,7 +3,7 @@
 //   /reports/:report   one report to read, section by section, with its contents at the top and its downloads
 // A report reads in its own Ivory & Gold look (2026-11-16, the owner's wish, from the Sovran Machine's machine/styles/report.css):
 // a warm ivory page, a cover at the top (the crimson crown, the title in Gloock, a gold double rule, the Live Sovran wordmark),
-// gold PART labels, a crimson drop cap on each part's first paragraph, and one quiet Download the PDF (the white print PDF).
+// gold PART labels, a crimson drop cap on each part's first paragraph, and one small, quiet PDF download (the white print PDF; the file for your AI is not offered, the owner's wish).
 // The server is reports.js (GET /api/reports, /api/reports/:report, /api/reports/:report/files/:kind). A report's text is
 // Markdown, drawn with markdown-it (no HTML inside it is ever drawn). They come from the Sovran Library with your key.
 
@@ -13,8 +13,6 @@ import { app, screen, onLeave } from './shell.js';
 import { markReport } from './report-marks.js';
 
 const markdown = markdownit({ html: false, linkify: true });
-const FILE_WORDS = { pdf: 'Download the PDF', 'for-your-ai': 'Download the file for your AI' };
-const FILE_ORDER = ['pdf', 'for-your-ai']; // the PDF first
 const PART_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 
 const dayWords = (day) => (day ? new Date(`${String(day).slice(0, 10)}T12:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '');
@@ -24,11 +22,13 @@ const metaLine = (r) => [
   r.words ? `${Number(r.words).toLocaleString()} words` : '',
 ].filter(Boolean).join(' · ');
 
-const downloads = (r) => (r.files.length
-  ? el('div', { class: 'report-files' }, ...[...r.files].sort((a, b) => FILE_ORDER.indexOf(a.kind) - FILE_ORDER.indexOf(b.kind)).map((f) => el('a', {
-    class: 'button button-quiet report-file', href: `/api/reports/${r.report}/files/${f.kind}`, download: f.file_name, 'data-kind': f.kind,
-  }, icon('down'), ` ${FILE_WORDS[f.kind] ?? f.file_name}`)))
-  : null);
+// Only the white PDF is offered, as one small quiet link: reading here comes first (the owner's wish, 2026-11-16).
+const downloads = (r) => {
+  const pdf = r.files.find((f) => f.kind === 'pdf');
+  return pdf ? el('div', { class: 'report-files' }, el('a', {
+    class: 'report-file', href: `/api/reports/${r.report}/files/pdf`, download: pdf.file_name, 'data-kind': 'pdf',
+  }, icon('down'), ' PDF download')) : null;
+};
 
 function reportCard(r) {
   return el('article', { class: 'report-card', 'data-report': r.report },

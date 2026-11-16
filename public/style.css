@@ -4495,7 +4495,8 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .report-card-meta { font-size: var(--text-sm); color: var(--color-text-muted); }
 .report-card-sections { font-size: var(--text-sm); color: var(--color-text-muted); }
 .report-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.report-file { border: var(--line); }
+.report-file { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--color-text-muted); text-decoration: none; }
+.report-file:hover { color: var(--color-text); }
 .report-head { display: grid; gap: var(--space-2); margin: var(--space-4) 0 var(--space-6); }
 .report-title { font-size: var(--text-2xl); }
 .report-meta { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
