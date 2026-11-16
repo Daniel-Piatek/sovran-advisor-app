@@ -5,6 +5,7 @@
 
 import { el, request, shortDate, clockTime } from './ui.js';
 
+const STILL_MS = 3 * 60 * 1000; // a step unchanged this long: say what to do
 const SHOWN = 8; // what is new: the first few, then "and N more"
 const MARKS = { waiting: '○', doing: '…', done: '✓', skipped: '–', failed: '✕' };
 const HELP_LINE = 'Still stuck? Post in the Sovran WhatsApp group with a screenshot of this page.';
@@ -26,10 +27,15 @@ function newsList(news) {
     ...(news.length > SHOWN ? [el('li', { class: 'update-more' }, `and ${news.length - SHOWN} more`)] : []));
 }
 
+// The steps, each with its mark; the one under way turns (a ring), so it is clear the update is working.
 function stepList(steps) {
-  return el('ol', { class: 'update-steps', 'aria-label': 'Steps' }, ...steps.map((s) => el('li', { 'data-state': s.state },
-    el('span', { class: 'update-mark', 'aria-hidden': 'true' }, MARKS[s.state] ?? '○'),
-    el('span', {}, s.label))));
+  const working = steps.some((s) => s.state === 'doing');
+  return el('div', {},
+    el('ol', { class: 'update-steps', 'aria-label': 'Steps' }, ...steps.map((s) => el('li', { 'data-state': s.state },
+      s.state === 'doing' ? el('span', { class: 'update-mark update-turning', 'aria-hidden': 'true' })
+        : el('span', { class: 'update-mark', 'aria-hidden': 'true' }, MARKS[s.state] ?? '○'),
+      el('span', {}, s.label, s.state === 'doing' ? '…' : '')))),
+    working ? el('p', { class: 'update-working', role: 'status' }, 'Updating. This can take a few minutes. Keep this page open: it starts again by itself when it is done.') : null);
 }
 
 // After a restart: wait for the app to go, then to come back, then load the page again.
@@ -44,7 +50,8 @@ async function waitForRestart(say) {
 }
 
 export function updatesSection() {
-  const title = el('h2', { class: 'settings-title' }, 'Updates');
+  const titleWords = el('span', {}, 'Updates'); // its own span: the folded Settings moves it into the button that opens the part
+  const title = el('h2', { class: 'settings-title' }, titleWords);
   const body = el('div', { class: 'update-body', 'aria-live': 'polite' });
   const section = el('section', { class: 'settings-part', 'aria-label': 'Updates' }, title,
     el('p', { class: 'empty' }, 'Get the newest version of Sovran Advisor. Your notes, journal, people, tasks and settings stay as they are, and a whole copy of them is made first.'),
@@ -59,6 +66,7 @@ export function updatesSection() {
   async function load() {
     try { state = await request('GET', '/api/update'); } catch { body.replaceChildren(say('Whether there is an update couldn’t be loaded.')); return; }
     draw();
+    if (ready() || state.progress?.running) section.open?.(); // an update waiting, or under way: its part opens by itself
     if (state.progress?.running) follow();
   }
 
@@ -76,14 +84,23 @@ export function updatesSection() {
   }
 
   // While it runs: the steps with their ticks, every second; at the end, the result (and the restart).
+  // Follows the steps until the end. The last steps can finish and the app restart between two looks: a look that gets no
+  // answer means it is starting again, never a page left standing on a step (2026-11-16: it looked stuck on "The new version").
   async function follow() {
+    let gone = false;
+    let seen = '';
+    let since = Date.now();
+    let told = false;
     for (;;) {
-      try { state = await request('GET', '/api/update'); } catch { break; } // the app is restarting
+      try { state = await request('GET', '/api/update'); } catch { gone = true; break; } // the app is restarting
       draw();
       if (!state.progress?.running) break;
+      const now = JSON.stringify(state.progress.steps);
+      if (now !== seen) { seen = now; since = Date.now(); told = false; }
+      if (!told && Date.now() - since > STILL_MS) { told = true; body.append(say('This is taking longer than usual. Reload this page: if the update has finished, it says so. If it still shows this step, post in the Sovran WhatsApp group with a screenshot of this page.')); }
       await new Promise((resolve) => setTimeout(resolve, 700));
     }
-    if (!state.progress || state.progress.result?.restarting) {
+    if (gone || !state.progress || state.progress.result?.restarting) {
       body.append(say('Starting again… this page comes back by itself.'));
       waitForRestart((text) => body.append(say(text)));
     }
@@ -91,7 +108,7 @@ export function updatesSection() {
 
   function draw() {
     const s = state;
-    title.replaceChildren('Updates', ...(ready() && !s.progress?.running ? [' ', el('span', { class: 'update-ready' }, 'Update ready')] : []));
+    titleWords.replaceChildren('Updates', ...(ready() && !s.progress?.running ? [' ', el('span', { class: 'update-ready' }, 'Update ready')] : []));
     const parts = [];
     const progress = s.progress;
 

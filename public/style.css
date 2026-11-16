@@ -4560,3 +4560,19 @@ mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-o
 .report-my-quote { font-size: var(--text-sm); }
 .report-my-comment { font-size: var(--text-sm); color: var(--color-text-muted); white-space: pre-wrap; }
 .report-my-item.is-gone .report-my-quote { color: var(--color-text-muted); }
+
+/* Settings, folded (public/settings-sections.js): each part shows its name with an arrow to its left, and one short line
+   where the name alone doesn't say it; a click opens it. The arrow turns down when the part is open. */
+.settings-title > .settings-toggle { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.settings-toggle > .icon { flex: none; display: inline-flex; color: var(--color-text); transition: transform 120ms ease; transform: rotate(90deg); }
+.settings-part.is-closed .settings-toggle > .icon { transform: none; }
+.settings-toggle:hover { text-decoration: underline; }
+.settings-hint { margin: 0 0 var(--space-1) calc(1em + var(--space-2)); font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.settings-part.is-closed > :not(.settings-title, .settings-hint) { display: none; }
+.settings-part:not(.is-closed) > .settings-hint { display: none; } /* open, the part's own words say it */
+@media (prefers-reduced-motion: reduce) { .settings-toggle > .icon { transition: none; } }
+
+/* Settings › Updates: the step under way turns, and a line says the update is working. */
+.update-mark.update-turning { display: inline-block; flex: 0 0 auto; align-self: center; margin: 0 0.225em; box-sizing: border-box; width: 0.8em; height: 0.8em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: working-turn 0.8s linear infinite; }
+.update-working { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text); line-height: var(--line-height-short); }
+@media (prefers-reduced-motion: reduce) { .update-mark.update-turning { animation: none; } }

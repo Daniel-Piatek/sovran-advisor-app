@@ -5,7 +5,8 @@
 // changed and every step it took, asked for or was refused.
 
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
-import { app, screen, loadCourse } from './shell.js';
+import { app, screen, loadCourse, onLeave } from './shell.js';
+import { foldSettings } from './settings-sections.js';
 import { listedModules, switchModule, moduleOn } from './modules.js';
 import { googleSection, googleCalendarSection } from './google.js';
 import { readTimings, BUDGET_MS } from './timings.js';
@@ -481,6 +482,7 @@ export async function showSettings() {
       el('p', { class: 'empty' }, 'Every switch you changed and every step your assistant took, asked for or was refused, newest first.'),
       logFold),
   );
+  onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)
 
   function draw({ permissions, allowed = [], activity }) {
     allowedFold.say(allowed.length, ['kind of step', 'kinds of step']);
