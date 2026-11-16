@@ -34,7 +34,7 @@ test('Switch it on switches the part on, and its card offers to open it', async 
   if (test.info().project.name !== 'phone') await expect(page.locator('.sidebar-link[data-section="Tasks"]')).toBeVisible();
 });
 
-test('a film plays inside the app, without its own title, and All films goes back', async ({ page, app }) => {
+test('a film plays inside the app, without its own title, and All videos and Back to all videos go back', async ({ page, app }) => {
   await page.goto(`${app.url}/tour`);
   await page.locator('.tour-card[data-film="planner"]').getByRole('link', { name: 'Watch' }).click();
   await expect(page).toHaveURL(/\/tour\?film=planner$/);
@@ -43,7 +43,8 @@ test('a film plays inside the app, without its own title, and All films goes bac
   await expect(film.locator('#caph')).toHaveText('Switch on Planner');
   await expect(film.locator('html')).toHaveClass(/in-app/);
   await expect(film.locator('.wrap > h1')).toBeHidden();
-  await page.getByRole('link', { name: 'All films' }).click();
+  await expect(page.getByRole('link', { name: 'All videos', exact: true })).toBeVisible();
+  await film.getByRole('link', { name: '← Back to all videos' }).click();
   await expect(page.locator('.tour-card')).toHaveCount(6);
 });
 
@@ -54,4 +55,26 @@ test('the basics film and its voice are served by the app', async ({ page, app }
   const voice = await page.request.get(`${app.url}/tour/voice/basics/t01-00.mp3`);
   expect(voice.status()).toBe(200);
   expect(voice.headers()['content-type']).toBe('audio/mpeg');
+});
+
+test('the Sovran Library line opens Settings at the key box, ready to paste', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour`);
+  await page.getByRole('link', { name: 'Paste your key →' }).click();
+  await expect(page).toHaveURL(/\/settings#sovran-library$/);
+  await expect(page.getByRole('textbox', { name: 'Library key' })).toBeFocused();
+  await expect(page.getByRole('textbox', { name: 'Library key' })).toBeInViewport();
+});
+
+test('the next and previous chapter buttons and the arrow keys move a chapter, within that video', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour?film=planner`);
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#caph')).toHaveText('Switch on Planner');
+  await film.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(film.locator('#caph')).toHaveText('Plan your day');
+  await film.locator('body').press('ArrowRight');
+  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await film.getByRole('button', { name: 'Next chapter' }).click(); // the last chapter of this video: it stays
+  await expect(film.locator('#caph')).toHaveText('A highlight, and closing the day');
+  await film.getByRole('button', { name: 'Previous chapter' }).click();
+  await expect(film.locator('#caph')).toHaveText('Plan your day');
 });
