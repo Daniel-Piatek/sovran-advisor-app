@@ -32,7 +32,7 @@ const downloads = (r) => {
 
 // What each kind of report is, for its card (the owner's wish, 2026-11-16: a description, not the list of sections).
 const ABOUT = [
-  [/pattern/i, 'Your Pattern is about your wholeness: the gifts that come to you naturally, the challenges that are those same gifts held back, and how both belong to the one whole you. It ends by opening a way of living your life as that wholeness.'],
+  [/pattern/i, 'Rooted in your own design, your Pattern shows your natural gifts and your challenges as one whole: you are the Sovran Self, already whole, perfect and complete, with nothing to fix. It opens a way of living from that wholeness, meeting every part of yourself as it is and following the knowing that has always been inside you.'],
   [/layered-portrait|portrait/i, 'One page that grows with you: each part of the Sovran Quest adds a layer.'],
 ];
 const aboutOf = (r) => r.description || ABOUT.find(([match]) => match.test(`${r.report} ${r.title}`))?.[1] || '';
