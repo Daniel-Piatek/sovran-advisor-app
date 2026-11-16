@@ -50,7 +50,11 @@ test('the list, then a report to read with its contents and its downloads', asyn
   await expect(page.locator('.report-part-label')).toHaveText(['Part One', 'Part Two']);
   await expect(page.locator('#section-before-you-begin .report-part-label')).toHaveCount(0);
   await expect(page.locator('#section-your-gifts .report-text > p.report-lede')).toHaveCount(1);
-  await expect(page.locator('.report-cover .report-file')).toHaveText([/PDF download/]); // only the white PDF; no file for your AI
+  await expect(page.locator('.report-cover .report-file')).toHaveText([/PDF download/]);
+  // Wide: the ivory sheet with a comments column beside it, headed Your comments, with a how-to while there are none.
+  const head = page.locator('.report-comments-head');
+  if (test.info().project.name === 'phone') await expect(head).toBeHidden();
+  else await expect(head).toContainText('Your commentsSelect any words in the report'); // only the white PDF; no file for your AI
   const contents = page.getByRole('navigation', { name: 'Contents' });
   await expect(contents.getByRole('button')).toHaveText(['Before You Begin', 'Your Gifts', 'The Door That Opens']);
   await contents.getByRole('button', { name: 'The Door That Opens' }).click();

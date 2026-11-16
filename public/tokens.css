@@ -87,6 +87,8 @@
   --report-rule: #d9c14b;       /* brand Gold: rules and labels */
   --report-initial: #c71f42;    /* brand Crimson: the drop cap */
   --report-column: 680px;       /* the reading column */
+  --report-sheet: calc(var(--space-8) + var(--report-column) + var(--space-12)); /* the ivory sheet, wide screens */
+  --report-side: #fbfbfb;       /* brand White: the comments column beside the ivory sheet, and each comment */
 
   /* Fonts */
   --font-heading: "Gloock", Georgia, serif;                       /* headings and page titles, Regular only */

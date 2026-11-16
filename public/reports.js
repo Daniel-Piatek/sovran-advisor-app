@@ -110,6 +110,8 @@ async function showReport(name) {
     el('header', { class: 'top-bar' }, back),
     el('article', { class: 'report-paper' },
       cover,
+      el('div', { class: 'report-comments-head' }, el('p', { class: 'report-comments-title' }, 'Your comments'),
+        el('p', { class: 'report-comments-hint' }, 'Select any words in the report to highlight them or add a comment. Your comments show here, level with their words.')),
       ...(contents ? [contents] : []),
       list,
       body),
