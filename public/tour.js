@@ -2,7 +2,7 @@
 // sidebar, just above Settings. First the basics (everything that works straight after you install),
 // then one short film for each part you can switch on, each card with its own "Switch it on".
 //   /tour               the films, as cards
-//   /tour?film=<id>     one film playing, with "All films" to go back
+//   /tour?film=<id>     one video playing, with "All videos" above it and "Back to all videos" below
 // The films themselves are pages in public/tour/ (basics.html, extras.html) with the owner's voice as
 // mp3 files in public/tour/voice/. They are made from the published films by build-app-films.py in the
 // project files (student-guide/tour/); inside the app they hide their own title and follow Light/Dark.
@@ -65,16 +65,16 @@ function showList() {
         el('h2', { class: 'tour-hero-title' }, 'The basics'),
         el('p', {}, 'What each part of Sovran Advisor is for, how they fit together, and what to try first. Everything in it works straight after you install.'),
         el('a', { class: 'button button-primary', href: '/tour?film=basics' }, icon('play'), 'Watch'))),
-    el('h2', { class: 'tour-label tour-extras-label' }, 'More you can switch on · one short film each'),
+    el('h2', { class: 'tour-label tour-extras-label' }, 'More you can switch on · one short video each'),
     el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, style: `--tour-kind: var(--kind-${extra.kind})` },
-      el('h3', { class: 'tour-card-title' }, el('i', { class: 'tour-dot' }), extra.title),
+      el('h3', { class: 'tour-card-title' }, extra.title),
       el('p', {}, extra.text),
       el('div', { class: 'tour-card-foot' },
-        el('a', { class: 'tour-watch', href: `/tour?film=${extra.id}` }, icon('play'), 'Watch'),
+        el('a', { class: 'tour-watch', href: `/tour?film=${extra.id}` }, el('span', { class: 'tour-play-sm' }, icon('play')), 'Watch'),
         stateOf(extra))))),
     el('p', { class: 'tour-libline' }, el('i', { class: 'tour-dot' }), el('b', {}, 'Your Sovran Library'),
       ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
-      el('a', { class: 'tour-open', href: '/settings' }, 'Open Settings →')),
+      el('a', { class: 'tour-open', href: '/settings#sovran-library' }, 'Paste your key →')),
   );
 }
 
@@ -90,11 +90,13 @@ function showFilm(film) {
   });
   const extra = EXTRAS.find((x) => x.id === film.id);
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, el('a', { class: 'back-link', href: '/tour' }, icon('back'), ' All films')),
+    el('header', { class: 'top-bar' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All videos')),
     el('div', { class: 'tour-film-head' },
       el('h1', { class: 'top-bar-title' }, film.title),
       extra ? stateOf(extra) : null),
-    frame);
+    frame,
+    // After a video: a clear way back to the others (2026-11-16, the owner's wish).
+    el('p', { class: 'tour-after' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'Back to all videos')));
 }
 
 export function showTour() {
