@@ -43,6 +43,7 @@ import { loadModules } from './modules.js';
 import { showWelcome, welcomeState } from './welcome.js';
 import { showMailImport } from './mail.js';
 import { showMailApp } from './mail-app.js';
+import { showTour } from './tour.js';
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
@@ -64,6 +65,7 @@ startRouter([
   { path: /^\/boards\/([0-9a-f-]{36})$/, show: showBoard },
   { path: /^\/settings$/, show: showSettings },
   { path: /^\/library$/, show: showLibrary },
+  { path: /^\/tour$/, show: showTour },
   { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },

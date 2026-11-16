@@ -128,6 +128,7 @@ const contentTypes = {
   '.ico': 'image/x-icon',
   '.icns': 'image/icns',
   '.ttf': 'font/ttf',
+  '.mp3': 'audio/mpeg', // the Tour films' voice (public/tour/voice/)
   '.txt': 'text/plain; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
 };

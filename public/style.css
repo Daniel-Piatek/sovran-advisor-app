@@ -49,7 +49,7 @@ body {
 
 .sidebar-link:hover { color: var(--color-text); }
 
-/* Settings and Library sit at the foot of the column. Sections can be dragged into your own order:
+/* Tour, Settings and Library sit at the foot of the column. Sections can be dragged into your own order:
    a thin line in the text colour shows where one will land, the one being moved is paler. */
 .sidebar .more-menu + .sidebar-pinned { margin-top: auto; }
 .sidebar-link.drop-before { border-top-color: var(--color-text); }
@@ -3938,6 +3938,7 @@ html[data-section="person"] { --section: var(--kind-people); }
 html[data-section="timeline"] { --section: var(--kind-timeline); }
 html[data-section="key_element"] { --section: var(--kind-life); }
 html[data-section="assistant"] { --section: var(--kind-assistant); }
+html[data-section="play"] { --section: var(--color-accent); } /* the Tour: Crimson, as in the approved draft (2026-11-16) */
 html[data-section] .page { border-top: calc(var(--border-width) * 3) solid var(--section, var(--color-border)); }
 html[data-section] .page.planner-page, html[data-section] .page.page-journal, html[data-section] .page.assistant-page { border-top: 0; }
 html[data-section] .page.planner-page .tray, html[data-section] .page.planner-page .plan-board,
@@ -4425,3 +4426,41 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .cal-add-how { margin: var(--space-2) 0; font-size: var(--text-sm); }
 .cal-add-how > summary { cursor: pointer; font-weight: 600; }
 .cal-add-how ol { margin: var(--space-2) 0; padding-left: 1.4em; display: grid; gap: var(--space-1); }
+
+/* ---- The Tour (tour.js, 2026-11-16): the basics film first, then a card for each part you can switch on ----
+   Text in the cards is set close (1.36), the owner's spacing for short card text. */
+.tour-label { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: var(--weight-button); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); margin: 0; }
+.tour-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-4); align-items: center; border: var(--line); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-6); }
+.tour-hero-text { display: grid; gap: var(--space-2); justify-items: start; }
+.tour-hero-text p { margin: 0 0 var(--space-2); line-height: 1.36; }
+.tour-hero-title { font-family: var(--font-heading); font-weight: 400; font-size: var(--text-xl); margin: 0; line-height: var(--line-height-tight); }
+.tour-hero-still { display: block; text-decoration: none; }
+.tour-still { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-md); background: var(--color-surface); border: var(--line); overflow: hidden; display: grid; place-items: center; }
+.tour-still-app { position: absolute; inset: 10% 8% 16%; background: var(--color-bg); border-radius: var(--radius-sm); display: grid; grid-template-columns: 22% 1fr; gap: 6%; padding: 4%; }
+.tour-still-app span { background: var(--color-surface); border-radius: 4px; }
+.tour-still-app b { display: grid; gap: 8%; align-content: start; }
+.tour-still-app i { height: 10px; border-radius: 3px; background: var(--color-surface); }
+.tour-still-app i:first-child { width: 50%; height: 16px; background: var(--color-text); opacity: 0.7; }
+.tour-play { position: relative; width: 56px; height: 56px; border-radius: 50%; background: var(--color-accent); color: var(--color-accent-text); display: grid; place-items: center; }
+.tour-play svg { width: 28px; height: 28px; }
+.tour-still-caption { position: absolute; left: 0; right: 0; bottom: 0; background: var(--color-accent); color: var(--color-accent-text); font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-xs); padding: 6px var(--space-3); }
+.tour-hero-still:hover .tour-play, .tour-hero-still:focus-visible .tour-play { transform: scale(1.06); }
+.tour-extras-label { margin-bottom: var(--space-3); }
+.tour-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.tour-card { border: var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
+.tour-card p { margin: 0; font-size: var(--text-sm); line-height: 1.36; color: var(--color-text-muted); }
+.tour-card-title { font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-base); margin: 0; display: flex; align-items: center; gap: var(--space-2); }
+.tour-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tour-kind, var(--kind-assistant)); flex: none; display: inline-block; }
+.tour-card { grid-template-rows: auto 1fr auto; }
+.tour-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding-top: var(--space-1); }
+.tour-watch { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-sm); color: var(--color-text); text-decoration: none; }
+.tour-watch:hover { text-decoration: underline; }
+.tour-state { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-family: var(--font-ui); font-size: var(--text-sm); }
+.tour-on { font-size: var(--text-xs); font-weight: var(--weight-button); border-radius: 999px; padding: 1px var(--space-2); border: var(--border-width) solid var(--kind-life); }
+.tour-open { color: var(--color-text); font-weight: var(--weight-bold); }
+.tour-libline .tour-dot { margin-right: var(--space-2); }
+.tour-libline { margin: var(--space-4) 0 0; padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); font-size: var(--text-sm); line-height: 1.36; }
+.tour-film-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin: calc(-1 * var(--space-3)) 0 var(--space-3); }
+.tour-film-head .top-bar-title { margin: 0; }
+.tour-frame { display: block; width: 100%; min-height: 70vh; border: 0; background: transparent; }
+@media (max-width: 900px) { .tour-cards { grid-template-columns: 1fr; } .tour-hero { grid-template-columns: 1fr; } }
