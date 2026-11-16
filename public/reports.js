@@ -32,7 +32,7 @@ const downloads = (r) => {
 
 // What each kind of report is, for its card (the owner's wish, 2026-11-16: a description, not the list of sections).
 const ABOUT = [
-  [/pattern/i, 'A mirror, not a definition. Your Pattern follows what comes to you naturally, what happens to it when life presses on it, and how it opens again, in five parts that end with a door. Read it slowly, mark what rings true, and bring your questions to your assistant.'],
+  [/pattern/i, 'Your Pattern is about your wholeness: the gifts that come to you naturally, the challenges that are those same gifts held back, and how both belong to the one whole you. It ends by opening a way of living your life as that wholeness.'],
   [/layered-portrait|portrait/i, 'One page that grows with you: each part of the Sovran Quest adds a layer.'],
 ];
 const aboutOf = (r) => r.description || ABOUT.find(([match]) => match.test(`${r.report} ${r.title}`))?.[1] || '';
