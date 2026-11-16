@@ -112,7 +112,7 @@ export const MODULES = [
     // Off: the tab is gone and no new one can be made; the boards are kept, and boards inside notes are not touched.
     id: 'boards',
     label: 'Boards',
-    description: 'A Boards tab in Notes: endless whiteboards to bring your notes, journal entries and Inbox items onto, with quick cards, arrows, a pen and coloured groups. Needs Writing and thinking.',
+    description: 'A Boards tab in Notes: endless whiteboards to bring your notes, journal entries and Inbox items onto, with quick cards, arrows and coloured groups. Needs Writing and thinking.',
     starter: false,
   },
   {
@@ -163,8 +163,19 @@ export const MODULES = [
     public: ['GET /o/<token>.gif'], // the one address anything outside may reach (Mail 9), and only while Mail is on
     jobs: ['mail-sync', 'mail-sender'], // Live with Gmail (Mail 4): off until switched on, stops with the module
   },
+  {
+    // Reports (2026-11-16, from APP Daniel; reports.js, public/reports.js, report-marks.js): your own Sovran reports to read,
+    // the Layered Portrait first once it begins. They come from the Sovran Library with your own key (Settings › Sovran Library);
+    // nothing is kept on this computer except your own highlights and comments (report_marks), which your assistant reads too.
+    // Off until switched on (the owner's rule: new parts ship off).
+    id: 'reports',
+    starter: false,
+    label: 'Reports',
+    description: 'A Reports page with your own Sovran reports to read, section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments; your assistant reads them with the report.',
+    nav: ['Reports'],
+    tools: ['reports_read'],
+  },
 ];
-
 const now = () => new Date().toISOString();
 const keyOf = (id) => `module.${id}`;
 const fail = (status, message) => Object.assign(new Error(message), { status });

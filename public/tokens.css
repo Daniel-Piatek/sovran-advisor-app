@@ -95,7 +95,8 @@
   --text-2xl: 2rem;     /* 32px */
 
   --line-height-tight: 1.2;
-  --line-height-base: 1.5;
+  --line-height-base: 1.44;  /* body text (the owner's rule, 2026-11-16: never 1.5 or more) */
+  --line-height-short: 1.36; /* short text in cards, boxes and captions (the same rule) */
 
   --weight-regular: 400;
   --weight-medium: 500;         /* menus */

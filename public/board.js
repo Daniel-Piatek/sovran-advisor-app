@@ -7,7 +7,7 @@
 // Inbox cards; a double click on a card that points at something calls onPeek, which opens it beside the board (public/board-peek.js).
 
 import { el, icon, request, api, undoBar } from './ui.js';
-import { inkLayer, renderStrokes } from './ink.js';
+import { inkLayer } from './ink.js';
 import { openTaskPicker, openInboxPicker } from './board-task-picker.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -428,8 +428,7 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       el('button', { type: 'button', class: 'button button-quiet', onclick: () => refForm('person') }, 'Person'),
       el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openTaskPicker({ onBoard: refsOn('tasks'), onAdd: guard(async (tasks) => { formPlace.replaceChildren(); for (const t of tasks) await addAt({ kind: 'card', ref_table: 'tasks', ref_id: t.id }); if (tasks.length) say(tasks.length === 1 ? 'The task is on the board.' : `${tasks.length} tasks are on the board.`); }) }) }, 'Task'),
       ...(endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => void openInboxPicker({ onBoard: refsOn('captures'), onAdd: guard(async (items) => { formPlace.replaceChildren(); for (const c of items) await addAt({ kind: 'card', ref_table: 'captures', ref_id: c.id }); if (items.length) say(items.length === 1 ? 'The Inbox item is on the board.' : `${items.length} Inbox items are on the board.`); }) }) }, 'Inbox')] : []),
-      ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(penOn), title: 'Draw on the board by hand', onclick: () => { penOn = !penOn; if (penOn) arrowMode = false; arrowFrom = null; say(penOn ? 'Draw with the pen. Press Pen again to move cards.' : ''); draw(); } }, 'Pen')]),
-      ...((board.strokes ?? []).some((s) => !s.faded) ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Turns what you wrote with the Pen into typed words on the board', onclick: guard(toText) }, 'To text')] : []),
+      // No Pen and no To text on any board (the owner's wish, 2026-11-16): ink drawn before still shows, and Clear drawing takes it away.
       ...((board.strokes ?? []).length ? [el('button', { type: 'button', class: 'button button-quiet', title: 'Takes away everything drawn with the Pen (Undo brings it back)', onclick: guard(clearDrawing) }, 'Clear drawing')] : []),
       ...(endless ? [] : [el('button', { type: 'button', class: 'button button-quiet', onclick: () => pageFile.click() }, 'Page')]),
       ...(board.background && !endless ? [el('button', { type: 'button', class: 'button button-quiet', onclick: guard(async () => { await request('PATCH', `/api/boards/${boardId}`, { background: null }); await refresh(); }) }, 'No page')] : []),
@@ -442,19 +441,6 @@ export async function mountBoard(host, boardId, { large = false, onOpen = null, 
       el('button', { type: 'button', class: 'button button-quiet', onclick: showAll }, 'Show all'))] : [];
     bar.replaceChildren(...(endless ? [] : [el('span', { class: 'board-title' }, icon('board'), el('strong', {}, board.title || 'Untitled board'))]), ...leadTools, addMenu, ...zoom, ...tools,
       ...(!large && onOpen ? [el('button', { type: 'button', class: 'button button-quiet', onclick: () => onOpen(board) }, 'Open')] : []));
-  }
-
-  // To text: your assistant reads the handwriting not yet turned into words; the words come as a text item and the ink fades below them.
-  async function toText() {
-    const loose = (board.strokes ?? []).filter((s) => !s.faded);
-    const picture = renderStrokes(loose, { width: WIDTH, height: HEIGHT });
-    if (!picture) return;
-    say('Your assistant is reading the handwriting…');
-    try {
-      await request('POST', `/api/boards/${boardId}/ink-to-text`, { stroke_ids: loose.map((s) => s.id), image: picture.dataUrl, x: picture.x, y: picture.y });
-      say('');
-    } catch (err) { say(err.message); return; }
-    await refresh();
   }
 
   async function refresh() {

@@ -100,6 +100,8 @@ import { writeMoveFile, moveFileName, receiveMoveFile, moveStatus, cancelMove, c
 import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
+import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
+import { listMarks, addMark, changeMark, removeMark, restoreMark } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
@@ -146,6 +148,7 @@ export function startServer({
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
   try { applyPendingMove(dataDir); } catch (err) { console.error(`The moving file could not be brought in: ${err.message}`); }
   const db = openDatabase(dataDir);
+  useReports({ dir: path.join(dataDir, 'reports') }); // Reports (reports.js): made-up reports here only without a library key (tests, demo)
   settleAnswers(db);
   settleImports(db);
   settleSends(db); // a mail that was being sent when the app stopped is never sent again by itself
@@ -291,10 +294,15 @@ export function startServer({
         const bytes = Buffer.from(picture[1], 'base64');
         if (!bytes.length || bytes.length > 3 * 1024 * 1024) return sendJson(res, 400, { error: 'That picture is empty or too large.' });
         if (!getBoard(db, strokesMatch[1])) return sendJson(res, 404, { error: 'No such board' });
+        // The reading is a helper chat, not one of yours: it is set aside (Recently deleted) as soon as it has answered, so it
+        // never fills your Chats list.
         const chat = createConversation(db, dataDir);
         fs.writeFileSync(path.join(dataDir, chat.folder, 'handwriting.png'), bytes);
-        const answered = await sendMessage(db, chat.id, 'Read the handwriting in the picture file handwriting.png (open it with the Read tool, or see it attached). Answer with only the words you read, on one line, and nothing else.',
-          { dataDir, ...ai(), mcp: { url: mcpUrl, secret: mcpSecret }, images: [path.join(dataDir, chat.folder, 'handwriting.png')] });
+        let answered;
+        try {
+          answered = await sendMessage(db, chat.id, 'Read the handwriting in the picture file handwriting.png (open it with the Read tool, or see it attached). Answer with only the words you read, on one line, and nothing else.',
+            { dataDir, ...ai(), mcp: { url: mcpUrl, secret: mcpSecret }, images: [path.join(dataDir, chat.folder, 'handwriting.png')] });
+        } finally { deleteConversation(db, chat.id); }
         const words = String(answered?.text ?? '').replace(/^["“”'\s]+|["“”'\s]+$/g, '').split('\n')[0];
         return sendJson(res, 200, { conversation_id: chat.id, item: strokesToText(db, strokesMatch[1], input.stroke_ids, words, { x: Number(input.x) || 40, y: Number(input.y) || 40 }) });
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
@@ -1564,6 +1572,48 @@ export function startServer({
         if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
         throw err;
       }
+    }
+    // Reports (module reports, reports.js): your own Sovran reports, read only.
+    //   (from the Sovran Library with the owner's key; the key never reaches the page)
+    //   GET /api/reports                       the final reports, the Layered Portrait first: [{ report, title, version, approved_on, words, sections, files }]
+    //   GET /api/reports/:report               one report with every section's text
+    //   GET /api/reports/:report/files/:kind   its pdf or its for-your-ai file, as a download
+    //   GET    /api/reports/:report/marks       your highlights and comments on it (report-marks.js), kept only here
+    //   POST   /api/reports/:report/marks       { section_key, quote, prefix?, suffix?, comment?, version? }
+    //   PATCH  /api/report-marks/:id            { comment }
+    //   DELETE /api/report-marks/:id            remove it (deleted_at); POST /api/report-marks/:id/restore brings it back
+    const marksOf = url.pathname.match(/^\/api\/reports\/([a-z0-9-]+)\/marks$/);
+    const oneMark = url.pathname.match(/^\/api\/report-marks\/([0-9a-f-]{36})(\/restore)?$/);
+    if (marksOf || oneMark) {
+      if (!reportsOn(db)) return sendJson(res, 409, { error: 'Reports is switched off in Settings › Modules.' });
+      try {
+        if (marksOf && req.method === 'GET') return sendJson(res, 200, listMarks(db, marksOf[1]));
+        if (marksOf && req.method === 'POST') return sendJson(res, 201, addMark(db, marksOf[1], await readJson(req)));
+        if (oneMark?.[2] && req.method === 'POST') return sendJson(res, 200, restoreMark(db, oneMark[1]));
+        if (oneMark && !oneMark[2] && req.method === 'PATCH') return sendJson(res, 200, changeMark(db, oneMark[1], await readJson(req)));
+        if (oneMark && !oneMark[2] && req.method === 'DELETE') return sendJson(res, 200, removeMark(db, oneMark[1]));
+        return sendJson(res, 405, { error: 'Method not allowed' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+    if (url.pathname === '/api/reports' || url.pathname.startsWith('/api/reports/')) {
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
+      try {
+        if (url.pathname === '/api/reports') return sendJson(res, 200, await listReports(db));
+        const one = url.pathname.match(/^\/api\/reports\/([a-z0-9-]+)$/);
+        if (one) return sendJson(res, 200, await readReport(db, one[1]));
+        const file = url.pathname.match(/^\/api\/reports\/([a-z0-9-]+)\/files\/([a-z-]+)$/);
+        if (!file) return sendJson(res, 404, { error: 'Not found' });
+        const found = await reportFile(db, file[1], file[2]);
+        res.writeHead(200, {
+          'Content-Type': found.type,
+          'Content-Length': found.bytes.length,
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(found.name)}`,
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'; sandbox",
+          'Cache-Control': 'no-store',
+        });
+        return res.end(found.bytes);
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     // Help pages (module help, advanced/last/2 and 3; off in a new install):
     //   GET /api/docs       the pages for the modules that are on: [{ id, title, module, paths }] ([] while Help pages is off)

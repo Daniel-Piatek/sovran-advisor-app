@@ -183,6 +183,7 @@ const icons = {
   bell: svg('<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1.2 1.5H2.8zM6.5 14.5h3"/>'),
   repeat: svg('<path d="M2.5 7V6a2.5 2.5 0 0 1 2.5-2.5h8M11 1.5l2 2-2 2M13.5 9v1a2.5 2.5 0 0 1-2.5 2.5H3M5 14.5l-2-2 2-2"/>'),
   archive: svg('<rect x="1.5" y="2.5" width="13" height="3" rx="1"/><path d="M2.5 5.5v8h11v-8M6.5 8.5h3"/>'),
+  report: svg('<path d="M2 3.2c1.9-.6 4.1-.4 6 .9 1.9-1.3 4.1-1.5 6-.9v10c-1.9-.6-4.1-.4-6 .9-1.9-1.3-4.1-1.5-6-.9z"/><path d="M8 4.1v10"/>'),
   calendar: svg('<rect x="2" y="2.5" width="12" height="11.5" rx="1.5"/><path d="M2 6h12M5.5 1v3M10.5 1v3M5 9h1M8 9h1M11 9h1M5 11.5h1M8 11.5h1"/>'),
 };
 

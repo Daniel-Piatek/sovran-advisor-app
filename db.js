@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 73;
+export const SCHEMA_VERSION = 74;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -384,6 +384,8 @@ const steps = {
   },
   // 73: files on a task (the task pop-up's Files box): task_files is new (made from schema.sql). Nothing else changes.
   73() {},
+  // 74: highlights and comments on your Sovran reports (Reports): report_marks is new (made from schema.sql). Nothing else changes.
+  74() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.

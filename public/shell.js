@@ -24,6 +24,7 @@ const sections = [
   { name: 'Timeline', href: '/timeline', icon: 'timeline', more: true, module: 'people-plus', owns: (path) => path === '/timeline' },
   { name: 'People', href: '/people', icon: 'person', more: true, owns: (path) => /^\/(people|companies)(\/|$)/.test(path) },
   { name: 'My Life', module: 'life', href: '/life', icon: 'key_element', more: true, owns: (path) => /^\/life(\/|$)/.test(path) },
+  { name: 'Reports', href: '/reports', icon: 'report', more: true, module: 'reports', owns: (path) => /^\/reports(\/|$)/.test(path) },
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
   { name: 'Mail', href: '/mail', icon: 'mail', more: true, module: 'mail', owns: (path) => /^\/mail(\/|$)/.test(path) },
   { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },

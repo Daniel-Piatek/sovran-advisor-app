@@ -4337,7 +4337,7 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .help-pane-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
 .help-pane-title, .help-page-title { margin: 0; font-family: var(--font-heading); font-weight: 400; font-size: var(--text-xl); }
 .help-page-title { font-size: var(--text-2xl); margin-bottom: var(--space-4); }
-.help-text { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.55; }
+.help-text { font-family: var(--font-body); font-size: var(--text-base); line-height: var(--line-height-base); }
 .help-text h2 { font-family: var(--font-heading); font-weight: 400; font-size: var(--text-lg); color: var(--color-heading); margin: var(--space-4) 0 var(--space-2); }
 .help-text h3 { font-family: var(--font-ui); font-weight: 600; font-size: var(--text-base); margin: var(--space-3) 0 var(--space-1); }
 .help-text p, .help-text ul, .help-text ol { margin: 0 0 var(--space-3); }
@@ -4477,3 +4477,86 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .tour-film-head .top-bar-title { margin: 0; }
 .tour-frame { display: block; width: 100%; min-height: 70vh; border: 0; background: transparent; }
 @media (max-width: 900px) { .tour-cards { grid-template-columns: 1fr; } .tour-hero { grid-template-columns: 1fr; } }
+
+/* ---- Reports (module reports, public/reports.js): your own Sovran reports ----
+   The list: a card per report (its shape is the open-book icon), the Layered Portrait first. A report: its title, its
+   downloads, its contents, then each section with a Crimson heading. Body text at 1.44, short text at 1.36 (the owner's rule). */
+.reports-page .top-bar { margin-bottom: var(--space-2); }
+.report-intro { margin: 0 0 var(--space-4); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.report-portrait-waiting { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.report-portrait-title { font-family: var(--font-heading); font-weight: var(--weight-regular); color: var(--color-text); }
+.report-list { display: grid; gap: var(--space-3); }
+.report-card { display: grid; gap: var(--space-3); padding: var(--space-4); border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); }
+.report-card-main { display: flex; gap: var(--space-3); align-items: flex-start; color: inherit; text-decoration: none; }
+.report-card-main:hover .report-card-title { text-decoration: underline; }
+.report-card-shape { flex: none; padding-top: var(--space-1); color: var(--color-text-muted); }
+.report-card-text { display: grid; gap: var(--space-1); min-width: 0; line-height: var(--line-height-short); }
+.report-card-title { margin: 0; font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-xl); line-height: var(--line-height-tight); }
+.report-card-meta { font-size: var(--text-sm); color: var(--color-text-muted); }
+.report-card-sections { font-size: var(--text-sm); color: var(--color-text-muted); }
+.report-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.report-file { border: var(--line); }
+.report-head { display: grid; gap: var(--space-2); margin: var(--space-4) 0 var(--space-6); }
+.report-title { font-size: var(--text-2xl); }
+.report-meta { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.report-contents { margin: 0 0 var(--space-8); padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); }
+.report-contents-title { margin: 0 0 var(--space-2); font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+.report-contents ol { margin: 0; padding-left: var(--space-6); display: grid; gap: var(--space-1); line-height: var(--line-height-short); }
+.report-contents-link { padding: 0; border: 0; background: none; font: inherit; color: var(--color-text); text-align: left; cursor: pointer; }
+.report-contents-link:hover { text-decoration: underline; }
+.report-section { scroll-margin-top: var(--space-4); margin-bottom: var(--space-8); }
+.report-section-title { margin: 0 0 var(--space-3); font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-xl); color: var(--color-heading); line-height: var(--line-height-tight); }
+.report-level-2 .report-section-title { font-size: var(--text-lg); }
+.report-text { font-family: var(--font-body); font-size: var(--text-base); line-height: var(--line-height-base); }
+.report-text p, .report-text ul, .report-text ol, .report-text blockquote { margin: 0 0 var(--space-4); }
+.report-text ul, .report-text ol { padding-left: var(--space-6); }
+.report-text li { margin-bottom: var(--space-1); }
+.report-text h3, .report-text h4 { margin: var(--space-6) 0 var(--space-2); font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-bold); }
+.report-text blockquote { padding-left: var(--space-4); border-left: var(--line); color: var(--color-text-muted); }
+.report-text hr { border: 0; border-top: var(--line); margin: var(--space-6) 0; }
+.report-text a { color: var(--color-text); text-decoration: underline; }
+
+/* Reading a report with your highlights: the text keeps its reading width, your comments sit in a margin beside it (under it
+   on a smaller screen). A highlight is the Assistant's soft gold wash, with its dark ink in both themes; a highlight with a
+   comment has a dotted line under it as well, so the two are told apart without colour. */
+.report-reading .report-head, .report-reading .report-contents, .report-reading .report-my-place, .report-reading > .top-bar { max-width: var(--page-max-width); margin-left: 0; }
+.report-reading .report-body, .report-reading .report-undo { margin-left: 0; }
+.report-section-row { display: grid; grid-template-columns: minmax(0, var(--page-max-width)) minmax(var(--card-min-width), 1fr); gap: var(--space-6); align-items: start; }
+/* Wide screens: each comment sits level with the words it is about (public/report-marks.js sets its top). */
+.report-section-row { align-items: stretch; }
+.report-margin { position: relative; }
+.report-margin[hidden] { display: block; visibility: hidden; }
+.report-margin > .report-margin-note { position: absolute; left: 0; right: 0; }
+@media (max-width: 1100px) {
+  .report-section-row { grid-template-columns: minmax(0, 1fr); }
+  .report-margin[hidden] { display: none; }
+  .report-margin { position: static; display: grid; gap: var(--space-2); }
+  .report-margin > .report-margin-note { position: static; }
+}
+.report-margin-note { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-3); border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); font: inherit; text-align: left; color: var(--color-text); cursor: pointer; line-height: var(--line-height-short); }
+.report-margin-note:hover { border-color: var(--color-text-muted); }
+.report-margin-quote { font-size: var(--text-xs); color: var(--color-text-muted); }
+.report-margin-comment { font-size: var(--text-sm); white-space: pre-wrap; }
+mark.report-mark { background: var(--kind-assistant-wash); color: var(--kind-assistant-ink); border-radius: var(--radius-sm); cursor: pointer; }
+mark.report-mark.has-comment { text-decoration: underline dotted; text-underline-offset: 3px; }
+mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-offset: 1px; }
+.report-pick, .report-pop { position: fixed; z-index: 30; border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); }
+.report-pick { display: flex; gap: var(--space-1); padding: var(--space-1); }
+.report-pick[hidden], .report-pop[hidden] { display: none; }
+.report-pop { display: grid; gap: var(--space-2); width: min(360px, calc(100vw - var(--space-8))); padding: var(--space-3); line-height: var(--line-height-short); }
+.report-pop-quote { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+.report-pop-text { width: 100%; box-sizing: border-box; padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-sm); line-height: var(--line-height-short); resize: vertical; }
+.report-pop-actions { display: flex; justify-content: space-between; gap: var(--space-2); }
+.report-my-place { margin: 0 0 var(--space-8); }
+.report-my-empty { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.report-my { padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); }
+.report-my > summary { cursor: pointer; font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-text-muted); }
+.report-my-count { font-weight: var(--weight-regular); }
+.report-my-list { margin: var(--space-3) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); }
+.report-my-item { display: flex; gap: var(--space-2); align-items: flex-start; justify-content: space-between; }
+.report-my-link { display: grid; gap: var(--space-1); flex: 1; min-width: 0; padding: 0; border: 0; background: none; font: inherit; text-align: left; color: var(--color-text); cursor: pointer; line-height: var(--line-height-short); }
+.report-my-link:disabled { cursor: default; }
+.report-my-where { font-size: var(--text-xs); color: var(--color-text-muted); }
+.report-my-quote { font-size: var(--text-sm); }
+.report-my-comment { font-size: var(--text-sm); color: var(--color-text-muted); white-space: pre-wrap; }
+.report-my-item.is-gone .report-my-quote { color: var(--color-text-muted); }
