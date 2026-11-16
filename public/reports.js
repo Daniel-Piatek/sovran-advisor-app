@@ -36,13 +36,17 @@ const ABOUT = [
   [/layered-portrait|portrait/i, 'One page that grows with you: each part of the Sovran Quest adds a layer.'],
 ];
 const aboutOf = (r) => r.description || ABOUT.find(([match]) => match.test(`${r.report} ${r.title}`))?.[1] || '';
+// A report's own picture for its card, when it has one (the Pattern's, the owner's, 2026-11-16); else the crown.
+const PICTURES = [[/pattern/i, '/brand/sovran-pattern-report.png']];
+const pictureOf = (r) => PICTURES.find(([match]) => match.test(`${r.report} ${r.title}`))?.[1];
 
 // A report's card, in the report's own Ivory & Gold look: crown, gold label and rule, title, what it is, and when.
 function reportCard(r) {
   const about = aboutOf(r);
   return el('article', { class: 'report-card', 'data-report': r.report },
     el('a', { class: 'report-card-main', href: `/reports/${r.report}` },
-      el('img', { class: 'report-card-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
+      pictureOf(r) ? el('img', { class: 'report-card-picture', src: pictureOf(r), alt: '' })
+        : el('img', { class: 'report-card-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
       el('span', { class: 'report-card-text' },
         el('span', { class: 'report-card-label' }, 'Sovran report'),
         el('h2', { class: 'report-card-title' }, r.title),
