@@ -35,7 +35,8 @@ test('the list, then a report to read with its contents and its downloads', asyn
   await expect(card).toHaveCount(1);
   await expect(card).toContainText('Version 2');
   await expect(card).toContainText('5,227 words');
-  await expect(card).toContainText('Before You Begin · Your Gifts · The Door That Opens');
+  await expect(card).toContainText('A mirror, not a definition. Your Pattern follows'); // what the report is, not its sections
+  await expect(card.locator('img.report-card-crown')).toBeVisible();
   await expect(page.getByText('A draft')).toHaveCount(0);
   await expect(card.getByRole('link', { name: /Download/ })).toHaveCount(0); // the downloads are on the report's own page
 

@@ -30,14 +30,26 @@ const downloads = (r) => {
   }, icon('down'), ' PDF download')) : null;
 };
 
+// What each kind of report is, for its card (the owner's wish, 2026-11-16: a description, not the list of sections).
+const ABOUT = [
+  [/pattern/i, 'A mirror, not a definition. Your Pattern follows what comes to you naturally, what happens to it when life presses on it, and how it opens again, in five parts that end with a door. Read it slowly, mark what rings true, and bring your questions to your assistant.'],
+  [/layered-portrait|portrait/i, 'One page that grows with you: each part of the Sovran Quest adds a layer.'],
+];
+const aboutOf = (r) => r.description || ABOUT.find(([match]) => match.test(`${r.report} ${r.title}`))?.[1] || '';
+
+// A report's card, in the report's own Ivory & Gold look: crown, gold label and rule, title, what it is, and when.
 function reportCard(r) {
+  const about = aboutOf(r);
   return el('article', { class: 'report-card', 'data-report': r.report },
     el('a', { class: 'report-card-main', href: `/reports/${r.report}` },
-      el('span', { class: 'report-card-shape', 'aria-hidden': 'true' }, icon('report')),
+      el('img', { class: 'report-card-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
       el('span', { class: 'report-card-text' },
+        el('span', { class: 'report-card-label' }, 'Sovran report'),
         el('h2', { class: 'report-card-title' }, r.title),
+        el('span', { class: 'report-card-rule', 'aria-hidden': 'true' }),
+        about ? el('span', { class: 'report-card-about' }, about) : null,
         el('span', { class: 'report-card-meta' }, metaLine(r)),
-        r.sections.length ? el('span', { class: 'report-card-sections' }, r.sections.map((s) => s.title).join(' · ')) : null)));
+        el('span', { class: 'report-card-open' }, 'Read it here', icon('right')))));
 }
 
 export async function showReports(name) {
@@ -49,11 +61,11 @@ export async function showReports(name) {
   try { reports = await request('GET', '/api/reports'); } catch (err) { reports = null; problem = err.message; }
   const top = el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Reports'));
   if (!reports) { screen.replaceChildren(top, el('p', { class: 'empty' }, problem || 'Your reports could not be read just now.')); return; }
+  // The line under the title: where the Layered Portrait will be, until it is here (the owner's wish, 2026-11-16).
   const portrait = reports.some((r) => r.report === 'layered-portrait') ? null
-    : el('p', { class: 'report-portrait-waiting' }, el('span', { class: 'report-portrait-title' }, 'Your Layered Portrait'),
+    : el('p', { class: 'report-intro' }, el('span', { class: 'report-portrait-title' }, 'Your Layered Portrait'),
       ' begins here and grows as you go through the Sovran Quest.');
   screen.replaceChildren(top,
-    el('p', { class: 'report-intro' }, 'Your own Sovran reports, to read here or download.'),
     portrait,
     reports.length ? el('div', { class: 'report-list' }, ...reports.map(reportCard))
       : el('p', { class: 'empty' }, 'No reports yet. Each one appears here once it is ready.'));
