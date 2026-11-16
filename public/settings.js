@@ -288,7 +288,7 @@ function librarySection() {
   };
   remove.addEventListener('click', () => save(''));
   request('GET', '/api/library').then(show).catch(() => { status.textContent = "The library's state couldn't be loaded."; });
-  return el('section', { class: 'settings-part', 'aria-label': 'Sovran Library' },
+  return el('section', { class: 'settings-part', id: 'sovran-library', 'aria-label': 'Sovran Library' },
     el('h2', { class: 'settings-title' }, 'Sovran Library'),
     status,
     el('p', { class: 'empty' }, 'Paste the key you were given. Your assistant then reads the Sovran teaching and, if you have them, your own decodes. The key stays on this computer.'),
@@ -483,6 +483,18 @@ export async function showSettings() {
       logFold),
   );
   onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)
+  // Opened from the Tour's Sovran Library line (/settings#sovran-library): straight to the key box, ready to paste.
+  if (location.hash === '#sovran-library') {
+    const part = screen.querySelector('#sovran-library');
+    const key = part?.querySelector('input');
+    if (key) {
+      part.open?.(); // unfold it first
+      part.scrollIntoView({ block: 'center' });
+      key.focus({ preventScroll: true });
+      part.classList.add('is-arrived');
+      setTimeout(() => part.classList.remove('is-arrived'), 2500);
+    }
+  }
 
   function draw({ permissions, allowed = [], activity }) {
     allowedFold.say(allowed.length, ['kind of step', 'kinds of step']);

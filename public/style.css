@@ -4460,7 +4460,7 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .tour-hero-still:hover .tour-play, .tour-hero-still:focus-visible .tour-play { transform: scale(1.06); }
 .tour-extras-label { margin-bottom: var(--space-3); }
 .tour-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
-.tour-card { border: var(--line); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
+.tour-card { border: var(--line); border-left: calc(var(--border-width) * 4) solid var(--tour-kind); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
 .tour-card p { margin: 0; font-size: var(--text-sm); line-height: 1.36; color: var(--color-text-muted); }
 .tour-card-title { font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-base); margin: 0; display: flex; align-items: center; gap: var(--space-2); }
 .tour-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tour-kind, var(--kind-assistant)); flex: none; display: inline-block; }
@@ -4468,6 +4468,14 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .tour-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding-top: var(--space-1); }
 .tour-watch { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-sm); color: var(--color-text); text-decoration: none; }
 .tour-watch:hover { text-decoration: underline; }
+/* The small Watch's play mark in a Crimson circle, a little larger than the mark (the large one on The basics is twice it). */
+.tour-play-sm { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--color-accent); color: var(--color-accent-text); }
+.tour-play-sm svg { width: 18px; height: 18px; }
+/* All videos, above a video and again under it: an outlined button, easy to find. */
+.tour-back { border: var(--border-width) solid var(--color-text); background: var(--color-bg); color: var(--color-text); }
+.tour-back:hover { background: var(--color-surface); }
+/* Settings › Sovran Library, opened from the Tour: the key box is marked a moment. */
+.settings-part.is-arrived { outline: calc(var(--border-width) * 2) solid var(--color-accent); outline-offset: var(--space-2); border-radius: var(--radius-sm); transition: outline-color 1.2s; }
 .tour-state { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-family: var(--font-ui); font-size: var(--text-sm); }
 .tour-on { font-size: var(--text-xs); font-weight: var(--weight-button); border-radius: 999px; padding: 1px var(--space-2); border: var(--border-width) solid var(--kind-life); }
 .tour-open { color: var(--color-text); font-weight: var(--weight-bold); }
