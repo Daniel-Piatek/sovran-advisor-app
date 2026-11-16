@@ -4574,7 +4574,7 @@ mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-o
   padding: var(--space-8); border: var(--line); border-radius: var(--radius-md);
 }
 /* On a wide screen the ivory is only the sheet behind the report; beside it, past a thin line, is a white column for
-   your comments, headed Your comments (with a one-line how-to while there are none). The owner's choice, 2026-11-16. */
+   your comments, headed Your comments with a one-line how-to under it (always shown). The owner's choice, 2026-11-16. */
 .report-comments-head { display: none; }
 .report-margin-note { background: var(--report-side); }
 /* Narrower, your comments on a part come together under it, with a small gold label. */
@@ -4590,7 +4590,6 @@ mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-o
   .report-comments-head { display: block; position: absolute; top: var(--space-8); left: calc(var(--report-sheet) + var(--space-8)); right: var(--space-8); }
   .report-comments-title { margin: 0; font-family: var(--font-ui); font-weight: 600; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
   .report-comments-hint { margin: var(--space-2) 0 0; font-size: var(--text-sm); line-height: var(--line-height-short); color: var(--report-ink-muted); }
-  .report-paper:has(.report-margin-note) .report-comments-hint { display: none; }
 }
 .report-reading .report-paper :is(.report-cover, .report-contents, .report-my-place) { max-width: var(--report-column); margin-left: 0; }
 .report-cover { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) 0 var(--space-8); }
