@@ -44,6 +44,13 @@ test('the list, then a report to read with its contents and its downloads', asyn
   await expect(page.getByRole('heading', { name: 'Your Made-up Pattern', level: 1 })).toBeVisible();
   await expect(page.locator('.report-text strong')).toHaveText('definition');
   await expect(page.getByRole('heading', { name: 'A Part Inside', level: 3 })).toBeVisible();
+  // The Ivory & Gold look: the cover's crown and wordmark, PART labels after the opening section, a drop cap on each part.
+  await expect(page.locator('.report-paper .report-cover img.report-crown')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Live Sovran' })).toBeVisible();
+  await expect(page.locator('.report-part-label')).toHaveText(['Part One', 'Part Two']);
+  await expect(page.locator('#section-before-you-begin .report-part-label')).toHaveCount(0);
+  await expect(page.locator('#section-your-gifts .report-text > p.report-lede')).toHaveCount(1);
+  await expect(page.locator('.report-cover .report-file')).toHaveText([/Download the PDF/, /Download the file for your AI/]);
   const contents = page.getByRole('navigation', { name: 'Contents' });
   await expect(contents.getByRole('button')).toHaveText(['Before You Begin', 'Your Gifts', 'The Door That Opens']);
   await contents.getByRole('button', { name: 'The Door That Opens' }).click();
