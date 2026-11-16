@@ -19,7 +19,9 @@ html.in-app .back-all { display: inline-block; }
 /* Inside the app (2026-11-16, the owner's wish): the scene buttons are the video's chapters, small, first;
    then a line across, then Start again and a red Back to all videos. */
 html.in-app #ends { order: 9; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 6px; }
-html.in-app #scenes .scene { font-size: .72rem; padding: 2px 9px; }
+html.in-app #scenes { gap: 6px; }
+html.in-app #scenes::before { content: "Video chapters"; font-family: var(--ui); font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+html.in-app #scenes .scene { font-size: .62rem; padding: 2px 8px; }
 html.in-app .back-all { background: var(--crimson); border-color: var(--crimson); color: var(--crimson-ink); margin-left: 0; }
 </style>
 <script>
@@ -823,7 +825,7 @@ const scenes = FILMS.flatMap((f) => f.scenes.map((s) => ({ ...s, film: f })));
 // ---- playing ----
 const bar = $('bar'), pp = $('pp');
 const filmBtns = FILMS.map((f) => { const b = h('button', 'scene film', f.t); b.type = 'button'; b.addEventListener('click', () => go(scenes.findIndex((s) => s.film === f))); $('films').append(b); return b; });
-const chips = scenes.map((s, i) => { const b = h('button', 'scene', s.t); b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
+const chips = scenes.map((s, i) => { const SHORT = {"Start with your journal": "Journal", "Capture a thought, sort it later": "Capture", "Notes, links and people": "Notes & links", "Your assistant": "Assistant", "Help on every page": "Help", "What to try first": "Try first", "Put Capture on your phone": "Set up", "Catch a thought anywhere": "Capture", "Today, Upcoming and done": "Your lists", "A highlight, and closing the day": "Highlight & close", "Your events": "Events", "Add your Google Calendar": "Google Calendar", "Think on a board": "Use a board", "Your Key Elements": "Key Elements", "Give things a home": "Homes"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch on') ? 'Switch on' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
 function reset() { hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
 function show(i) {
   cur = i; intro = 'scene:' + scenes[i].t;
