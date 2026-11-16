@@ -1,4 +1,4 @@
-// The pen (advanced/writing/8): ink kept with pressure and time, handwriting read as words by the (stand-in) assistant, a page under the board.
+// The pen (advanced/writing/8) was taken off every board on the owner's wish (2026-11-16): old ink still shows and can be cleared; a page under the board.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,61 +13,16 @@ async function board(app) {
   await post(app, `/api/boards/${made.id}/items`, { kind: 'card', text: 'Pricing case', x: 300, y: 200 });
   return { note, board: made };
 }
-async function draw(page, region, from, to) {
-  const frame = region.locator('.board-frame');
-  const box = await frame.boundingBox();
-  await page.mouse.move(box.x + from[0] * (box.width / 1200), box.y + from[1] * (box.width / 1200));
-  await page.mouse.down();
-  for (let i = 1; i <= 6; i++) await page.mouse.move(box.x + (from[0] + (to[0] - from[0]) * (i / 6)) * (box.width / 1200), box.y + (from[1] + (to[1] - from[1]) * (i / 6)) * (box.width / 1200));
-  await page.mouse.up();
-}
-
-test('Pen on, draw a line: it is kept with the pressure and time of each point and is still there after a reload', async ({ page, app }) => {
+test('no Pen and no To text on any board; ink drawn before still shows, and Clear drawing takes it away', async ({ page, app }) => {
   const { board: b } = await board(app);
+  await post(app, `/api/boards/${b.id}/strokes`, { points: [[100, 400, 0.5, 0], [300, 420, 0.5, 40], [500, 450, 0.5, 80]] });
   await page.goto(`${app.url}/boards/${b.id}`);
   const region = page.getByRole('region', { name: 'Board: Workshop flow' });
-  await region.getByRole('button', { name: 'Pen', exact: true }).click();
-  await expect(region.getByRole('button', { name: 'Pen', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await draw(page, region, [100, 400], [500, 450]);
   await expect(region.locator('.ink-stroke')).toHaveCount(1);
-  const [stroke] = (await boardOf(app, b.id)).strokes;
-  expect(stroke.points.length).toBeGreaterThan(3);
-  expect(stroke.points[0]).toHaveLength(4);
-  expect(stroke.points.every((p) => p[2] === 0.5)).toBe(true); // a mouse presses at 0.5
-  expect(stroke.points.at(-1)[3]).toBeGreaterThan(0); // time since the stroke began
-  await page.reload();
-  await expect(page.getByRole('region', { name: 'Board: Workshop flow' }).locator('.ink-stroke')).toHaveCount(1);
-});
-
-test('To text: your assistant reads the handwriting, the words become a text item and the ink fades below them; a correction to the words wins', async ({ page, app }) => {
-  const { board: b } = await board(app);
-  await page.goto(`${app.url}/boards/${b.id}`);
-  const region = page.getByRole('region', { name: 'Board: Workshop flow' });
-  await region.getByRole('button', { name: 'Pen', exact: true }).click();
-  await draw(page, region, [620, 220], [760, 240]);
-  await draw(page, region, [620, 280], [760, 300]);
-  await expect(region.locator('.ink-stroke')).toHaveCount(2);
-  await region.getByRole('button', { name: 'To text' }).click();
-  await expect(region.getByRole('group', { name: 'Text: longer?' })).toBeVisible();
-  await expect(region.locator('.ink-stroke.is-faded')).toHaveCount(2);
-  await expect(region.getByRole('button', { name: 'To text' })).toHaveCount(0); // nothing left to read
-  const saved = await boardOf(app, b.id);
-  expect(saved.strokes.every((s) => s.faded && s.text_item_id)).toBe(true);
-  expect(saved.items.find((i) => i.kind === 'text').text).toBe('longer?');
-  // the picture went to the assistant's own folder, and the turn is in the Assistant
-  const chats = await fetch(`${app.url}/api/conversations`).then((r) => r.json());
-  expect(chats.length).toBe(1);
-  const folder = path.join(app.dataDir, (await fetch(`${app.url}/api/conversations/${chats[0].id}`).then((r) => r.json())).folder, 'handwriting.png');
-  expect(fs.readFileSync(folder).subarray(1, 4).toString()).toBe('PNG');
-
-  await region.getByRole('button', { name: 'Pen', exact: true }).click(); // pen off: the words can be edited
-  await region.getByRole('group', { name: 'Text: longer?' }).dblclick();
-  await region.getByLabel('Its words').fill('longer day?');
-  await region.getByLabel('Its words').press('Enter');
-  await expect(region.getByRole('group', { name: 'Text: longer day?' })).toBeVisible();
-  await page.reload();
-  await expect(page.getByRole('region', { name: 'Board: Workshop flow' }).getByRole('group', { name: 'Text: longer day?' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Board: Workshop flow' }).locator('.ink-stroke.is-faded')).toHaveCount(2); // and so is the ink
+  await expect(region.getByRole('button', { name: 'Pen', exact: true })).toHaveCount(0);
+  await expect(region.getByRole('button', { name: 'To text' })).toHaveCount(0);
+  await region.getByRole('button', { name: 'Clear drawing' }).click();
+  await expect(region.locator('.ink-stroke')).toHaveCount(0);
 });
 
 test('Page: a picture lies under the board and you draw over it; No page takes it away', async ({ page, app }) => {

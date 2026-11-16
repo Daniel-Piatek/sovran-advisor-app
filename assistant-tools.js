@@ -39,6 +39,7 @@ import { parseQuickAdd } from './public/due.js';
 import { calendarList, planProposal, applyProposal, undoProposal } from './calendar-assistant.js';
 import { reconnectList } from './reconnect.js';
 import { INTERACTION_KINDS, checkInteractionInput, logInteraction, deleteInteraction, findPerson } from './interactions.js';
+import { reportsOn, reportsText } from './reports.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -54,7 +55,7 @@ export const PATHS = {
 };
 
 // A tool that belongs to a module is offered, and runs, while the module is on.
-const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus', my_life: 'life', read_life_item: 'life', docs_read: 'help' };
+const MODULE_TOOLS = { log_interaction: 'people-plus', reconnect_list: 'people-plus', mail_search: 'mail', mail_read: 'mail', mail_draft: 'mail', mail_to_task: 'mail', list_comments: 'writing', reply_to_comment: 'writing', board_read: 'writing', board_draw: 'writing', calendar_list: 'calendar-plus', calendar_propose: 'calendar-plus', my_life: 'life', read_life_item: 'life', docs_read: 'help', reports_read: 'reports' };
 export const offeredTools = (db) => TOOLS.filter((tool) => !MODULE_TOOLS[tool.name] || moduleOn(db, MODULE_TOOLS[tool.name]));
 
 export const TOOLS = [
@@ -82,6 +83,11 @@ export const TOOLS = [
     name: 'docs_read',
     description: 'Read the app’s own help pages, to answer how a part of this app works (“how does the Inbox work?”, “what is a Speedy?”). Give a view (like planner, inbox, tasks) or some words; it returns the best one or two pages with their link. Only for how the app works: for the owner’s own notes, journal and tasks use the other tools. Reading only.',
     inputSchema: { type: 'object', properties: { view: { type: 'string', description: 'A view of the app, like planner or inbox' }, words: { type: 'string', description: 'Words to look for in the help pages' } } },
+  },
+  {
+    name: 'reports_read',
+    description: 'Read the owner’s own Sovran reports (the Sovran Pattern, later reports, the Layered Portrait) with their own highlights and comments on them. Without report it lists them with their sections; with report (like pattern) it returns the owner’s highlights and comments first, then that report in full (its for-your-AI file when it has one), or one section by its key. Speak about them with care: they are a mirror, not a definition. Cite a report as the link it gives. Reading only.',
+    inputSchema: { type: 'object', properties: { report: { type: 'string', description: 'A report’s name, like pattern; leave out to list them' }, section: { type: 'string', description: 'One section’s key, from the list' } } },
   },
   {
     name: 'list_tasks',
@@ -436,7 +442,7 @@ async function approveStep(db, args, run) {
 }
 
 // The tools that only read: all the Inbox reader may use (assistant/3).
-export const READ_TOOLS = ['docs_read', 'search_notes', 'read_note', 'my_life', 'read_life_item', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
+export const READ_TOOLS = ['docs_read', 'reports_read', 'search_notes', 'read_note', 'my_life', 'read_life_item', 'list_tasks', 'list_inbox', 'read_week', 'read_day', 'reconnect_list'];
 
 // Runs one tool. run: { conversationId, messageId, folder, read(page), card(card), readOnly }
 // for the answer under way. Returns text for the assistant (or a promise of it).
@@ -469,6 +475,11 @@ export function runTool(db, name, args = {}, run = {}) {
     if (!found.length) return 'No help page for that. Say so, and do not guess how the app works.';
     return found.map((d) => `# ${d.title} (cite it as [${d.title} help](/help/${d.id}))\n\n${d.markdown}`).join('\n\n---\n\n');
   }
+  if (name === 'reports_read') {
+    if (!reportsOn(db)) throw fail(403, 'Reports is switched off in Settings › Modules.');
+    return reportsText(db, { report: args.report ?? '', section: args.section ?? '' });
+  }
+
   if (name === 'list_tasks') {
     const tasks = tasksFor(db, args.when);
     return tasks.length ? text(tasks) : 'No tasks there.';

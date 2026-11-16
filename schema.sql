@@ -1334,3 +1334,22 @@ CREATE TABLE IF NOT EXISTS task_files (
   sha256 TEXT NOT NULL REFERENCES files (sha256)
 );
 CREATE INDEX IF NOT EXISTS task_files_by_task ON task_files (task_id);
+
+-- A highlight on one of your Sovran reports, with your comment if you wrote one (Reports, 2026-11-16, the owner's wish). The report
+-- itself stays untouched in the Sovran Library; this is your own layer on top, kept only here. A mark finds its place again by its
+-- words: quote, with a little of the text before (prefix) and after (suffix), in the section section_key.
+CREATE TABLE IF NOT EXISTS report_marks (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  report TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  section_key TEXT NOT NULL,
+  quote TEXT NOT NULL,
+  prefix TEXT NOT NULL DEFAULT '',
+  suffix TEXT NOT NULL DEFAULT '',
+  comment TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS report_marks_by_report ON report_marks (report, deleted_at);
