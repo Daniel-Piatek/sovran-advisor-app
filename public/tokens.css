@@ -78,6 +78,18 @@
   --icon-base: #302d2d;         /* the crown's dark base */
   --icon-inner: var(--color-bg); /* the disc inside the ring */
 
+  /* Colours: a report's own page (Reports, the Ivory & Gold report design, 2026-11-16), the same in both themes: a report
+     reads like the printed page. Crimson only on this light page; gold only for rules and labels, never for reading text. */
+  --report-paper: #fbf8ef;      /* brand Ivory */
+  --report-ink: #302d2d;        /* brand Charcoal */
+  --report-ink-muted: #555151;
+  --report-line: #d4d1d1;
+  --report-rule: #d9c14b;       /* brand Gold: rules and labels */
+  --report-initial: #c71f42;    /* brand Crimson: the drop cap */
+  --report-column: 680px;       /* the reading column */
+  --report-sheet: calc(var(--space-8) + var(--report-column) + var(--space-12)); /* the ivory sheet, wide screens */
+  --report-side: #fbfbfb;       /* brand White: the comments column beside the ivory sheet, and each comment */
+
   /* Fonts */
   --font-heading: "Gloock", Georgia, serif;                       /* headings and page titles, Regular only */
   --font-ui: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* menus, labels, buttons */

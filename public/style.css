@@ -4491,19 +4491,27 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
    downloads, its contents, then each section with a Crimson heading. Body text at 1.44, short text at 1.36 (the owner's rule). */
 .reports-page .top-bar { margin-bottom: var(--space-2); }
 .report-intro { margin: 0 0 var(--space-4); color: var(--color-text-muted); line-height: var(--line-height-short); }
-.report-portrait-waiting { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); color: var(--color-text-muted); line-height: var(--line-height-short); }
 .report-portrait-title { font-family: var(--font-heading); font-weight: var(--weight-regular); color: var(--color-text); }
 .report-list { display: grid; gap: var(--space-3); }
-.report-card { display: grid; gap: var(--space-3); padding: var(--space-4); border: var(--line); border-radius: var(--radius-md); background: var(--color-bg); }
-.report-card-main { display: flex; gap: var(--space-3); align-items: flex-start; color: inherit; text-decoration: none; }
-.report-card-main:hover .report-card-title { text-decoration: underline; }
-.report-card-shape { flex: none; padding-top: var(--space-1); color: var(--color-text-muted); }
-.report-card-text { display: grid; gap: var(--space-1); min-width: 0; line-height: var(--line-height-short); }
-.report-card-title { margin: 0; font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-xl); line-height: var(--line-height-tight); }
-.report-card-meta { font-size: var(--text-sm); color: var(--color-text-muted); }
-.report-card-sections { font-size: var(--text-sm); color: var(--color-text-muted); }
+.report-card { border: var(--line); border-left: 4px solid var(--report-rule); border-radius: var(--radius-md); background: var(--report-paper); color: var(--report-ink); }
+.report-card-main { display: flex; gap: var(--space-6); align-items: flex-start; padding: var(--space-6) var(--space-8); color: inherit; text-decoration: none; }
+.report-card-crown { flex: none; width: 88px; height: auto; margin-top: var(--space-2); }
+.report-card-text { display: grid; gap: var(--space-2); justify-items: start; min-width: 0; line-height: var(--line-height-short); }
+.report-card-label { font-family: var(--font-ui); font-weight: 600; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
+.report-card-title { margin: 0; font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: 32px; line-height: 1.15; color: var(--report-ink); }
+.report-card-rule { width: 120px; height: 4px; border-top: 1px solid var(--report-rule); border-bottom: 1px solid var(--report-rule); }
+.report-card-about { max-width: var(--report-column); font-size: 16px; line-height: var(--line-height-base); color: var(--report-ink); }
+.report-card-meta { font-size: var(--text-sm); color: var(--report-ink-muted); }
+.report-card-open { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); font-weight: 600; color: var(--report-initial); }
+.report-card-main:hover .report-card-open { text-decoration: underline; }
+@media (max-width: 700px) {
+  .report-card-main { flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+  .report-card-crown { width: 64px; margin: 0; }
+  .report-card-title { font-size: 26px; }
+}
 .report-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.report-file { border: var(--line); }
+.report-file { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: var(--line); border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--color-text-muted); text-decoration: none; }
+.report-file:hover { color: var(--color-text); }
 .report-head { display: grid; gap: var(--space-2); margin: var(--space-4) 0 var(--space-6); }
 .report-title { font-size: var(--text-2xl); }
 .report-meta { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
@@ -4568,3 +4576,73 @@ mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-o
 .report-my-quote { font-size: var(--text-sm); }
 .report-my-comment { font-size: var(--text-sm); color: var(--color-text-muted); white-space: pre-wrap; }
 .report-my-item.is-gone .report-my-quote { color: var(--color-text-muted); }
+
+/* A report's own look, Ivory & Gold (2026-11-16, the owner's wish; from the Sovran Machine's machine/styles/report.css): an
+   ivory page in both themes, a cover at the top, gold PART labels, part titles in Gloock on one line, a crimson drop cap.
+   Inside the page the app's colours are the report's, so buttons, your highlights list and the margin read on ivory. */
+.report-paper {
+  --color-bg: var(--report-paper); --color-surface: var(--report-paper); --color-text: var(--report-ink);
+  --color-text-muted: var(--report-ink-muted); --color-text-faint: var(--report-ink-muted); --color-border: var(--report-line);
+  --color-heading: var(--report-ink);
+  background: var(--report-paper); color: var(--report-ink);
+  max-width: calc(var(--report-column) + var(--space-6) + 360px + 2 * var(--space-8));
+  padding: var(--space-8); border: var(--line); border-radius: var(--radius-md);
+}
+/* On a wide screen the ivory is only the sheet behind the report; beside it, past a thin line, is a white column for
+   your comments, headed Your comments with a one-line how-to under it (always shown). The owner's choice, 2026-11-16. */
+.report-comments-head { display: none; }
+.report-margin-note { background: var(--report-side); }
+/* Narrower, your comments on a part come together under it, with a small gold label. */
+@media (max-width: 1100px) {
+  .report-paper .report-margin:not([hidden]) { margin-top: var(--space-4); padding-top: var(--space-3); border-top: var(--line); }
+  .report-paper .report-margin:not([hidden])::before { content: 'Your comments'; font-family: var(--font-ui); font-weight: 600; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
+}
+@media (min-width: 1101px) {
+  .report-paper { position: relative; isolation: isolate; max-width: calc(var(--report-sheet) + 400px); background: var(--report-side); }
+  .report-paper::before { content: ''; position: absolute; inset: 0 auto 0 0; z-index: -1; width: var(--report-sheet);
+    background: var(--report-paper); border-right: var(--line); border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  .report-reading .report-paper .report-section-row { grid-template-columns: minmax(0, var(--report-column)) minmax(var(--card-min-width), 1fr); gap: calc(2 * var(--space-12)); }
+  .report-comments-head { display: block; position: absolute; top: var(--space-8); left: calc(var(--report-sheet) + var(--space-8)); right: var(--space-8); }
+  .report-comments-title { margin: 0; font-family: var(--font-ui); font-weight: 600; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
+  .report-comments-hint { margin: var(--space-2) 0 0; font-size: var(--text-sm); line-height: var(--line-height-short); color: var(--report-ink-muted); }
+}
+.report-reading .report-paper :is(.report-cover, .report-contents, .report-my-place) { max-width: var(--report-column); margin-left: 0; }
+.report-cover { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) 0 var(--space-8); }
+.report-crown { width: 150px; height: auto; }
+.report-cover .report-title { margin: var(--space-8) 0 var(--space-4); font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: 44px; line-height: 1.15; letter-spacing: -0.5px; color: var(--report-ink); }
+.report-rule { width: 230px; height: 4px; margin: var(--space-3) auto; border-top: 1px solid var(--report-rule); border-bottom: 1px solid var(--report-rule); }
+.report-wordmark { width: 230px; height: auto; margin-top: var(--space-6); }
+.report-for { margin-top: var(--space-6); }
+.report-for-label { margin: 0; font-family: var(--font-ui); font-weight: 600; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
+.report-for-name { margin: var(--space-2) 0 0; font-family: var(--font-heading); font-size: 24px; }
+.report-cover .report-meta { margin: var(--space-6) 0 var(--space-3); }
+.report-cover .report-files { justify-content: center; }
+.report-paper .report-text { font-size: 17px; line-height: var(--line-height-base); color: var(--report-ink); }
+.report-paper .report-section { margin-bottom: var(--space-8); padding-top: var(--space-6); }
+.report-part-label { margin: 0 0 var(--space-1); font-family: var(--font-ui); font-weight: 600; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--report-rule); }
+.report-paper .report-level-1 > .report-section-title { margin: var(--space-1) 0 var(--space-6); font-size: min(32px, 5.6vw); line-height: 1.15; white-space: nowrap; color: var(--report-ink); }
+.report-paper .report-level-2 > .report-section-title { color: var(--report-ink); }
+.report-paper .report-lede::first-letter { float: left; padding: 5px 8px 0 0; font-family: var(--font-heading); font-size: 58px; line-height: 0.85; color: var(--report-initial); }
+@media (max-width: 700px) {
+  .report-paper { padding: var(--space-4); border: 0; border-radius: 0; }
+  .report-rule, .report-wordmark { width: 190px; }
+  .report-cover { padding: var(--space-4) 0 var(--space-6); }
+  .report-cover .report-title { font-size: 34px; }
+  .report-crown { width: 110px; }
+}
+
+/* Settings, folded (public/settings-sections.js): each part shows its name with an arrow to its left, and one short line
+   where the name alone doesn't say it; a click opens it. The arrow turns down when the part is open. */
+.settings-title > .settings-toggle { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.settings-toggle > .icon { flex: none; display: inline-flex; color: var(--color-text); transition: transform 120ms ease; transform: rotate(90deg); }
+.settings-part.is-closed .settings-toggle > .icon { transform: none; }
+.settings-toggle:hover { text-decoration: underline; }
+.settings-hint { margin: 0 0 var(--space-1) calc(1em + var(--space-2)); font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
+.settings-part.is-closed > :not(.settings-title, .settings-hint) { display: none; }
+.settings-part:not(.is-closed) > .settings-hint { display: none; } /* open, the part's own words say it */
+@media (prefers-reduced-motion: reduce) { .settings-toggle > .icon { transition: none; } }
+
+/* Settings › Updates: the step under way turns, and a line says the update is working. */
+.update-mark.update-turning { display: inline-block; flex: 0 0 auto; align-self: center; margin: 0 0.225em; box-sizing: border-box; width: 0.8em; height: 0.8em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: working-turn 0.8s linear infinite; }
+.update-working { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text); line-height: var(--line-height-short); }
+@media (prefers-reduced-motion: reduce) { .update-mark.update-turning { animation: none; } }

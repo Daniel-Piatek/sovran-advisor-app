@@ -90,7 +90,11 @@ export const test = base.extend({
 
   // The page depends on the app, so the page is checked and closed before the app stops:
   // a request still under way when a test ends is never cut off by a stopped app.
-  page: async ({ page, expectedConsoleErrors, app }, use) => {
+  // Settings opens with every part folded to its name (public/settings-sections.js); most tests start with them all open.
+  settingsFolded: [false, { option: true }],
+
+  page: async ({ page, expectedConsoleErrors, settingsFolded, app }, use) => {
+    if (!settingsFolded) await page.addInitScript(() => { try { localStorage.setItem('settings-sections', 'open'); } catch { /* folded */ } });
     const errors = [];
     page.on('console', (msg) => { if (msg.type() === 'error') errors.push(msg.text()); });
     page.on('pageerror', (err) => errors.push(err.message));

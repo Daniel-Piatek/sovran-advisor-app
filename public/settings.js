@@ -5,7 +5,8 @@
 // changed and every step it took, asked for or was refused.
 
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
-import { app, screen, loadCourse } from './shell.js';
+import { app, screen, loadCourse, onLeave } from './shell.js';
+import { foldSettings } from './settings-sections.js';
 import { listedModules, switchModule, moduleOn } from './modules.js';
 import { googleSection, googleCalendarSection } from './google.js';
 import { readTimings, BUDGET_MS } from './timings.js';
@@ -481,11 +482,13 @@ export async function showSettings() {
       el('p', { class: 'empty' }, 'Every switch you changed and every step your assistant took, asked for or was refused, newest first.'),
       logFold),
   );
+  onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)
   // Opened from the Tour's Sovran Library line (/settings#sovran-library): straight to the key box, ready to paste.
   if (location.hash === '#sovran-library') {
     const part = screen.querySelector('#sovran-library');
     const key = part?.querySelector('input');
     if (key) {
+      part.open?.(); // unfold it first
       part.scrollIntoView({ block: 'center' });
       key.focus({ preventScroll: true });
       part.classList.add('is-arrived');

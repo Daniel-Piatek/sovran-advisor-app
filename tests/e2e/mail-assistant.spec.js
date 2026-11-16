@@ -120,7 +120,7 @@ test('Settings says what your assistant may do with your mail, and that it canno
   const part = page.getByRole('region', { name: 'Your assistant and mail' });
   await expect(part.locator('li[data-rule]')).toHaveText([/already in the conversation/, /never attaches a file/, /at most 10 mails a day/, /never sends by itself/]);
   await expect(part).toContainText('Drafted today: 0 of 10.');
-  await expect(part.getByRole('button')).toHaveCount(0);
+  await expect(part.locator('button:not(.settings-toggle)')).toHaveCount(0); // only the name that folds it
 });
 
 test('a draft is a card: it waits for Send; a stranger is refused; Send gives ten seconds, Undo takes it back, nothing goes', async ({ page, app }) => {
