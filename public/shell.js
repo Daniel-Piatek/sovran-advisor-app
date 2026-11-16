@@ -13,7 +13,7 @@ export const screen = el('div');
 
 // ---- The sidebar: on a phone, a bar along the bottom ----
 // Capture on top (⌘K), then the sections. The Inbox shows how many captures wait. On a
-// phone, the sections marked `more` (People, My Life, Assistant, Settings, Library) sit under a More button instead.
+// phone, the sections marked `more` (People, My Life, Assistant, Tour, Settings, Library) sit under a More button instead.
 
 const sections = [
   { name: 'Notes', href: '/', icon: 'notes', owns: (path) => path === '/' || path.startsWith('/notes/') || path.startsWith('/boards') },
@@ -29,6 +29,8 @@ const sections = [
   { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
+  // The Tour (tour.js): short films of the app, and of the parts you can switch on (2026-11-16, the owner's wish).
+  { name: 'Tour', href: '/tour', icon: 'play', more: true, owns: (path) => path === '/tour' },
   { name: 'Settings', href: '/settings', icon: 'settings', more: true, owns: (path) => path === '/settings' },
   { name: 'Library', href: '/library', icon: 'grid', more: true, owns: (path) => path === '/library' },
 ];
@@ -74,9 +76,9 @@ document.addEventListener('pointerdown', (event) => {
 const captureButton = el('button', {
   type: 'button', class: 'sidebar-capture', title: 'Quick capture (⌘K)', onclick: () => openCapture(),
 }, icon('plus'), el('span', {}, 'Capture'), el('kbd', { class: 'sidebar-key' }, '⌘K'));
-// Settings and Library are pinned to the foot of the column; the others can be dragged into
+// Tour, Settings and Library are pinned to the foot of the column; the others can be dragged into
 // the owner's own order (2026-11-09), remembered in this browser.
-const PINNED = ['Settings', 'Library'];
+const PINNED = ['Tour', 'Settings', 'Library'];
 const ORDER_KEY = 'sidebar.order';
 const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)];
 const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section));
