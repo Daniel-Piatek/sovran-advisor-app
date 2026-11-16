@@ -20,7 +20,7 @@ html.in-app .back-all { display: inline-block; }
    then a line across, then Start again and a red Back to all videos. */
 html.in-app #ends { order: 9; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 6px; }
 html.in-app #scenes { gap: 4px; }
-.pp.pp-sm { width: 28px; height: 28px; font-size: 11px; }
+.pp.pp-sm { width: 24px; height: 24px; font-size: 9px; background: transparent; color: var(--ink); border: 1px solid var(--line); }
 html.in-app #scenes::before { content: "Chapters"; font-family: var(--ui); font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 html.in-app #scenes .scene { font-size: .62rem; padding: 2px 7px; }
 html.in-app .back-all { background: var(--crimson); border-color: var(--crimson); color: var(--crimson-ink); margin-left: 0; }
@@ -69,8 +69,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .cap .n { font-family: var(--ui); font-size: .78rem; font-weight: 600; color: var(--crimson-text); letter-spacing: .04em; }
 .cap h2 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; line-height: 1.2; }
 .cap p { margin: 0; max-width: 72ch; }
-.now { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-height: 52px; background: var(--crimson); color: var(--crimson-ink); border-radius: 10px; padding: 8px 12px; }
-.pp { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--crimson-ink); color: var(--crimson); cursor: pointer; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+.now { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.pp { order: 1; flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--crimson); color: var(--crimson-ink); cursor: pointer; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
 .pp:focus-visible, .sbtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .say { font-family: var(--ui); font-size: .95rem; font-weight: 700; }
 .hint2 { font-family: var(--ui); font-size: .82rem; opacity: .9; }
@@ -254,7 +254,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .veil span { font-family: var(--ui); font-weight: 700; background: var(--crimson); color: var(--crimson-ink); border-radius: 999px; padding: 10px 18px; box-shadow: 0 6px 18px rgba(48,45,45,.15); }
 
 .below { display: grid; gap: 12px; }
-.bar { height: 4px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+.bar { order: 2; flex: 1 1 160px; height: 4px; background: var(--surface); border-radius: 4px; overflow: hidden; }
 .bar span { display: block; height: 100%; width: 0; background: var(--crimson); }
 .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .btn { font: inherit; font-family: var(--ui); font-weight: 700; font-size: .85rem; cursor: pointer; border-radius: 8px; padding: 7px 14px; border: 2px solid var(--line); background: transparent; color: var(--ink); }
@@ -336,6 +336,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
   .row { grid-template-columns: 22px 46px 1fr; } .row .kind { display: none; }
   .foot .dict { display: none; }
 }
+/* The player under the video (2026-11-16, the owner's wish): slim, one line with the progress bar. */
+.now .say { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.now .hint2 { order: 4; flex-basis: 100%; font-family: var(--ui); font-size: .72rem; color: var(--faint); opacity: 1; }
+.now .sound { order: 3; margin-left: 0; }
+.now .sbtn { font-size: .75rem; padding: 3px 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+.now .sbtn[aria-pressed="true"] { background: var(--surface); color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -348,11 +354,6 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
     <span class="n" id="capn">Scene 1 of 10</span>
     <h2 id="caph">Welcome</h2>
     <p id="capp"></p>
-  </div>
-  <div class="now">
-    <button class="pp pp-sm" type="button" id="prevch" aria-label="Previous chapter" title="Previous chapter (←)">⏮</button><button class="pp" type="button" id="pp" aria-label="Pause">❚❚</button><button class="pp pp-sm" type="button" id="nextch" aria-label="Next chapter" title="Next chapter (→)">⏭</button>
-    <span class="say" id="pplabel">Pause</span><span class="hint2">or click the screen · space bar pauses · ← → chapters</span>
-    <div class="sound" id="sound" hidden><button class="sbtn" type="button" id="snd" aria-pressed="false">🔊 Sound on</button></div>
   </div>
 
   <div class="window" id="window" title="Click to pause or play">
@@ -380,7 +381,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
   </div>
 
   <div class="below">
-    <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <div class="now">
+      <button class="pp pp-sm" type="button" id="prevch" aria-label="Previous chapter" title="Previous chapter (←)">⏮</button><button class="pp" type="button" id="pp" aria-label="Pause">❚❚</button><button class="pp pp-sm" type="button" id="nextch" aria-label="Next chapter" title="Next chapter (→)">⏭</button>
+      <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+      <span class="say" id="pplabel">Pause</span><span class="hint2">Click the video or press the space bar to pause · ← → for chapters</span>
+      <div class="sound" id="sound" hidden><button class="sbtn" type="button" id="snd" aria-pressed="false">🔊 Sound on</button></div>
+    </div>
     <div class="ctrl" id="ends"><button class="btn" type="button" id="again">Start again</button><a class="btn back-all" id="back-all" href="/tour" target="_top">← Back to all videos</a></div>
     <div class="ctrl" id="films" role="group" aria-label="Films"><span class="small" style="font-weight:700">Films:</span></div>
     <div class="ctrl" id="scenes" role="group" aria-label="Scenes"></div>
@@ -826,7 +832,7 @@ const scenes = FILMS.flatMap((f) => f.scenes.map((s) => ({ ...s, film: f })));
 // ---- playing ----
 const bar = $('bar'), pp = $('pp');
 const filmBtns = FILMS.map((f) => { const b = h('button', 'scene film', f.t); b.type = 'button'; b.addEventListener('click', () => go(scenes.findIndex((s) => s.film === f))); $('films').append(b); return b; });
-const chips = scenes.map((s, i) => { const SHORT = {"The map": "Map", "Start with your journal": "Journal", "Capture a thought, sort it later": "Capture", "Notes, links and people": "Notes & links", "Your assistant": "Assistant", "Help on every page": "Help", "What to try first": "Try first", "Put Capture on your phone": "Set up", "Catch a thought anywhere": "Capture", "Today, Upcoming and done": "Your lists", "A highlight, and closing the day": "Highlight & close", "Your events": "Events", "Add your Google Calendar": "Google Calendar", "Think on a board": "Use a board", "Your Key Elements": "Key Elements", "Give things a home": "Homes"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch on') ? 'Switch on' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
+const chips = scenes.map((s, i) => { const SHORT = {"The Map": "Map", "Start with your journal": "Journal", "Capture a thought, sort it later": "Capture", "Notes, links and people": "Notes & links", "Your assistant": "Assistant", "Help on every page": "Help", "What to try first": "Try first", "Put Capture on your phone": "Set up", "Catch a thought anywhere": "Capture", "Today, Upcoming and done": "Your lists", "A highlight, and closing the day": "Highlight & close", "Your events": "Events", "Add your Google Calendar": "Google Calendar", "Think on a board": "Use a board", "Your Key Elements": "Key Elements", "Give things a home": "Homes"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch on') ? 'Switch on' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
 function reset() { hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
 function show(i) {
   cur = i; intro = 'scene:' + scenes[i].t;
