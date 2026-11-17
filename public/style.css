@@ -4668,6 +4668,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .settings-part.is-closed > :not(.settings-title, .settings-hint) { display: none; }
 .settings-part:not(.is-closed) > .settings-hint { display: none; } /* open, the part's own words say it */
 @media (prefers-reduced-motion: reduce) { .settings-toggle > .icon { transition: none; } }
+.top-bar > .settings-all { margin-left: auto; } /* Open all · Close all, quiet, at the right of the Settings title */
 
 /* Settings › Updates: the step under way turns, and a line says the update is working. */
 .update-mark.update-turning { display: inline-block; flex: 0 0 auto; align-self: center; margin: 0 0.225em; box-sizing: border-box; width: 0.8em; height: 0.8em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: working-turn 0.8s linear infinite; }

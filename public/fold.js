@@ -20,7 +20,10 @@ export function fold(id, name, ...content) {
     el('summary', { class: 'fold-head' }, icon('chevron'), label, note),
     el('div', { class: 'fold-body' }, ...content));
   box.open = remembered(id);
-  box.addEventListener('toggle', () => remember(id, box.open));
+  box.addEventListener('toggle', () => {
+    if (box.dataset.bulk) { delete box.dataset.bulk; return; } // opened by Settings' Open all: not remembered
+    remember(id, box.open);
+  });
   // count: how many; words: [one, many], e.g. ['step', 'steps']; extra: the latest, or what is in use.
   box.say = (count, [one, many], extra = '') => {
     const what = count === 0 ? 'Nothing yet' : `${count} ${count === 1 ? one : many}`;
