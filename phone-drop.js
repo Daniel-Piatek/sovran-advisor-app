@@ -19,6 +19,8 @@ import { fixPhoneWords, rememberSpoken, rememberSpokenEntry } from './tidy.js';
 import { makeSaveKeys, openSealed } from './cloud/library-save/sealing.js';
 import { saveChatPart } from './chat-saves.js';
 import { libraryKey } from './sovran-library.js';
+import { takePhoneMark } from './report-marks.js';
+import { syncShelf } from './phone-shelf.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -56,7 +58,7 @@ async function call(fetcher, body) {
 export function phoneDropState(db) {
   const box = readBox(db);
   if (!box) return { linked: false };
-  return { linked: true, link: phoneLink(box), made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null, saves_chats: Boolean(box.saver) };
+  return { linked: true, link: phoneLink(box), made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null, saves_chats: Boolean(box.saver), shelf: Object.keys(box.shelf ?? {}).filter((n) => n.startsWith('report.')).length };
 }
 
 // A box in the cloud for this computer, unless there is one. new: close the old one first (the old link stops).
@@ -100,6 +102,9 @@ function journalDay(note, at) {
   return localDay(at ?? new Date());
 }
 
+let shelfDue = true; // the reports are read afresh for the phone at each start of the app (and every few hours)
+export const readShelfSoon = () => { shelfDue = true; };
+
 // Collect what waits: each note into the Inbox (kind journal: into the Journal), then the box deletes them. A note that can't be opened (not sealed
 // with this key) is deleted too, never kept. Returns how many came in.
 export async function collect(db, { fetcher = fetch } = {}) {
@@ -107,6 +112,7 @@ export async function collect(db, { fetcher = fetch } = {}) {
   await ensureSaver(db, fetcher);
   const box = readBox(db);
   let total = 0;
+  let marked = 0; // highlights and comments from the phone: not counted as things for the Inbox
   for (let round = 0; round < 10; round++) {
     let notes;
     try { ({ notes } = await call(fetcher, { action: 'take', box: box.box, pull: box.pull })); } catch (err) {
@@ -125,6 +131,8 @@ export async function collect(db, { fetcher = fetch } = {}) {
         const body = String(note.body ?? '').trim().slice(0, MAX_PHONE_TEXT);
         if (note.kind === 'chat') { // only the Sovran Library's save tool may add to a chat, never the phone's link
           if (note.saved && saveChatPart(db, note)) total++;
+        } else if (note.kind === 'mark') { // a highlight or comment made on a report on the phone (never from the save tool)
+          if (!note.saved && takePhoneMark(db, note)) marked++;
         } else if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
           const words = fixPhoneWords(db, body);
           if (note.kind === 'journal') {
@@ -144,8 +152,19 @@ export async function collect(db, { fetcher = fetch } = {}) {
     await call(fetcher, { action: 'done', box: box.box, pull: box.pull, ids: done });
     if (notes.length < 50) break;
   }
-  const latest = readBox(db) ?? box;
+  let latest = readBox(db) ?? box;
   writeBox(db, { ...latest, problem: null, last_checked_at: now(), ...(total ? { last_collected_at: now(), collected: (latest.collected ?? 0) + total } : {}) });
+  // My reports on Sovran Go: the shelf the phone reads (phone-shelf.js), after the phone's own marks are in.
+  try {
+    latest = readBox(db);
+    if (latest.shelf_problem && Date.now() - new Date(latest.shelf_tried_at ?? 0).getTime() < 600_000) return total; // tried again every ten minutes
+    const kept = await syncShelf(db, latest, (name, sealed) => call(fetcher, { action: 'shelf_put', box: latest.box, pull: latest.pull, name, sealed }), { force: shelfDue });
+    shelfDue = false;
+    if (kept && readBox(db)?.box === latest.box) writeBox(db, { ...readBox(db), ...kept, shelf_problem: null });
+  } catch (err) { // an older drop box has no shelf yet, or no signal: the notes above are in all the same
+    const still = readBox(db);
+    if (still?.box === latest?.box) writeBox(db, { ...still, shelf_problem: err.message, shelf_tried_at: now() });
+  }
   return total;
 }
 

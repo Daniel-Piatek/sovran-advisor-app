@@ -51,12 +51,12 @@ async function phone(browser, testInfo, { answer = () => ({ status: 200, body: {
   return { page, context, dropped, errors, link };
 }
 
-test('Sovran Go opens on four choices, and Ask my AI is a link that opens Claude', async ({ browser }, testInfo) => {
+test('Sovran Go opens on its choices, My reports last, and Ask my AI is a link that opens Claude', async ({ browser }, testInfo) => {
   const { page, context, errors } = await phone(browser, testInfo);
   await expect(page).toHaveTitle('Sovran Go');
   await expect(page.locator('.band-name')).toHaveText('Sovran Go');
   await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeVisible();
-  await expect(page.locator('.choice strong')).toHaveText(['Ask my AI', 'Journal entry', 'My own thought', 'From someone else']);
+  await expect(page.locator('.choice strong')).toHaveText(['Ask my AI', 'Journal entry', 'My own thought', 'From someone else', 'My reports']);
   const ask = page.getByRole('link', { name: /Ask my AI/ });
   await expect(ask).toHaveAttribute('href', 'https://claude.ai/new');
   await expect(ask).toHaveAttribute('target', '_blank'); // a real tapped link: the phone hands it to the Claude app

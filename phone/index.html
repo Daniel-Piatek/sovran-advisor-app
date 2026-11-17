@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <title>Sovran Go</title>
-  <meta name="description" content="Sovran Go: ask your AI, write in your Journal, or keep a thought for the Inbox on your computer.">
+  <meta name="description" content="Sovran Go: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, or read your Sovran reports.">
   <meta name="apple-mobile-web-app-title" content="Sovran Go">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -42,7 +42,23 @@
         <svg class="disc disc-outer" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><rect x="8" y="8" width="8" height="8" rx="1"/></g></svg>
         <span class="choice-words"><strong>From someone else</strong><span>Something you heard or read</span></span>
       </button>
+      <button type="button" class="choice choice-reports" id="my-reports">
+        <img class="choice-crown" src="brand/official-crimson-crown.png" alt="" width="40" height="40">
+        <span class="choice-words"><strong>My reports</strong><span>Read your Sovran reports, highlight and comment</span></span>
+        <span class="choice-go" aria-hidden="true">›</span>
+      </button>
       <p class="status" id="waiting-line" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- My reports: the list, then one report to read (reports.js). -->
+    <section class="reports" id="reports" hidden>
+      <button type="button" class="back" id="reports-back">‹ Back</button>
+      <h1 class="title">My reports</h1>
+      <div class="reports-list" id="reports-list"></div>
+    </section>
+    <section class="report" id="report" hidden>
+      <button type="button" class="back" id="report-back">‹ My reports</button>
+      <article class="report-paper" id="report-paper"></article>
     </section>
 
     <!-- Writing: a journal entry, my own thought, or from someone else. -->
@@ -88,6 +104,18 @@
       <h1 class="title">Sovran Go</h1>
       <p>This phone isn’t linked yet. On your computer, open Sovran Advisor, then <strong>Settings › Phone capture</strong>, and scan the code with this phone’s camera.</p>
     </section>
+
+    <!-- On a report: the bar for the words you selected, the sheet for a comment, and a short line that goes away. -->
+    <div class="pick" id="pick" role="toolbar" aria-label="The words you selected" hidden>
+      <button type="button" id="pick-highlight">Highlight</button>
+      <button type="button" id="pick-comment">Comment</button>
+      <a id="pick-ask" href="https://claude.ai/new" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v2.4"/><rect x="5.5" y="6" width="13" height="11.4" rx="2.8"/><path d="M9.4 10.8v.8M14.6 10.8v.8M9.6 14.4h4.8"/></svg>
+        <span id="pick-ask-words">Ask my AI</span>
+      </a>
+    </div>
+    <div class="sheet" id="sheet" role="dialog" aria-label="Your comment" hidden></div>
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 
     <p class="foot">Your words are scrambled on this phone before they leave it. Only your computer can read them.</p>
   </main>

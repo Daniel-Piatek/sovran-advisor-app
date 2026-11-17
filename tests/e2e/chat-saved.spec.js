@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import { startServer } from '../../server.js';
 import { saveToAdvisor } from '../../cloud/library-save/save.js';
 import { fakeBox } from '../fake-drop-box.js';
+import { useReports } from '../../reports.js';
 
 const KEY = 'sovran_madeupmadeupmadeupmadeup';
 // On a phone the list comes first and an item is opened by tapping it (as in inbox.spec.js).
@@ -20,6 +21,7 @@ test('a saved chat is one Inbox item, marked as from your chat with Claude, and 
   const box = fakeBox();
   box.students.set(box.sha(KEY), 'client-madeup');
   const app = await startServer({ dataDir: testInfo.outputPath('data'), port: 0, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, googleCalendarEvery: 0, googleCalendarSendEvery: 0, mailSyncEvery: 0, phoneDropEvery: 0, phoneDropFetch: box.fetcher });
+  useReports({ fetch: async () => new Response('{}', { status: 401 }) }); // the copies for the phone's shelf never ask the real library from a test
   try {
     const api = (method, p, body) => fetch(app.url + p, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     const save = (args) => saveToAdvisor(box.libraryTx('client-madeup'), { id: 'client-madeup' }, args);

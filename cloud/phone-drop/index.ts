@@ -1,7 +1,8 @@
 // Supabase web function phone-drop: the door between a student's phone and their Sovran Advisor (module phone-drop).
 // Deploy with JWT checking off: each call carries its own box token instead. The phone page may only leave a sealed
 // note (action drop); the student's app may open a box, collect, mark as kept (which deletes) and close (open, take,
-// done, close), and register its public key for saved chats (register; cloud/library-save/). The words are scrambled on the phone with a key that never reaches this function. The database side
+// done, close), register its public key for saved chats (register; cloud/library-save/) and put sealed copies of the student's
+// reports and highlights on the box's shelf (shelf_put), which the phone reads with its own token (shelf). The words are scrambled on the phone with a key that never reaches this function. The database side
 // is cloud/phone-drop.sql.
 import postgres from 'npm:postgres@3.4.5';
 
@@ -15,6 +16,8 @@ const HASH = /^[0-9a-f]{64}$/;
 const SEALED = /^[A-Za-z0-9_-]{30,170000}$/; // 20,000 characters of any kind, sealed, fit
 const LIBRARY_KEY = /^sovran_[A-Za-z0-9_-]{20,200}$/;
 const PUBLIC_KEY = /^[A-Za-z0-9_-]{87}$/;
+const SHELF_NAME = /^[a-z0-9][a-z0-9.-]{0,79}$/;
+const SHELF_SEALED = /^[A-Za-z0-9_-]{30,1400000}$/; // a whole report, sealed (about a megabyte of text at most)
 // As library-mcp hashes a library key (core.js sha256Hex).
 async function sha256Hex(text: string) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -44,6 +47,13 @@ Deno.serve(async (req) => {
       if (r === 'busy' || r === 'full') return json(429, { error: 'The drop box can’t take a new phone just now. Try again in an hour.' });
       return json(400, { error: 'That box could not be made.' });
     }
+    if (msg.action === 'shelf') { // the phone reads what its computer put there: My reports on Sovran Go
+      if (!TOKEN.test(String(msg.drop ?? ''))) return json(400, { error: 'Send the drop token.' });
+      const have: Record<string, string> = {};
+      if (msg.have && typeof msg.have === 'object') for (const [k, v] of Object.entries(msg.have).slice(0, 20)) if (SHELF_NAME.test(k) && typeof v === 'string') have[k] = v.slice(0, 40);
+      const [{ r }] = await sql`SELECT phone_drop.read_shelf(${box}, ${msg.drop}, ${sql.json(have)}) AS r`;
+      return r === null ? json(404, { error: 'This link has been replaced. Open the new one from Settings on your computer.' }) : json(200, { shelf: r });
+    }
     if (!TOKEN.test(String(msg.pull ?? ''))) return json(400, { error: 'Send the pull token.' });
     if (msg.action === 'take') {
       const [{ r }] = await sql`SELECT phone_drop.take_notes(${box}, ${msg.pull}) AS r`;
@@ -61,6 +71,15 @@ Deno.serve(async (req) => {
       if (r === 'unknown') return json(404, { error: 'No such box.' });
       if (r === 'nokey') return json(403, { error: 'That library key is not in use.' });
       return json(400, { error: 'Not a public key.' });
+    }
+    if (msg.action === 'shelf_put') { // the computer's sealed copy of a report, or of the highlights ('' takes it off)
+      const sealed = String(msg.sealed ?? '');
+      if (!SHELF_NAME.test(String(msg.name ?? '')) || (sealed !== '' && !SHELF_SEALED.test(sealed))) return json(400, { error: 'Send a name and sealed text.' });
+      const [{ r }] = await sql`SELECT phone_drop.put_shelf(${box}, ${msg.pull}, ${msg.name}, ${sealed}) AS r`;
+      if (r === 'ok') return json(200, { put: true });
+      if (r === 'unknown') return json(404, { error: 'No such box.' });
+      if (r === 'full') return json(429, { error: 'The shelf is full.' });
+      return json(400, { error: 'Send a name and sealed text.' });
     }
     if (msg.action === 'close') {
       const [{ r }] = await sql`SELECT phone_drop.close_box(${box}, ${msg.pull}) AS r`;

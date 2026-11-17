@@ -100,3 +100,102 @@ body.choosing .status, body.choosing .foot { color: #aaa6a6; }
 a { color: var(--muted); font-family: var(--ui); }
 .foot { margin: auto 0 0; color: var(--muted); font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
 .done ~ .foot { margin-top: 0; }
+
+/* ---- My reports (reports.js): the report's own Ivory & Gold look, as on the computer's Reports page ----
+   A warm ivory page in both themes (a report reads like its paper), charcoal words, gold labels and rules, the
+   crimson drop cap. Reading text 1.44; cards, labels and comments 1.36. */
+:root { --paper: #fbf8ef; --ink: #302d2d; --ink-muted: #555151; --rule: #d9c14b; --wash: #efe3a5; --paper-line: #d4d1d1; }
+.choice-reports { margin-top: 10px; background: var(--paper); border: 1.5px solid var(--gold); }
+.choice-reports:active { background: #f3eedd; }
+.choice-crown { width: 40px; height: 40px; flex: none; object-fit: contain; }
+.choice-go { margin-left: auto; font-family: var(--ui); font-size: 1.5rem; line-height: 1; color: var(--charcoal); }
+body.reading { background: var(--paper); color: var(--ink); }
+body.reading .foot { display: none; }
+body.reading .back, body.reading .title { color: var(--ink); }
+.reports, .report { display: flex; flex-direction: column; gap: 14px; }
+.reports-list { display: grid; gap: 14px; }
+.reports-empty { margin: 0; font-size: 1.0625rem; line-height: 1.44; color: var(--ink-muted); }
+.report-card {
+  display: grid; gap: 8px; justify-items: start; width: 100%; text-align: left; cursor: pointer; font: inherit; line-height: 1.36;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--paper-line); border-left: 4px solid var(--rule); border-radius: 10px; padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+}
+.report-card:focus-visible, .report-contents-link:focus-visible, .report-note:focus-visible, .pick button:focus-visible, .pick a:focus-visible, .sheet button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.report-card-crown { width: 64px; height: auto; }
+.report-card-picture { width: 112px; height: 112px; }
+.report-card-label, .report-part-label, .report-notes::before {
+  font-family: var(--ui); font-weight: 700; font-size: 0.6875rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rule); /* brand Gold, as on the computer */
+}
+.report-card-title { font-family: var(--heading); font-size: 1.625rem; line-height: 1.15; }
+.report-card-rule { width: 120px; height: 4px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.report-card-about { font-size: 1rem; line-height: 1.44; }
+.report-card-meta { font-family: var(--ui); font-size: 0.875rem; color: var(--ink-muted); }
+.report-card-open { font-family: var(--ui); font-weight: 700; color: var(--crimson); }
+
+.report-paper { color: var(--ink); }
+.report-cover { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 0 20px; }
+.report-crown { width: 110px; height: auto; }
+.report-title { margin: 24px 0 12px; font-family: var(--heading); font-weight: 400; font-size: 2.125rem; line-height: 1.15; letter-spacing: -0.5px; }
+.report-rule { width: 190px; height: 4px; margin: 8px auto; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.report-wordmark { width: 190px; height: auto; margin-top: 20px; }
+.report-meta { margin: 20px 0 0; font-family: var(--ui); font-size: 0.875rem; line-height: 1.36; color: var(--ink-muted); }
+.report-hint { margin: 0 0 16px; font-family: var(--ui); font-size: 0.875rem; line-height: 1.36; color: var(--ink-muted); text-align: center; }
+.report-contents { margin: 0 0 24px; padding: 12px 16px; border: 1px solid var(--paper-line); border-radius: 10px; }
+.report-contents-title { margin: 0 0 8px; font-family: var(--ui); font-size: 0.875rem; font-weight: 700; color: var(--ink-muted); }
+.report-contents ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; line-height: 1.36; }
+.report-contents-link { padding: 6px 0; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--ink); text-align: left; cursor: pointer; }
+.report-section { scroll-margin-top: 12px; margin-bottom: 28px; padding-top: 20px; }
+.report-part-label { margin: 0 0 4px; }
+.report-section-title { margin: 4px 0 20px; font-family: var(--heading); font-weight: 400; font-size: 1.75rem; line-height: 1.15; }
+.report-level-2 > .report-section-title { font-size: 1.375rem; margin-bottom: 12px; }
+.report-text { font-size: 1.0625rem; line-height: 1.44; -webkit-user-select: text; user-select: text; overflow-wrap: break-word; }
+.report-text p, .report-text ul, .report-text ol, .report-text blockquote { margin: 0 0 16px; }
+.report-text ul, .report-text ol { padding-left: 1.4em; }
+.report-text li { margin-bottom: 4px; }
+.report-text h3, .report-text h4 { margin: 24px 0 8px; font-family: var(--ui); font-size: 1.0625rem; font-weight: 700; }
+.report-text blockquote { padding-left: 16px; border-left: 1px solid var(--paper-line); color: var(--ink-muted); }
+.report-text hr { border: 0; border-top: 1px solid var(--paper-line); margin: 24px 0; }
+.report-text .report-break { width: 34%; height: 2px; margin: 32px auto; background: var(--rule); }
+.report-text a { color: var(--ink); text-decoration: underline; font-family: inherit; }
+.report-lede::first-letter { float: left; padding: 5px 8px 0 0; font-family: var(--heading); font-size: 3.625rem; line-height: 0.85; color: var(--crimson); }
+mark.report-mark { background: var(--wash); color: var(--ink); border-radius: 3px; cursor: pointer; }
+mark.report-mark.has-comment { text-decoration: underline dotted; text-underline-offset: 3px; }
+mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.report-notes { display: grid; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--paper-line); }
+.report-notes::before { content: 'Your comments'; }
+.report-note { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--paper-line); border-radius: 10px; background: var(--white); color: var(--ink); font: inherit; line-height: 1.36; text-align: left; cursor: pointer; }
+.report-note-quote { font-size: 0.8125rem; color: var(--ink-muted); }
+.report-note-comment { font-size: 0.9375rem; white-space: pre-wrap; }
+.report-note-asked { font-size: 0.875rem; color: var(--ink-muted); }
+
+/* The bar for selected words, at the bottom, clear of the phone's own copy menu. */
+.pick {
+  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex; align-items: stretch; background: var(--charcoal); border-radius: 12px; overflow: hidden; max-width: calc(100vw - 16px);
+}
+.pick button, .pick a {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer; white-space: nowrap;
+  font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1; color: var(--white); text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.pick button + button, .pick a { border-left: 1px solid #555151; }
+.pick button:active, .pick a:active { background: #464242; }
+.pick svg { width: 20px; height: 20px; fill: none; stroke: var(--gold); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.sheet {
+  position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; max-height: 80dvh; overflow-y: auto; display: grid; gap: 10px;
+  padding: 16px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--white); color: var(--ink); border-top: 2px solid var(--gold); border-radius: 16px 16px 0 0; line-height: 1.36;
+}
+.sheet-close { justify-self: end; width: 44px; height: 44px; margin: -10px -10px -14px 0; border: 0; background: none; font-size: 1.5rem; line-height: 1; color: var(--ink-muted); cursor: pointer; }
+.sheet-quote { margin: 0; font-size: 0.9375rem; color: var(--ink-muted); }
+.sheet-asked { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; }
+.sheet-answer { margin: 0; padding-left: 12px; border-left: 2px solid var(--gold); font-size: 0.9375rem; line-height: 1.44; white-space: pre-wrap; }
+.sheet-text { width: 100%; min-height: 6rem; padding: 12px; border: 1px solid var(--paper-line); border-radius: 10px; background: var(--white); color: var(--ink); font: inherit; font-size: 1.0625rem; line-height: 1.44; resize: vertical; }
+.sheet-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sheet-quiet { min-height: 48px; padding: 0 4px; border: 0; background: none; font-family: var(--ui); font-weight: 500; font-size: 1rem; color: var(--ink-muted); cursor: pointer; }
+.sheet-save { min-height: 48px; padding: 0 22px; border: 0; border-radius: 8px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; cursor: pointer; }
+.sheet-waiting { margin: 0; font-family: var(--ui); font-size: 0.8125rem; color: var(--ink-muted); }
+.toast {
+  position: fixed; z-index: 35; left: 16px; right: 16px; bottom: max(76px, calc(env(safe-area-inset-bottom) + 62px)); margin: 0 auto; max-width: 420px; padding: 12px 16px;
+  background: var(--charcoal); color: var(--white); border-radius: 10px; font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; text-align: center;
+}
+.copy-box { position: fixed; top: 0; left: -200vw; opacity: 0; }
