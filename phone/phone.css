@@ -168,11 +168,13 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .report-note-comment { font-size: 0.9375rem; white-space: pre-wrap; }
 .report-note-asked { font-size: 0.875rem; color: var(--ink-muted); }
 
-/* The bar for selected words, at the bottom, clear of the phone's own copy menu. */
+/* The bar for selected words: a little up from the bottom, clear of the phone's own copy menu above the words and of
+   Android's search bar along the bottom edge; at the top (.is-top) when the chosen words are low on the screen. */
 .pick {
-  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom));
+  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(104px + env(safe-area-inset-bottom));
   display: flex; align-items: stretch; background: var(--charcoal); border-radius: 12px; overflow: hidden; max-width: calc(100vw - 16px);
 }
+.pick.is-top { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
 .pick button, .pick a {
   display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer; white-space: nowrap;
   font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1; color: var(--white); text-decoration: none; -webkit-tap-highlight-color: transparent;
