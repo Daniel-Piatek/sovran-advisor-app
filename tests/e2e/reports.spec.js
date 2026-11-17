@@ -184,3 +184,34 @@ test('ask the assistant about chosen words: the answer beside them, kept, and ca
   await pop.getByRole('link', { name: 'Open in Assistant' }).click();
   await expect(page).toHaveURL(new RegExp(`/assistant/${chats[0].id}$`));
 });
+
+// The Pattern's break line in Part Five (2026-11-17, the owner's wish): a short centred gold bar, never shown as text,
+// whether the line arrives as it is or written with &lt; &gt; &quot;.
+test('a break line is drawn as a short gold bar, never as text', async ({ page, app }) => {
+  const sections = [
+    SECTIONS[0],
+    { ...SECTIONS[1], body: 'Before the break.\n\n<div class="break"></div>\n\nAfter the break.' },
+    { ...SECTIONS[3], body: 'Once more.\n&lt;div class=&quot;break&quot;&gt;&lt;/div&gt;\nAnd the end.' },
+  ];
+  place(app, 'pattern', { sections });
+  await page.goto(`${app.url}/reports/pattern`);
+  await expect(page.locator('.report-text').nth(1)).toContainText('After the break.');
+  await expect(page.locator('.report-break')).toHaveCount(2);
+  await expect(page.locator('.report-body')).not.toContainText('div');
+  await expect(page.locator('.report-body')).not.toContainText('break"');
+  const bar = await page.locator('#section-your-gifts .report-break').evaluate((node) => {
+    const s = getComputedStyle(node);
+    const text = node.parentElement.getBoundingClientRect();
+    const box = node.getBoundingClientRect();
+    return { height: box.height, share: box.width / text.width, colour: s.backgroundColor, centred: Math.abs((box.left - text.left) - (text.right - box.right)) < 1,
+      above: parseFloat(s.marginTop), below: parseFloat(s.marginBottom) };
+  });
+  expect(bar.height).toBe(2);
+  expect(bar.share).toBeCloseTo(0.34, 2);
+  expect(bar.colour).toBe('rgb(217, 193, 75)');
+  expect(bar.centred).toBe(true);
+  expect(bar.above).toBeGreaterThan(20);
+  expect(bar.below).toBeGreaterThan(20);
+  // The drop cap still sits on the part's first paragraph.
+  await expect(page.locator('#section-your-gifts .report-text > p.report-lede')).toHaveText('Before the break.');
+});

@@ -4537,6 +4537,8 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .report-text h3, .report-text h4 { margin: var(--space-6) 0 var(--space-2); font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-bold); }
 .report-text blockquote { padding-left: var(--space-4); border-left: var(--line); color: var(--color-text-muted); }
 .report-text hr { border: 0; border-top: var(--line); margin: var(--space-6) 0; }
+/* A report's break line (<div class="break"></div>, public/report-break.js): a short centred gold bar, 2px, 34% of the text width. */
+.report-text .report-break { width: 34%; height: 2px; margin: var(--space-8) auto; border: 0; background: var(--report-rule); } /* brand Gold #D9C14B */
 .report-text a { color: var(--color-text); text-decoration: underline; }
 
 /* Reading a report with your highlights: the text keeps its reading width, your comments sit in a margin beside it (under it
