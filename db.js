@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 75;
+export const SCHEMA_VERSION = 76;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -391,6 +391,8 @@ const steps = {
     const columns = db.prepare("SELECT name FROM pragma_table_info('report_marks')").all().map((c) => c.name);
     if (columns.length && !columns.includes('conversation_id')) db.exec("ALTER TABLE report_marks ADD COLUMN conversation_id TEXT NOT NULL DEFAULT ''");
   },
+  // 76: journal entries from the phone, tidied (Sovran Go, tidy.js): entry_tidy is new (made from schema.sql). Nothing else changes.
+  76() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.

@@ -1,7 +1,7 @@
 {
-  "name": "Capture",
-  "short_name": "Capture",
-  "description": "A thought from your phone to the Inbox in Sovran Advisor on your computer.",
+  "name": "Sovran Go",
+  "short_name": "Sovran Go",
+  "description": "Ask your AI, write in your Journal, or keep a thought for the Inbox in Sovran Advisor on your computer.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

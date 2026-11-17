@@ -32,9 +32,10 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes
   everything to a new computer. No cloud account, nothing to pay.
-- **Phone capture** (off until you switch it on): a Capture app with the crown icon on your iPhone or
-  Android phone. Speak (with the keyboard's microphone) or type a thought anywhere; it lands in your
-  Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
+- **Phone capture** (off until you switch it on): **Sovran Go**, with the crown icon, on your iPhone or
+  Android phone. It asks what you would like to do: **Ask my AI** opens the Claude app; a **Journal entry**
+  lands in your Journal on the day you wrote it; **My own thought** or **From someone else** (speak with
+  the keyboard's microphone, or type) lands in your Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
   unreadable, in the Sovran drop box only until your computer collects it, then it is deleted.
   On your computer it is tidied: names and course words spelled right (your glossary and the Sovran
   glossary, `sovran-glossary.json`), and commas and full stops added by your own assistant.

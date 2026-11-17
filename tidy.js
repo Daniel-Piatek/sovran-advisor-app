@@ -6,7 +6,8 @@
 //      all) adds punctuation and capital letters. Its answer is kept only when it changed punctuation, capitals and
 //      at most a few words; otherwise the words stay as they were. What was said on the phone is always kept
 //      (capture_tidy.spoken) and the Inbox shows it under "As you said it".
-// A note you have edited, sorted or deleted in the meantime is left alone.
+// A note you have edited, sorted or deleted in the meantime is left alone. A journal entry from the phone (Sovran Go)
+// is tidied the same way (entry_tidy): left alone once you have edited or deleted it.
 
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -15,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { claudeEnv, DEFAULT_COMMAND } from './assistant.js';
 import { codexArgs, codexEnv, lineReader } from './codex.js';
 import { fixes, keyterms, applyFixes } from './glossary.js';
+import { updateEntry } from './entries.js';
 
 const MAX_TRIES = 3;
 const READ_FOR_MS = 2 * 60_000;
@@ -31,6 +33,13 @@ export function rememberSpoken(db, captureId, { spoken, fixed }) {
   const time = now();
   db.prepare(`INSERT OR IGNORE INTO capture_tidy (id, created_at, updated_at, capture_id, spoken, fixed, state)
     VALUES (?, ?, ?, ?, ?, ?, ?)`).run(randomUUID(), time, time, captureId, spoken, fixed, 'waiting');
+}
+
+// A journal entry from the phone waits for its punctuation.
+export function rememberSpokenEntry(db, entryId, { spoken, fixed }) {
+  const time = now();
+  db.prepare(`INSERT OR IGNORE INTO entry_tidy (id, created_at, updated_at, entry_id, spoken, fixed, state)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`).run(randomUUID(), time, time, entryId, spoken, fixed, 'waiting');
 }
 
 // How many words differ between two texts (a word-level edit distance, punctuation and capitals ignored).
@@ -75,8 +84,11 @@ export function startTidier({ db, dataDir, command = DEFAULT_COMMAND, ai = null,
   const settle = (row, state, body) => {
     db.exec('BEGIN');
     try {
-      if (body) db.prepare("UPDATE captures SET body = ?, updated_at = ? WHERE id = ? AND body = ? AND state = 'waiting' AND deleted_at IS NULL").run(body, now(), row.capture_id, row.fixed);
-      db.prepare('UPDATE capture_tidy SET state = ?, updated_at = ? WHERE id = ?').run(state, now(), row.id);
+      if (body && row.entry_id) { // only an entry still as it came in; updateEntry keeps its links and tasks in step
+        const still = db.prepare('SELECT body FROM journal_entries WHERE id = ? AND deleted_at IS NULL').get(row.entry_id);
+        if (still?.body === row.fixed) updateEntry(db, row.entry_id, { body });
+      } else if (body) db.prepare("UPDATE captures SET body = ?, updated_at = ? WHERE id = ? AND body = ? AND state = 'waiting' AND deleted_at IS NULL").run(body, now(), row.capture_id, row.fixed);
+      db.prepare(`UPDATE ${row.entry_id ? 'entry_tidy' : 'capture_tidy'} SET state = ?, updated_at = ? WHERE id = ?`).run(state, now(), row.id);
       db.exec('COMMIT');
     } catch (err) { db.exec('ROLLBACK'); throw err; }
   };
@@ -125,11 +137,16 @@ export function startTidier({ db, dataDir, command = DEFAULT_COMMAND, ai = null,
         WHERE t.state = 'waiting' AND c.deleted_at IS NULL AND c.state = 'waiting' AND c.body = t.fixed ORDER BY t.created_at LIMIT 20`).all();
       db.prepare(`UPDATE capture_tidy SET state = 'kept', updated_at = ? WHERE state = 'waiting' AND capture_id IN
         (SELECT id FROM captures c WHERE c.deleted_at IS NOT NULL OR c.state <> 'waiting' OR c.body <> capture_tidy.fixed)`).run(now());
+      // The same for journal entries from the phone.
+      waiting.push(...db.prepare(`SELECT t.id, t.entry_id, t.fixed, t.tries FROM entry_tidy t JOIN journal_entries e ON e.id = t.entry_id
+        WHERE t.state = 'waiting' AND e.deleted_at IS NULL AND e.body = t.fixed ORDER BY t.created_at LIMIT 20`).all());
+      db.prepare(`UPDATE entry_tidy SET state = 'kept', updated_at = ? WHERE state = 'waiting' AND entry_id IN
+        (SELECT id FROM journal_entries e WHERE e.deleted_at IS NOT NULL OR e.body <> entry_tidy.fixed)`).run(now());
       let any = false;
       for (const row of waiting) {
         if (stopped) break;
         if (row.tries >= MAX_TRIES) { settle(row, 'kept', ''); continue; }
-        db.prepare('UPDATE capture_tidy SET tries = tries + 1, updated_at = ? WHERE id = ?').run(now(), row.id);
+        db.prepare(`UPDATE ${row.entry_id ? 'entry_tidy' : 'capture_tidy'} SET tries = tries + 1, updated_at = ? WHERE id = ?`).run(now(), row.id);
         if (await tidyOne(row)) any = true;
       }
       if (any) onDone();

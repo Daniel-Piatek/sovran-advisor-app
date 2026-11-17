@@ -1,7 +1,9 @@
-// The phone Capture page (module phone-drop), served from GitHub Pages and put on the phone's home screen with the
+// Sovran Go, the phone page (module phone-drop), served from GitHub Pages and put on the phone's home screen with the
 // crown icon. Its link carries, after "#", this phone's own drop box, its token and the key (a browser never sends
-// that part anywhere). A thought is sealed here (seal.js) and left in the Sovran drop box; the person's own computer
-// collects it into the Inbox and the box forgets it. Without signal, the words wait on this phone and go later.
+// that part anywhere). The first screen asks what you would like to do: Ask my AI opens your AI's own app; a journal
+// entry, your own thought or something from someone else is written here, sealed (seal.js) and left in the Sovran
+// drop box. The person's own computer collects it (a journal entry into the Journal, a thought into the Inbox) and
+// the box forgets it. Without signal, the words wait on this phone and go later.
 
 import { seal, readLinkPart } from './seal.js';
 
@@ -9,6 +11,7 @@ export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/p
 const LINK = 'sovran.phone.link';
 const WAITING = 'sovran.phone.waiting';
 const SEEN_SETUP = 'sovran.phone.setup-seen';
+const AI = 'sovran.phone.ai';
 const store = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private browsing: nothing kept */ } },
@@ -16,6 +19,24 @@ const store = {
 const $ = (id) => document.getElementById(id);
 const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+// The AI that Ask my AI opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
+const AIS = {
+  claude: { href: 'https://claude.ai/new', line: 'Ask Claude about your reports and the teaching' },
+  chatgpt: { href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching' },
+};
+const asked = new URLSearchParams(location.search).get('ai');
+if (asked && AIS[asked]) store.set(AI, asked);
+const ai = AIS[store.get(AI)] ?? AIS.claude;
+
+// What can be written here. A journal entry goes to the Journal; the other two to the Inbox, as before.
+const KINDS = {
+  journal: { title: 'Journal entry', keep: 'Add to my Journal', done: 'Added', place: 'Journal', world: 'inner' },
+  inner: { title: 'My own thought', keep: 'Keep in Inbox', done: 'Kept', place: 'Inbox', world: 'inner' },
+  outer: { title: 'From someone else', keep: 'Keep in Inbox', done: 'Kept', place: 'Inbox', world: 'outer' },
+};
+const two = (n) => String(n).padStart(2, '0');
+const localDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 
 // The link: from the address (and remembered), else the one remembered. An installed Android app opens without the
 // "#" part (its manifest starts at ./) and finds it here; an iPhone keeps the whole address on the home screen.
@@ -36,6 +57,13 @@ if (!ios) {
 const waiting = () => { try { return JSON.parse(store.get(WAITING) ?? '[]'); } catch { return []; } };
 const keepWaiting = (list) => store.set(WAITING, JSON.stringify(list));
 const say = (words) => { $('status').textContent = words; };
+const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signal.`;
+
+function show(name) {
+  for (const id of ['choose', 'form', 'done', 'setup', 'nolink']) $(id).hidden = id !== name;
+  document.body.classList.toggle('choosing', name === 'choose');
+  scrollTo(0, 0);
+}
 
 async function send(item) {
   const sealed = await seal(link.key, item);
@@ -61,57 +89,99 @@ async function flush() {
   return list.length;
 }
 
-function showForm() {
-  $('setup').hidden = true;
-  $('form').hidden = false;
+function start() {
   const text = $('text');
-  let world = 'inner';
-  const worlds = [...document.querySelectorAll('[data-world]')];
-  worlds.forEach((b) => b.addEventListener('click', () => {
-    world = b.dataset.world;
-    worlds.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  const drafts = {}; // what was written and not kept yet, by kind: Back loses nothing
+  let kind = 'inner';
+
+  $('ask').href = ai.href;
+  $('ask-line').textContent = ai.line;
+
+  const choose = () => {
+    const left = waiting().length;
+    $('waiting-line').textContent = left ? waits(left) : '';
+    show('choose');
+  };
+  const write = (next) => {
+    kind = next;
+    const k = KINDS[kind];
+    $('form').dataset.kind = kind;
+    $('form-disc').replaceChildren(document.querySelector(`.choice[data-kind="${kind}"] svg`).cloneNode(true));
+    $('form-title').textContent = k.title;
+    $('form-day').hidden = kind !== 'journal';
+    $('form-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    $('keep').textContent = k.keep;
+    text.value = drafts[kind] ?? '';
+    say('');
+    show('form');
     text.focus();
-  }));
+  };
+  const done = (title, words) => {
+    const k = KINDS[kind];
+    $('done-title').textContent = title;
+    $('done-tag').textContent = k.title;
+    $('done-tag').dataset.kind = kind;
+    $('done-words').textContent = words;
+    show('done');
+  };
+
+  // The phone's own Back goes from writing to the choices, as ‹ Back does.
+  document.querySelectorAll('.choice[data-kind]').forEach((b) => b.addEventListener('click', () => { history.pushState({ writing: true }, ''); write(b.dataset.kind); }));
+  $('back').addEventListener('click', () => history.back());
+  addEventListener('popstate', () => { if (!$('form').hidden) drafts[kind] = text.value; choose(); });
+  $('another').addEventListener('click', () => write(kind));
+
   $('form').addEventListener('submit', async (event) => {
     event.preventDefault();
     const body = text.value.trim();
     if (!body) { text.focus(); return; }
-    const item = { body, world, at: new Date().toISOString() };
-    const button = $('form').querySelector('.keep');
-    button.disabled = true;
-    text.value = '';
+    const k = KINDS[kind];
+    const at = new Date();
+    const item = { body, world: k.world, at: at.toISOString(), ...(kind === 'journal' ? { kind: 'journal', day: localDay(at) } : {}) };
+    $('keep').disabled = true;
+    say('');
     try {
       await send(item);
       const left = await flush();
-      say(left ? `Kept. It goes to your Inbox when your computer is on. ${left} more ${left === 1 ? 'waits' : 'wait'} on this phone.` : 'Kept. It goes to your Inbox when your computer is on.');
+      drafts[kind] = '';
+      done(k.done, `It will be in your ${k.place} when your computer is on.${left ? ` ${left} more ${left === 1 ? 'waits' : 'wait'} on this phone.` : ''}`);
     } catch (err) {
-      if (err.refused) { text.value = body; say(err.message); }
-      else { keepWaiting([...waiting(), item]); say(err.full ? err.message : 'No connection. Saved on this phone; it goes as soon as there is signal.'); }
+      if (err.refused) say(err.message); // the words stay in the box
+      else {
+        keepWaiting([...waiting(), item]);
+        drafts[kind] = '';
+        done('Saved', err.full ? err.message : 'No connection. Saved on this phone; it goes as soon as there is signal.');
+      }
     }
-    button.disabled = false;
+    $('keep').disabled = false;
   });
+
   const retry = async () => {
     const before = waiting().length;
     if (!before) return;
     const left = await flush();
-    if (left < before) say(left ? `${before - left} sent; ${left} still ${left === 1 ? 'waits' : 'wait'} on this phone.` : `${before} saved earlier ${before === 1 ? 'is' : 'are'} sent.`);
-    else say(`${left} ${left === 1 ? 'thought waits' : 'thoughts wait'} on this phone for signal.`);
+    const line = left < before
+      ? (left ? `${before - left} sent; ${left} still ${left === 1 ? 'waits' : 'wait'} on this phone.` : `${before} saved earlier ${before === 1 ? 'is' : 'are'} sent.`)
+      : waits(left);
+    $('waiting-line').textContent = line;
+    if (!$('form').hidden) say(line);
   };
   addEventListener('online', retry);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retry(); });
+  choose();
   retry();
 }
 
 // First visit in the browser: how to put it on the home screen (once; "Use it here for now" goes straight on).
 function showSetup() {
-  $('setup').hidden = false;
+  show('setup');
   $(ios ? 'steps-ios' : 'steps-android').hidden = false;
   let prompt = null;
   addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); prompt = event; $('install').hidden = false; });
   $('install').addEventListener('click', async () => { if (prompt) { prompt.prompt(); await prompt.userChoice.catch(() => {}); prompt = null; $('install').hidden = true; } });
-  $('use-here').addEventListener('click', (event) => { event.preventDefault(); store.set(SEEN_SETUP, '1'); showForm(); });
+  $('use-here').addEventListener('click', (event) => { event.preventDefault(); store.set(SEEN_SETUP, '1'); start(); });
 }
 
-if (!link) $('nolink').hidden = false;
-else if (installed || store.get(SEEN_SETUP)) showForm();
+if (!link) show('nolink');
+else if (installed || store.get(SEEN_SETUP)) start();
 else showSetup();
