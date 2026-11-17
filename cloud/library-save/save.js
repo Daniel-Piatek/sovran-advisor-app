@@ -21,10 +21,16 @@ const CHAT_ID = /^[a-z0-9]{12}$/;
 
 const OFFER = 'Would you like me to keep this chat saved to your Sovran Advisor?';
 
+// The order matters and is said three times (here, in the tool's description, in its answer): the first live test
+// (18 Nov 2026) showed an assistant putting its answer only into the save and showing the student just "Saved".
+const ANSWER_FIRST = 'The save is an extra copy, never the answer itself: always write your full answer to the student in the chat first, '
+  + 'exactly as you would with no saving, and only after that call the tool with a copy of what you just wrote. '
+  + 'A reply that only says it was saved is a mistake.';
+
 export const SAVE_INSTRUCTIONS = ' Saving: after your first answer in a chat that used this library, end that answer by asking once, in these words: '
-  + `"${OFFER}" If the student says yes, call save_to_my_sovran_advisor with every question and answer so far, word for word, `
-  + 'and after each later answer in the same chat call it again with only the new question and answer and the chat_id it gave you; '
-  + 'then add one short line: "Saved to your Sovran Advisor." If the student says no, do not ask again in this chat; save only if they ask ("save this"). '
+  + `"${OFFER}" If the student says yes, call save_to_my_sovran_advisor with every question and answer so far, word for word, and say in one short line: "Saved to your Sovran Advisor." `
+  + 'For every later question in the same chat: answer it fully in the chat first, then call the tool again with only that new question and answer and the chat_id it gave you, and say nothing about the save. '
+  + `${ANSWER_FIRST} If the student says no, do not ask again in this chat; save only if they ask ("save this"). `
   + 'Never save without the student\'s yes.';
 
 export const SAVE_TOOL = {
@@ -32,7 +38,8 @@ export const SAVE_TOOL = {
   description: 'Saves this chat to the student\'s own Sovran Advisor, where it arrives in their Inbox as one item per chat. '
     + `Use it only after the student said yes to "${OFFER}" (ask that once, after your first answer in a chat that used this library), or when they ask you to save. `
     + 'First save: send every question and answer so far, word for word, with no chat_id; the answer gives you a chat_id. '
-    + 'After each later answer in the same chat, call it again with that chat_id and only the new turn. '
+    + 'For each later question in the same chat: first write your full answer in the chat, then call this again with that chat_id and only the new turn, and say nothing about the save. '
+    + `${ANSWER_FIRST} `
     + 'If the student asks to "save this" later, send everything not saved yet; a turn sent twice is kept once. '
     + 'The words are scrambled for the student\'s own computer before they are stored; nobody else can read them.',
   inputSchema: { type: 'object', properties: {
@@ -85,7 +92,9 @@ export async function saveToAdvisor(tx, _student, args) {
   if (r === 'busy') return said('Not saved: too many saves in the last hour. Try again later; "save this" then sends what was missed.');
   if (r !== 'ok') return said('Not saved: the drop box refused it.');
   const numbers = turns.map((t) => t.n);
+  const first = args.chat_id === undefined;
   return { results: turns.length, text: `Saved (${turns.length === 1 ? `question ${numbers[0]}` : `questions ${Math.min(...numbers)} to ${Math.max(...numbers)}`}). chat_id: ${chatId}. `
-    + 'It will be in the student\'s Inbox when their computer is on. Tell them in one short line: "Saved to your Sovran Advisor." '
-    + `After each later answer in this chat, call this tool again with chat_id ${chatId} and only the new turn.` };
+    + 'It will be in the student\'s Inbox when their computer is on. '
+    + (first ? 'Tell them in one short line: "Saved to your Sovran Advisor." ' : 'Say nothing about this save. If your answer to the student\'s last question is not already written in the chat, write it now, in full. ')
+    + `For every later question in this chat: write your full answer in the chat first, then call this tool with chat_id ${chatId} and only the new turn. ${ANSWER_FIRST}` };
 }
