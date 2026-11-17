@@ -280,8 +280,11 @@ export async function showInbox() {
           }, icon(`world_${name}`), name === 'inner' ? 'Inner' : 'Outer');
           return button;
         })),
+        // A chat your AI saved (Keep this chat saved, chat-saves.js): one item per chat, new parts join it.
+        ...chatLine(capture),
         place,
         ...(capture.shared_from ? [el('p', { class: 'capture-hint inbox-shared' }, icon('link'), ` Shared from ${capture.shared_from}`)] : []),
+
         // A phone note tidied (Phone capture, tidy.js): the words as they were said, one click away.
         ...(capture.spoken && capture.spoken !== capture.body ? [el('details', { class: 'capture-hint inbox-spoken' },
           el('summary', {}, 'From your phone, tidied. As you said it'), el('p', {}, capture.spoken))] : []),
@@ -295,6 +298,14 @@ export async function showInbox() {
           el('span', { class: 'inbox-choices-end' }, ...decisions.slice(3).map(choiceButton))),
         el('div', { class: 'inbox-picker-place' })),
     );
+  }
+  function chatLine(capture) {
+    let chat = null;
+    try { chat = capture.chat ? JSON.parse(capture.chat) : null; } catch { /* no line */ }
+    if (!chat) return [];
+    return [el('p', { class: 'capture-hint inbox-chat' }, el('span', { class: 'inbox-chat-mark' }, icon('assistant')),
+      el('strong', {}, `From your chat with ${chat.assistant || 'your AI'}`),
+      ` · ${chat.questions} ${chat.questions === 1 ? 'question' : 'questions'} · last added ${clockTime(chat.at)}`)];
   }
   let homeControl = null; // the Home in the top bar
   let barHome = null;     // the same value, in the suggestion bar

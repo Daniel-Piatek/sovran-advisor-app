@@ -92,4 +92,67 @@ BEGIN
   RETURN FOUND;
 END $$;
 
+-- ---- Keep this chat saved (the Sovran Library's save tool, cloud/library-save/) ----
+-- A student's computer registers a public key against their library key. The Sovran Library (library-mcp) seals a
+-- saved chat to that key and leaves it in the same box as the phone's notes; only that computer can open it.
+-- One row per student: the box of the computer that registered last.
+CREATE TABLE IF NOT EXISTS phone_drop.savers (
+  student_id text PRIMARY KEY,                               -- library.student_for_key(...).id
+  box        text NOT NULL UNIQUE REFERENCES phone_drop.boxes (box) ON DELETE CASCADE,
+  public_key text NOT NULL CHECK (public_key ~ '^[A-Za-z0-9_-]{87}$'), -- P-256, raw, base64url; the private key stays on the computer
+  created_at timestamptz NOT NULL DEFAULT now(),
+  hour_from  timestamptz NOT NULL DEFAULT now(),             -- the hour being counted, for the limit below
+  hour_saves integer NOT NULL DEFAULT 0
+);
+ALTER TABLE phone_drop.savers ENABLE ROW LEVEL SECURITY; -- no policies
+
+-- The computer registers (or replaces) its public key: 'ok', 'unknown' (no such box, or a wrong token),
+-- 'nokey' (not a library key in use) or 'refused' (not a public key).
+CREATE OR REPLACE FUNCTION phone_drop.register_saver(p_box text, p_pull text, p_key_hash text, p_public text) RETURNS text
+LANGUAGE plpgsql AS $$
+DECLARE v_student text;
+BEGIN
+  PERFORM 1 FROM phone_drop.boxes WHERE box = p_box AND pull_hash = phone_drop.hash(p_pull);
+  IF NOT FOUND THEN RETURN 'unknown'; END IF;
+  SELECT id INTO v_student FROM library.student_for_key(p_key_hash);
+  IF v_student IS NULL THEN RETURN 'nokey'; END IF;
+  DELETE FROM phone_drop.savers WHERE box = p_box AND student_id <> v_student;
+  INSERT INTO phone_drop.savers (student_id, box, public_key) VALUES (v_student, p_box, p_public)
+    ON CONFLICT (student_id) DO UPDATE SET box = excluded.box, public_key = excluded.public_key;
+  RETURN 'ok';
+EXCEPTION WHEN check_violation THEN RETURN 'refused';
+END $$;
+
+-- For library-mcp, which runs as library_reader with the student set for its transaction (library.student_id):
+-- the student's registered public key, or NULL when their computer has not registered one.
+CREATE OR REPLACE FUNCTION phone_drop.saver_key() RETURNS text
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog AS
+$$ SELECT public_key FROM phone_drop.savers WHERE student_id = nullif(current_setting('library.student_id', true), '') $$;
+
+-- A sealed part of a saved chat, left in the student's box: 'ok', 'none' (no computer registered), 'busy' (more
+-- than 120 saves in the hour), 'full' (as for the phone) or 'refused' (not sealed text).
+CREATE OR REPLACE FUNCTION phone_drop.save_note(p_sealed text) RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
+DECLARE s phone_drop.savers%ROWTYPE;
+BEGIN
+  SELECT * INTO s FROM phone_drop.savers WHERE student_id = nullif(current_setting('library.student_id', true), '') FOR UPDATE;
+  IF NOT FOUND THEN RETURN 'none'; END IF;
+  IF s.hour_from < now() - interval '1 hour' THEN s.hour_from := now(); s.hour_saves := 0; END IF;
+  IF s.hour_saves >= 120 THEN RETURN 'busy'; END IF;
+  IF (SELECT count(*) FROM phone_drop.notes WHERE box = s.box) >= 200 THEN RETURN 'full'; END IF;
+  IF (SELECT count(*) FROM phone_drop.notes) >= 5000 THEN RETURN 'full'; END IF;
+  INSERT INTO phone_drop.notes (box, sealed) VALUES (s.box, p_sealed);
+  UPDATE phone_drop.savers SET hour_from = s.hour_from, hour_saves = s.hour_saves + 1 WHERE student_id = s.student_id;
+  UPDATE phone_drop.boxes SET last_drop_at = now() WHERE box = s.box;
+  RETURN 'ok';
+EXCEPTION WHEN check_violation THEN RETURN 'refused';
+END $$;
+
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA phone_drop FROM PUBLIC;
+-- library-mcp's role may use those two functions and nothing else here (the tables have no policies for it).
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'library_reader') THEN
+    GRANT USAGE ON SCHEMA phone_drop TO library_reader;
+    GRANT EXECUTE ON FUNCTION phone_drop.saver_key(), phone_drop.save_note(text) TO library_reader;
+  END IF;
+END $$;

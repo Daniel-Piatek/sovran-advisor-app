@@ -4424,6 +4424,9 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .phone-drop-privacy { font-size: var(--text-sm); }
 
 /* A phone note tidied: the words as said, folded (Inbox, tidy.js). */
+.inbox-chat { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1); }
+.inbox-chat-mark { display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-6); border-radius: 50%; background: var(--kind-assistant); color: var(--kind-assistant-ink); }
+.inbox-chat-mark .icon svg { width: var(--text-sm); height: var(--text-sm); }
 .inbox-spoken { margin: 0; }
 .inbox-spoken summary { cursor: pointer; }
 .inbox-spoken p { margin: var(--space-1) 0 0; white-space: pre-wrap; }

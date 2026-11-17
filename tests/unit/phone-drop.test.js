@@ -11,35 +11,10 @@ import { waitingCaptures } from '../../captures.js';
 import { entriesOfDay, generalJournal, localDay } from '../../entries.js';
 import { SCHEMA_VERSION } from '../../db.js';
 import { startServer } from '../../server.js';
+import { fakeBox } from '../fake-drop-box.js';
 
 const temp = (t) => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'phone-drop-')); t.after(() => fs.rmSync(dir, { recursive: true, force: true })); return dir; };
 const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
-
-// The Sovran drop box (cloud/phone-drop), kept in memory: the same answers as the web function.
-function fakeBox() {
-  const boxes = new Map();
-  let next = 1;
-  const calls = [];
-  const fetcher = async (url, { body }) => {
-    assert.equal(url, DROP_URL);
-    const msg = JSON.parse(body);
-    calls.push(msg);
-    const reply = (status, data) => ({ ok: status < 300, status, json: async () => data });
-    const b = boxes.get(msg.box);
-    if (msg.action === 'open') { boxes.set(msg.box, { drop_hash: msg.drop_hash, pull_hash: msg.pull_hash, notes: [] }); return reply(200, { opened: true }); }
-    if (msg.action === 'drop') {
-      if (!b || sha(msg.drop) !== b.drop_hash) return reply(404, { error: 'This link has been replaced.' });
-      b.notes.push({ id: next++, sealed: msg.sealed }); return reply(200, { kept: true });
-    }
-    if (!b || sha(msg.pull) !== b.pull_hash) return reply(404, { error: 'No such box.' });
-    if (msg.action === 'take') return reply(200, { notes: b.notes.slice(0, 50) });
-    if (msg.action === 'done') { const before = b.notes.length; b.notes = b.notes.filter((n) => !msg.ids.includes(n.id)); return reply(200, { deleted: before - b.notes.length }); }
-    if (msg.action === 'close') { boxes.delete(msg.box); return reply(200, { closed: true }); }
-    return reply(400, {});
-  };
-  const phoneDrops = async (link, note) => fetcher(DROP_URL, { body: JSON.stringify({ action: 'drop', box: link.box, drop: link.drop, sealed: await seal(link.key, note) }) });
-  return { boxes, calls, fetcher, phoneDrops };
-}
 
 test('a note sealed with the key opens only with that key', async () => {
   const key = randomB64(32);

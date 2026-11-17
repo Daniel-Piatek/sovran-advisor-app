@@ -37,6 +37,8 @@ notes, and an AI assistant that knows them, all on your own computer.
   lands in your Journal on the day you wrote it; **My own thought** or **From someone else** (speak with
   the keyboard's microphone, or type) lands in your Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
   unreadable, in the Sovran drop box only until your computer collects it, then it is deleted.
+  **Keep this chat saved**: with your library key, Claude can offer to save a chat about your reports to
+  your Inbox, one item per chat, sealed so that only your computer can read it.
   On your computer it is tidied: names and course words spelled right (your glossary and the Sovran
   glossary, `sovran-glossary.json`), and commas and full stops added by your own assistant.
 

@@ -627,6 +627,26 @@ CREATE TABLE IF NOT EXISTS entry_tidy (
   tries INTEGER NOT NULL DEFAULT 0
 );
 
+-- Keep this chat saved (chat-saves.js): which Inbox item holds which chat saved by the student's AI through the
+-- Sovran Library. chat_id is the save tool's own name for the chat; turns is what the item holds, as JSON
+-- [{ n, asked, answer }]; rendered is the item's words as this app last wrote them (edited since: left alone, and
+-- what comes after starts a new row and item, "(continued)").
+CREATE TABLE IF NOT EXISTS chat_saves (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'captured' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  chat_id TEXT NOT NULL,
+  capture_id TEXT NOT NULL UNIQUE REFERENCES captures (id),
+  title TEXT NOT NULL DEFAULT '',
+  assistant TEXT NOT NULL DEFAULT '',
+  turns TEXT NOT NULL DEFAULT '[]',
+  rendered TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS chat_saves_by_chat ON chat_saves (chat_id, created_at);
+
 CREATE TABLE IF NOT EXISTS capture_suggestions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,
