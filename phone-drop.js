@@ -4,7 +4,11 @@
 // This computer collects what waits about once a minute while the app runs, keeps it in the Inbox (a journal entry:
 // in the Journal, General, on the day it was written) and has the box delete it. The box never holds anything readable; the key travels only in the link's part after "#".
 //
-// One box per install, kept in settings (phone.drop): { box, drop, pull, key, made_at }. "A new link" closes the old
+// Keep this chat saved (chat-saves.js): the same box also takes the parts of a chat that the student's AI saves through
+// the Sovran Library. Those are sealed for this computer alone: it makes a pair of keys (the private one stays here, in
+// phone.drop.seal) and registers the public one against the student's library key (action register).
+//
+// One box per install, kept in settings (phone.drop): { box, drop, pull, key, made_at, seal?, saver? }. "A new link" closes the old
 // box in the cloud (the old link stops working) and makes a new one. Switching the module off closes the box.
 
 import crypto from 'node:crypto';
@@ -12,6 +16,9 @@ import { unseal, randomB64 } from './phone/seal.js';
 import { createCapture, WORLDS } from './captures.js';
 import { createEntry, isDay, localDay } from './entries.js';
 import { fixPhoneWords, rememberSpoken, rememberSpokenEntry } from './tidy.js';
+import { makeSaveKeys, openSealed } from './cloud/library-save/sealing.js';
+import { saveChatPart } from './chat-saves.js';
+import { libraryKey } from './sovran-library.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -49,7 +56,7 @@ async function call(fetcher, body) {
 export function phoneDropState(db) {
   const box = readBox(db);
   if (!box) return { linked: false };
-  return { linked: true, link: phoneLink(box), made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null };
+  return { linked: true, link: phoneLink(box), made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null, saves_chats: Boolean(box.saver) };
 }
 
 // A box in the cloud for this computer, unless there is one. new: close the old one first (the old link stops).
@@ -57,7 +64,7 @@ export async function linkPhone(db, { fetcher = fetch, fresh = false } = {}) {
   const old = readBox(db);
   if (old && !fresh) return phoneDropState(db);
   if (old) await call(fetcher, { action: 'close', box: old.box, pull: old.pull }).catch(() => { /* gone already, or offline: it ages out */ });
-  const box = { box: randomB64(16), drop: randomB64(32), pull: randomB64(32), key: randomB64(32), made_at: now() };
+  const box = { box: randomB64(16), drop: randomB64(32), pull: randomB64(32), key: randomB64(32), made_at: now(), ...(old?.seal ? { seal: old.seal } : {}) }; // the keys for saved chats stay
   await call(fetcher, { action: 'open', box: box.box, drop_hash: sha(box.drop), pull_hash: sha(box.pull) });
   writeBox(db, box);
   return phoneDropState(db);
@@ -71,6 +78,21 @@ export async function unlinkPhone(db, { fetcher = fetch } = {}) {
   await call(fetcher, { action: 'close', box: box.box, pull: box.pull }).catch(() => { /* offline: the box ages out after 180 days */ });
 }
 
+// Keep this chat saved: with a library key, this computer's public key is registered for the box, once per key and
+// box (asked again at most once an hour while the drop box says no: an older drop box, or a key not in use).
+async function ensureSaver(db, fetcher) {
+  let box = readBox(db);
+  const key = libraryKey(db);
+  if (!box || !key) return;
+  const wanted = sha(`${key}.${box.box}`);
+  if (box.saver === wanted || (box.saver_asked === wanted && Date.now() - new Date(box.saver_asked_at ?? 0).getTime() < 3600_000)) return;
+  const seal = box.seal ?? await makeSaveKeys();
+  let registered = false;
+  try { await call(fetcher, { action: 'register', box: box.box, pull: box.pull, library_key: key, public: seal.public }); registered = true; } catch { /* asked again in an hour */ }
+  box = readBox(db);
+  if (box) writeBox(db, { ...box, seal: box.seal ?? seal, ...(registered ? { saver: wanted, saver_asked: null } : { saver_asked: wanted, saver_asked_at: now() }) });
+}
+
 // A journal entry from the phone: the day the phone said (its own calendar day), else the day of its time here.
 // Written at the time it was kept on the phone, so the day's entries stay in the order they were written.
 function journalDay(note, at) {
@@ -81,8 +103,9 @@ function journalDay(note, at) {
 // Collect what waits: each note into the Inbox (kind journal: into the Journal), then the box deletes them. A note that can't be opened (not sealed
 // with this key) is deleted too, never kept. Returns how many came in.
 export async function collect(db, { fetcher = fetch } = {}) {
+  if (!readBox(db)) return 0;
+  await ensureSaver(db, fetcher);
   const box = readBox(db);
-  if (!box) return 0;
   let total = 0;
   for (let round = 0; round < 10; round++) {
     let notes;
@@ -94,9 +117,15 @@ export async function collect(db, { fetcher = fetch } = {}) {
     const done = [];
     for (const n of notes) {
       try {
-        const note = await unseal(box.key, n.sealed);
+        let note;
+        try { note = await unseal(box.key, n.sealed); } catch (err) { // not from the phone: a saved chat, sealed for this computer?
+          if (!box.seal) throw err;
+          note = { ...(await openSealed(box.seal, n.sealed)), saved: true };
+        }
         const body = String(note.body ?? '').trim().slice(0, MAX_PHONE_TEXT);
-        if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
+        if (note.kind === 'chat') { // only the Sovran Library's save tool may add to a chat, never the phone's link
+          if (note.saved && saveChatPart(db, note)) total++;
+        } else if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
           const words = fixPhoneWords(db, body);
           if (note.kind === 'journal') {
             const time = new Date(note.at);

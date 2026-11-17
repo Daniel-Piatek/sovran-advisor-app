@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 76;
+export const SCHEMA_VERSION = 77;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -393,6 +393,8 @@ const steps = {
   },
   // 76: journal entries from the phone, tidied (Sovran Go, tidy.js): entry_tidy is new (made from schema.sql). Nothing else changes.
   76() {},
+  // 77: Keep this chat saved (chat-saves.js): chat_saves is new (made from schema.sql). Nothing else changes.
+  77() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.
