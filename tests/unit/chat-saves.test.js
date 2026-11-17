@@ -16,6 +16,11 @@ import { SAVE_TOOL, SAVE_INSTRUCTIONS, saveToAdvisor, redactSave, MAX_SAVE_CHARS
 import { renderChat } from '../../chat-saves.js';
 import { startServer } from '../../server.js';
 import { fakeBox } from '../fake-drop-box.js';
+import { useReports } from '../../reports.js';
+
+// A library key is set here, and Reports is on in a new install: the copies for the phone's shelf (phone-shelf.js) must
+// never ask the real Sovran Library from a test.
+useReports({ fetch: async () => new Response('{}', { status: 401 }) });
 
 const temp = (t) => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chat-saves-')); t.after(() => fs.rmSync(dir, { recursive: true, force: true })); return dir; };
 const KEY = 'sovran_madeupmadeupmadeupmadeup';

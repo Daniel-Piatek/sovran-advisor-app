@@ -148,6 +148,47 @@ BEGIN
 EXCEPTION WHEN check_violation THEN RETURN 'refused';
 END $$;
 
+-- ---- The shelf: My reports on Sovran Go (phone-shelf.js) ----
+-- What the phone may read: the student's computer puts sealed copies here (their reports, their highlights and
+-- comments), sealed with the same key as the phone's notes, which only the phone and the computer have. The phone
+-- reads them with its drop token; nobody else can read a word. At most 12 things per box, each replaced in place.
+CREATE TABLE IF NOT EXISTS phone_drop.shelf (
+  box        text NOT NULL REFERENCES phone_drop.boxes (box) ON DELETE CASCADE,
+  name       text NOT NULL CHECK (name ~ '^[a-z0-9][a-z0-9.-]{0,79}$'),
+  sealed     text NOT NULL CHECK (length(sealed) <= 1400000 AND sealed ~ '^[A-Za-z0-9_-]+$'),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (box, name)
+);
+ALTER TABLE phone_drop.shelf ENABLE ROW LEVEL SECURITY; -- no policies
+
+-- The computer puts (or replaces) one thing on its shelf; NULL or '' takes it off. 'ok', 'unknown' (no such box, or
+-- a wrong token), 'full' (12 things already) or 'refused' (not sealed text, or not a name).
+CREATE OR REPLACE FUNCTION phone_drop.put_shelf(p_box text, p_pull text, p_name text, p_sealed text) RETURNS text
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM 1 FROM phone_drop.boxes WHERE box = p_box AND pull_hash = phone_drop.hash(p_pull) FOR UPDATE;
+  IF NOT FOUND THEN RETURN 'unknown'; END IF;
+  IF coalesce(p_sealed, '') = '' THEN DELETE FROM phone_drop.shelf WHERE box = p_box AND name = p_name; RETURN 'ok'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM phone_drop.shelf WHERE box = p_box AND name = p_name)
+     AND (SELECT count(*) FROM phone_drop.shelf WHERE box = p_box) >= 12 THEN RETURN 'full'; END IF;
+  INSERT INTO phone_drop.shelf (box, name, sealed) VALUES (p_box, p_name, p_sealed)
+    ON CONFLICT (box, name) DO UPDATE SET sealed = excluded.sealed, updated_at = now();
+  RETURN 'ok';
+EXCEPTION WHEN check_violation THEN RETURN 'refused';
+END $$;
+
+-- The phone reads its shelf: every name with when it last changed, and the sealed text of those it does not have
+-- yet (p_have: { name: the updated_at the phone holds }). NULL: no such box, or a wrong token.
+CREATE OR REPLACE FUNCTION phone_drop.read_shelf(p_box text, p_drop text, p_have jsonb) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM 1 FROM phone_drop.boxes WHERE box = p_box AND drop_hash = phone_drop.hash(p_drop);
+  IF NOT FOUND THEN RETURN NULL; END IF;
+  RETURN coalesce((SELECT jsonb_agg(jsonb_build_object('name', name, 'updated_at', updated_at)
+      || CASE WHEN coalesce(p_have ->> name, '') = (to_jsonb(updated_at) #>> '{}') THEN '{}'::jsonb ELSE jsonb_build_object('sealed', sealed) END ORDER BY name)
+    FROM phone_drop.shelf WHERE box = p_box), '[]'::jsonb);
+END $$;
+
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA phone_drop FROM PUBLIC;
 -- library-mcp's role may use those two functions and nothing else here (the tables have no policies for it).
 DO $$ BEGIN

@@ -108,3 +108,42 @@ export function marksText(db, report, sections = [], only = null) {
   });
   return `## The owner's own highlights and comments on this report (${marks.length})\n\nThese are theirs, kept only in their app; the report itself is unchanged. Use them: they show what struck them and what they asked (with the answers they were given beside the words).\n\n${lines.join('\n')}`;
 }
+
+// ---- Highlights and comments made on the phone (My reports on Sovran Go, phone-shelf.js) ----
+// A sealed note from the phone, kind mark: { op: 'add' | 'comment' | 'remove', id, at, … }. The id is made on the phone,
+// so a note that arrives twice changes nothing the second time. When the phone and the computer both changed a
+// comment, both are kept (the computer's first). A highlight removed on the phone stays if it was changed here after.
+const PHONE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export function takePhoneMark(db, note) {
+  const id = String(note?.id ?? '');
+  if (!PHONE_ID.test(id)) return false;
+  const time = new Date(note.at);
+  const at = Number.isNaN(time.getTime()) || time > new Date() ? now() : time.toISOString(); // a phone's clock can be wrong
+  const row = db.prepare('SELECT id, comment, updated_at, deleted_at FROM report_marks WHERE id = ?').get(id);
+  if (note.op === 'add') {
+    if (row) return false; // here already (or removed here since): never made twice
+    if (!REPORT.test(String(note.report)) || checkMarkInput(note)) return false;
+    db.prepare(`INSERT INTO report_marks (id, created_at, updated_at, report, version, section_key, quote, prefix, suffix, comment)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, at, at, String(note.report), Number.isInteger(note.version) ? note.version : 1, note.section_key,
+      note.quote, note.prefix ?? '', note.suffix ?? '', String(note.comment ?? '').trim());
+    return true;
+  }
+  if (!row || row.deleted_at) return false;
+  if (note.op === 'comment') {
+    if (typeof note.comment !== 'string' || note.comment.length > LIMITS.comment) return false;
+    const theirs = note.comment.trim();
+    const was = typeof note.was === 'string' ? note.was.trim() : null; // the comment the phone saw when it changed it
+    if (theirs === row.comment) return false;
+    const changedHere = was !== null && row.comment && row.comment !== was; // the computer's comment is not the one the phone saw
+    if (changedHere && theirs && row.comment.includes(theirs)) return false; // joined already (the same note again)
+    const comment = (changedHere && theirs ? `${row.comment}\n\n${theirs}` : theirs).slice(0, LIMITS.comment);
+    db.prepare('UPDATE report_marks SET comment = ?, updated_at = ? WHERE id = ?').run(comment, now(), id);
+    return true;
+  }
+  if (note.op === 'remove') {
+    if (row.updated_at > at) return false; // changed on the computer after it was removed on the phone: kept
+    db.prepare('UPDATE report_marks SET deleted_at = ?, updated_at = ? WHERE id = ?').run(now(), now(), id);
+    return true;
+  }
+  return false;
+}

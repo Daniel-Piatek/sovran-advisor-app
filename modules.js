@@ -132,7 +132,7 @@ export const MODULES = [
     id: 'phone-drop',
     starter: false, // off in a new install: switch it on in Settings › Modules
     label: 'Phone capture',
-    description: 'Sovran Go, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
+    description: 'Sovran Go, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, read your Sovran reports and highlight them, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
   },
   {
     // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title

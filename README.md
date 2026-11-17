@@ -34,7 +34,8 @@ notes, and an AI assistant that knows them, all on your own computer.
   everything to a new computer. No cloud account, nothing to pay.
 - **Phone capture** (off until you switch it on): **Sovran Go**, with the crown icon, on your iPhone or
   Android phone. It asks what you would like to do: **Ask my AI** opens the Claude app; a **Journal entry**
-  lands in your Journal on the day you wrote it; **My own thought** or **From someone else** (speak with
+  lands in your Journal on the day you wrote it; **My reports** lets you read your Sovran reports there, in
+  the same Ivory & Gold look, and highlight or comment (it matches the computer); **My own thought** or **From someone else** (speak with
   the keyboard's microphone, or type) lands in your Inbox, even if your computer is off at the time. Each thought is scrambled on the phone and waits,
   unreadable, in the Sovran drop box only until your computer collects it, then it is deleted.
   **Keep this chat saved**: with your library key, Claude can offer to save a chat about your reports to

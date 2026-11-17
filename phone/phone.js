@@ -3,9 +3,11 @@
 // that part anywhere). The first screen asks what you would like to do: Ask my AI opens your AI's own app; a journal
 // entry, your own thought or something from someone else is written here, sealed (seal.js) and left in the Sovran
 // drop box. The person's own computer collects it (a journal entry into the Journal, a thought into the Inbox) and
-// the box forgets it. Without signal, the words wait on this phone and go later.
+// the box forgets it. Without signal, the words wait on this phone and go later. My reports (reports.js) reads the
+// sealed copies of the person's reports that their computer puts on the box's shelf.
 
 import { seal, readLinkPart } from './seal.js';
+import { setupReports } from './reports.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 const LINK = 'sovran.phone.link';
@@ -22,8 +24,8 @@ const installed = matchMedia('(display-mode: standalone)').matches || navigator.
 
 // The AI that Ask my AI opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
 const AIS = {
-  claude: { href: 'https://claude.ai/new', line: 'Ask Claude about your reports and the teaching' },
-  chatgpt: { href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching' },
+  claude: { name: 'Claude', href: 'https://claude.ai/new', line: 'Ask Claude about your reports and the teaching' },
+  chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching' },
 };
 const asked = new URLSearchParams(location.search).get('ai');
 if (asked && AIS[asked]) store.set(AI, asked);
@@ -60,24 +62,22 @@ const say = (words) => { $('status').textContent = words; };
 const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signal.`;
 
 function show(name) {
-  for (const id of ['choose', 'form', 'done', 'setup', 'nolink']) $(id).hidden = id !== name;
+  for (const id of ['choose', 'form', 'done', 'setup', 'nolink', 'reports', 'report']) $(id).hidden = id !== name;
   document.body.classList.toggle('choosing', name === 'choose');
   scrollTo(0, 0);
 }
 
-async function send(item) {
-  const sealed = await seal(link.key, item);
+// One call to the drop box. Throws with refused (the box said no for good) or full; else there was no connection.
+async function call(body, wait = 10000) {
   let res;
   try {
-    res = await fetch(DROP_URL, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'drop', box: link.box, drop: link.drop, sealed }), signal: AbortSignal.timeout(10000),
-    });
+    res = await fetch(DROP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body), signal: AbortSignal.timeout(wait) });
   } catch { throw new Error('No connection.'); }
-  if (res.ok) return;
+  if (res.ok) return res.json().catch(() => ({}));
   const error = (await res.json().catch(() => ({}))).error ?? 'Not kept.';
   throw Object.assign(new Error(error), { refused: res.status === 404 || res.status === 400, full: res.status === 429 });
 }
+const send = async (item) => { await call({ action: 'drop', box: link.box, drop: link.drop, sealed: await seal(link.key, item) }); };
 
 async function flush() {
   let list = waiting();
@@ -125,10 +125,24 @@ function start() {
     show('done');
   };
 
+  // My reports (reports.js). A highlight or comment made there goes the same way as a thought: sealed, into the drop
+  // box, or kept on this phone until there is signal.
+  const reports = setupReports({ link, store, show, ai, call: (body) => call(body, 20000),
+    leave: async (note) => { try { await send(note); await flush(); } catch (err) { if (!err.refused) keepWaiting([...waiting(), note]); } } });
+  $('my-reports').addEventListener('click', () => { history.pushState({ view: 'reports' }, ''); reports.showList(); });
+  $('reports-back').addEventListener('click', () => history.back());
+  $('report-back').addEventListener('click', () => history.back());
+
   // The phone's own Back goes from writing to the choices, as ‹ Back does.
   document.querySelectorAll('.choice[data-kind]').forEach((b) => b.addEventListener('click', () => { history.pushState({ writing: true }, ''); write(b.dataset.kind); }));
   $('back').addEventListener('click', () => history.back());
-  addEventListener('popstate', () => { if (!$('form').hidden) drafts[kind] = text.value; choose(); });
+  addEventListener('popstate', () => {
+    if (!$('form').hidden) drafts[kind] = text.value;
+    const to = history.state;
+    if (to?.view === 'report') reports.showReport(to.report);
+    else if (to?.view === 'reports') reports.showList();
+    else { reports.leaveReports(); choose(); }
+  });
   $('another').addEventListener('click', () => write(kind));
 
   $('form').addEventListener('submit', async (event) => {

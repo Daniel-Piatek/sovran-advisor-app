@@ -52,6 +52,7 @@ export function phoneDropSection() {
         ? `Last came in ${when(state.last_collected_at)} · ${state.collected} so far. This computer checks about once a minute while Sovran Advisor is open.`
         : 'Nothing has come in yet. This computer checks about once a minute while Sovran Advisor is open.')),
       ...(state.saves_chats ? [el('p', { class: 'empty phone-drop-chats' }, 'Chats with your AI: ready. When Claude offers to keep a chat saved and you say yes, it arrives in your Inbox as one item.')] : []),
+      ...(state.shelf ? [el('p', { class: 'empty phone-drop-reports' }, `My reports: ${state.shelf === 1 ? 'your report is' : `your ${state.shelf} reports are`} on your phone, in Sovran Go, with your highlights and comments. A new link takes them off the old phone.`)] : []),
       el('div', { class: 'move-actions' }, check, copy, fresh));
   };
 
