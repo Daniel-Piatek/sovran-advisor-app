@@ -17,6 +17,7 @@ import path from 'node:path';
 import { moduleOn } from './modules.js';
 import { libraryKey, LIBRARY_URL } from './sovran-library.js';
 import { listMarks, marksText } from './report-marks.js';
+import { plainBreaks } from './public/report-break.js';
 
 export const REPORT = /^[a-z0-9][a-z0-9-]{0,60}$/; // a report's steady name: pattern, layered-portrait, …
 export const FILE_KINDS = ['pdf', 'for-your-ai'];
@@ -131,9 +132,9 @@ export async function reportsText(db, { report = '', section = '' } = {}) {
   const top = marks ? `${head}\n\n${marks}\n\n---\n\n# The report` : head;
   // The whole report: its for-your-AI file when it has one (a note on how to read it, then the whole report), else its sections.
   if (!wanted && r.files.some((f) => f.kind === 'for-your-ai')) {
-    try { return `${top}\n\n${(await reportFile(db, r.report, 'for-your-ai')).bytes.toString('utf8')}`; } catch { /* then its sections */ }
+    try { return `${top}\n\n${plainBreaks((await reportFile(db, r.report, 'for-your-ai')).bytes.toString('utf8'))}`; } catch { /* then its sections */ }
   }
   const parts = [top];
-  for (const s of chosen) parts.push('', `${s.level === 2 ? '###' : '##'} ${s.title}`, '', s.body);
+  for (const s of chosen) parts.push('', `${s.level === 2 ? '###' : '##'} ${s.title}`, '', plainBreaks(s.body));
   return parts.join('\n');
 }

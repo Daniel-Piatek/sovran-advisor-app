@@ -11,6 +11,7 @@ import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request } from './ui.js';
 import { app, screen, onLeave } from './shell.js';
 import { markReport } from './report-marks.js';
+import { markBreaks, drawBreaks } from './report-break.js';
 
 const markdown = markdownit({ html: false, linkify: true });
 const PART_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
@@ -100,7 +101,8 @@ async function showReport(name) {
   // Each section: its text, and beside it (under it on a phone) the margin with your comments (public/report-marks.js).
   const parts = r.sections.map((s) => {
     const text = el('div', { class: 'report-text' });
-    text.innerHTML = markdown.render(s.body ?? '');
+    text.innerHTML = markdown.render(markBreaks(s.body));
+    drawBreaks(text); // a break line: a short gold bar, never text (public/report-break.js)
     const part = partOf.get(s.section_key);
     if (part) text.querySelector(':scope > p')?.classList.add('report-lede'); // the drop cap
     const margin = el('aside', { class: 'report-margin', 'aria-label': `Your comments on ${s.title}`, hidden: true });
