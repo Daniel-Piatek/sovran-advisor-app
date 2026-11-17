@@ -14,7 +14,7 @@ import { moduleOn, switchModule } from './modules.js';
 // The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life.
 const EXTRAS = [
   { id: 'phone', module: 'phone-drop', title: 'Phone Capture', kind: 'people', open: '/settings', openLabel: 'Open Settings',
-    text: 'A Capture app on your phone. Speak or type, and it lands in your Inbox.' },
+    text: 'Sovran Go on your phone. Speak or type, and it lands in your Inbox or your Journal.' },
   { id: 'tasks', module: 'tasks', title: 'Tasks', kind: 'tasks', open: '/tasks', openLabel: 'Open Tasks',
     text: 'Today, Upcoming and Someday. Press q anywhere to add one in a line.' },
   { id: 'planner', module: 'planner', title: 'Planner', kind: 'planner', open: '/planner', openLabel: 'Open Planner',

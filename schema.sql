@@ -612,6 +612,21 @@ CREATE TABLE IF NOT EXISTS capture_tidy (
   tries INTEGER NOT NULL DEFAULT 0
 );
 
+-- A journal entry from the phone (Sovran Go), tidied the same way (tidy.js): what was said, the words after the
+-- glossary's fixes (what the entry first held), and the state, as in capture_tidy.
+CREATE TABLE IF NOT EXISTS entry_tidy (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'captured' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  entry_id TEXT NOT NULL UNIQUE REFERENCES journal_entries (id),
+  spoken TEXT NOT NULL,
+  fixed TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'waiting' CHECK (state IN ('waiting', 'done', 'kept')),
+  tries INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS capture_suggestions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

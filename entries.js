@@ -98,14 +98,14 @@ export function checkEntryInput(input) {
 }
 
 // A new entry: in the chosen journal (General when none is chosen), on the chosen day
-// (today when none is chosen), written now.
-export function createEntry(db, { journal_id, day = localDay(), title = '', body = '', origin = 'typed', capture_id = null } = {}) {
+// (today when none is chosen), written now (or at written_at: a journal entry from the phone, collected later).
+export function createEntry(db, { journal_id, day = localDay(), title = '', body = '', origin = 'typed', capture_id = null, written_at } = {}) {
   const journal = journal_id ? activeJournal(db, journal_id) : generalJournal(db);
   if (!journal) throw fail(400, 'There is no such journal.');
   const id = randomUUID();
   const time = now();
   db.prepare(`INSERT INTO journal_entries (id, created_at, updated_at, origin, capture_id, journal_id, day, written_at, title, body)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, time, time, origin, capture_id, journal.id, day, time, title, body);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, time, time, origin, capture_id, journal.id, day, written_at ?? time, title, body);
   syncLinks(db, 'entry', id, body);
   syncTasks(db, 'entry', id, body);
   return getEntry(db, id);

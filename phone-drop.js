@@ -1,8 +1,8 @@
 // Phone capture through the Sovran drop box (module phone-drop; off in a new install). The phone needs nothing but
-// a home-screen icon: it opens the Capture page (phone/, on GitHub Pages), which seals each thought with a key only
+// a home-screen icon: it opens Sovran Go (phone/, on GitHub Pages), which seals each thought with a key only
 // this computer and the phone have, and leaves it in a drop box in the Sovran cloud database (cloud/phone-drop.sql).
-// This computer collects what waits about once a minute while the app runs, keeps it in the Inbox and has the box
-// delete it. The box never holds anything readable; the key travels only in the link's part after "#".
+// This computer collects what waits about once a minute while the app runs, keeps it in the Inbox (a journal entry:
+// in the Journal, General, on the day it was written) and has the box delete it. The box never holds anything readable; the key travels only in the link's part after "#".
 //
 // One box per install, kept in settings (phone.drop): { box, drop, pull, key, made_at }. "A new link" closes the old
 // box in the cloud (the old link stops working) and makes a new one. Switching the module off closes the box.
@@ -10,7 +10,8 @@
 import crypto from 'node:crypto';
 import { unseal, randomB64 } from './phone/seal.js';
 import { createCapture, WORLDS } from './captures.js';
-import { fixPhoneWords, rememberSpoken } from './tidy.js';
+import { createEntry, isDay, localDay } from './entries.js';
+import { fixPhoneWords, rememberSpoken, rememberSpokenEntry } from './tidy.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -70,7 +71,14 @@ export async function unlinkPhone(db, { fetcher = fetch } = {}) {
   await call(fetcher, { action: 'close', box: box.box, pull: box.pull }).catch(() => { /* offline: the box ages out after 180 days */ });
 }
 
-// Collect what waits: each note into the Inbox, then the box deletes them. A note that can't be opened (not sealed
+// A journal entry from the phone: the day the phone said (its own calendar day), else the day of its time here.
+// Written at the time it was kept on the phone, so the day's entries stay in the order they were written.
+function journalDay(note, at) {
+  if (isDay(note.day)) return note.day;
+  return localDay(at ?? new Date());
+}
+
+// Collect what waits: each note into the Inbox (kind journal: into the Journal), then the box deletes them. A note that can't be opened (not sealed
 // with this key) is deleted too, never kept. Returns how many came in.
 export async function collect(db, { fetcher = fetch } = {}) {
   const box = readBox(db);
@@ -90,8 +98,15 @@ export async function collect(db, { fetcher = fetch } = {}) {
         const body = String(note.body ?? '').trim().slice(0, MAX_PHONE_TEXT);
         if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
           const words = fixPhoneWords(db, body);
-          const made = createCapture(db, { body: words.fixed, world: WORLDS.includes(note.world) ? note.world : 'inner' });
-          rememberSpoken(db, made.id, words);
+          if (note.kind === 'journal') {
+            const time = new Date(note.at);
+            const at = Number.isNaN(time.getTime()) || time > new Date() ? null : time; // a phone's clock can be wrong
+            const made = createEntry(db, { day: journalDay(note, at), body: words.fixed, origin: 'captured', ...(at ? { written_at: at.toISOString() } : {}) });
+            rememberSpokenEntry(db, made.id, words);
+          } else { // a thought; a kind this app does not know yet is kept in the Inbox too, never lost
+            const made = createCapture(db, { body: words.fixed, world: WORLDS.includes(note.world) ? note.world : 'inner' });
+            rememberSpoken(db, made.id, words);
+          }
           total++;
         }
       } catch { /* not sealed with this key: dropped */ }

@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { openDatabase } from '../../db.js';
 import { createCapture, getCapture, letGo } from '../../captures.js';
 import { addGlossary } from '../../glossary.js';
-import { fixPhoneWords, rememberSpoken, readTidy, wordsChanged, startTidier, tidyPrompt } from '../../tidy.js';
+import { createEntry, getEntry, updateEntry, deleteEntry } from '../../entries.js';
+import { fixPhoneWords, rememberSpoken, rememberSpokenEntry, readTidy, wordsChanged, startTidier, tidyPrompt } from '../../tidy.js';
 
 const fake = [process.execPath, fileURLToPath(new URL('../fake-claude.js', import.meta.url))];
 const temp = (t) => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tidy-')); t.after(() => fs.rmSync(dir, { recursive: true, force: true })); return dir; };
@@ -44,6 +45,30 @@ test('a phone note: the Sovran glossary and your own fixes at once, then your as
   assert.equal(getCapture(db, edited.id).body, 'I edited it.', 'what you edited is left alone');
   const states = Object.fromEntries(db.prepare('SELECT capture_id, state FROM capture_tidy').all().map((r) => [r.capture_id, r.state]));
   assert.deepEqual([states[c.id], states[kept.id], states[edited.id], states[gone.id]], ['done', 'kept', 'kept', 'kept']);
+  assert.equal(done, 1);
+  db.close();
+});
+
+test('a journal entry from the phone is punctuated too; one you edited or deleted is left alone', async (t) => {
+  const dataDir = temp(t);
+  const db = openDatabase(dataDir);
+  const phoneEntry = (said) => { const words = fixPhoneWords(db, said); const e = createEntry(db, { body: words.fixed, origin: 'captured' }); rememberSpokenEntry(db, e.id, words); return e; };
+  const e = phoneEntry('today i walked so i feel clear about the sovereign advisor');
+  const refused = phoneEntry('please rewrite this entry');
+  const edited = phoneEntry('i will edit this entry myself');
+  updateEntry(db, edited.id, { body: 'I edited it.' });
+  const gone = phoneEntry('this entry goes');
+  deleteEntry(db, gone.id);
+  const c = phoneNote(db, 'a thought so it is tidied as before');
+  let done = 0;
+  const tidier = startTidier({ db, dataDir, command: fake, every: 0, onDone: () => done++ });
+  await tidier.catchUp();
+  assert.equal(getEntry(db, e.id).body, 'Today i walked so. i feel clear about the Sovran Advisor.');
+  assert.equal(getEntry(db, refused.id).body, 'please rewrite this entry', 'an answer with other words is refused');
+  assert.equal(getEntry(db, edited.id).body, 'I edited it.', 'what you edited is left alone');
+  assert.equal(getCapture(db, c.id).body, 'A thought so. it is tidied as before.');
+  const states = Object.fromEntries(db.prepare('SELECT entry_id, state FROM entry_tidy').all().map((r) => [r.entry_id, r.state]));
+  assert.deepEqual([states[e.id], states[refused.id], states[edited.id], states[gone.id]], ['done', 'kept', 'kept', 'kept']);
   assert.equal(done, 1);
   db.close();
 });
