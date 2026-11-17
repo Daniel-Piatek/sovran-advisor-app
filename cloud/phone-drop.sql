@@ -21,10 +21,13 @@ CREATE TABLE IF NOT EXISTS phone_drop.boxes (
 CREATE TABLE IF NOT EXISTS phone_drop.notes (
   id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   box        text NOT NULL REFERENCES phone_drop.boxes (box) ON DELETE CASCADE,
-  sealed     text NOT NULL CHECK (length(sealed) <= 24000 AND sealed ~ '^[A-Za-z0-9_-]+$'), -- scrambled on the phone
+  sealed     text NOT NULL CHECK (length(sealed) <= 170000 AND sealed ~ '^[A-Za-z0-9_-]+$'), -- scrambled on the phone
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS notes_box ON phone_drop.notes (box, id);
+-- Boxes made before thoughts could be 20,000 characters: widen the old 24,000 limit (safe to run again).
+ALTER TABLE phone_drop.notes DROP CONSTRAINT IF EXISTS notes_sealed_check;
+ALTER TABLE phone_drop.notes ADD CONSTRAINT notes_sealed_check CHECK (length(sealed) <= 170000 AND sealed ~ '^[A-Za-z0-9_-]+$');
 ALTER TABLE phone_drop.boxes ENABLE ROW LEVEL SECURITY; -- no policies: nobody but the function's owner role gets in
 ALTER TABLE phone_drop.notes ENABLE ROW LEVEL SECURITY;
 
