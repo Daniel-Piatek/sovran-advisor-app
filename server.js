@@ -101,7 +101,7 @@ import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
 import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
-import { listMarks, addMark, changeMark, removeMark, restoreMark } from './report-marks.js';
+import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
 import { startTitler } from './short-titles.js';
@@ -1584,12 +1584,47 @@ export function startServer({
     //   POST   /api/reports/:report/marks       { section_key, quote, prefix?, suffix?, comment?, version? }
     //   PATCH  /api/report-marks/:id            { comment }
     //   DELETE /api/report-marks/:id            remove it (deleted_at); POST /api/report-marks/:id/restore brings it back
+    //   POST   /api/report-marks/:id/ask        { text, report_title?, section_title? }: ask the assistant about the mark's words;
+    //                                            the answer streams back as lines of JSON, like a chat's (Ask about this, 2026-11-17)
+    const askMark = url.pathname.match(/^\/api\/report-marks\/([0-9a-f-]{36})\/ask$/);
+    if (askMark) {
+      if (!reportsOn(db)) return sendJson(res, 409, { error: 'Reports is switched off in Settings › Modules.' });
+      if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
+      const input = await readJson(req);
+      const problem = checkMessageInput({ text: input?.text });
+      if (problem) return sendJson(res, 400, { error: problem });
+      let mark = getMark(db, askMark[1]);
+      if (!mark) return sendJson(res, 404, { error: 'There is no such highlight.' });
+      const label = (v, fallback) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 200) : fallback);
+      // Its own chat, made with the first question (or again, if that chat was deleted on the Assistant page).
+      let first = false;
+      if (!mark.conversation_id || !getConversation(db, mark.conversation_id)) {
+        const chat = createConversation(db, dataDir);
+        const quote = mark.quote.replace(/\s+/g, ' ').trim();
+        renameConversation(db, chat.id, `Report: “${quote.length > 60 ? `${quote.slice(0, 59)}…` : quote}”`);
+        mark = setMarkConversation(db, mark.id, chat.id);
+        first = true;
+      }
+      if (isAnswering(mark.conversation_id)) return sendJson(res, 409, { error: 'The assistant is still answering here.' });
+      const note = askNote({ quote: mark.quote, report: mark.report, reportTitle: label(input.report_title, 'report'), sectionTitle: label(input.section_title, mark.section_key), first });
+      const line = (event) => { if (!res.writableEnded) res.write(`${JSON.stringify(event)}\n`); };
+      const answered = sendMessage(db, mark.conversation_id, input.text, {
+        dataDir, ...ai(), send: line, mcp: { url: mcpUrl, secret: mcpSecret }, library: libraryServer(db), notes: [note],
+        context: { path: `/reports/${mark.report}`, title: label(input.report_title, 'Reports') },
+        pick: moduleOn(db, 'ai-pick') ? getPick(db, mark.conversation_id, ai().provider) : null,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-cache' });
+      line({ type: 'chat', conversation_id: mark.conversation_id });
+      await answered;
+      res.end();
+      return undefined;
+    }
     const marksOf = url.pathname.match(/^\/api\/reports\/([a-z0-9-]+)\/marks$/);
     const oneMark = url.pathname.match(/^\/api\/report-marks\/([0-9a-f-]{36})(\/restore)?$/);
     if (marksOf || oneMark) {
       if (!reportsOn(db)) return sendJson(res, 409, { error: 'Reports is switched off in Settings › Modules.' });
       try {
-        if (marksOf && req.method === 'GET') return sendJson(res, 200, listMarks(db, marksOf[1]));
+        if (marksOf && req.method === 'GET') return sendJson(res, 200, listMarksWithAsks(db, marksOf[1]));
         if (marksOf && req.method === 'POST') return sendJson(res, 201, addMark(db, marksOf[1], await readJson(req)));
         if (oneMark?.[2] && req.method === 'POST') return sendJson(res, 200, restoreMark(db, oneMark[1]));
         if (oneMark && !oneMark[2] && req.method === 'PATCH') return sendJson(res, 200, changeMark(db, oneMark[1], await readJson(req)));

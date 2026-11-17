@@ -142,3 +142,45 @@ test('highlight words, comment on others, see them beside the text and in Your h
   await page.locator('.report-undo').getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator('#section-your-gifts mark.report-mark')).toHaveText('notice things');
 });
+
+// Ask about this (2026-11-17): select words, press the robot's Ask about this, ask; the answer comes in beside the words and
+// stays there (and in the Assistant's chats); a second question carries on the same chat; the assistant reads them with the report.
+test('ask the assistant about chosen words: the answer beside them, kept, and carried on', async ({ page, app }) => {
+  place(app, 'pattern');
+  await page.goto(`${app.url}/reports/pattern`);
+  await choose(page, 'your-gifts', 'notice things');
+  const pick = page.getByRole('toolbar', { name: 'Mark these words' });
+  const ask = pick.getByRole('button', { name: 'Ask about this' });
+  await expect(ask.locator('[data-icon="assistant"]')).toHaveCount(1); // the Assistant's own robot face
+  await ask.click();
+  const pop = page.getByRole('dialog', { name: 'Ask your assistant' });
+  await pop.getByRole('textbox', { name: 'Your question' }).fill('What does this mean for my work?');
+  await pop.getByRole('button', { name: 'Ask' }).click();
+  // The stand-in answers with what it was sent: the question, the page, and the words with their section.
+  const answer = pop.locator('.report-ask-a');
+  await expect(answer).toContainText('You said: What does this mean for my work?');
+  await expect(answer).toContainText('selected these words in “Your Gifts” in their Your Made-up Pattern');
+  await expect(answer).toContainText('“notice things”');
+  await expect(page.locator('#section-your-gifts mark.has-ask')).toHaveText('notice things');
+  await expect(page.locator('#section-your-gifts .report-margin-note.is-ask')).toContainText('What does this mean for my work?');
+
+  // A second question goes on in the same chat.
+  await pop.getByRole('textbox', { name: 'Your question' }).fill('And at home?');
+  await pop.getByRole('button', { name: 'Ask' }).click();
+  await expect(pop.locator('.report-ask-q')).toHaveText(['What does this mean for my work?', 'And at home?']);
+  await expect(pop.locator('.report-ask-a').nth(1)).toContainText('You said: And at home?');
+  await expect(pop.locator('.report-ask-a').nth(1)).toContainText('still asking about the words');
+
+  // Kept: after a reload, beside the words; one chat in the Assistant, named after the words; read with the report.
+  await page.reload();
+  await expect(page.locator('#section-your-gifts .report-margin-note.is-ask')).toContainText('And at home?');
+  await expect(page.locator('#section-your-gifts .report-margin-note.is-ask')).toContainText('2 questions');
+  const marks = await (await page.request.get(`${app.url}/api/reports/pattern/marks`)).json();
+  expect(marks[0].asks.map((a) => a.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
+  const chats = await (await page.request.get(`${app.url}/api/conversations`)).json();
+  expect(chats.map((c) => c.title)).toEqual(['Report: “notice things”']);
+  await page.locator('#section-your-gifts mark.report-mark').click();
+  await expect(pop.locator('.report-ask-q')).toHaveCount(2);
+  await pop.getByRole('link', { name: 'Open in Assistant' }).click();
+  await expect(page).toHaveURL(new RegExp(`/assistant/${chats[0].id}$`));
+});

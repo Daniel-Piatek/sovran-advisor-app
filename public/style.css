@@ -4570,6 +4570,26 @@ mark.report-mark:focus-visible { outline: 2px solid var(--color-text); outline-o
 .report-pop-quote { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
 .report-pop-text { width: 100%; box-sizing: border-box; padding: var(--space-2); border: var(--line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-sm); line-height: var(--line-height-short); resize: vertical; }
 .report-pop-actions { display: flex; justify-content: space-between; gap: var(--space-2); }
+/* Ask about this (2026-11-17, the owner's wish): the robot (the Assistant's own face, gold), a wider pop with the questions
+   and answers, and gold-edged notes in the margin. Words with a question under them are underlined in gold. */
+.report-pick-ask .icon, .report-pop-ask .button .icon, .report-margin-asked .icon { color: var(--kind-assistant); }
+.report-pop.report-pop-ask { width: min(460px, calc(100vw - var(--space-8))); max-height: min(70vh, 640px); overflow-y: auto; }
+.report-pop-ask .report-pop-actions { flex-wrap: wrap; align-items: center; }
+.report-pop-ask .report-pop-actions > :last-child { margin-left: auto; }
+.report-ask-thread { display: grid; gap: var(--space-2); }
+.report-ask-thread[hidden] { display: none; }
+.report-ask-comment { margin: 0; font-size: var(--text-sm); white-space: pre-wrap; }
+.report-ask-q { margin: 0; justify-self: end; max-width: 85%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface); border: var(--line); font-size: var(--text-sm); white-space: pre-wrap; }
+.report-ask-a { padding-left: var(--space-3); border-left: 2px solid var(--kind-assistant); font-size: var(--text-sm); line-height: var(--line-height-base); }
+.report-ask-a > :first-child { margin-top: 0; }
+.report-ask-a > :last-child { margin-bottom: 0; }
+.report-ask-wait { color: var(--color-text-muted); font-style: italic; }
+.report-margin-note.is-ask { border-left: 3px solid var(--kind-assistant); }
+.report-margin-asked { display: flex; gap: var(--space-1); align-items: flex-start; font-size: var(--text-sm); font-weight: var(--weight-bold); }
+.report-margin-asked .icon { flex: none; }
+.report-margin-answer { font-size: var(--text-sm); color: var(--color-text-muted); }
+.report-margin-more { font-size: var(--text-xs); color: var(--color-text-muted); }
+mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .report-my-place { margin: 0 0 var(--space-8); }
 .report-my-empty { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--line-height-short); }
 .report-my { padding: var(--space-3) var(--space-4); border: var(--line); border-radius: var(--radius-md); }
