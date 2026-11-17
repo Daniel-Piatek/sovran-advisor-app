@@ -1350,6 +1350,7 @@ CREATE TABLE IF NOT EXISTS report_marks (
   quote TEXT NOT NULL,
   prefix TEXT NOT NULL DEFAULT '',
   suffix TEXT NOT NULL DEFAULT '',
-  comment TEXT NOT NULL DEFAULT ''
+  comment TEXT NOT NULL DEFAULT '',
+  conversation_id TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS report_marks_by_report ON report_marks (report, deleted_at);

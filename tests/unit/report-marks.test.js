@@ -8,7 +8,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { prepareDatabase, openDatabase, SCHEMA_VERSION } from '../../db.js';
-import { listMarks, addMark, changeMark, removeMark, restoreMark, marksText } from '../../report-marks.js';
+import { listMarks, addMark, changeMark, removeMark, restoreMark, marksText, listMarksWithAsks, setMarkConversation, askNote } from '../../report-marks.js';
+import { createConversation, addAnswered } from '../../assistant.js';
 import { reportsText, useReports } from '../../reports.js';
 import { setModule } from '../../modules.js';
 
@@ -67,6 +68,40 @@ test('the assistant reads the owner’s highlights and comments first, in readin
   assert.doesNotMatch(one, /Quietly”/, 'one section: only its own marks');
   assert.match(await reportsText(db), /The owner's highlights: 2 \(1 with a comment\)/);
   useReports({ dir: '' });
+});
+
+test('Ask about this: a highlight’s own chat, beside the words and read with the report; the note it carries', () => {
+  const db = emptyDb();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'asks-'));
+  const mark = addMark(db, 'pattern', { section_key: 'your-gifts', quote: 'notice things' });
+  assert.deepEqual(listMarksWithAsks(db, 'pattern')[0].asks, [], 'no chat yet');
+  const chat = createConversation(db, dir);
+  assert.equal(setMarkConversation(db, mark.id, chat.id).conversation_id, chat.id);
+  addAnswered(db, chat.id, 'What does this mean for my work?', 'In your design, noticing comes first.');
+  assert.deepEqual(listMarksWithAsks(db, 'pattern')[0].asks.map((a) => [a.role, a.text]),
+    [['user', 'What does this mean for my work?'], ['assistant', 'In your design, noticing comes first.']]);
+  const text = marksText(db, 'pattern', SECTIONS);
+  assert.match(text, /they highlighted: “notice things”\n {2}They asked their assistant: What does this mean for my work\?\n {2}The answer: In your design, noticing comes first\./);
+
+  const first = askNote({ quote: 'notice  things', sectionTitle: 'Your Gifts', report: 'pattern', reportTitle: 'Sovran Pattern Report', first: true });
+  assert.match(first, /selected these words in “Your Gifts” in their Sovran Pattern Report and asks about them: “notice things”/);
+  assert.match(first, /reports_read \(report: pattern\)/);
+  assert.match(first, /search_my_decodes/);
+  assert.match(first, /unless they ask where it comes from/, 'D’s rule: no source named unless asked');
+  assert.match(askNote({ quote: 'x', sectionTitle: 'S', report: 'pattern', reportTitle: 'R', first: false }), /still asking about the words/);
+});
+
+test('schema 75 gives an older report_marks its conversation_id, keeping its rows', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'marks-75-'));
+  let db = openDatabase(dir);
+  setModule(db, 'reports', true);
+  addMark(db, 'pattern', { section_key: 'your-gifts', quote: 'kept' });
+  db.exec('ALTER TABLE report_marks DROP COLUMN conversation_id; PRAGMA user_version = 74;');
+  db.close();
+  db = openDatabase(dir);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
+  assert.deepEqual(listMarks(db, 'pattern').map((m) => [m.quote, m.conversation_id]), [['kept', '']]);
+  db.close();
 });
 
 test('schema 74 adds the table to an older database and keeps everything else', () => {
