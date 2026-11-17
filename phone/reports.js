@@ -237,13 +237,22 @@ export function setupReports({ link, store, show, leave, ai, call }) {
     const words = wholeWords(index.text, start, end);
     return words ? { section, ...words } : null;
   }
+  // Where the bar sits: the phone's own things take the bottom edge (Android's "Tap to see search results") and the
+  // space just above the selected words (Copy · Select all), so the bar goes a little up from the bottom when the
+  // words are in the upper part of the screen, and to the top when they are low.
+  function placePick() {
+    const sel = window.getSelection();
+    const box = sel?.rangeCount ? sel.getRangeAt(0).getBoundingClientRect() : null;
+    const low = box && box.bottom > window.innerHeight - 230;
+    pick.classList.toggle('is-top', Boolean(low));
+  }
   let settling = 0;
   document.addEventListener('selectionchange', () => {
     clearTimeout(settling);
     settling = setTimeout(() => {
       if ($('report').hidden || !sheet.hidden) return;
       const info = selectionInfo();
-      if (info) { chosen = info; pick.hidden = false; }
+      if (info) { chosen = info; placePick(); pick.hidden = false; }
       else if (Date.now() - barTouched > 700) { chosen = null; pick.hidden = true; } // a tap on the bar may clear the selection first
     }, 200);
   });

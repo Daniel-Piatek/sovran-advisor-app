@@ -141,6 +141,9 @@ test('selected words can be highlighted: it shows at once, goes sealed to the co
   await expect(page.locator('#pick')).toBeVisible();
   await expect(page.locator('#pick button, #pick a')).toHaveText(['Highlight', 'Comment', 'Ask my AI']);
   for (const h of await page.locator('#pick button, #pick a').evaluateAll((all) => all.map((b) => b.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44);
+  // Clear of the phone's own bars: never on the bottom edge (Android's search bar sits there), at the top when the words are low.
+  const place = await page.locator('#pick').evaluate((bar) => ({ top: bar.classList.contains('is-top'), gap: window.innerHeight - bar.getBoundingClientRect().bottom, y: bar.getBoundingClientRect().top }));
+  if (place.top) expect(place.y).toBeLessThan(40); else expect(place.gap).toBeGreaterThanOrEqual(100);
   await page.locator('#pick-highlight').click();
   await expect(page.locator('#pick')).toBeHidden();
   await expect(page.locator('mark.report-mark')).toHaveText('quiet knowing');
