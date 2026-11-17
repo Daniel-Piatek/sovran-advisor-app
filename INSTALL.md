@@ -39,7 +39,11 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
    `cd "$HOME/Sovran Advisor" && npm run desktop:build && mkdir -p ~/Applications && cp -R "build/Sovran Advisor.app" ~/Applications/`.
    This needs the command line developer tools (`xcode-select --install` if `xcrun` is
    missing). Then `open "$HOME/Applications/Sovran Advisor.app"`. The person can drag the icon
-   to the Dock.
+   to the Dock. Opening it the first time also asks the Mac to look after the app (`scripts/login-agent.js`):
+   from then on it starts when the person logs in, stops when they log out, and starts again if it ever
+   stops. macOS may show a notice "Background Items Added" for Sovran Advisor: tell the person that is
+   expected and to leave it allowed in System Settings › General › Login Items. (Without it, the icon
+   still opens the app, the old way.)
 5. **The assistant** runs on the person's own Claude Code, signed in with their own Claude
    account. Check `claude --version` answers in a new Terminal window. If it does not, install
    Claude Code (`curl -fsSL https://claude.ai/install.sh | bash`) and have the person sign in
@@ -160,7 +164,8 @@ the update. Never use `git reset --hard`, `git checkout -- <file>`, `git stash d
 said yes to losing that exact change.
 
 1. Stop the app: in its folder, `npm run stop` (quitting the Mac icon closes the icon only; the
-   app keeps running until it is stopped). On Windows, closing its black window stops it too.
+   app keeps running until it is stopped). On a Mac it stays stopped until the icon is opened again
+   or the person logs in again. On Windows, closing its black window stops it too.
 2. **Keep the person's changes.** In the app's folder, run `git status`. If files the app came
    with are changed or new files are there (`data/` never shows: it is left out of git), first
    check that `MY-CHANGES.md` lists them and add what is missing (if that file is not there yet,
@@ -181,7 +186,7 @@ said yes to losing that exact change.
 5. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
    was upgraded or moved (for example by `brew upgrade node`): the icon remembers where Node.js
    was when it was built, and does not start without it.
-6. Start it again and check that the person's own changes still work. A database from an older
+6. Start it again (on a Mac: open the icon, which also sets up or refreshes its start at log-in) and check that the person's own changes still work. A database from an older
    version is upgraded by the app itself, after it keeps a whole copy next to it; there is also a
    daily copy in `data/backups/`.
 

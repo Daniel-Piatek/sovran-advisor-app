@@ -113,6 +113,14 @@ function codexInstallSteps(state, k) {
     step(`**If it still says Codex isn’t found,** install Codex on its own. ${k.open.replace('**Open Terminal.**', 'Open Terminal:')} Type this line and press [return] (if it asks for your Mac password, type it: nothing shows while you type). Wait until you can type again, then restart Sovran Advisor and press Check again.`, typeLine('npm install -g @openai/codex')));
 }
 
+// Restart Sovran Advisor first (2026-11-17): an app left running from before a log-out can't read the computer's
+// saved sign-ins, so it says “not signed in” even when you are. Starting it fresh fixes that; on a Mac the icon does.
+function freshStartStep(k) {
+  return k.mac
+    ? step('**Restart Sovran Advisor first.** Click the **Sovran Advisor** icon in your Dock (or in your Applications folder). If Sovran Advisor was left running from before you last logged out, this starts it fresh. Wait until this page opens again.')
+    : step('**Restart Sovran Advisor first.** Close its black window, then double-click the **Sovran Advisor** shortcut on your desktop. Wait until this page opens again.');
+}
+
 // What a result says, and what to do: one block.
 export function checkAdvice(state) {
   const k = keysFor(state.platform);
@@ -129,8 +137,11 @@ export function checkAdvice(state) {
         installSteps(state, k), el('p', { class: 'empty' }, HELP_LINE));
     case 'signed_out':
       return box('signed_out', `${state.program} isn’t signed in to your ${name} account.`,
-        el('p', {}, `Sign in once, in ${k.shell}. It takes about two minutes.${claude ? '' : ' Any ChatGPT plan works; Plus or higher is best, Free and Go are for light use.'}`),
-        signInSteps(state, k), el('p', { class: 'empty' }, HELP_LINE));
+        el('ol', { class: 'ai-check-steps' },
+          freshStartStep(k),
+          step('**Press Check again.** If it now says your assistant works, you’re done.'),
+          step(`**If it still says you aren’t signed in,** sign in once, in ${k.shell}. It takes about two minutes.${claude ? '' : ' Any ChatGPT plan works; Plus or higher is best, Free and Go are for light use.'} Follow these steps:`, signInSteps(state, k))),
+        el('p', { class: 'empty' }, HELP_LINE));
     case 'free':
       return box('free', 'Your Claude account is on the Free plan.',
         el('p', {}, ...rich('The part of Claude that runs your assistant (Claude Code) needs **Pro or higher**. If you already pay for Claude, you may be signed in with a different account: skip step 1.')),
