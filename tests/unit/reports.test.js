@@ -1,4 +1,4 @@
-// Reports (module reports, reports.js; off in a new install): from the Sovran Library with the owner's key (a stand-in library here), the Layered
+// Reports (module reports, reports.js; on in a new install since 2026-11-17): from the Sovran Library with the owner's key (a stand-in library here), the Layered
 // Portrait first; files fetched with the key; the assistant's reports_read; without a key the made-up folder; off is off.
 
 import { test } from 'node:test';
