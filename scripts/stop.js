@@ -1,5 +1,6 @@
 // Stops Sovran Advisor if it is running (npm run stop), for example before an update. Quitting the
-// Mac icon closes the icon only; the app itself keeps running until this (or a restart of the computer).
+// Mac icon closes the icon only; the app itself keeps running until this, a log-out or a restart of the computer.
+// On a Mac it stays stopped (a clean exit) until the icon is opened or the person logs in again (login-agent.js).
 const port = process.env.PORT ?? '3300';
 try {
   const res = await fetch(`http://127.0.0.1:${port}/api/quit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(3000) });

@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "stop": "node scripts/stop.js",
+    "login-agent": "node scripts/login-agent.js",
     "desktop:build": "node scripts/build-desktop.js",
     "desktop:build:demo": "PLAYWRIGHT_BROWSERS_PATH=0 node scripts/build-desktop.js --demo",
     "seed": "node scripts/seed.js",

@@ -167,9 +167,8 @@ export const MODULES = [
     // Reports (2026-11-16, from APP Daniel; reports.js, public/reports.js, report-marks.js): your own Sovran reports to read,
     // the Layered Portrait first once it begins. They come from the Sovran Library with your own key (Settings › Sovran Library);
     // nothing is kept on this computer except your own highlights and comments (report_marks), which your assistant reads too.
-    // Off until switched on (the owner's rule: new parts ship off).
+    // On in a new install and for everyone who never switched it (the owner's wish, 2026-11-17).
     id: 'reports',
-    starter: false,
     label: 'Reports',
     description: 'A Reports page with your own Sovran reports to read, section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments; your assistant reads them with the report.',
     nav: ['Reports'],

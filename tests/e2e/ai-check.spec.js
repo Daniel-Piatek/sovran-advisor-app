@@ -22,6 +22,9 @@ test('not signed in: every step, the line to type, then Check again works', asyn
   const result = part(page).locator('.ai-check-result');
   await expect(result).toHaveAttribute('data-result', 'signed_out');
   await expect(result.locator('.ai-check-title')).toHaveText('Claude Code isn’t signed in to your Claude account.');
+  // First a fresh start: an app left running from before a log-out can't see the sign-in (2026-11-17).
+  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Restart Sovran Advisor first');
+  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Sovran Advisor icon in your Dock');
   await expect(result).toContainText('Open Terminal');
   await expect(result).toContainText('Finder');
   await expect(result).toContainText('Authorize');

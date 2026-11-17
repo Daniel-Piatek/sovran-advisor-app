@@ -8,13 +8,17 @@ import os from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { SCHEMA_VERSION } from '../db.js';
 
+// What the running app says about itself: null when nothing (of ours) answers.
+export async function health(url) {
+  try {
+    const response = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(1000) });
+    const body = response.ok ? await response.json() : null;
+    return body?.ok === true ? body : null;
+  } catch { return null; }
+}
+
 export async function ensureServer({ url, start, timeout = 20000 }) {
-  const ready = async () => {
-    try {
-      const response = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(1000) });
-      return response.ok && (await response.json()).ok === true;
-    } catch { return false; }
-  };
+  const ready = async () => Boolean(await health(url));
   if (await ready()) return;
   // An unrelated service on this port must never be replaced or opened as our app.
   const address = new URL(url);
@@ -30,6 +34,31 @@ export async function ensureServer({ url, start, timeout = 20000 }) {
   while (Date.now() < end) {
     if (await ready()) return;
     await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  throw new Error('The app did not finish starting. Please ask for help checking its startup.');
+}
+
+// On a Mac the Mac itself looks after the app (login-agent.js). An app still running that the Mac did not start
+// this way is left over from before: possibly from an earlier log-in, when it can no longer read the Keychain and
+// so can't see the Claude sign-in ("Not logged in"). It is asked to stop, and the Mac's own copy takes its place.
+export async function ensureAgentServer({ url, label, start, timeout = 30000 }) {
+  const now = await health(url);
+  if (now && now.agent === label) return 'running';
+  if (now) {
+    await fetch(`${url}/api/quit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(3000) }).catch(() => {});
+    const end = Date.now() + 10000;
+    while (await health(url)) {
+      if (Date.now() > end) throw new Error('An older Sovran Advisor is still running and would not stop. Restart your computer, then open Sovran Advisor again.');
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+  }
+  await start();
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    const answer = await health(url);
+    if (answer?.agent === label) return now ? 'replaced' : 'started';
+    if (!answer) await new Promise(resolve => setTimeout(resolve, 250));
+    else throw new Error('Another copy of Sovran Advisor started instead. Restart your computer, then open Sovran Advisor again.');
   }
   throw new Error('The app did not finish starting. Please ask for help checking its startup.');
 }
@@ -53,7 +82,22 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const root = fileURLToPath(new URL('../', import.meta.url));
     const demo = process.argv[2] === 'demo';
     const { url, port, dataDir } = launchers[demo ? 'demo' : 'personal'];
-    await ensureServer({ url, start: async () => {
+    // The personal app on a Mac: the Mac starts it and keeps it to this log-in (login-agent.js). If that can't be
+    // set up (for example it was switched off in System Settings › Login Items), it starts as before.
+    let agent = null;
+    if (!demo && process.platform === 'darwin') {
+      const { ensureAgent, startAgent, steadyNode } = await import('./login-agent.js');
+      try {
+        agent = await ensureAgent({ root, node: steadyNode(), pathList: launchPath() });
+      } catch (error) { console.log(error.message); }
+      if (agent?.label) {
+        await ensureAgentServer({ url, label: agent.label, start: async () => {
+          // The Mac may be starting it already (it was just loaded); a start while it runs changes nothing.
+          if (!(await health(url))) await startAgent({ label: agent.label });
+        } });
+      }
+    }
+    if (!agent?.label) await ensureServer({ url, start: async () => {
       const file = path.join(root, dataDir, 'app.db');
       if (demo && !fs.existsSync(file)) throw new Error('There is no demo copy yet. Run npm run demo once.');
       if (!demo && fs.existsSync(file)) {

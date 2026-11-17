@@ -109,6 +109,7 @@ import { phoneDropState, linkPhone, unlinkPhone, startPhoneDrop } from './phone-
 import { startTidier } from './tidy.js';
 import qrcode from 'qrcode-generator';
 import { randomBytes } from 'node:crypto';
+import { RESTART_CODE } from './scripts/login-agent.js';
 import {
   checkPersonInput, checkCompanyInput, createPerson, getPerson, listPeople, updatePerson, createCompany, getCompany,
   listCompanies, updateCompany, deleteContact, restoreContact, listDeletedContacts,
@@ -141,6 +142,7 @@ const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 export function startServer({
   port = 3000, dataDir = path.join(appDir, 'data'), hosts = [], readCalendarsEvery = READ_EVERY_MS, assistantCommand = DEFAULT_COMMAND, codexCommand = null,
   readCaptures = true, writeTitles = true, linkFetcher = fetchTitle, google = {}, mailSyncEvery = 20_000, googleCalendarEvery = 60_000, googleCalendarSendEvery = 2000, backupEvery = 60 * 60 * 1000, onQuit = null, onRestart = null,
+  agent = null, // the Mac's login agent that started this app (scripts/login-agent.js); the Dock icon asks for it
   updateCheckEvery = 0, updateGit = undefined, updateNpm = undefined, updateAppDir = appDir,
   phoneDropEvery = 60_000, phoneDropFetch = fetch, tidyNotes = true,
 } = {}) {
@@ -205,7 +207,7 @@ export function startServer({
   async function api(req, res, url) {
     if (url.pathname === '/api/health') {
       const { ok } = db.prepare('SELECT 1 AS ok').get();
-      return sendJson(res, 200, { ok: ok === 1 });
+      return sendJson(res, 200, { ok: ok === 1, ...(agent ? { agent } : {}) });
     }
 
     // Bullets (Writing and thinking, advanced/writing/1):
@@ -2356,11 +2358,36 @@ function sendJson(res, status, data) {
 // Started with `node server.js` (not imported by a test).
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const ownPort = Number(process.env.PORT ?? 3300);
-  // Started by a restart: the one that was running is on its way out; wait until its address is free.
-  if (process.env.RESTART_WAIT) {
+  // Started by a restart: the one that was running is on its way out; wait until its address is free. The same when
+  // the Mac starts it (scripts/login-agent.js): an older one may still be stopping (the Dock icon asks it to).
+  const agent = process.env.SOVRAN_AGENT || null;
+  if (process.env.RESTART_WAIT || agent) {
     for (let i = 0; i < 60; i++) {
       try { await fetch(`http://127.0.0.1:${ownPort}/api/health`, { signal: AbortSignal.timeout(500) }); } catch { break; }
       await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+  // A restart (after an update, or Settings › Restart) of the personal copy on a Mac that the Mac does not look after
+  // yet: hand it to the Mac (scripts/login-agent.js), so the first update to this version sets that up by itself.
+  // If the Mac's copy doesn't answer within 20 seconds, this one starts as before.
+  if (process.env.RESTART_WAIT && !agent && process.platform === 'darwin' && ownPort === 3300) {
+    const root = path.dirname(fileURLToPath(import.meta.url));
+    if (!process.env.DATA_DIR || path.resolve(process.env.DATA_DIR) === path.join(root, 'data')) {
+      try {
+        const { ensureAgent, startAgent, steadyNode } = await import('./scripts/login-agent.js');
+        const { launchPath } = await import('./scripts/desktop-server.js');
+        const done = await ensureAgent({ root, node: steadyNode(), pathList: launchPath() });
+        if (done.label) {
+          await startAgent({ label: done.label });
+          for (let i = 0; i < 80; i++) {
+            try {
+              const body = await (await fetch(`http://127.0.0.1:${ownPort}/api/health`, { signal: AbortSignal.timeout(500) })).json();
+              if (body.agent === done.label) process.exit(0);
+            } catch { /* not up yet */ }
+            await new Promise((resolve) => setTimeout(resolve, 250));
+          }
+        }
+      } catch (err) { console.error(`The Mac could not take over starting the app: ${err.message}`); }
     }
   }
   let app = null; // set once started: going back from an update closes it before the version before starts
@@ -2377,7 +2404,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     ...(process.env.CODEX_COMMAND ? { codexCommand: JSON.parse(process.env.CODEX_COMMAND) } : {}),
     // READ_CALENDARS=off: keep other calendars as they were last read (the demo copy).
     ...(process.env.READ_CALENDARS === 'off' ? { readCalendarsEvery: 0 } : {}),
-    onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js)
+    agent,
+    onQuit: () => process.kill(process.pid, 'SIGTERM'), // npm run stop (scripts/stop.js); the Mac leaves it stopped
     // Settings > Restart: the same command again (same folder, same settings), on its own, then this one stops.
     // beforeStart (going back from an update, app-update.js): this app lets go of the database first, then it runs, then the
     // version before starts.
@@ -2385,6 +2413,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       if (beforeStart) {
         try { await app.close(); } catch { /* closing is best effort: what is saved is saved */ }
         beforeStart();
+      }
+      // Started by the Mac: end with the code that asks the Mac to start it again, so the new one still belongs to
+      // this log-in (a copy started here would outlive a log-out and lose the Claude sign-in).
+      if (agent) {
+        if (!beforeStart) { setTimeout(() => process.exit(RESTART_CODE), 5000).unref(); try { await app?.close(); } catch { /* best effort */ } }
+        process.exit(RESTART_CODE);
       }
       spawn(process.execPath, process.argv.slice(1), { cwd: process.cwd(), env: { ...process.env, PORT: new URL(url).port, RESTART_WAIT: '1' }, detached: true, stdio: 'ignore', windowsHide: true }).unref();
       if (beforeStart) process.exit(0);

@@ -25,7 +25,7 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Boards** (off until you switch it on): a Boards tab in Notes. Each board is an endless whiteboard (with Full screen and Hide notes for the most room): bring your
   notes, journal entries and Inbox items onto it from a list beside it, add quick cards (and make one a real note),
   join cards with arrows, and put cards in coloured groups that move together.
-- **Reports** (off until you switch it on): your own Sovran reports from your Sovran Library (with your Library key),
+- **Reports** (on from the start; switch it off in Settings › Modules): your own Sovran reports from your Sovran Library (with your Library key),
   to read section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments:
   they stay only in your app, the report itself is never changed, and your assistant reads them with the report.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
@@ -69,6 +69,10 @@ your changes stay safe when you update.
 ## For the curious
 
 - Start it by hand: `npm start`, then open http://127.0.0.1:3300.
+- On a Mac the computer itself looks after the app: it starts when you log in, stops when you log
+  out, and starts again if it ever stops (`scripts/login-agent.js`, set up by the app icon). An app
+  left running after a log-out can't see your Claude sign-in, so this keeps the assistant working.
+  `npm run login-agent -- --remove` switches it off; the icon then starts the app the old way.
 - Tests: `npm install`, `npm run test:setup` once, then `npm test`.
 - How the app is built and the rules Claude follows when changing it: `AGENTS.md`.
 
