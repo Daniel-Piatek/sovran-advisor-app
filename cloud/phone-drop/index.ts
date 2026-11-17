@@ -12,7 +12,7 @@ const json = (code: number, body: unknown) =>
 const BOX = /^[A-Za-z0-9_-]{22}$/;
 const TOKEN = /^[A-Za-z0-9_-]{32,64}$/;
 const HASH = /^[0-9a-f]{64}$/;
-const SEALED = /^[A-Za-z0-9_-]{30,24000}$/;
+const SEALED = /^[A-Za-z0-9_-]{30,170000}$/; // 20,000 characters of any kind, sealed, fit
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });

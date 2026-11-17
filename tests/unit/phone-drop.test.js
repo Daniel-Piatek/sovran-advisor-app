@@ -110,3 +110,17 @@ test('the server: off by default, then link, code and check', async (t) => {
   await new Promise((done) => setTimeout(done, 50));
   assert.equal(box.boxes.size, 0);
 });
+
+test('a 20,000-character thought, of the widest characters, still fits the drop box once sealed', async () => {
+  const key = randomB64(32);
+  const { MAX_PHONE_TEXT } = await import('../../phone-drop.js');
+  assert.equal(MAX_PHONE_TEXT, 20000);
+  const SEALED = /^[A-Za-z0-9_-]{30,170000}$/; // cloud/phone-drop/index.ts and phone-drop.sql
+  for (const body of ['a'.repeat(20000), 'é'.repeat(20000), '€'.repeat(20000), '😀'.repeat(10000), '\u0001'.repeat(20000)]) {
+    const sealed = await seal(key, { body, world: 'inner', at: new Date().toISOString() });
+    assert.ok(SEALED.test(sealed), `sealed length ${sealed.length}`);
+    assert.equal((await unseal(key, sealed)).body, body);
+  }
+  const fn = fs.readFileSync(new URL('../../cloud/phone-drop/index.ts', import.meta.url), 'utf8');
+  assert.match(fn, /\{30,170000\}/);
+});

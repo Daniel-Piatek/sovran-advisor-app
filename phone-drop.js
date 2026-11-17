@@ -14,7 +14,7 @@ import { fixPhoneWords, rememberSpoken } from './tidy.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
-export const MAX_PHONE_TEXT = 4000;
+export const MAX_PHONE_TEXT = 20000;
 const SETTING = 'phone.drop';
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
