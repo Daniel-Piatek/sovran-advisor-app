@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { openDatabase } from '../../db.js';
 import { seal, unseal, randomB64, readLinkPart } from '../../phone/seal.js';
+import { setProvider } from '../../ai.js';
 import { linkPhone, unlinkPhone, collect, phoneDropState, DROP_URL, PAGE_URL } from '../../phone-drop.js';
 import { waitingCaptures } from '../../captures.js';
 import { entriesOfDay, generalJournal, localDay } from '../../entries.js';
@@ -38,6 +39,13 @@ test('the phone link carries box, drop token and key after "#", and the cloud ge
   assert.ok(!JSON.stringify(open).includes(link.key) && !JSON.stringify(open).includes(link.drop));
   // asked again: the same box
   assert.equal((await linkPhone(db, { fetcher: box.fetcher })).link, state.link);
+  // A student whose assistant is ChatGPT: the same link, telling the phone to open ChatGPT from Ask my AI.
+  setProvider(db, 'codex');
+  const forChatgpt = phoneDropState(db);
+  assert.equal(forChatgpt.link, state.link.replace('#v1.', '?ai=chatgpt#v1.'));
+  assert.equal(forChatgpt.ai, 'ChatGPT');
+  setProvider(db, 'claude');
+  assert.equal(phoneDropState(db).link, state.link);
   db.close();
 });
 

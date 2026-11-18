@@ -24,7 +24,8 @@ const installed = matchMedia('(display-mode: standalone)').matches || navigator.
 
 // The AI that Ask my AI opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
 const AIS = {
-  claude: { name: 'Claude', href: 'https://claude.ai/new', line: 'Ask Claude about your reports and the teaching' },
+  // fill: an address that opens the AI's app with words already in its box (tried on a real Android phone with the Claude app).
+  claude: { name: 'Claude', href: 'https://claude.ai/new', fill: 'https://claude.ai/new?q=', line: 'Ask Claude about your reports and the teaching' },
   chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching' },
 };
 const asked = new URLSearchParams(location.search).get('ai');
