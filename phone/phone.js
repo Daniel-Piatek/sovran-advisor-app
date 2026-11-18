@@ -26,7 +26,10 @@ const installed = matchMedia('(display-mode: standalone)').matches || navigator.
 const AIS = {
   // fill: an address that opens the AI's app with words already in its box (tried on a real Android phone with the Claude app).
   claude: { name: 'Claude', href: 'https://claude.ai/new', fill: 'https://claude.ai/new?q=', line: 'Ask Claude about your reports and the teaching' },
-  chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching' },
+  // ask: a line added to the copied words. ChatGPT answers a pasted passage by itself and never opens the Sovran Library,
+  // so it never meets the offer to keep the chat (seen with a student's phone, 18 Nov 2026). The line asks for both.
+  chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching',
+    ask: 'Please use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.' },
 };
 const asked = new URLSearchParams(location.search).get('ai');
 if (asked && AIS[asked]) store.set(AI, asked);
