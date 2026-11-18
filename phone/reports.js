@@ -246,6 +246,7 @@ export function setupReports({ link, store, show, leave, ai, call }) {
     const low = box && box.bottom > window.innerHeight - 230;
     pick.classList.toggle('is-top', Boolean(low));
   }
+  window.addEventListener('scroll', () => { if (!pick.hidden) placePick(); }, { passive: true }); // the chosen words moved on the screen
   let settling = 0;
   document.addEventListener('selectionchange', () => {
     clearTimeout(settling);
@@ -304,14 +305,21 @@ export function setupReports({ link, store, show, leave, ai, call }) {
   const ask = $('pick-ask');
   ask.href = ai.href;
   $('pick-ask-words').textContent = 'Ask my AI';
-  ask.addEventListener('click', () => {
+  // Where the phone has its own Share menu, the words go through it: the person picks their AI's app (Claude,
+  // ChatGPT, …) and the words are already in its box. They are copied as well, for an app that takes no shared text.
+  ask.addEventListener('click', (event) => {
     if (!chosen || !reading) return;
     const words = `From my ${reading.report.title}: “${chosen.quote.replace(/\s+/g, ' ')}”\n\nMy question: `;
     copy(words);
-    say(`Copied. Paste it into ${ai.name} and add your question.`);
     window.getSelection()?.removeAllRanges();
     pick.hidden = true;
     chosen = null;
+    if (typeof navigator.share === 'function') {
+      event.preventDefault(); // not the link: the Share menu instead
+      navigator.share({ text: words }).catch(() => say(`Copied. Paste it into ${ai.name} and add your question.`)); // closed without choosing: the words are still copied
+      return;
+    }
+    say(`Copied. Paste it into ${ai.name} and add your question.`);
   });
   function copy(words) {
     try { if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(words).catch(() => oldCopy(words)); return; } } catch { /* then the older way */ }

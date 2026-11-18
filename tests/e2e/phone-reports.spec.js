@@ -228,6 +228,23 @@ test('highlights, comments and questions made on the computer show on the phone,
   await context.close();
 });
 
+test('where the phone has a Share menu, Ask my AI hands the words to it, so they arrive in the chosen AI’s box', async ({ browser }, testInfo) => {
+  const { page, context, dropped, errors } = await phone(browser, testInfo);
+  await page.addInitScript(() => { window.shared = []; navigator.share = async (data) => { window.shared.push(data); }; });
+  await page.reload();
+  await openPattern(page);
+  await select(page, 'your-gifts', 'You notice what others walk past.');
+  const pages = context.pages().length;
+  await page.locator('#pick-ask').click();
+  await expect.poll(() => page.evaluate(() => window.shared)).toEqual([{ text: 'From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ' }]);
+  expect(context.pages().length).toBe(pages); // the Share menu, not the link
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('You notice what others walk past.'); // copied too
+  await expect(page.locator('#pick')).toBeHidden();
+  expect(dropped).toEqual([]);
+  expect(errors).toEqual([]);
+  await context.close();
+});
+
 test('Ask my AI copies the words and is a real link to the AI’s own app', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await openPattern(page);
