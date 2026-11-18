@@ -228,7 +228,7 @@ test('highlights, comments and questions made on the computer show on the phone,
   await context.close();
 });
 
-test('Ask my AI copies the words and is a real link to the AI’s own app', async ({ browser }, testInfo) => {
+test('Ask my AI opens the AI’s own app with the words in its box, and copies them too', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await openPattern(page);
   await select(page, 'your-gifts', 'You notice what others walk past.');
@@ -237,8 +237,10 @@ test('Ask my AI copies the words and is a real link to the AI’s own app', asyn
   await expect(ask).toHaveAttribute('target', '_blank');
   await context.route('https://claude.ai/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Claude</title>' }));
   const [opened] = await Promise.all([context.waitForEvent('page'), ask.click()]);
+  const words = 'From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ';
+  expect(opened.url()).toBe('https://claude.ai/new?q=' + encodeURIComponent(words)); // the words arrive in Claude's box
   await opened.close();
-  await expect(page.locator('#toast')).toHaveText('Copied. Paste it into Claude and add your question.');
+  await expect(page.locator('#toast')).toHaveText('Opening Claude with your words in the box. Add your question.');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ');
   await expect(page.locator('#pick')).toBeHidden();
   expect(dropped).toEqual([]); // asking leaves no highlight

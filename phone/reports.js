@@ -301,15 +301,18 @@ export function setupReports({ link, store, show, leave, ai, call }) {
   }
   $('pick-highlight').addEventListener('click', () => keep(''));
   $('pick-comment').addEventListener('click', () => { if (chosen) { const held = chosen; commentSheet({ quote: held.quote, save: (words) => { chosen = held; return keep(words); } }); chosen = held; } });
-  // Ask my AI: a real link the person taps (so the phone hands it to the AI's own app), with the words copied first.
+  // Ask my AI: a real link the person taps (so the phone hands it to the AI's own app). Where the AI's app takes words
+  // in its address (Claude), they arrive in its box; they are copied as well, for a paste.
   const ask = $('pick-ask');
   ask.href = ai.href;
   $('pick-ask-words').textContent = 'Ask my AI';
   ask.addEventListener('click', () => {
     if (!chosen || !reading) return;
     const words = `From my ${reading.report.title}: “${chosen.quote.replace(/\s+/g, ' ')}”\n\nMy question: `;
-    copy(words);
-    say(`Copied. Paste it into ${ai.name} and add your question.`);
+    copy(words); // always, so a paste still works where the app opens with an empty box
+    const fills = Boolean(ai.fill) && words.length <= 1800; // a very long passage would make too long an address
+    ask.href = fills ? ai.fill + encodeURIComponent(words) : ai.href;
+    say(fills ? `Opening ${ai.name} with your words in the box. Add your question.` : `Copied. Paste it into ${ai.name} and add your question.`);
     window.getSelection()?.removeAllRanges();
     pick.hidden = true;
     chosen = null;
