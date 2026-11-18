@@ -15,11 +15,13 @@ What is kept: everything you wrote (notes, journal, people, tasks), your setting
 
 **To go back** to the version before, press **Go back to the version before** under "Updated". If the update also moved your notes forward, it says so first: your notes then go back to how they were just before the update, and anything you wrote since is kept in a copy in your backups folder, so nothing is lost.
 
-**If the button can't do it** (for example the update clashes with a change you made to the app yourself, or your copy was installed from a zip), it puts everything back as it was and shows this one line. Open **Claude Code** (with ChatGPT: **OpenAI's Codex app**), start a new chat, paste it and press Enter:
+**Installed from a zip?** The button works for you too: the first time it looks, it makes your copy able to update itself, without changing any of your files.
+
+**If the button can't do it** (for example the update clashes with a change you made to the app yourself, or git is not on your computer), it puts everything back as it was and shows this one line. Open **Claude Code**, start a new chat, paste it and press Enter. With ChatGPT, Codex must run on your own computer, not in the cloud (in the cloud it cannot find the app): open **Terminal**, type `cd ~/"Sovran Advisor"; codex`, press Enter, then paste the line:
 
 > Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
 
-Claude Code then does the update with you and asks before combining your change with the new one. To go back that way, paste "Undo the last Sovran Advisor update".
+Claude Code (or Codex) then does the update with you and asks before combining your change with the new one. To go back that way, paste "Undo the last Sovran Advisor update".
 
 **Mac and Windows.** The button is made for both. It has not been tried on Windows yet, so if anything looks wrong there, use the Claude Code line above.
 

@@ -90,7 +90,7 @@ test('updating: the assistant always knows the one line; with Help pages on, doc
   const { guide, UPDATE_LINE } = await import('../../assistant.js');
   assert.equal(UPDATE_LINE, 'Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md');
   assert.ok(guide().includes(UPDATE_LINE), 'Help pages off: the assistant still has the line');
-  assert.match(guide(), /Codex app/);
+  assert.match(guide(), /Codex must run on this computer, never in the cloud/);
   const page = docs.find((d) => d.id === 'updating');
   assert.ok(page.markdown.includes(UPDATE_LINE), 'the page and the assistant give the same line');
 

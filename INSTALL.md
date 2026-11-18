@@ -10,6 +10,15 @@ This page is written for **Claude** (Claude Code) or, for someone who uses ChatG
 ChatGPT (Codex). If you are Codex, or the person says they use ChatGPT, follow the ChatGPT
 steps marked below; otherwise the Claude ones.
 
+**First, check you are on the person's own computer.** Everything here happens in their home
+folder (`~/Sovran Advisor` on a Mac, `%USERPROFILE%\Sovran Advisor` on Windows). If you are
+running in a cloud workspace (a Linux machine that is not theirs, such as a Codex cloud task),
+you cannot reach it: do nothing, and tell the person in plain words to start you again on their
+own computer. With Codex: open Terminal (Mac) or PowerShell (Windows), type
+`cd ~/"Sovran Advisor"; codex` and press Enter, then paste the same line again. (In the Codex
+app instead: start a new chat that works **locally**, not in the cloud, in the Sovran Advisor
+folder.) For a first install, `cd ~` instead.
+
 ---
 
 ## For Claude or Codex: how to install it
@@ -197,10 +206,22 @@ not touched). If the update upgraded the database, tell the person before going 
 the older version may not open the newer database: the copy it kept is
 `data/app.db.before-v<N>.bak`.
 
-**Installed from a zip (no git):** downloading again would wipe the person's changes. Download
-the new zip into a new folder, move `data/` and `MY-CHANGES.md` across into it, make the changes
-listed in `MY-CHANGES.md` again, and keep the old folder, renamed `Sovran Advisor (before
-update)`, until the person says all is well. Better still, offer to install git first and use it
-from then on.
+**Installed from a zip (no `.git` folder in the app's folder):** never download again over it: that
+would wipe the person's changes. Make it a git copy in place instead; this changes none of its files.
+(Versions from 18 Nov 2026 on do this themselves at Settings › Updates › Check for updates; `adoptZipCopy`
+in `app-update.js`.) If `git --version` does not answer, install git first (Mac: `xcode-select --install`;
+Windows: https://git-scm.com).
+1. In the app's folder: `git init -q`, `git symbolic-ref HEAD refs/heads/main`,
+   `git config core.fileMode false`,
+   `git remote add origin https://github.com/Daniel-Piatek/sovran-advisor-app.git`, then add the lines
+   `data/`, `node_modules/`, `build/` and `MY-CHANGES.md` to `.git/info/exclude`, and
+   `git fetch origin main`.
+2. Find the version its files came from: `git add -A`, `T=$(git write-tree)`, then compare `$T` with
+   `git log --first-parent --format='%H %T' origin/main`. A matching tree is that version. If none
+   matches, take the one with the fewest lines apart (`git diff --numstat $T <commit>`); on a tie, the
+   older one.
+3. `git update-ref refs/heads/main <that commit>` and `git reset -q` (only git's own list changes,
+   no file). `git status` now shows the person's own changes, if any.
+4. Go on with step 1 of updating above. From now on the Update button works by itself.
 
 Never touch the `data/` folder: it is the person's own notes, journal and people.

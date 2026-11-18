@@ -209,3 +209,55 @@ test('the routes: GET /api/update, a look, an update that restarts, and the jobs
   assert.equal(restarted, 1);
   assert.equal((await fetch(`${app.url}/api/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 405);
 });
+
+// A student's copy installed from a zip (2026-11-18): the same files as a version on GitHub, but no .git folder.
+function zipWorld(t) {
+  const w = world(t);
+  w.publish('app-update.js', '// the updater\n', 'Settings: Updates (#25)');
+  git(w.app, 'pull', '-q', 'origin', 'main');
+  fs.rmSync(path.join(w.app, '.git'), { recursive: true, force: true });
+  return { ...w, hub: path.join(w.root, 'hub.git') };
+}
+
+test('a copy from a zip: it can update, and becomes a git copy without changing its files', async (t) => {
+  const w = zipWorld(t);
+  const where = await whereAmI({ appDir: w.app });
+  assert.equal(where.why, 'no_git_copy');
+  assert.equal(where.zip, true);
+  const before = await updateStatus({ appDir: w.app, dataDir: w.dataDir, canRestart: true });
+  assert.equal(before.can, true, 'the button is offered, not the Codex line');
+  assert.equal(before.zip, true);
+
+  w.publish('page.txt', 'one\ntwo\nthree\nfour\nfive\nsix\nseven NEW\n', 'Notes: pin a note (#32)');
+  const check = await checkForUpdate({ appDir: w.app, dataDir: w.dataDir, remoteUrl: w.hub });
+  assert.equal(check.behind, 1, 'it found the version its files came from');
+  assert.deepEqual(check.news, ['Notes: pin a note']);
+  assert.equal(git(w.app, 'status', '--porcelain'), '', 'its files match that version: nothing of its own');
+  assert.equal(read(w.app, 'page.txt'), 'one\ntwo\nthree\nfour\nfive\nsix\nseven\n', 'no file changed by the look');
+  assert.ok(fs.existsSync(path.join(w.dataDir, 'app.db')), 'data/ untouched');
+  assert.doesNotMatch(git(w.app, 'ls-files'), /^data\//m);
+});
+
+test('a copy from a zip with the student\'s own change: the update keeps it, and the notes', async (t) => {
+  const w = zipWorld(t);
+  write(w.app, 'page.txt', 'one\ntwo MINE\nthree\nfour\nfive\nsix\nseven\n');
+  w.publish('page.txt', 'one\ntwo\nthree\nfour\nfive\nsix\nseven NEW\n', 'Notes: pin a note (#32)');
+  let restarted = 0;
+  const updater = makeUpdater({ appDir: w.app, dataDir: w.dataDir, db: w.db, remoteUrl: w.hub, onRestart: () => restarted++ });
+  updater.start();
+  const progress = await wait(updater);
+  assert.equal(progress.result.kind, 'updated', JSON.stringify(progress));
+  await new Promise((r) => setTimeout(r, 400));
+  assert.equal(restarted, 1);
+  assert.equal(read(w.app, 'page.txt'), 'one\ntwo MINE\nthree\nfour\nfive\nsix\nseven NEW\n', 'both changes');
+  assert.match(git(w.app, 'log', '--format=%s'), /My own changes before the update of/);
+  assert.equal((await whereAmI({ appDir: w.app })).can, true, 'from now on it updates itself like any other copy');
+  assert.equal(w.db.prepare("SELECT body FROM notes WHERE id = 'n1'").get().body, 'kept');
+});
+
+test('a copy from a zip that cannot reach GitHub: the .git folder it made is taken away again', async (t) => {
+  const w = zipWorld(t);
+  await assert.rejects(checkForUpdate({ appDir: w.app, dataDir: w.dataDir, remoteUrl: path.join(w.root, 'nowhere.git') }), /could not be reached/);
+  assert.equal(fs.existsSync(path.join(w.app, '.git')), false);
+  assert.equal((await whereAmI({ appDir: w.app })).zip, true, 'as it was');
+});
