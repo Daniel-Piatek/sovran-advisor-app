@@ -1,7 +1,8 @@
 // Settings › Updates (app-update.js, 2026-11-14, the owner's wish): get the newest version with one press. It shows whether
 // a new version is ready (the app looks once a day by itself and never installs by itself), what is new in plain words,
 // each step with a tick while it updates, and after it, what came in and a way back to the version before.
-// A copy that cannot update itself (installed from a zip, its own branch) gets the one line to paste into Claude Code.
+// A copy from a zip becomes a git copy at its first look (app-update.js adoptZipCopy). One that cannot update itself (no
+// git, its own branch) gets the one line to paste into Claude Code or Codex, run on this computer.
 
 import { el, request, shortDate, clockTime } from './ui.js';
 
@@ -9,6 +10,8 @@ const STILL_MS = 3 * 60 * 1000; // a step unchanged this long: say what to do
 const SHOWN = 8; // what is new: the first few, then "and N more"
 const MARKS = { waiting: '○', doing: '…', done: '✓', skipped: '–', failed: '✕' };
 const HELP_LINE = 'Still stuck? Post in the Sovran WhatsApp group with a screenshot of this page.';
+// Codex can run in the cloud, where it never finds the app (2026-11-18, a student's update): it must run on this computer.
+const OPEN_AI = 'Open Claude Code, start a new chat, paste this line and press Enter. With ChatGPT, use Codex on this computer, not in the cloud: open Terminal, type cd ~/"Sovran Advisor"; codex and press Enter, then paste the line.';
 
 // The exact line to paste, with a Copy button beside it (the Check button's look).
 function pasteLine(line) {
@@ -114,7 +117,7 @@ export function updatesSection() {
 
     if (!s.can) {
       parts.push(say(s.message ?? 'This copy cannot update itself.'),
-        el('p', { class: 'empty' }, 'To update it, open Claude Code (or, with ChatGPT, the Codex app), paste this one line and press Enter:'),
+        el('p', { class: 'empty' }, `To update it: ${OPEN_AI}`),
         pasteLine(s.update_line));
       body.replaceChildren(...parts);
       return;
@@ -126,12 +129,12 @@ export function updatesSection() {
       if (r && !r.ok) {
         const box = el('div', { class: 'ai-check-result', 'data-result': r.kind, role: 'alert' }, el('p', { class: 'ai-check-title' }, r.message));
         if (r.kind === 'clash') {
-          box.append(el('p', {}, `Where: ${r.files.join(', ')}. Nothing is lost. Claude Code can combine your change with the new version, asking you first. Open Claude Code, paste this line and press Enter:`),
+          box.append(el('p', {}, `Where: ${r.files.join(', ')}. Nothing is lost. Claude Code or Codex can combine your change with the new version, asking you first. ${OPEN_AI}`),
             pasteLine(s.update_line));
         } else if (r.kind === 'offline') {
           box.append(el('p', {}, 'Check the internet connection, then try again.'));
         } else {
-          box.append(el('p', {}, 'Nothing you wrote was changed. To update another way, open Claude Code, paste this line and press Enter:'), pasteLine(s.update_line));
+          box.append(el('p', {}, `Nothing you wrote was changed. To update another way: ${OPEN_AI}`), pasteLine(s.update_line));
           if (r.detail) box.append(el('pre', { class: 'update-detail' }, r.detail));
         }
         box.append(el('p', { class: 'empty' }, HELP_LINE));

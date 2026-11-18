@@ -17,6 +17,7 @@ import { execFile } from 'node:child_process';
 import { checkBackup, rowCounts, backupsDir } from './backup.js';
 
 export const REMOTE = 'origin';
+export const REPO_URL = 'https://github.com/Daniel-Piatek/sovran-advisor-app.git';
 export const BRANCH = 'main';
 export const UPDATE_LINE = 'Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md';
 export const UNDO_LINE = 'Undo the last Sovran Advisor update';
@@ -99,7 +100,9 @@ export async function whereAmI({ appDir, gitPath }) {
   const top = await g(['rev-parse', '--show-toplevel']);
   const same = (a, b) => (process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b); // C: or c:
   if (top.code !== 0 || !same(fs.realpathSync(top.stdout.trim()), fs.realpathSync(appDir))) {
-    return { can: false, why: 'no_git_copy', message: 'This copy was installed without git (from a zip), so it cannot update itself.' };
+    // A copy from a zip (no .git of its own): it can still update, by becoming a git copy first (adoptZipCopy).
+    const zip = !fs.existsSync(path.join(appDir, '.git')) && fs.existsSync(path.join(appDir, 'app-update.js')) && fs.existsSync(path.join(appDir, '.gitignore'));
+    return { can: false, why: 'no_git_copy', zip, message: 'This copy was installed without git (from a zip), so it cannot update itself.' };
   }
   const branch = (await g(['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim();
   if (branch !== BRANCH) return { can: false, why: 'other_branch', message: `This copy is on its own branch (${branch}), so it does not update itself.` };
@@ -108,11 +111,62 @@ export async function whereAmI({ appDir, gitPath }) {
   return { can: true, g };
 }
 
-// Looks for a newer version: { checked_at, behind, news: [what is new, newest first], db_upgrade }.
-export async function checkForUpdate({ appDir, dataDir, gitPath }) {
+// A copy installed from a zip becomes a git copy of its own, in place, without changing any of its files (2026-11-18: a
+// student's zip copy sent her to Codex, which ran in the cloud and never found it). It is given a .git folder, the
+// versions from GitHub, and the version its files came from: the one they match exactly, else the nearest one, so that
+// whatever differs is the owner's own change and is kept as such by the update. data/ and the app's packages stay out.
+// If anything fails on the way, the .git folder it made is taken away again, so the copy is as it was.
+export async function adoptZipCopy({ appDir, gitPath, remoteUrl = REPO_URL }) {
   const where = await whereAmI({ appDir, gitPath });
-  if (!where.can) throw fail(where.why, where.message);
-  const { g } = where;
+  if (where.can) return where;
+  if (!where.zip) throw fail(where.why, where.message);
+  const g = await gitIn(appDir, gitPath);
+  const dotGit = path.join(appDir, '.git');
+  try {
+    const steps = [['init', '-q'], ['symbolic-ref', 'HEAD', `refs/heads/${BRANCH}`], ['config', 'core.fileMode', 'false'], ['remote', 'add', REMOTE, remoteUrl]];
+    for (const args of steps) if ((await g(args)).code !== 0) throw fail('adopt', 'This copy could not be made ready to update itself. Nothing was changed.');
+    fs.mkdirSync(path.join(dotGit, 'info'), { recursive: true });
+    fs.writeFileSync(path.join(dotGit, 'info', 'exclude'), 'data/\nnode_modules/\nbuild/\nMY-CHANGES.md\n');
+    const fetched = await g(['fetch', '--quiet', REMOTE, BRANCH], { timeout: 180_000 });
+    if (fetched.code !== 0) throw fail('offline', 'The newest version could not be reached. Is this computer online? Nothing was changed.', { detail: fetched.stderr.trim() });
+    await g(['add', '-A']);
+    const tree = (await g(['write-tree'])).stdout.trim();
+    const versions = (await g(['log', '--first-parent', '--format=%H %T', '-n', '500', `${REMOTE}/${BRANCH}`])).stdout.trim().split('\n')
+      .map((line) => line.split(' ')).filter(([commit, t]) => commit && t);
+    let base = versions.find(([, t]) => t === tree)?.[0];
+    if (!base) {
+      // The nearest: the fewest lines apart. On a tie the older one, so a newer version is never taken as there already.
+      let fewest = Infinity;
+      for (const [commit] of versions) {
+        const differ = (await g(['diff', '--numstat', tree, commit])).stdout.split('\n').filter(Boolean)
+          .reduce((sum, line) => { const [added, gone] = line.split('\t'); return sum + (Number(added) || 1) + (Number(gone) || 0); }, 0);
+        if (differ <= fewest) { fewest = differ; base = commit; }
+      }
+    }
+    if (!base) throw fail('adopt', 'The version this copy came from could not be found. Nothing was changed.');
+    if ((await g(['update-ref', `refs/heads/${BRANCH}`, base])).code !== 0 || (await g(['reset', '-q'])).code !== 0) {
+      throw fail('adopt', 'This copy could not be made ready to update itself. Nothing was changed.');
+    }
+    const now = await whereAmI({ appDir, gitPath });
+    if (!now.can) throw fail(now.why, now.message);
+    return now;
+  } catch (err) {
+    fs.rmSync(dotGit, { recursive: true, force: true });
+    throw err;
+  }
+}
+
+// A git copy ready to update: a zip copy is made one first.
+async function readyCopy({ appDir, gitPath, remoteUrl }) {
+  const where = await whereAmI({ appDir, gitPath });
+  if (where.can) return where;
+  if (where.zip) return adoptZipCopy({ appDir, gitPath, remoteUrl });
+  throw fail(where.why, where.message);
+}
+
+// Looks for a newer version: { checked_at, behind, news: [what is new, newest first], db_upgrade }.
+export async function checkForUpdate({ appDir, dataDir, gitPath, remoteUrl }) {
+  const { g } = await readyCopy({ appDir, gitPath, remoteUrl });
   const fetched = await g(['fetch', '--quiet', REMOTE, BRANCH], { timeout: 90_000 });
   if (fetched.code !== 0) throw fail('offline', 'The newest version could not be reached. Is this computer online?', { detail: fetched.stderr.trim() });
   const upstream = `${REMOTE}/${BRANCH}`;
@@ -137,9 +191,11 @@ export async function updateStatus({ appDir, dataDir, gitPath, canRestart }) {
     undo = head === last.after_commit ? { can: true, db: last.schema_after !== last.schema_before, since: last.at } : { can: false };
     last = { at: last.at, news: last.news ?? [] };
   }
+  const able = where.can || Boolean(where.zip); // a zip copy becomes a git copy at its first look or update
   return {
-    can: where.can && Boolean(canRestart),
-    ...(!where.can ? { why: where.why, message: where.message } : !canRestart ? { why: 'no_restart', message: 'This copy was not started from its icon, so it cannot restart itself after an update.' } : {}),
+    can: able && Boolean(canRestart),
+    ...(where.zip ? { zip: true } : {}),
+    ...(!able ? { why: where.why, message: where.message } : !canRestart ? { why: 'no_restart', message: 'This copy was not started from its icon, so it cannot restart itself after an update.' } : {}),
     update_line: UPDATE_LINE, undo_line: UNDO_LINE,
     check: state.check ?? null, last, undo,
   };
@@ -179,7 +235,7 @@ async function npmInstall(appDir, npm) {
 }
 
 // One update at a time. progress: { steps: [{ id, label, state: waiting|doing|done|skipped|failed }], result }.
-export function makeUpdater({ appDir, dataDir, db, gitPath, npm, onRestart }) {
+export function makeUpdater({ appDir, dataDir, db, gitPath, npm, onRestart, remoteUrl }) {
   let progress = null;
   const set = (id, state) => { const step = progress.steps.find((s) => s.id === id); if (step) step.state = state; };
   const begin = (steps) => { progress = { running: true, steps: steps.map(([id, label]) => ({ id, label, state: 'waiting' })), result: null }; };
@@ -193,13 +249,14 @@ export function makeUpdater({ appDir, dataDir, db, gitPath, npm, onRestart }) {
     const doing = (id) => { current = id; set(id, 'doing'); };
     try {
       doing('backup');
-      const where = await whereAmI({ appDir, gitPath });
-      if (!where.can) throw fail(where.why, where.message);
-      g = where.g;
+      let where = await whereAmI({ appDir, gitPath });
+      if (!where.can && !where.zip) throw fail(where.why, where.message);
       const backup = copyDatabase(db, dataDir, 'before-update-');
       set('backup', 'done');
 
       doing('own');
+      if (!where.can) where = await adoptZipCopy({ appDir, gitPath, remoteUrl }); // a zip copy: a git copy first
+      g = where.g;
       const changed = (await g(['status', '--porcelain'])).stdout.trim();
       if (changed) {
         await g(['add', '-A', '--', '.', ':!MY-CHANGES.md']);
