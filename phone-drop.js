@@ -21,6 +21,7 @@ import { saveChatPart } from './chat-saves.js';
 import { libraryKey } from './sovran-library.js';
 import { takePhoneMark } from './report-marks.js';
 import { syncShelf } from './phone-shelf.js';
+import { getProvider } from './ai.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -42,7 +43,8 @@ function writeBox(db, value) {
     .run(crypto.randomUUID(), time, time, SETTING, JSON.stringify(value));
 }
 
-export const phoneLink = (box) => `${PAGE_URL}#v1.${box.box}.${box.drop}.${box.key}`;
+// chatgpt: for a student whose assistant is ChatGPT, the link tells the phone once (?ai=chatgpt), so Ask my AI opens ChatGPT there.
+export const phoneLink = (box, chatgpt = false) => `${PAGE_URL}${chatgpt ? '?ai=chatgpt' : ''}#v1.${box.box}.${box.drop}.${box.key}`;
 
 async function call(fetcher, body) {
   let res;
@@ -58,7 +60,8 @@ async function call(fetcher, body) {
 export function phoneDropState(db) {
   const box = readBox(db);
   if (!box) return { linked: false };
-  return { linked: true, link: phoneLink(box), made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null, saves_chats: Boolean(box.saver), shelf: Object.keys(box.shelf ?? {}).filter((n) => n.startsWith('report.')).length };
+  const chatgpt = getProvider(db) === 'codex';
+  return { linked: true, link: phoneLink(box, chatgpt), ai: chatgpt ? 'ChatGPT' : 'Claude', made_at: box.made_at, last_collected_at: box.last_collected_at ?? null, collected: box.collected ?? 0, problem: box.problem ?? null, saves_chats: Boolean(box.saver), shelf: Object.keys(box.shelf ?? {}).filter((n) => n.startsWith('report.')).length };
 }
 
 // A box in the cloud for this computer, unless there is one. new: close the old one first (the old link stops).
