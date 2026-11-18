@@ -23,6 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # A phone keeps the page's files for ten minutes and a reload only asks again for index.html, so every file
+      # index.html and the scripts load is named with this version: a reload then shows a new version at once.
+      - name: Name the files with this version
+        run: |
+          v=${GITHUB_SHA::8}
+          sed -i -E "s/(href=\"phone\.css|src=\"phone\.js)\"/\1?v=$v\"/" phone/index.html
+          sed -i -E "s#from '\./([a-z]+)\.js'#from './\1.js?v=$v'#" phone/phone.js phone/reports.js
+          grep -c "?v=$v" phone/index.html phone/phone.js phone/reports.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: phone
