@@ -28,6 +28,8 @@ const sections = [
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
   { name: 'Mail', href: '/mail', icon: 'mail', more: true, module: 'mail', owns: (path) => /^\/mail(\/|$)/.test(path) },
   { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
+  // Group Circle (group-feed.js, public/group.js; module group, on in a new install): your Quest group's Announcements and Circle.
+  { name: 'Group Circle', href: '/group', icon: 'group', more: true, module: 'group', owns: (path) => /^\/group(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
   // The Tour (tour.js): short films of the app, and of the parts you can switch on (2026-11-16, the owner's wish).
@@ -38,8 +40,9 @@ const sections = [
 
 const sidebar = document.getElementById('sidebar');
 const inboxCount = el('span', { class: 'sidebar-count', hidden: true });
+const groupCount = el('span', { class: 'sidebar-count', hidden: true });
 const sectionLinks = sections.map((section) => el('a', { class: section.more ? 'sidebar-link in-more' : 'sidebar-link', href: section.href, 'data-section': section.name },
-  icon(section.icon), el('span', {}, section.name), section.name === 'Inbox' ? inboxCount : null));
+  icon(section.icon), el('span', {}, section.name), section.name === 'Inbox' ? inboxCount : section.name === 'Group Circle' ? groupCount : null));
 // More (a phone only): a small menu above the bar with the sections that don't fit.
 const moreMenu = el('div', { class: 'more-menu', role: 'menu', 'aria-label': 'More', hidden: true },
   ...sections.filter((s) => s.more).map((section) => el('a', {
@@ -156,6 +159,22 @@ sidebar.addEventListener('dragover', (event) => { if (dragging.link && event.tar
 sidebar.addEventListener('drop', (event) => {
   if (dragging.link && event.target === sidebar) { event.preventDefault(); moveLink(dragging.link, null); dragging.link = null; clearMarks(); }
 });
+
+// Group Circle: how many new posts wait in Announcements and the Circle together. Asked when the app opens, every two
+// minutes while the window is in front, and by the Group Circle page when it has shown something.
+export async function refreshGroupCount() {
+  if (!moduleOn('group')) { groupCount.hidden = true; return; }
+  try {
+    const { counts } = await request('GET', '/api/group');
+    const waiting = (counts?.news ?? 0) + (counts?.feed ?? 0) + (counts?.flags ?? 0); // flags: the guide's, in APP Daniel
+    groupCount.textContent = waiting ? String(waiting) : '';
+    groupCount.hidden = waiting === 0;
+    groupCount.setAttribute('aria-label', `${waiting} new`);
+  } catch { groupCount.hidden = true; }
+}
+setTimeout(refreshGroupCount, 1500);
+setInterval(() => { if (document.visibilityState === 'visible') refreshGroupCount(); }, 120_000);
+onModulesChanged(refreshGroupCount);
 
 // How many captures wait: in the sidebar, and named for screen readers.
 export async function refreshInboxCount() {

@@ -15,6 +15,9 @@ import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar, clockTime } from './ui.js';
 import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
+import { startGroupDraft } from './group.js';
+import { tellDanielButton } from './tell-daniel.js';
+import { moduleOn } from './modules.js';
 import { dueLabel } from './due.js';
 import { firstWordWords } from './spoken.js';
 import { callControls } from './call.js';
@@ -154,14 +157,28 @@ function keepOf(message, body) {
 }
 
 // Under a finished reply: send it to the Inbox to be sorted later. A selected part is kept alone.
-function keepButtons(message, body) {
+function keepButtons(message, body, question = '') {
   const result = el('span', { class: 'chat-keep-result', role: 'status' });
   const done = (text, href) => result.replaceChildren(text, ...(href ? [' ', el('a', { href }, 'Open')] : []));
   const inbox = el('button', { type: 'button', class: 'button button-quiet', title: 'Send this reply (or the part you selected) to the Inbox', onclick: async () => {
     const { text } = keepOf(message, body);
     try { await request('POST', '/api/captures', { body: text, world: 'inner' }); done('Sent to the Inbox.', '/inbox'); } catch (err) { done(`Couldn't send: ${err.message}`); }
   } }, 'Send to Inbox');
-  return el('div', { class: 'chat-keep' }, inbox, result);
+  // Share to Group Circle (2026-11-19, the owner's wish): the reply (or the part you selected), to check before posting.
+  const share = moduleOn('group') ? el('button', { type: 'button', class: 'button button-quiet share-to-group', title: 'Share this reply (or the part you selected) with your group',
+    onclick: () => startGroupDraft(keepOf(message, body).text, 'Assistant') }, 'Share to Group Circle') : null;
+  // Tell Daniel (2026-11-19, the owner's wish): this answer (or the part you selected) with its question and what it used.
+  const tell = tellDanielButton({ place: 'assistant', items: () => {
+    const { text, part } = keepOf(message, body);
+    return [
+      { key: 'question', label: 'Your question', value: question.trim().slice(0, 6000) },
+      { key: part ? 'answer_part' : 'answer', label: part ? 'The part of the answer you selected' : 'The answer', value: text.slice(0, 12000) },
+      { key: 'used', label: 'What it looked at', value: [...(message.steps ?? []).map((s) => [STEP_NAMES[s.tool] ?? s.tool, s.detail].filter(Boolean).join(': ')),
+        ...(message.sources ?? []).map((src) => src.title || src.path)].slice(0, 30) },
+      { key: 'model', label: 'Answered by', value: [message.ai, message.model].filter(Boolean).join(' ') },
+    ];
+  } });
+  return el('div', { class: 'chat-keep' }, inbox, share, tell, result);
 }
 
 // How a turn of a call went (advanced/voice/3-6), under your words and under its answer: said on a call, where the answer
@@ -177,7 +194,7 @@ function callMarkNodes(mark) {
 }
 
 // A bubble: yours on the right, the assistant's on the left with its label.
-function bubble(message, changed = () => {}, mark = null) {
+function bubble(message, changed = () => {}, mark = null, question = '') {
   if (message.role === 'user') {
     return el('div', { class: 'chat-bubble is-user', 'data-role': 'user' }, el('p', { class: 'chat-text' }, message.text),
       ...(message.context ? [el('a', { class: 'chat-context', href: message.context.path }, 'Asked on: ', message.context.title || message.context.path)] : []),
@@ -194,7 +211,7 @@ function bubble(message, changed = () => {}, mark = null) {
     body,
     ...(message.state === 'answering' ? [el('span', { class: 'chat-working', 'aria-label': 'Answering' }, '…')] : []),
     ...(message.state === 'stopped' ? [el('p', { class: 'chat-note' }, 'Stopped.')] : []),
-    ...(message.state === 'answering' || !message.text?.trim() ? [] : [keepButtons(message, body)]),
+    ...(message.state === 'answering' || !message.text?.trim() ? [] : [keepButtons(message, body, question)]),
     ...callMarkNodes(mark),
     citations(message.sources),
     ...(message.cards ?? []).map((card) => cardNode(card, (next) => { Object.assign(card, next); changed(); })),
@@ -355,7 +372,7 @@ export async function showAssistant(id) {
         else if (m.ai !== last) lastWords = '';
         last = m.ai;
       }
-      nodes.push(bubble(m, () => drawThread(), marks[m.id]));
+      nodes.push(bubble(m, () => drawThread(), marks[m.id], messages[messages.indexOf(m) - 1]?.role === 'user' ? messages[messages.indexOf(m) - 1].text : ''));
       const next = messages[messages.indexOf(m) + 1];
       for (const w of written.filter((x) => x.created_at >= m.created_at && (!next || x.created_at < next.created_at))) {
         nodes.push(writtenLine(w));
@@ -447,7 +464,7 @@ export async function showAssistant(id) {
     setAnswering(true);
     let node = thread.lastElementChild;
     const redraw = () => {
-      const next = bubble(answer, () => redraw());
+      const next = bubble(answer, () => redraw(), null, asked.text);
       const open = node.querySelector('.chat-steps')?.open;
       if (open) next.querySelector('.chat-steps')?.setAttribute('open', '');
       node.replaceWith(next);

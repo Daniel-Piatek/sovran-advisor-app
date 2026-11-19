@@ -23,7 +23,7 @@ async function openInbox(page, app) {
   await page.goto(`${app.url}/inbox`);
   await showFirst(page);
 }
-const count = (page) => page.getByRole('navigation', { name: 'Sections' }).locator('.sidebar-count');
+const count = (page) => page.getByRole('navigation', { name: 'Sections' }).locator('[data-section="Inbox"] .sidebar-count');
 
 test('three captures wait in the Inbox, oldest first, and the sidebar says 3', async ({ page, app }) => {
   await page.goto(app.url);

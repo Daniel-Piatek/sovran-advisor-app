@@ -149,6 +149,8 @@ const icons = {
   link: svg('<path d="M6.5 9.5l3-3M7 4.5l.8-.8a2.5 2.5 0 0 1 3.5 3.5l-.8.8M9 11.5l-.8.8a2.5 2.5 0 0 1-3.5-3.5l.8-.8"/>'),
   inbox: svg('<path d="M2 9.5l1.8-6A1 1 0 0 1 4.8 2.8h6.4a1 1 0 0 1 1 .7l1.8 6M2 9.5V13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9.5M2 9.5h3.5l1 2h3l1-2H14"/>'),
   plus: svg('<path d="M8 3v10M3 8h10"/>'),
+  // Group Circle (2026-11-19): three people in a circle.
+  group: svg('<circle cx="8" cy="4.6" r="1.9"/><circle cx="3.9" cy="10.4" r="1.7"/><circle cx="12.1" cy="10.4" r="1.7"/><path d="M5.2 13.9c.8-.7 1.7-1 2.8-1s2 .3 2.8 1"/>'),
   person: svg('<circle cx="8" cy="5.5" r="3"/><path d="M2.5 14.5c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/>'),
   // My Life: a Key Element is a pillar with a keyhole (2026-10-27, the owner's choice), a
   // Goal a target, a Project a flag, a Topic a #.
@@ -215,6 +217,7 @@ const discs = {
   task: disc('<path d="M7.6 12.4l3 3 5.8-6.4"/>'),
   planner: disc('<circle cx="12" cy="12" r="5.3"/><path d="M12 9.2V12l2 1.4"/>'),
   calendar: disc('<rect x="7" y="7.8" width="10" height="9" rx="1.6"/><path d="M7 11h10M9.6 6.3v2.6M14.4 6.3v2.6"/>'),
+  group: disc('<circle cx="12" cy="8" r="1.9"/><circle cx="8.1" cy="13.6" r="1.7"/><circle cx="15.9" cy="13.6" r="1.7"/><path d="M9.6 17.2c.7-.6 1.5-.9 2.4-.9s1.7.3 2.4.9"/>'),
   person: disc('<circle cx="12" cy="9.6" r="2.6"/><path d="M7.4 17.2c.7-2.5 2.4-3.7 4.6-3.7s3.9 1.2 4.6 3.7"/>'),
   timeline: disc('<path d="M9 7v10"/><path d="M12 8.5h4M12 12h3M12 15.5h4"/>'),
   key_element: disc('<path d="M6.8 10.2L12 7l5.2 3.2M7.2 17h9.6M9 11.6v3.8M12 11.6v3.8M15 11.6v3.8"/>'),

@@ -9,6 +9,8 @@
 
 import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar } from './ui.js';
+import { moduleOn } from './modules.js';
+import { openTellDaniel } from './tell-daniel.js';
 
 const markdown = markdownit({ html: false, linkify: true });
 // What the assistant is doing, in words, while the answer has not begun.
@@ -387,7 +389,17 @@ export async function markReport({ report, sections, list, undoPlace }) {
   pick.append(
     el('button', { type: 'button', class: 'button button-quiet', onmousedown: (e) => e.preventDefault(), onclick: () => keep('') }, 'Highlight'),
     el('button', { type: 'button', class: 'button button-quiet', onmousedown: (e) => e.preventDefault(), onclick: askComment }, 'Comment'),
-    el('button', { type: 'button', class: 'button button-quiet report-pick-ask', onmousedown: (e) => e.preventDefault(), onclick: askNew }, icon('assistant'), 'Ask about this'));
+    el('button', { type: 'button', class: 'button button-quiet report-pick-ask', onmousedown: (e) => e.preventDefault(), onclick: askNew }, icon('assistant'), 'Ask about this'),
+    // Tell Daniel (2026-11-19, the owner's wish): a problem or a question about these words, with the report and section.
+    ...(moduleOn('tell') ? [el('button', { type: 'button', class: 'button button-quiet tell-daniel', onmousedown: (e) => e.preventDefault(), onclick: () => {
+      if (!chosen) return;
+      const { section, quote } = chosen;
+      pick.hidden = true;
+      openTellDaniel({ place: 'report', items: [
+        { key: 'report', label: 'Report', value: `${report.title}${report.version ? ` (version ${report.version})` : ''}` },
+        { key: 'section', label: 'Section', value: section.title ?? section.section_key },
+        { key: 'quote', label: 'The words', value: quote.slice(0, 6000) }] });
+    } }, 'Tell Daniel')] : []));
 
   const onSelectEnd = () => setTimeout(() => {
     if (!pop.hidden) return;
