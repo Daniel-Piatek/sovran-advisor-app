@@ -9,7 +9,7 @@ import { prepareDatabase } from '../../db.js';
 import { moduleOn } from '../../modules.js';
 import { setLibraryKey, libraryKey } from '../../sovran-library.js';
 import { useGroup } from '../../group-feed.js';
-import { tellDaniel, listTells, markTell, appVersion } from '../../tell-daniel.js';
+import { tellDaniel, listTells, markTell, appVersion, noteNewTells } from '../../tell-daniel.js';
 import { fakeGroupCloud } from '../fake-group-cloud.js';
 
 const KEY = 'sovran_madeupmadeupmadeupmadeup';
@@ -41,7 +41,7 @@ test('a report goes with the key, the place, what it was about and the app’s v
   assert.equal(sent.context.question, 'What is my Tyrant?');
   assert.equal(sent.context.extra.deep.deeper.deepest, null, 'only a few levels deep');
   assert.equal(sent.version, appVersion());
-  assert.match(appVersion(), /^\d+\.\d+\.\d+/);
+  assert.match(appVersion(), / · (Mac|Windows|Linux|\w+)$/);
 });
 
 test('the app checks before it asks the cloud', async () => {
@@ -73,4 +73,19 @@ test('the guide lists them and marks each one; a student cannot', async () => {
   assert.equal(cloud.state.tells[0].status, 'digging');
   await assert.rejects(markTell(db, reports[0].id, { status: 'maybe' }), /Pick New/);
   assert.deepEqual((await listTells(db)).counts, { new: 0, digging: 1, done: 0 });
+});
+
+test('the guide’s Inbox gets one line a day while new reports wait', async () => {
+  const { db } = setup();
+  await tellDaniel(db, { kind: 'broken', why: 'Planner is blank' });
+  await tellDaniel(db, { kind: 'off', why: 'Not me' });
+  useGroup({ keyOf: () => GUIDE });
+  const inbox = [];
+  const add = (text) => inbox.push(text);
+  assert.match(await noteNewTells(db, add, { today: '2026-11-19' }), /^2 new student reports/);
+  assert.equal(await noteNewTells(db, add, { today: '2026-11-19' }), null, 'once a day');
+  assert.ok(await noteNewTells(db, add, { today: '2026-11-20' }), 'the next day again, while they wait');
+  assert.equal(inbox.length, 2);
+  useGroup({ keyOf: () => '' });
+  assert.equal(await noteNewTells(db, add, { today: '2026-11-21' }), null, 'no guide key: nothing, no error');
 });

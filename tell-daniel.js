@@ -11,6 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import { moduleOn } from './modules.js';
 import { askCloud } from './group-feed.js';
 
@@ -26,9 +27,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 let version = null;
 export function appVersion() {
   if (version) return version;
-  let pkg = '?';
+  let pkg = '';
   let commit = '';
-  try { pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')).version ?? '?'; } catch { /* left as ? */ }
+  try { pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')).version ?? ''; } catch { /* none */ }
   try {
     const head = fs.readFileSync(path.join(HERE, '.git', 'HEAD'), 'utf8').trim();
     const ref = head.startsWith('ref: ') ? head.slice(5) : null;
@@ -41,7 +42,7 @@ export function appVersion() {
     }
     commit = /^[0-9a-f]{40}$/.test(sha) ? sha.slice(0, 7) : '';
   } catch { /* not a git copy */ }
-  version = `${pkg}${commit ? ` (${commit})` : ''} · ${{ darwin: 'Mac', win32: 'Windows', linux: 'Linux' }[process.platform] ?? process.platform}`;
+  version = `${[pkg, commit ? `(${commit})` : ''].filter(Boolean).join(' ') || 'unknown version'} · ${{ darwin: 'Mac', win32: 'Windows', linux: 'Linux' }[process.platform] ?? process.platform}`;
   return version;
 }
 
@@ -84,4 +85,24 @@ export async function markTell(db, id, input) {
   if (!Object.hasOwn(STATUSES, input?.status)) throw fail(400, 'Pick New, Needs digging or Dealt with.');
   const note = typeof input?.note === 'string' ? input.note.trim().slice(0, 4000) : '';
   return askCloud(db, { action: 'tell_status', id: n, status: input.status, note: note || null });
+}
+
+// Once a day, while new reports wait, a line in the guide's Inbox: "3 new student reports". addToInbox(text) is the
+// app's own (captures.js createCapture); the day it last said so is kept in settings tell.noted_day.
+const NOTED = 'tell.noted_day';
+const localDay = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+export async function noteNewTells(db, addToInbox, { today = localDay() } = {}) {
+  if (!tellOn(db)) return null;
+  const row = db.prepare('SELECT value FROM settings WHERE key = ? AND deleted_at IS NULL').get(NOTED);
+  if (row?.value === today) return null;
+  let counts;
+  try { ({ counts } = await listTells(db, { status: 'new' })); } catch { return null; } // no guide key yet, or offline: next time
+  if (!counts.new) return null;
+  const text = `${counts.new === 1 ? '1 new student report' : `${counts.new} new student reports`} from Tell Daniel. Open Student reports in the sidebar to read them.`;
+  addToInbox(text);
+  const time = new Date().toISOString();
+  db.prepare(`INSERT INTO settings (id, created_at, updated_at, key, value) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at, deleted_at = NULL`)
+    .run(randomUUID(), time, time, NOTED, today);
+  return text;
 }
