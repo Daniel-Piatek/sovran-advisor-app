@@ -166,7 +166,7 @@ export async function refreshGroupCount() {
   if (!moduleOn('group')) { groupCount.hidden = true; return; }
   try {
     const { counts } = await request('GET', '/api/group');
-    const waiting = (counts?.news ?? 0) + (counts?.feed ?? 0);
+    const waiting = (counts?.news ?? 0) + (counts?.feed ?? 0) + (counts?.flags ?? 0); // flags: the guide's, in APP Daniel
     groupCount.textContent = waiting ? String(waiting) : '';
     groupCount.hidden = waiting === 0;
     groupCount.setAttribute('aria-label', `${waiting} new`);

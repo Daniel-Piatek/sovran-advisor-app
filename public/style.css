@@ -4767,3 +4767,29 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .group-page .group-more:hover, .group-page .group-like:hover { background: var(--color-surface); }
 .group-page .group-plus { border-color: var(--color-border); }
 .group-comment .group-more { color: var(--color-text-muted); font-size: var(--text-xs); }
+/* Group Circle, the guide's tools (APP Daniel) */
+.group-pick { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-text-muted); }
+.group-pick select, .group-field { font: inherit; font-size: var(--text-sm); color: var(--color-text); background: var(--color-bg); border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); }
+.group-extras { flex-wrap: wrap; font-size: var(--text-sm); }
+.group-field-label { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); }
+.group-field-label[hidden] { display: none; }
+.group-fingerprint { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--color-surface); border-radius: var(--radius-sm); padding: var(--space-3);
+  font-size: var(--text-sm); line-height: var(--line-height-short); user-select: all; }
+.group-hidden { opacity: 0.55; }
+.group-flag { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+.group-actions .button { font-size: var(--text-sm); }
+.group-people { display: flex; flex-direction: column; gap: var(--space-3); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-4); }
+.group-people-title { font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-lg); margin: 0; }
+.group-people-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.group-people-table td { padding: var(--space-2) var(--space-2) var(--space-2) 0; vertical-align: top; border-bottom: var(--border-width) solid var(--color-border); line-height: var(--line-height-short); }
+.group-person-name { max-width: 14rem; }
+.group-person-actions { text-align: right; white-space: nowrap; }
+.group-paused td:first-child .group-person-name { color: var(--color-text-muted); }
+.group-paused td:nth-child(2)::after { content: ' · paused'; color: var(--color-accent); }
+@media (max-width: 640px) {
+  .group-people-table td { display: block; border-bottom: 0; padding: var(--space-1) 0; }
+  .group-people-table tr { display: block; border-bottom: var(--border-width) solid var(--color-border); padding: var(--space-2) 0; }
+  .group-person-actions { text-align: left; white-space: normal; }
+}
+.group-people-note { color: var(--color-text); font-weight: var(--weight-medium); }

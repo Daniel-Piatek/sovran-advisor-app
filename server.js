@@ -1588,6 +1588,13 @@ export function startServer({
     //   POST   /api/group/posts/:id/like|done|flag   { on } (flag: { comment? })
     //   POST   /api/group/pictures               { jpeg: base64 }: a picture the page already shrank → { path }
     //   GET    /api/group/pictures/<group>/<name>.jpg   its bytes (kept on this computer once fetched)
+    // The guide's part (APP Daniel, with the guide key; the cloud refuses anyone else, so these do nothing for a student):
+    //   GET    /api/group/:tab?group=<code|ALL>  one group's tab, or every group's
+    //   POST   /api/group/announcements          { tab, kind, group, body, pictures?, due_on?, comments_on? }
+    //   POST   /api/group/posts|comments/:id/hide   { on }
+    //   GET    /api/group/flags; POST /api/group/flags/clear { post, comment? }
+    //   GET    /api/group/groups; POST /api/group/manage { what, student?, value? }
+    //   POST   /api/group/guide-key              makes the guide key here once → { fingerprint } (APP Daniel only)
     if (url.pathname === '/api/group' || url.pathname.startsWith('/api/group/')) {
       if (!group.groupOn(db)) return sendJson(res, 409, { error: 'Group Circle is switched off in Settings › Modules.' });
       const m = (re) => url.pathname.match(re);
@@ -1602,11 +1609,25 @@ export function startServer({
         if (url.pathname === '/api/group/name' && req.method === 'PUT') return sendJson(res, 200, await group.setName(db, await readJson(req)));
         if (url.pathname === '/api/group/pictures' && req.method === 'POST') {
           const input = await readJson(req);
-          return sendJson(res, 201, await group.addPicture(db, Buffer.from(typeof input?.jpeg === 'string' ? input.jpeg : '', 'base64')));
+          return sendJson(res, 201, await group.addPicture(db, Buffer.from(typeof input?.jpeg === 'string' ? input.jpeg : '', 'base64'), input?.group));
         }
         if (url.pathname === '/api/group/posts' && req.method === 'POST') return sendJson(res, 201, await group.addPost(db, await readJson(req)));
+        if (url.pathname === '/api/group/announcements' && req.method === 'POST') return sendJson(res, 201, await group.addGuidePost(db, await readJson(req)));
+        if (url.pathname === '/api/group/flags' && req.method === 'GET') return sendJson(res, 200, await group.openFlags(db));
+        if (url.pathname === '/api/group/flags/clear' && req.method === 'POST') return sendJson(res, 200, await group.clearFlags(db, await readJson(req)));
+        if (url.pathname === '/api/group/groups' && req.method === 'GET') return sendJson(res, 200, await group.listGroups(db));
+        if (url.pathname === '/api/group/manage' && req.method === 'POST') return sendJson(res, 200, await group.manage(db, await readJson(req)));
+        if (url.pathname === '/api/group/guide-key' && req.method === 'POST') {
+          if (!group.isGuideApp()) return sendJson(res, 404, { error: 'Not found' });
+          return sendJson(res, 200, group.makeGuideKey(db));
+        }
+        const hide = m(/^\/api\/group\/(posts|comments)\/(\d+)\/hide$/);
+        if (hide && req.method === 'POST') return sendJson(res, 200, await group.hideItem(db, hide[1] === 'comments' ? 'comment' : 'post', hide[2], await readJson(req)));
         const post = m(/^\/api\/group\/posts\/(\d+)$/);
-        if (post && req.method === 'PATCH') return sendJson(res, 200, await group.changePost(db, post[1], await readJson(req)));
+        if (post && req.method === 'PATCH') {
+          const input = await readJson(req);
+          return sendJson(res, 200, await (group.isGuideApp() ? group.changeGuidePost(db, post[1], input) : group.changePost(db, post[1], input)));
+        }
         if (post && req.method === 'DELETE') return sendJson(res, 200, await group.removePost(db, post[1]));
         const act = m(/^\/api\/group\/posts\/(\d+)\/(comments|like|done|flag)$/);
         if (act && req.method === 'POST') {
@@ -1618,7 +1639,7 @@ export function startServer({
         if (comment && req.method === 'PATCH') return sendJson(res, 200, await group.changeComment(db, comment[1], await readJson(req)));
         if (comment && req.method === 'DELETE') return sendJson(res, 200, await group.removeComment(db, comment[1]));
         const tab = m(/^\/api\/group\/(news|feed)$/);
-        if (tab && req.method === 'GET') return sendJson(res, 200, await group.readTab(db, tab[1], url.searchParams.get('before')));
+        if (tab && req.method === 'GET') return sendJson(res, 200, await group.readTab(db, tab[1], url.searchParams.get('before'), url.searchParams.get('group')));
         return sendJson(res, 404, { error: 'Not found' });
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
     }

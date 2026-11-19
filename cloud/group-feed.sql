@@ -165,6 +165,7 @@ BEGIN
         'pictures', to_jsonb(p.pictures), 'comments_on', p.comments_on, 'created_at', p.created_at, 'edited_at', p.edited_at,
         'hidden', p.hidden_at IS NOT NULL,
         'author', group_feed.author_name(p.student_id, p.guide_name), 'by_guide', p.student_id IS NULL,
+        'student', CASE WHEN is_guide THEN p.student_id END,                -- the guide's, to pause someone from their post
         'mine', CASE WHEN is_guide THEN p.student_id IS NULL ELSE p.student_id = me END,
         'likes', (SELECT count(*) FROM group_feed.likes l WHERE l.post_id = p.id),
         'liked', EXISTS (SELECT 1 FROM group_feed.likes l WHERE l.post_id = p.id AND l.liker = me),
@@ -174,7 +175,7 @@ BEGIN
                         ELSE EXISTS (SELECT 1 FROM group_feed.flags f WHERE f.post_id = p.id AND f.comment_id IS NULL AND f.student_id = me)::int END,
         'comments', coalesce((SELECT jsonb_agg(jsonb_build_object('id', c.id, 'body', c.body, 'created_at', c.created_at,
             'edited_at', c.edited_at, 'hidden', c.hidden_at IS NOT NULL, 'author', group_feed.author_name(c.student_id, c.guide_name),
-            'by_guide', c.student_id IS NULL, 'mine', CASE WHEN is_guide THEN c.student_id IS NULL ELSE c.student_id = me END) ORDER BY c.id)
+            'by_guide', c.student_id IS NULL, 'student', CASE WHEN is_guide THEN c.student_id END, 'mine', CASE WHEN is_guide THEN c.student_id IS NULL ELSE c.student_id = me END) ORDER BY c.id)
           FROM group_feed.comments c WHERE c.post_id = p.id AND c.deleted_at IS NULL AND (is_guide OR c.hidden_at IS NULL)), '[]'::jsonb)
       ) x
       FROM group_feed.posts p

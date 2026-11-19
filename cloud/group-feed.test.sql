@@ -96,6 +96,8 @@ BEGIN
   PERFORM pg_temp.ok(jsonb_array_length(group_feed.flags_open(G)->'flags') = 0, 'hiding deals with the flag');
   PERFORM pg_temp.ok(jsonb_array_length(group_feed.read(G, 'feed', 'SQ01', NULL, 20)->'posts') = 2, 'the guide still sees it, to bring it back');
   PERFORM pg_temp.ok(group_feed.hide(A, 'post', p1, true)->>'error' = 'guideonly', 'a student cannot hide');
+  PERFORM pg_temp.ok(group_feed.read(G, 'feed', 'SQ01', NULL, 20)->'posts'->-1->>'student' LIKE 'client-%', 'the guide sees who wrote a post, to pause them');
+  PERFORM pg_temp.ok(NOT (group_feed.read(B, 'feed', NULL, NULL, 20)->'posts'->0 ? 'student') OR group_feed.read(B, 'feed', NULL, NULL, 20)->'posts'->0->>'student' IS NULL, 'a student never sees another''s id');
 
   PERFORM group_feed.manage(G, 'pause', 'client-bbbbbbbbbbbb', NULL);
   PERFORM pg_temp.ok(group_feed.comment(B, p1, 'x')->>'error' = 'paused', 'a paused student cannot comment');

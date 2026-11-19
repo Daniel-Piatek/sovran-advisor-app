@@ -71,7 +71,7 @@ startRouter([
   { path: /^\/library$/, show: showLibrary },
   { path: /^\/tour$/, show: showTour },
   { path: /^\/reports(?:\/([a-z0-9-]+))?$/, show: showReports },
-  { path: /^\/group(?:\/(announcements|circle))?$/, show: showGroup },
+  { path: /^\/group(?:\/(announcements|circle|flags|people))?$/, show: showGroup }, // flags, people: the guide's (APP Daniel)
   { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },
