@@ -4814,4 +4814,11 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .tell-status { margin: 0; font-size: var(--text-sm); color: var(--color-accent); }
 .tell-done { margin: 0; line-height: var(--line-height-base); }
 .help-tell { margin-top: var(--space-8); color: var(--color-text-muted); font-size: var(--text-sm); }
+.group-people .group-comment-form { flex-wrap: wrap; }
+.group-people .group-comment-form .detail-input { flex: 1 1 9rem; min-width: 0; }
 .group-people .group-comment-form .button { white-space: nowrap; flex: none; }
+.group-new-group { margin-bottom: var(--space-12); } /* clear of the phone's bottom bar */
+.group-tabs { overflow-x: auto; scrollbar-width: none; } /* four tabs (the guide's) scroll sideways on a phone instead of widening the page */
+@media (max-width: 640px) { .group-tab { padding: var(--space-2) var(--space-3); white-space: nowrap; } }
+.note-bar-actions { flex-wrap: wrap; justify-content: flex-end; min-width: 0; } /* Share to Group Circle and Tell Daniel wrap on a phone instead of widening the page */
+@media (max-width: 640px) { .note-bar { align-items: flex-start; } }
