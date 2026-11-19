@@ -98,7 +98,7 @@ export async function noteNewTells(db, addToInbox, { today = localDay() } = {}) 
   let counts;
   try { ({ counts } = await listTells(db, { status: 'new' })); } catch { return null; } // no guide key yet, or offline: next time
   if (!counts.new) return null;
-  const text = `${counts.new === 1 ? '1 new student report' : `${counts.new} new student reports`} from Tell Daniel. Open Student reports in the sidebar to read them.`;
+  const text = `${counts.new === 1 ? '1 new student report' : `${counts.new} new student reports`} from Tell Daniel. Open Group Circle › Reports to read them.`;
   addToInbox(text);
   const time = new Date().toISOString();
   db.prepare(`INSERT INTO settings (id, created_at, updated_at, key, value) VALUES (?, ?, ?, ?, ?)
