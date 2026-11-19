@@ -14,7 +14,11 @@ steps marked below; otherwise the Claude ones.
 folder (`~/Sovran Advisor` on a Mac, `%USERPROFILE%\Sovran Advisor` on Windows). If you are
 running in a cloud workspace (a Linux machine that is not theirs, such as a Codex cloud task),
 you cannot reach it: do nothing, and tell the person in plain words to start you again on their
-own computer. With Codex: open Terminal (Mac) or PowerShell (Windows), type
+own computer. The same goes for Claude's ordinary chat or Cowork in the Claude app: they work in a
+Linux sandbox and cannot install anything on the person's Windows or Mac. Do not hand the person
+Terminal or PowerShell commands to type instead. Tell them, in plain words: open the Claude app,
+click **Code** at the top left, start a new session on **This computer** (or pick their Documents
+folder), and paste the same sentence again. With Codex: open Terminal (Mac) or PowerShell (Windows), type
 `cd ~/"Sovran Advisor"; codex` and press Enter, then paste the same line again. (In the Codex
 app instead: start a new chat that works **locally**, not in the cloud, in the Sovran Advisor
 folder.) For a first install, `cd ~` instead.
@@ -70,12 +74,28 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
 
 ### On Windows
 
-1. **Node.js 22.13 or newer:** `node -v`; if missing or older, `winget install OpenJS.NodeJS.LTS`
-   (or the Windows installer from https://nodejs.org). Open a new PowerShell window afterwards.
-2. **Download the app** into `%USERPROFILE%\Sovran Advisor`: with git
-   (`winget install Git.Git` if missing),
+Windows has not been fully tested yet; if a step fails, tell the person plainly and suggest they
+post a screenshot in the Sovran WhatsApp group.
+
+0. **Check the computer can run it.** It needs Windows 10 (version 1809 or later) or Windows 11,
+   64-bit. Run `[Environment]::OSVersion.Version` and `[Environment]::Is64BitOperatingSystem`
+   (build 17763 or higher, and `True`). If it is older (Windows 7 or 8) or 32-bit, stop and tell
+   the person kindly that this computer is too old for Sovran Advisor, and that nothing was changed.
+   Then check `winget --version`. If it does not answer (older Windows 10 copies often lack it),
+   do not try to repair it: use the installer downloads in steps 1 and 2 instead.
+1. **Node.js 22.13 or newer:** `node -v`; if missing or older, `winget install OpenJS.NodeJS.LTS`.
+   Without winget: open https://nodejs.org/en/download for the person (`start https://nodejs.org/en/download`);
+   they press the **Windows Installer (.msi)** button, open the file, and press Next until Finish.
+   Open a new PowerShell window afterwards.
+2. **Git** (the app also needs it later, to update itself): `git --version`; if missing,
+   `winget install Git.Git`. Without winget: `start https://git-scm.com/download/win`; the person
+   downloads the 64-bit installer, opens it, and presses Next until Finish (the default choices are
+   fine). Open a new PowerShell window afterwards. Then **download the app** into
+   `%USERPROFILE%\Sovran Advisor`:
    `git clone https://github.com/Daniel-Piatek/sovran-advisor-app.git "$env:USERPROFILE\Sovran Advisor"`.
-3. **Install what it needs:** `cd "$env:USERPROFILE\Sovran Advisor"; npm install --omit=dev`.
+3. **Install what it needs:** `cd "$env:USERPROFILE\Sovran Advisor"; npm.cmd install --omit=dev`.
+   (Use `npm.cmd`, not `npm`: on many Windows computers PowerShell refuses `npm` with "running
+   scripts is disabled on this system". Do not change the person's execution policy for this.)
 4. **A desktop shortcut** to `start-windows.cmd` in that folder, named "Sovran Advisor", with
    the app's icon:
    ```powershell
