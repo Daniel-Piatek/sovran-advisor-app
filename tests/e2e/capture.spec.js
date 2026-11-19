@@ -60,7 +60,7 @@ test('a capture asks nothing: no folder, date or tag in the box', async ({ page,
 
 test('the Inbox in the sidebar counts what waits', async ({ page, app }) => {
   await page.goto(app.url);
-  const count = page.getByRole('navigation', { name: 'Sections' }).locator('.sidebar-count');
+  const count = page.getByRole('navigation', { name: 'Sections' }).locator('[data-section="Inbox"] .sidebar-count');
   await expect(count).toBeHidden();
   for (const thought of ['one', 'two', 'three']) {
     await page.keyboard.press('ControlOrMeta+k');
