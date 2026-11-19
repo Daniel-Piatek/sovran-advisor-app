@@ -4794,7 +4794,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 }
 .group-people-note { color: var(--color-text); font-weight: var(--weight-medium); }
 /* ---- Tell Daniel (public/tell-daniel.js, module tell; 2026-11-19) ---- */
-.tell-dialog { max-width: 36rem; }
+.tell-dialog { max-width: 36rem; margin-top: var(--space-6); max-height: calc(100dvh - 2 * var(--space-6)); overflow-y: auto; }
 .tell-form { display: flex; flex-direction: column; gap: var(--space-3); }
 .tell-kinds { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .tell-kinds legend { font-family: var(--font-ui); font-weight: var(--weight-bold); margin-bottom: var(--space-2); }
@@ -4814,3 +4814,4 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .tell-status { margin: 0; font-size: var(--text-sm); color: var(--color-accent); }
 .tell-done { margin: 0; line-height: var(--line-height-base); }
 .help-tell { margin-top: var(--space-8); color: var(--color-text-muted); font-size: var(--text-sm); }
+.group-people .group-comment-form .button { white-space: nowrap; flex: none; }
