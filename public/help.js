@@ -9,6 +9,7 @@ import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request } from './ui.js';
 import { app, screen } from './shell.js';
 import { moduleOn, onModulesChanged } from './modules.js';
+import { tellDanielButton } from './tell-daniel.js';
 
 const markdown = markdownit({ html: false, linkify: true });
 const HOW = '## How it works';
@@ -102,12 +103,19 @@ export async function showHelp(id) {
   if (!id) {
     screen.replaceChildren(el('header', { class: 'top-bar' }, el('h1', {}, 'Help')),
       el('p', { class: 'empty' }, 'A short page for each part of the app. The “?” after a page’s title opens its page beside it.'),
-      el('ul', { class: 'help-list' }, ...docs.map((d) => el('li', {}, el('a', { class: 'help-list-link', href: `/help/${d.id}` }, d.title)))));
+      el('ul', { class: 'help-list' }, ...docs.map((d) => el('li', {}, el('a', { class: 'help-list-link', href: `/help/${d.id}` }, d.title)))),
+      ...tellAboutApp(null));
     return;
   }
   let doc;
   try { doc = await request('GET', `/api/docs/${id}`); } catch { doc = null; }
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('a', { class: 'back-link', href: '/help' }, icon('back'), ' Help')),
-    ...(doc ? [el('h1', { class: 'help-page-title' }, doc.title), docBody(doc, { open: true })] : [el('p', { class: 'empty' }, 'There is no such help page.')]));
+    ...(doc ? [el('h1', { class: 'help-page-title' }, doc.title), docBody(doc, { open: true }), ...tellAboutApp(doc.title)] : [el('p', { class: 'empty' }, 'There is no such help page.')]));
+}
+
+// Tell Daniel (2026-11-19, the owner's wish): for the app itself, at the foot of Help, with the page it was asked from.
+function tellAboutApp(page) {
+  const button = tellDanielButton({ place: 'app', label: 'Tell Daniel about a problem or a question', items: () => [{ key: 'page', label: 'Help page', value: page }] });
+  return button ? [el('p', { class: 'help-tell' }, 'Something not working, or something you’d like to ask? ', button)] : [];
 }

@@ -184,6 +184,14 @@ export const MODULES = [
     description: 'A shared space for your Quest group. Announcements from Daniel: homework, reminders and news. The Circle: posts, pictures, comments and likes from everyone in your group, and nobody outside it. Needs your Sovran Library key.',
     nav: ['Group Circle'],
   },
+  {
+    // Tell Daniel (2026-11-19, the owner's wish; tell-daniel.js, public/tell-daniel.js, cloud/tell-daniel.sql): a button on
+    // Assistant answers, notes, journal entries, report passages and Help that lets Daniel know about a problem or a
+    // question, with what it was about. On in a new install, like Group Circle: Daniel asked to hear these things.
+    id: 'tell',
+    label: 'Tell Daniel',
+    description: 'A Tell Daniel button on Assistant answers, notes, journal entries, report passages and Help, to let Daniel know when something isn’t working, seems off, or raises a question. You see exactly what goes with it before you send. Needs your Sovran Library key.',
+  },
 ];
 const now = () => new Date().toISOString();
 const keyOf = (id) => `module.${id}`;

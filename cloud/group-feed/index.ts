@@ -5,6 +5,8 @@
 // the key and never from what the app asks for.
 //
 // POST {action, ...}            JSON in, JSON out (actions below)
+// POST {action:'tell', kind, why, place, context, version}; {action:'tells', status?, before?}; {action:'tell_status', id, status, note?}
+//      Tell Daniel (cloud/tell-daniel.sql)
 // POST {action:'picture_put', jpeg: <base64>}   a picture the app already shrank; returns {path}
 // GET  .../group-feed/picture/<group>/<name>.jpg   the picture's bytes, if the key holder may see it
 // Pictures live in the private storage bucket group-feed, reached with the service role key the function is given.
@@ -33,6 +35,7 @@ const ERRORS: Record<string, [number, string]> = {
   group: [400, 'Pick a group.'],
   nostudent: [404, 'No such student.'],
   bad: [400, 'That didn’t look right. Check the words and try again.'],
+  unknown: [401, 'This Sovran Library key isn’t known, or has been switched off.'],
 };
 
 async function sha256Hex(text: string) {
@@ -112,6 +115,13 @@ Deno.serve(async (req) => {
       case 'flags': return one(sql`SELECT group_feed.flags_open(${h}) AS r`);
       case 'flags_clear': return one(sql`SELECT group_feed.flags_clear(${h}, ${id(msg.post)}, ${id(msg.comment)}) AS r`);
       case 'groups': return one(sql`SELECT group_feed.groups_list(${h}) AS r`);
+      // Tell Daniel (cloud/tell-daniel.sql): a student sends one; the guide reads the list and marks each one
+      case 'tell': {
+        const context = msg.context && typeof msg.context === 'object' && !Array.isArray(msg.context) ? msg.context : {};
+        return one(sql`SELECT tell_daniel.tell(${h}, ${text(msg.kind, 20)}, ${text(msg.why, 4001)}, ${text(msg.place, 20)}, ${sql.json(context)}, ${text(msg.version, 80) || null}) AS r`);
+      }
+      case 'tells': return one(sql`SELECT tell_daniel.list(${h}, ${['new', 'digging', 'done'].includes(msg.status) ? msg.status : null}, ${id(msg.before)}) AS r`);
+      case 'tell_status': return one(sql`SELECT tell_daniel.set_status(${h}, ${id(msg.id)}, ${text(msg.status, 10)}, ${text(msg.note, 4001) || null}) AS r`);
       case 'manage': return one(sql`SELECT group_feed.manage(${h}, ${text(msg.what, 20)}, ${text(msg.student, 40) || null}, ${text(msg.value, 80) || null}) AS r`);
       default: return json(400, { error: `Unknown action: ${msg.action}` });
     }

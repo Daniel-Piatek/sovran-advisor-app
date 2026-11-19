@@ -8,6 +8,7 @@ import { clashPane } from './clash.js';
 import { applyFolds, zoomTo, setUsage, showBullet } from './outline.js';
 import { moduleOn } from './modules.js';
 import { startGroupDraft } from './group.js';
+import { tellDanielButton } from './tell-daniel.js';
 import { commentsPane } from './comments.js';
 import { openVersions, clockButton } from './versions.js';
 import { setComments } from './comment-marks.js';
@@ -234,6 +235,12 @@ export async function showNote(id) {
       startGroupDraft(words, 'Notes');
     } }, icon('group'), 'Share to Group Circle'));
   }
+  // Tell Daniel (2026-11-19, the owner's wish): a problem or a question about this note, with its words.
+  const tell = tellDanielButton({ place: 'note', items: async () => {
+    await saver.settled();
+    return [{ key: 'title', label: 'Title', value: note.title?.trim() }, { key: 'words', label: 'The words', value: plainText(note.body).trim().slice(0, 6000) }];
+  } });
+  if (tell) actions.append(tell);
   actions.append(deleteButton);
   // Versions (Writing and thinking): the clock opens them, with how many there are.
   if (moduleOn('writing')) {

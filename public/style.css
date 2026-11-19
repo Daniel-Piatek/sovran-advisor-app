@@ -4793,3 +4793,24 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
   .group-person-actions { text-align: left; white-space: normal; }
 }
 .group-people-note { color: var(--color-text); font-weight: var(--weight-medium); }
+/* ---- Tell Daniel (public/tell-daniel.js, module tell; 2026-11-19) ---- */
+.tell-dialog { max-width: 36rem; }
+.tell-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.tell-kinds { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.tell-kinds legend { font-family: var(--font-ui); font-weight: var(--weight-bold); margin-bottom: var(--space-2); }
+.tell-kind { display: flex; align-items: flex-start; gap: var(--space-2); line-height: var(--line-height-short); cursor: pointer; }
+.tell-kind input { margin-top: 0.2em; }
+.tell-kind > span { display: flex; flex-direction: column; }
+.tell-hint { font-size: var(--text-sm); color: var(--color-text-muted); font-weight: var(--weight-regular); }
+.tell-why-label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-ui); font-weight: var(--weight-bold); }
+.tell-why { width: 100%; resize: vertical; font: inherit; font-weight: var(--weight-regular); color: var(--color-text); background: var(--color-bg);
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); line-height: var(--line-height-base); }
+.tell-preview { font-size: var(--text-sm); background: var(--color-surface); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
+.tell-preview summary { cursor: pointer; font-family: var(--font-ui); font-weight: var(--weight-medium); }
+.tell-preview dl { margin: var(--space-2) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.tell-preview dt { color: var(--color-text-muted); }
+.tell-preview dd { margin: 0 0 var(--space-2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9rem; overflow: auto; line-height: var(--line-height-short); }
+.tell-status:empty { display: none; }
+.tell-status { margin: 0; font-size: var(--text-sm); color: var(--color-accent); }
+.tell-done { margin: 0; line-height: var(--line-height-base); }
+.help-tell { margin-top: var(--space-8); color: var(--color-text-muted); font-size: var(--text-sm); }

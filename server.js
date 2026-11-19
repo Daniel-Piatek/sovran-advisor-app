@@ -102,6 +102,7 @@ import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
 import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
 import * as group from './group-feed.js';
+import { tellDaniel, listTells, markTell, tellOn, appVersion } from './tell-daniel.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
@@ -1640,6 +1641,22 @@ export function startServer({
         if (comment && req.method === 'DELETE') return sendJson(res, 200, await group.removeComment(db, comment[1]));
         const tab = m(/^\/api\/group\/(news|feed)$/);
         if (tab && req.method === 'GET') return sendJson(res, 200, await group.readTab(db, tab[1], url.searchParams.get('before'), url.searchParams.get('group')));
+        return sendJson(res, 404, { error: 'Not found' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
+    }
+    // Tell Daniel (module tell, tell-daniel.js): let Daniel know about a problem or a question, with what it was about.
+    //   GET   /api/tell/version   this app's version, as it goes with a report: { version }
+    //   POST  /api/tell           { kind: broken|off|question|other, why, place, context }: sent with your library key → { id }
+    //   GET   /api/tell?status=new|digging|done&before=<id>   the guide's list (APP Daniel; the cloud refuses anyone else)
+    //   PATCH /api/tell/:id       { status, note? }: the guide marks one
+    if (url.pathname === '/api/tell' || url.pathname.startsWith('/api/tell/')) {
+      if (!tellOn(db)) return sendJson(res, 409, { error: 'Tell Daniel is switched off in Settings › Modules.' });
+      try {
+        if (url.pathname === '/api/tell/version' && req.method === 'GET') return sendJson(res, 200, { version: appVersion() });
+        if (url.pathname === '/api/tell' && req.method === 'POST') return sendJson(res, 201, await tellDaniel(db, await readJson(req)));
+        if (url.pathname === '/api/tell' && req.method === 'GET') return sendJson(res, 200, await listTells(db, { status: url.searchParams.get('status'), before: url.searchParams.get('before') }));
+        const one = url.pathname.match(/^\/api\/tell\/(\d+)$/);
+        if (one && req.method === 'PATCH') return sendJson(res, 200, await markTell(db, one[1], await readJson(req)));
         return sendJson(res, 404, { error: 'Not found' });
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
     }

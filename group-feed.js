@@ -51,6 +51,9 @@ async function cloud(db, body) {
   return answer;
 }
 
+// For Tell Daniel (tell-daniel.js), which goes through the same door with the same key.
+export const askCloud = (db, body) => cloud(db, body);
+
 function readSeen(db) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ? AND deleted_at IS NULL').get(SEEN);
   try { return { news: 0, feed: 0, ...(row ? JSON.parse(row.value) : {}) }; } catch { return { news: 0, feed: 0 }; }

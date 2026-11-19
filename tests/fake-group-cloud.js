@@ -5,7 +5,7 @@
 export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
   const who = (auth) => students[keyOf(auth)] ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
@@ -96,6 +96,27 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       case 'flags_clear': { const p = post(msg.post); p?.flags.filter((f) => (f.comment ?? null) === (msg.comment ?? null)).forEach((f) => { f.resolved = true; }); return json(200, { cleared: true }); }
       case 'groups': return json(200, { groups: state.groups.map((g) => ({ ...g, members: Object.values(students).filter((m) => m.group === g.code)
         .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
+      // Tell Daniel (cloud/tell-daniel.sql)
+      case 'tell': {
+        if (s.guide) return err('unknown', 401);
+        if (!['broken', 'off', 'question', 'other'].includes(msg.kind) || (msg.kind === 'other' && !String(msg.why ?? '').trim())) return err('bad');
+        const r = { id: ++state.nextId, student_id: s.id, student: s.name ?? s.id, group: s.group, kind: msg.kind, why: msg.why, place: msg.place, context: msg.context,
+          app_version: msg.version, status: 'new', note: null, created_at: new Date().toISOString(), status_at: null };
+        state.tells.push(r);
+        return json(200, { id: r.id });
+      }
+      case 'tells': {
+        if (!s.guide) return err('guideonly', 403);
+        const count = (st) => state.tells.filter((r) => r.status === st).length;
+        return json(200, { reports: state.tells.filter((r) => !msg.status || r.status === msg.status).sort((a, b) => b.id - a.id),
+          counts: { new: count('new'), digging: count('digging'), done: count('done') } });
+      }
+      case 'tell_status': {
+        if (!s.guide) return err('guideonly', 403);
+        const r = state.tells.find((x) => x.id === msg.id); if (!r) return err('gone', 404);
+        Object.assign(r, { status: msg.status, status_at: new Date().toISOString(), note: msg.note ?? r.note });
+        return json(200, { id: r.id, status: r.status });
+      }
       case 'manage': {
         const m = Object.values(students).find((x) => x.id === msg.student);
         const g = groupOf(msg.value);
