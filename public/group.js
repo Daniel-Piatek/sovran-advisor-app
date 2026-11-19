@@ -13,12 +13,17 @@
 
 import { el, icon, request, timeAgo } from './ui.js';
 import { app, screen, navigate, refreshGroupCount } from './shell.js';
+import { moduleOn } from './modules.js';
 
 const TABS = [
   { id: 'news', path: 'announcements', name: 'Announcements' },
   { id: 'feed', path: 'circle', name: 'Circle' },
 ];
 const GUIDE_TABS = [...TABS, { id: 'flags', path: 'flags', name: 'Flags' }, { id: 'people', path: 'people', name: 'People' }];
+// More guide tabs an app adds for itself (APP Daniel: Reports, the Tell Daniel list): { id, path, name, module?, draw(box) }.
+const EXTRA_TABS = [];
+export function addGuideTab(tab) { EXTRA_TABS.push(tab); }
+const guideTabs = () => [...GUIDE_TABS, ...EXTRA_TABS.filter((t) => !t.module || moduleOn(t.module))];
 const PICK_KEY = 'group.pick'; // the guide's chosen group in this browser: a code, or ALL
 const readPick = () => { try { return sessionStorage.getItem(PICK_KEY) || 'ALL'; } catch { return 'ALL'; } };
 const keepPick = (code) => { try { sessionStorage.setItem(PICK_KEY, code); } catch { /* fine */ } };
@@ -119,7 +124,7 @@ export async function showGroup(tabPath) {
   try { state = await request('GET', '/api/group'); } catch (err) { state = { ready: false, why: 'offline', message: err.message }; }
   if (!state.ready) return state.guide_app ? showGuideSetup(top, state) : showNotReady(top, state);
   if (state.me.guide) {
-    const tab = GUIDE_TABS.find((t) => t.path === tabPath) ?? TABS[0];
+    const tab = guideTabs().find((t) => t.path === tabPath) ?? TABS[0];
     if (tab.path !== tabPath) history.replaceState({}, '', `/group/${tab.path}`);
     let groups = [];
     try { groups = (await request('GET', '/api/group/groups')).groups ?? []; } catch { /* the picker shows All groups only */ }
@@ -177,7 +182,7 @@ function drawTab(top, state, tab, groups = []) {
   const me = state.me;
   const guide = Boolean(me.guide);
   const pick = guide ? (groups.some((g) => g.code === readPick()) ? readPick() : 'ALL') : me.group;
-  const tabs = el('nav', { class: 'group-tabs', 'aria-label': 'Group Circle' }, ...(guide ? GUIDE_TABS : TABS).map((t) => {
+  const tabs = el('nav', { class: 'group-tabs', 'aria-label': 'Group Circle' }, ...(guide ? guideTabs() : TABS).map((t) => {
     const count = t.id === tab.id ? 0 : state.counts[t.id];
     return el('a', { class: 'group-tab', href: `/group/${t.path}`, 'aria-current': t.id === tab.id ? 'page' : 'false' },
       t.name, count ? el('span', { class: 'group-tab-count', 'aria-label': `${count} new` }, String(count)) : null);
@@ -190,6 +195,11 @@ function drawTab(top, state, tab, groups = []) {
     : el('div', { class: 'group-head' },
       el('span', { class: 'group-chip' }, me.group_title ? `${me.group} · ${me.group_title}` : me.group),
       el('span', { class: 'group-who' }, tab.id === 'news' ? 'Only Daniel posts here' : `Only ${me.group} sees these posts`));
+  if (tab.draw) { // an app's own tab: no group picker, it shows every group
+    const box = el('div', { class: 'group-list' });
+    screen.replaceChildren(top, el('div', { class: 'group-head' }, el('span', { class: 'group-who' }, tab.who ?? '')), tabs, box);
+    return tab.draw(box);
+  }
   if (tab.id === 'flags' || tab.id === 'people') {
     const box = el('div', { class: 'group-list' });
     screen.replaceChildren(top, head, tabs, box);
