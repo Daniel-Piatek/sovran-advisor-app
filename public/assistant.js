@@ -15,6 +15,8 @@ import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar, clockTime } from './ui.js';
 import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
+import { startGroupDraft } from './group.js';
+import { moduleOn } from './modules.js';
 import { dueLabel } from './due.js';
 import { firstWordWords } from './spoken.js';
 import { callControls } from './call.js';
@@ -161,7 +163,10 @@ function keepButtons(message, body) {
     const { text } = keepOf(message, body);
     try { await request('POST', '/api/captures', { body: text, world: 'inner' }); done('Sent to the Inbox.', '/inbox'); } catch (err) { done(`Couldn't send: ${err.message}`); }
   } }, 'Send to Inbox');
-  return el('div', { class: 'chat-keep' }, inbox, result);
+  // Share to Group Circle (2026-11-19, the owner's wish): the reply (or the part you selected), to check before posting.
+  const share = moduleOn('group') ? el('button', { type: 'button', class: 'button button-quiet share-to-group', title: 'Share this reply (or the part you selected) with your group',
+    onclick: () => startGroupDraft(keepOf(message, body).text, 'Assistant') }, 'Share to Group Circle') : null;
+  return el('div', { class: 'chat-keep' }, inbox, share, result);
 }
 
 // How a turn of a call went (advanced/voice/3-6), under your words and under its answer: said on a call, where the answer

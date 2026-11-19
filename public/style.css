@@ -3911,6 +3911,7 @@ textarea.board-edit { resize: none; font-family: var(--font-body); }
 .icon[data-icon="calendar"] { --kind: var(--kind-time); --kind-ink: var(--kind-time-ink); }
 .icon[data-icon="planner"] { --kind: var(--kind-planner); --kind-ink: var(--kind-planner-ink); }
 .icon[data-icon="person"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); }
+.icon[data-icon="group"] { --kind: var(--kind-people); --kind-ink: var(--kind-people-ink); } /* Group Circle: violet, beside People */
 .icon[data-icon="timeline"] { --kind: var(--kind-timeline); --kind-ink: var(--kind-timeline-ink); }
 .icon[data-icon="key_element"] { --kind: var(--kind-life); --kind-ink: var(--kind-life-ink); }
 /* My Life's three levels (2026-11-09, the owner's wish: not all green). A Goal is Gold, the crown you reach for;
@@ -3935,6 +3936,7 @@ html[data-section="calendar"] { --section: var(--kind-time); }
 html[data-section="planner"] { --section: var(--kind-planner); }
 html[data-section="planner"] :is(.tray-title, .journal-section-title, .contact-heading, .life-list-title, .life-section-title, .chat-list-title, .task-group-title, .timeline-day-title) { color: var(--kind-time); }
 html[data-section="person"] { --section: var(--kind-people); }
+html[data-section="group"] { --section: var(--kind-people); }
 html[data-section="timeline"] { --section: var(--kind-timeline); }
 html[data-section="key_element"] { --section: var(--kind-life); }
 html[data-section="assistant"] { --section: var(--kind-assistant); }
@@ -4679,3 +4681,89 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .update-mark.update-turning { display: inline-block; flex: 0 0 auto; align-self: center; margin: 0 0.225em; box-sizing: border-box; width: 0.8em; height: 0.8em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: working-turn 0.8s linear infinite; }
 .update-working { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text); line-height: var(--line-height-short); }
 @media (prefers-reduced-motion: reduce) { .update-mark.update-turning { animation: none; } }
+
+/* ---- Group Circle (public/group.js, module group; 2026-11-19) ----
+   Built only from the shared tokens, so a new look for the app restyles it with everything else. */
+.group-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); }
+.group-chip { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--kind-people);
+  border: var(--border-width) solid var(--kind-people); border-radius: 999px; padding: 2px var(--space-3); }
+.group-who { margin-left: auto; font-size: var(--text-sm); color: var(--color-text-muted); }
+.group-tabs { display: flex; gap: var(--space-1); border-bottom: var(--border-width) solid var(--color-border); margin-bottom: var(--space-4); }
+.group-tab { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); font-family: var(--font-ui);
+  font-weight: var(--weight-medium); color: var(--color-text-muted); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.group-tab[aria-current="page"] { color: var(--color-text); border-bottom-color: var(--kind-people); }
+.group-tab-count { background: var(--color-accent); color: var(--color-accent-text); font-size: var(--text-xs); font-weight: var(--weight-bold);
+  border-radius: 999px; padding: 0 var(--space-2); line-height: var(--line-height-short); }
+.group-note, .group-from { background: var(--color-warning-surface); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm); line-height: var(--line-height-short); margin: 0 0 var(--space-3); }
+.group-empty, .group-name-form { max-width: 34rem; display: flex; flex-direction: column; gap: var(--space-3); line-height: var(--line-height-base); }
+.group-name-form h2 { font-family: var(--font-heading); font-weight: var(--weight-regular); margin: 0; }
+.group-name-form .button { align-self: flex-start; }
+.group-problem:empty, .group-status:empty { display: none; }
+.group-problem, .group-status { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
+.group-composer { display: flex; flex-direction: column; gap: var(--space-2); border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-5); background: var(--color-bg); }
+.group-text { width: 100%; resize: vertical; min-height: 4.5em; border: 0; background: transparent; color: var(--color-text);
+  font: inherit; line-height: var(--line-height-base); outline: none; }
+.group-composer-row { display: flex; align-items: center; gap: var(--space-2); }
+.group-spacer { flex: 1; }
+.group-plus { font-size: var(--text-lg); line-height: 1; min-width: 2.2em; border: var(--border-width) solid var(--color-border); }
+.group-thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.group-thumbs[hidden] { display: none; }
+.group-thumb { position: relative; margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.group-thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.group-thumb-remove { position: absolute; top: var(--space-1); right: var(--space-1); border: 0; border-radius: 999px; width: 1.6em; height: 1.6em;
+  background: var(--color-text); color: var(--color-bg); cursor: pointer; }
+.group-more-wrap { position: relative; display: inline-flex; }
+.group-more { letter-spacing: 0.1em; }
+.group-menu { position: absolute; top: 100%; right: 0; z-index: 20; min-width: 14rem; display: flex; flex-direction: column; padding: var(--space-1);
+  background: var(--color-bg); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); }
+.group-composer .group-menu { left: 0; right: auto; }
+.group-menu[hidden] { display: none; }
+.group-menu-item { text-align: left; border: 0; background: none; color: var(--color-text); font: inherit; padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); cursor: pointer; }
+.group-menu-item:hover, .group-menu-item:focus-visible { background: var(--color-surface); }
+.group-menu-danger { color: var(--color-accent); }
+.group-list { display: flex; flex-direction: column; gap: var(--space-4); }
+.group-post { display: flex; flex-direction: column; gap: var(--space-3); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-4); }
+.group-announcement { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+.group-post-head { display: flex; align-items: center; gap: var(--space-3); }
+.group-avatar { flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; color: var(--color-on-avatar);
+  font-family: var(--font-ui); font-weight: var(--weight-bold); font-size: var(--text-sm); }
+.group-avatar-small { width: 1.7rem; height: 1.7rem; font-size: var(--text-xs); }
+.group-by { display: flex; flex-direction: column; line-height: var(--line-height-short); }
+.group-name { font-family: var(--font-ui); font-weight: var(--weight-bold); }
+.group-badge { margin-left: var(--space-2); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text);
+  background: var(--kind-assistant-wash); border-radius: 999px; padding: 1px var(--space-2); }
+.group-when { font-size: var(--text-sm); color: var(--color-text-muted); }
+.group-kind { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase;
+  border-radius: 999px; padding: 2px var(--space-3); border: var(--border-width) solid currentColor; }
+.group-kind-homework { color: var(--color-accent); }
+.group-kind-reminder { color: var(--kind-people); }
+.group-kind-announcement { color: var(--color-text); }
+.group-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--line-height-base); }
+.group-pictures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.group-pictures-1 { grid-template-columns: minmax(0, 1fr); }
+.group-pictures img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.group-pictures-1 img { aspect-ratio: auto; max-height: var(--picture-max-height); object-fit: contain; }
+.group-actions { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+.group-like[aria-pressed="true"] { color: var(--color-accent); }
+.group-done { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-ui); font-weight: var(--weight-medium); color: var(--color-text); }
+.group-comments { display: flex; flex-direction: column; gap: var(--space-2); padding-left: var(--space-8); }
+.group-comment { display: flex; align-items: flex-start; gap: var(--space-2); }
+.group-bubble { background: var(--color-surface); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); line-height: var(--line-height-short); min-width: 0; }
+.group-bubble .group-body { display: inline; }
+.group-comment-form { display: flex; align-items: center; gap: var(--space-2); }
+.group-comment-input { flex: 1; min-width: 0; border: var(--border-width) solid var(--color-border); border-radius: 999px; padding: var(--space-2) var(--space-3);
+  background: var(--color-bg); color: var(--color-text); font: inherit; }
+.group-confirm { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: var(--text-sm); }
+.group-load-more { align-self: center; margin-top: var(--space-4); }
+@media (max-width: 640px) {
+  .group-comments { padding-left: 0; }
+  .group-who { margin-left: 0; width: 100%; }
+}
+.group-danger { color: var(--color-accent); }
+.group-page .group-more, .group-page .group-like { border-color: transparent; background: none; padding: var(--space-1) var(--space-2); min-height: 0; }
+.group-page .group-more:hover, .group-page .group-like:hover { background: var(--color-surface); }
+.group-page .group-plus { border-color: var(--color-border); }
+.group-comment .group-more { color: var(--color-text-muted); font-size: var(--text-xs); }

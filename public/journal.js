@@ -11,6 +11,8 @@ import {
   api, el, icon, titleOf, wordsLabel, timeAgo, clockTime, makeSaver, undoBar, titleField, linkedFromSection,
   today, isDay, weekdayName, longDate, addDays, weekStart, dayNumber, monthName, dateOf, dayOf,
 } from './ui.js';
+import { startGroupDraft } from './group.js';
+import { moduleOn } from './modules.js';
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
 
 // A just-added entry comes back whole (body); listed ones bring only their start (preview).
@@ -363,6 +365,14 @@ async function entryPage({ status, actions, back }, entry, { files = null } = {}
       }
     },
   }, icon('trash'), 'Delete');
+  // Share to Group Circle (2026-11-19, the owner's wish): opens the Circle with this entry's words, to check before posting.
+  if (moduleOn('group')) {
+    actions.append(el('button', { type: 'button', class: 'button button-quiet share-to-group', onclick: async () => {
+      await saver.settled();
+      const words = [entry.title?.trim(), plainText(entry.body).trim()].filter(Boolean).join('\n\n');
+      startGroupDraft(words, 'Journal');
+    } }, icon('group'), 'Share to Group Circle'));
+  }
   actions.append(deleteButton);
 
   const title = titleField({

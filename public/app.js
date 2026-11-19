@@ -20,6 +20,7 @@
 //   /mail/import        import a Takeout .mbox, fill from Gmail, Live with Gmail  (public/mail.js)
 //   /welcome            the first screen of a new install  (public/welcome.js)
 //   /reports, /reports/:report   your own Sovran reports, every one or one to read  (public/reports.js, module reports)
+//   /group, /group/announcements, /group/circle   Group Circle: your Quest group's space  (public/group.js, module group)
 //   /help, /help/:id    the help pages (module help), every one or one  (public/help.js)
 //   /library            the design library: every token and piece, with its live value  (public/library.js)
 // The frame around every screen (sidebar, bottom bar, moving between screens) is in
@@ -46,6 +47,7 @@ import { showMailImport } from './mail.js';
 import { showMailApp } from './mail-app.js';
 import { showTour } from './tour.js';
 import { showReports } from './reports.js';
+import { showGroup } from './group.js';
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
@@ -69,6 +71,7 @@ startRouter([
   { path: /^\/library$/, show: showLibrary },
   { path: /^\/tour$/, show: showTour },
   { path: /^\/reports(?:\/([a-z0-9-]+))?$/, show: showReports },
+  { path: /^\/group(?:\/(announcements|circle))?$/, show: showGroup },
   { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },

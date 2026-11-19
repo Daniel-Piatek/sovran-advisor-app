@@ -101,6 +101,7 @@ import { getLibrary, setLibraryKey, libraryServer } from './sovran-library.js';
 import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
 import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
+import * as group from './group-feed.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
@@ -150,6 +151,7 @@ export function startServer({
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
   try { applyPendingMove(dataDir); } catch (err) { console.error(`The moving file could not be brought in: ${err.message}`); }
   const db = openDatabase(dataDir);
+  group.useGroup({ dir: path.join(dataDir, 'group-pictures') }); // Group Circle (group-feed.js): each picture kept here once fetched
   useReports({ dir: path.join(dataDir, 'reports') }); // Reports (reports.js): made-up reports here only without a library key (tests, demo)
   settleAnswers(db);
   settleImports(db);
@@ -1574,6 +1576,51 @@ export function startServer({
         if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
         throw err;
       }
+    }
+    // Group Circle (module group, group-feed.js): your Quest group's Announcements and Circle, from the Sovran cloud
+    // with your library key (the key never reaches the page).
+    //   GET    /api/group                        who you are there and what's new: { ready, why?, me?, counts: { news, feed } }
+    //   GET    /api/group/:tab?before=<id>       a page of news (Announcements) or feed (Circle), newest first; the first page marks it seen
+    //   PUT    /api/group/name                   { name }: the name your group sees
+    //   POST   /api/group/posts                  { body, pictures? }: a post in the Circle
+    //   PATCH  /api/group/posts/:id              { body, pictures? }; DELETE /api/group/posts/:id
+    //   POST   /api/group/posts/:id/comments     { body }; PATCH and DELETE /api/group/comments/:id
+    //   POST   /api/group/posts/:id/like|done|flag   { on } (flag: { comment? })
+    //   POST   /api/group/pictures               { jpeg: base64 }: a picture the page already shrank → { path }
+    //   GET    /api/group/pictures/<group>/<name>.jpg   its bytes (kept on this computer once fetched)
+    if (url.pathname === '/api/group' || url.pathname.startsWith('/api/group/')) {
+      if (!group.groupOn(db)) return sendJson(res, 409, { error: 'Group Circle is switched off in Settings › Modules.' });
+      const m = (re) => url.pathname.match(re);
+      try {
+        const picture = m(/^\/api\/group\/pictures\/([A-Z0-9-]{2,20}\/[A-Za-z0-9_-]{22}\.jpg)$/);
+        if (picture && req.method === 'GET') {
+          const bytes = await group.pictureBytes(db, picture[1]);
+          res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Content-Length': bytes.length, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' });
+          return res.end(bytes);
+        }
+        if (url.pathname === '/api/group' && req.method === 'GET') return sendJson(res, 200, await group.groupState(db));
+        if (url.pathname === '/api/group/name' && req.method === 'PUT') return sendJson(res, 200, await group.setName(db, await readJson(req)));
+        if (url.pathname === '/api/group/pictures' && req.method === 'POST') {
+          const input = await readJson(req);
+          return sendJson(res, 201, await group.addPicture(db, Buffer.from(typeof input?.jpeg === 'string' ? input.jpeg : '', 'base64')));
+        }
+        if (url.pathname === '/api/group/posts' && req.method === 'POST') return sendJson(res, 201, await group.addPost(db, await readJson(req)));
+        const post = m(/^\/api\/group\/posts\/(\d+)$/);
+        if (post && req.method === 'PATCH') return sendJson(res, 200, await group.changePost(db, post[1], await readJson(req)));
+        if (post && req.method === 'DELETE') return sendJson(res, 200, await group.removePost(db, post[1]));
+        const act = m(/^\/api\/group\/posts\/(\d+)\/(comments|like|done|flag)$/);
+        if (act && req.method === 'POST') {
+          const input = await readJson(req);
+          const run = { comments: group.addComment, like: group.likePost, done: group.markDone, flag: group.flagPost }[act[2]];
+          return sendJson(res, act[2] === 'comments' ? 201 : 200, await run(db, act[1], input));
+        }
+        const comment = m(/^\/api\/group\/comments\/(\d+)$/);
+        if (comment && req.method === 'PATCH') return sendJson(res, 200, await group.changeComment(db, comment[1], await readJson(req)));
+        if (comment && req.method === 'DELETE') return sendJson(res, 200, await group.removeComment(db, comment[1]));
+        const tab = m(/^\/api\/group\/(news|feed)$/);
+        if (tab && req.method === 'GET') return sendJson(res, 200, await group.readTab(db, tab[1], url.searchParams.get('before')));
+        return sendJson(res, 404, { error: 'Not found' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
     }
     // Reports (module reports, reports.js): your own Sovran reports, read only.
     //   (from the Sovran Library with the owner's key; the key never reaches the page)

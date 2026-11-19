@@ -22,6 +22,8 @@
   /* Colours: light theme */
   --color-bg: #fbfbfb;          /* the page: brand White */
   --color-surface: #eceaea;     /* cards, panels, anything raised from the page */
+  --color-photo-ground: #fbfbfb; /* Group Circle: behind a see-through picture when it is made smaller (the same in both themes) */
+  --color-on-avatar: #fbfbfb;   /* Group Circle: the letter on a person's coloured circle (the same in both themes) */
   --color-text: #302d2d;        /* main text: brand Charcoal */
   --color-text-muted: #555151;  /* secondary text, empty states */
   --color-text-faint: #7b7777;  /* hints and placeholders only, never your own words (2026-10-26) */

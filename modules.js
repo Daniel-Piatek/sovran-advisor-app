@@ -174,6 +174,16 @@ export const MODULES = [
     nav: ['Reports'],
     tools: ['reports_read'],
   },
+  {
+    // Group Circle (2026-11-19, the owner's wish; group-feed.js, public/group.js, cloud/group-feed.sql): a shared space
+    // for your Quest group. Announcements from Daniel (homework, reminders, news) and the Circle, where everyone in the
+    // group posts words and pictures. Only your own group sees it; the Sovran cloud keeps it apart by your library key.
+    // On in a new install and for everyone who never switched it (the owner's wish, 2026-11-19: "ship it turned on").
+    id: 'group',
+    label: 'Group Circle',
+    description: 'A shared space for your Quest group. Announcements from Daniel: homework, reminders and news. The Circle: posts, pictures, comments and likes from everyone in your group, and nobody outside it. Needs your Sovran Library key.',
+    nav: ['Group Circle'],
+  },
 ];
 const now = () => new Date().toISOString();
 const keyOf = (id) => `module.${id}`;
