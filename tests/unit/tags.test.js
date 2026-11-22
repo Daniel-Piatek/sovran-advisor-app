@@ -166,3 +166,82 @@ test('Tags is off in a new install: #words put on no tag until it is switched on
   const after = createNote(db, { title: 'On', body: '#retreat' });
   assert.deepEqual(names(tagsOf(db, 'note', after.id)), ['retreat']);
 });
+
+// ---- A tag's description and picture, and the Sovran starter tags (2026-11-22) ----
+
+test('a tag keeps a few words and a picture: a kept image, a Sovran picture, or none', async () => {
+  const { storeBuffer } = await import('../../files.js');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const db = emptyDb();
+  const cols = db.prepare('PRAGMA table_info(tags)').all().map((c) => c.name);
+  assert.ok(cols.includes('description') && cols.includes('picture'));
+  const tag = ensureTag(db, 'Retreat');
+  updateTag(db, tag.id, { description: '  Where we go in spring.  ' });
+  assert.equal(getTag(db, tag.id).description, 'Where we go in spring.');
+  assert.throws(() => updateTag(db, tag.id, { description: 'x'.repeat(1001) }), (err) => err.status === 400);
+
+  const dir = mkdtempSync(path.join(tmpdir(), 'tag-pic-'));
+  const png = storeBuffer(db, dir, Buffer.from('a picture'), { name: 'a.png', type: 'image/png' });
+  const text = storeBuffer(db, dir, Buffer.from('some words'), { name: 'a.txt', type: 'text/plain' });
+  updateTag(db, tag.id, { picture: png.sha256 });
+  assert.equal(listTags(db).tags.find((t) => t.id === tag.id).picture_url, `/files/${png.sha256}`);
+  assert.throws(() => updateTag(db, tag.id, { picture: text.sha256 }), (err) => err.status === 400);
+  assert.throws(() => updateTag(db, tag.id, { picture: 'a'.repeat(64) }), (err) => err.status === 400);
+  assert.throws(() => updateTag(db, tag.id, { picture: 'sovran:dragon' }), (err) => err.status === 400);
+  assert.throws(() => updateTag(db, tag.id, { picture: 'https://example.com/a.png' }), (err) => err.status === 400);
+  updateTag(db, tag.id, { picture: 'sovran:medusa' });
+  assert.equal(listTags(db).tags.find((t) => t.id === tag.id).picture_url, '/api/tag-pictures/medusa');
+  updateTag(db, tag.id, { picture: '' });
+  assert.equal(listTags(db).tags.find((t) => t.id === tag.id).picture_url, null);
+});
+
+test('the Sovran starter tags come in with one tap, and leave your own words, picture and group alone', async () => {
+  const { starterState, addStarterTags } = await import('../../tags.js');
+  const db = emptyDb();
+  setModule(db, 'tags', true);
+  const mine = ensureTag(db, 'medusa');
+  updateTag(db, mine.id, { description: 'My own words.' });
+  assert.deepEqual(starterState(db), { total: 18, there: 1 });
+  const first = addStarterTags(db);
+  assert.equal(first.added, 17);
+  assert.deepEqual([first.total, first.there], [18, 18]);
+  const { tags, groups } = listTags(db);
+  assert.deepEqual(groups.map((g) => g.name), ['Characters', 'Quests']);
+  const medusa = tags.find((t) => t.name === 'medusa');
+  assert.equal(medusa.description, 'My own words.');
+  assert.equal(medusa.picture, 'sovran:medusa');
+  const hero = tags.find((t) => t.name === 'Hero Quest');
+  assert.equal(hero.group_id, groups[1].id);
+  assert.match(hero.description, /STOP/);
+  assert.equal(hero.picture, 'sovran:hero');
+  assert.equal(tags.find((t) => t.name === 'Gremlin').picture_url, '/api/tag-pictures/gremlin');
+  assert.equal(addStarterTags(db).added, 0);
+  assert.equal(listTags(db).tags.length, 18);
+});
+
+test('a Sovran picture is fetched once with the key, kept, and refused when it is not a picture', async () => {
+  const { sovranPicture } = await import('../../tag-pictures.js');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const db = emptyDb();
+  const dir = mkdtempSync(path.join(tmpdir(), 'tag-sovran-'));
+  const webp = Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBP'), Buffer.alloc(40, 1)]);
+  const asked = [];
+  const fetcher = async (url, init) => { asked.push([url, init.headers.authorization]); return { ok: true, arrayBuffer: async () => webp }; };
+  assert.equal(await sovranPicture(db, dir, 'medusa', { url: 'https://cloud.test/tag-pictures', fetcher }), null, 'no key, no picture');
+  assert.equal(asked.length, 0);
+  db.prepare("INSERT INTO settings (id, created_at, updated_at, key, value) VALUES ('k', '', '', 'library.key', ?)").run(JSON.stringify('client-test'));
+  assert.equal(await sovranPicture(db, dir, 'dragon', { url: 'https://cloud.test/tag-pictures', fetcher }), null, 'not a Sovran picture');
+  const sha = await sovranPicture(db, dir, 'medusa', { url: 'https://cloud.test/tag-pictures', fetcher });
+  assert.match(sha, /^[0-9a-f]{64}$/);
+  assert.deepEqual(asked, [['https://cloud.test/tag-pictures/medusa.webp', 'Bearer client-test']]);
+  assert.equal(await sovranPicture(db, dir, 'medusa', { url: 'https://cloud.test/tag-pictures', fetcher }), sha);
+  assert.equal(asked.length, 1, 'kept: asked only once');
+  const notPicture = async () => ({ ok: true, arrayBuffer: async () => Buffer.from('<html>not a picture at all, just words here</html>') });
+  assert.equal(await sovranPicture(db, dir, 'hero', { url: 'https://cloud.test/tag-pictures', fetcher: notPicture }), null);
+  assert.equal(await sovranPicture(db, dir, 'hero', { url: 'https://cloud.test/tag-pictures', fetcher: async () => ({ ok: false }) }), null);
+  assert.equal(await sovranPicture(db, dir, 'hero', { url: 'https://cloud.test/tag-pictures', fetcher: async () => { throw new Error('offline'); } }), null);
+});

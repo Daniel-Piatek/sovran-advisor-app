@@ -5,10 +5,10 @@
 //               Pin to sidebar puts the tag under Notes in the sidebar.
 // Renaming, joining and grouping tags is in Settings › Tags.
 
-import { el, icon, request } from './ui.js';
+import { el, icon, request, api } from './ui.js';
 import { app, screen, setFooterLink, refreshSidebar } from './shell.js';
 import { notesTabs } from './notes-screens.js';
-import { tagChip, tagFilter, taggedRow, loadTags, forgetTags, tagMark } from './tags.js';
+import { tagChip, tagFilter, taggedRow, loadTags, forgetTags, tagMark, tagPicture } from './tags.js';
 
 // Where Open all goes: that kind's own screen, with the tags picked.
 const SCREENS = { note: '/', entry: '/journal', person: '/people', company: '/companies', task: '/tasks', capture: '/inbox' };
@@ -41,7 +41,7 @@ export async function showTags(id) {
       return;
     }
     const line = (tag) => el('a', { class: 'tags-index-row', href: `/tags/${tag.id}` },
-      tagMark(),
+      tagPicture(tag, { small: true }),
       el('span', { class: 'tags-index-name' }, tag.name),
       ...(tag.pinned ? [el('span', { class: 'tags-index-pinned', title: 'Pinned to the sidebar', 'aria-label': 'Pinned' }, icon('pin'))] : []),
       el('span', { class: 'tags-index-count' }, plural(tag.count, 'item', 'items')));
@@ -93,11 +93,53 @@ async function showTag(id) {
         await load();
       } catch { status.textContent = "That couldn't be changed. Is the app still running?"; }
     } }, icon('pin'), tag.pinned ? 'Pinned to the sidebar' : 'Pin to the sidebar');
+    // Its description and picture (2026-11-22, D's wish): a few words on what the tag is, and a picture beside its name.
+    const change = async (fields, failed) => {
+      try { await request('PATCH', `/api/tags/${id}`, fields); forgetTags(); await load(); } catch (err) { status.textContent = err.message || failed; }
+    };
+    const words = el('p', { class: `tag-page-description${tag.description ? '' : ' is-empty'}` }, tag.description || 'No description yet.');
+    const editWords = el('button', { type: 'button', class: 'button button-quiet tag-page-edit' }, icon('edit'), tag.description ? 'Edit description' : 'Add a description');
+    const about = el('div', { class: 'tag-page-about' }, words);
+    editWords.addEventListener('click', () => {
+      const box = el('textarea', { class: 'detail-input tag-page-words', rows: 4, maxlength: 1000, 'aria-label': `Description of ${tag.name}`, placeholder: 'What this tag is about' });
+      box.value = tag.description;
+      const save = el('button', { type: 'button', class: 'button', onclick: () => change({ description: box.value }, "The description couldn't be saved. Is the app still running?") }, 'Save');
+      const cancel = el('button', { type: 'button', class: 'button button-quiet', onclick: () => load() }, 'Cancel');
+      box.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { event.preventDefault(); load(); }
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); save.click(); }
+      });
+      about.replaceChildren(box, el('div', { class: 'tag-page-tools' }, save, cancel));
+      box.focus();
+    });
+    const picker = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif', hidden: true, 'aria-label': `Picture for ${tag.name}` });
+    picker.addEventListener('change', async () => {
+      const file = picker.files[0];
+      picker.value = '';
+      if (!file) return;
+      status.textContent = 'Keeping the picture…';
+      try {
+        const kept = await api.uploadFile(file, { keepHere: true });
+        status.textContent = '';
+        await change({ picture: kept.sha256 }, "That picture couldn't be used.");
+      } catch { status.textContent = "That picture couldn't be kept. Is the app still running?"; }
+    });
+    const pictureTools = [
+      el('button', { type: 'button', class: 'button button-quiet tag-page-edit', onclick: () => picker.click() }, icon('image'), tag.picture ? 'Change picture' : 'Add a picture'),
+      ...(tag.picture ? [el('button', { type: 'button', class: 'button button-quiet tag-page-edit', onclick: () => change({ picture: '' }, "The picture couldn't be taken off.") }, 'Remove picture')] : []),
+      picker,
+    ];
     heading.replaceChildren(
       el('p', { class: 'tag-page-path' }, el('a', { href: '/tags' }, 'Tags'), ...(group ? [' › ', group.name] : []), ' › ', tag.name),
-      el('h2', { class: 'tag-page-title' }, tagMark(), tag.name),
-      el('p', { class: 'tag-page-count' }, plural(page.total, 'item', 'items'), ...(page.and.length ? [` with ${page.and.map((t) => t.name).join(' and ')} too`] : [])),
-      pin);
+      el('div', { class: 'tag-page-main' },
+        tagPicture(tag),
+        el('div', { class: 'tag-page-side' },
+          el('div', { class: 'tag-page-line' },
+            el('h2', { class: 'tag-page-title' }, ...(tag.picture_url ? [] : [tagMark()]), tag.name),
+            el('p', { class: 'tag-page-count' }, plural(page.total, 'item', 'items'), ...(page.and.length ? [` with ${page.and.map((t) => t.name).join(' and ')} too`] : [])),
+            pin),
+          about,
+          el('div', { class: 'tag-page-tools' }, editWords, ...pictureTools))));
     const tags = [id, ...narrow.picked()].join(',');
     content.replaceChildren(...(page.kinds.length ? page.kinds.map((k) => el('section', { class: 'tag-page-kind', 'aria-label': k.label },
       el('div', { class: 'tag-page-kind-head' },

@@ -27,6 +27,15 @@ const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 
 // never mistaken for a kind's colour.
 export const tagMark = () => el('span', { class: 'tag-mark', 'aria-hidden': 'true' }, icon('tag'));
 
+// A tag's picture, when it has one (a Sovran picture of a starter tag, or one of the owner's): beside its name on its page,
+// small in the Tags list. A picture that can't be had (no Sovran key yet, say) gives way to the tag shape, or to nothing.
+export function tagPicture(tag, { small = false } = {}) {
+  if (!tag.picture_url) return small ? tagMark() : el('span', { hidden: true });
+  const img = el('img', { class: `tag-picture${small ? ' is-small' : ''}`, src: tag.picture_url, alt: small ? '' : `Picture for ${tag.name}`, loading: 'lazy' });
+  img.addEventListener('error', () => img.replaceWith(small ? tagMark() : el('span', { hidden: true })));
+  return img;
+}
+
 export function tagChip(tag, { onRemove = null, link = true } = {}) {
   const name = el(link ? 'a' : 'span', { class: 'tag-chip-name', ...(link ? { href: `/tags/${tag.id}` } : {}) },
     tagMark(), tag.name);

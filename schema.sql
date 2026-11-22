@@ -1416,7 +1416,9 @@ CREATE TABLE IF NOT EXISTS tags (
   color TEXT NOT NULL DEFAULT 'plain' CHECK (color IN ('plain', 'notes', 'journal', 'tasks', 'time', 'people', 'life', 'goal')),
   group_id TEXT REFERENCES tag_groups (id),
   pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),
-  merged_into TEXT
+  merged_into TEXT,
+  description TEXT NOT NULL DEFAULT '',
+  picture TEXT NOT NULL DEFAULT ''
 );
 CREATE UNIQUE INDEX IF NOT EXISTS tags_by_name ON tags (name_key) WHERE deleted_at IS NULL;
 

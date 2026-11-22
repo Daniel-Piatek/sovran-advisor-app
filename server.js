@@ -31,7 +31,8 @@ import {
 import { readLink, fetchTitle } from './link-titles.js';
 import { linkedFrom, linkTarget, suggestLinks } from './links.js';
 import { listModules, checkModuleInput, setModule, moduleOn } from './modules.js';
-import { listTags, ensureTag, itemsWithTags, tagOverview, updateTag, deleteTag, restoreTag, joinTags, createGroup, updateGroup, deleteGroup, restoreGroup, checkItem, tagsOf, addItemTag, removeItemTag } from './tags.js';
+import { listTags, ensureTag, itemsWithTags, tagOverview, updateTag, deleteTag, restoreTag, joinTags, createGroup, updateGroup, deleteGroup, restoreGroup, checkItem, tagsOf, addItemTag, removeItemTag, starterState, addStarterTags } from './tags.js';
+import { sovranPicture } from './tag-pictures.js';
 import { createGoogleEvent, answerGoogleEvent, changeGoogleEvent, sendDue as sendGoogleCalendar, resolveClash as resolveGoogleClash, retryChange, listOutbox as listGoogleOutbox, getGuards, setGuards, startGoogleCalendarSend } from './gcal-write.js';
 import { readGoogleCalendar, startGoogleCalendarRead, writableCalendars, googleCalendarState, googleCalendarJob, googleCalendarSendJob } from './gcal.js';
 import { checkTemplateInput, listTemplates, createTemplate, removeTemplate, restoreTemplate, placeTemplate } from './templates.js';
@@ -429,13 +430,22 @@ export function startServer({
     //   POST   /api/tags                       make one (or find it): { name, color?, group_id? }
     //   GET    /api/tags/items?tags=a,b&kind=  the items of one kind that carry every one of these tags
     //   GET    /api/tags/:id?and=b,c           a tag's page: per kind, how many and the newest two (with and: only items with those too)
-    //   PATCH  /api/tags/:id                   { name?, color?, group_id?, pinned? }; a name another tag has: 409
+    //   PATCH  /api/tags/:id                   { name?, group_id?, pinned?, description?, picture? }; a name another tag has: 409
+    //   GET    /api/tags/starter               how many of the starter tags (characters, Quests) are there; POST adds the rest
+    //   GET    /api/tag-pictures/:name         a starter tag's Sovran picture (fetched once from the Sovran cloud): to /files/…
     //   DELETE /api/tags/:id                   take it off everything (the items stay); POST /api/tags/:id/restore undoes it
     //   POST   /api/tags/:id/join              { into }: its items get the other tag instead; restore undoes it
     //   POST   /api/tag-groups                 { name }; PATCH / DELETE /api/tag-groups/:id; POST /api/tag-groups/:id/restore
     //   GET    /api/item-tags?kind=&id=        an item's tags; POST /api/item-tags { kind, id, tag_id | name } puts one on;
     //   POST   /api/item-tags/remove           { kind, id, tag_id } takes one off
-    const tagsPath = url.pathname.match(/^\/api\/(tags|tag-groups|item-tags)(?:\/([0-9a-f-]{36}|items|remove))?(?:\/(restore|join))?$/);
+    const tagPicture = url.pathname.match(/^\/api\/tag-pictures\/([a-z]{2,20})$/);
+    if (tagPicture && req.method === 'GET') {
+      const sha = moduleOn(db, 'tags') ? await sovranPicture(db, dataDir, tagPicture[1]) : null;
+      if (!sha) return sendJson(res, 404, { error: 'No picture' });
+      res.writeHead(302, { location: `/files/${sha}`, 'cache-control': 'no-store' });
+      return res.end();
+    }
+    const tagsPath = url.pathname.match(/^\/api\/(tags|tag-groups|item-tags)(?:\/([0-9a-f-]{36}|items|remove|starter))?(?:\/(restore|join))?$/);
     if (tagsPath) {
       const [, area, which, action] = tagsPath;
       const off = () => sendJson(res, 409, { error: 'Tags is switched off (Settings › Modules).' });
@@ -445,6 +455,10 @@ export function startServer({
         if (area === 'tags' && !which) {
           if (req.method === 'GET') return sendJson(res, 200, listTags(db));
           if (req.method === 'POST') { const input = (await readJson(req)) ?? {}; return sendJson(res, 201, ensureTag(db, input.name, { color: input.color, group_id: input.group_id })); }
+        }
+        if (area === 'tags' && which === 'starter') {
+          if (req.method === 'GET') return sendJson(res, 200, starterState(db));
+          if (req.method === 'POST') { await readJson(req); return sendJson(res, 200, addStarterTags(db)); }
         }
         if (area === 'tags' && which === 'items' && req.method === 'GET') {
           const ids = (url.searchParams.get('tags') ?? '').split(',').filter(Boolean);

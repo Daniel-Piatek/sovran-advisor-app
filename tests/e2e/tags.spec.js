@@ -80,3 +80,55 @@ test.describe('switched on', () => {
     await expect(part.locator('[data-tag-id]')).toHaveCount(1);
   });
 });
+
+// A tag's description and picture (2026-11-22).
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64');
+
+test.describe('switched on, words and pictures', () => {
+  test.beforeEach(async ({ app }) => { await send(app, 'PATCH', '/api/modules', { id: 'tags', on: true }); });
+
+test('a tag’s page holds a few words on what it is and a picture beside its name', async ({ page, app }) => {
+  await app.createNote({ title: 'Venues', body: 'For the #retreat' });
+  const { tags } = await send(app, 'GET', '/api/tags');
+  await page.goto(`${app.url}/tags/${tags[0].id}`);
+  await expect(page.locator('.tag-page-description')).toHaveText('No description yet.');
+  await page.getByRole('button', { name: 'Add a description' }).click();
+  await page.getByLabel('Description of retreat').fill('Where we go in spring.');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.locator('.tag-page-description')).toHaveText('Where we go in spring.');
+
+  await page.getByLabel('Picture for retreat').setInputFiles({ name: 'retreat.png', mimeType: 'image/png', buffer: PNG });
+  await expect(page.locator('img.tag-picture')).toHaveAttribute('src', /^\/files\/[0-9a-f]{64}$/);
+  await page.goto(`${app.url}/tags`);
+  await expect(page.locator('.tags-index-row img.tag-picture.is-small')).toHaveCount(1);
+  await page.goto(`${app.url}/tags/${tags[0].id}`);
+  await page.getByRole('button', { name: 'Remove picture' }).click();
+  await expect(page.locator('img.tag-picture')).toHaveCount(0);
+  await expect(page.locator('.tag-page-title .tag-mark')).toHaveCount(1);
+});
+
+});
+
+test.describe('without a Sovran key', () => {
+  // The test app has no Sovran key, so the starter pictures can't be had (404) and the tag shape stands in.
+  test.use({ expectedConsoleErrors: [/404 \(Not Found\)/] });
+  test.beforeEach(async ({ app }) => { await send(app, 'PATCH', '/api/modules', { id: 'tags', on: true }); });
+
+  test('Settings › Tags: one tap adds the Sovran starter tags, each with its words', async ({ page, app }) => {
+    await page.goto(`${app.url}/settings`);
+    const part = page.locator('section[aria-label="Tags"]');
+    await part.getByRole('button', { name: 'Add the Sovran starter tags' }).click();
+    await expect(part.locator('[data-group-id]')).toHaveCount(2);
+    await expect(part.locator('.tag-settings-starter')).toBeHidden();
+    await expect(part.locator('[data-tag-id]')).toHaveCount(18);
+    await part.locator('[data-fold="tags-list"] summary').click();
+    await expect(part.getByLabel('Description of Medusa')).toHaveValue(/Fear, anxiety, worry/);
+    await part.getByLabel('Description of Hero Quest').fill('Six weeks of STOP.');
+    await part.getByLabel('Description of Hero Quest').blur();
+    await expect(part.locator('[data-tag-id] .tag-settings-note', { hasText: 'Description saved.' })).toHaveCount(1);
+    const { tags } = await send(app, 'GET', '/api/tags');
+    expect(tags.find((t) => t.name === 'Hero Quest').description).toBe('Six weeks of STOP.');
+    // No Sovran key in a test: the picture can't be had, so the tag shape stands in.
+    await expect(part.locator('[data-tag-id] .tag-mark').first()).toBeVisible();
+  });
+});
