@@ -208,7 +208,7 @@ test('disconnecting tells Google, empties the key store, and the account can be 
 });
 
 test('the Keychain store keeps, changes and forgets a secret (the real Keychain, a throwaway name)', { skip: process.platform !== 'darwin' }, async () => {
-  const store = macKeyStore({ service: `Sovran Advisor test ${process.pid} ${Date.now()}` });
+  const store = macKeyStore({ service: `Sovran Central test ${process.pid} ${Date.now()}` });
   try {
     assert.equal(await store.get('a'), null);
     await store.set('a', '{"x":"päss \\" word"}');

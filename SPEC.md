@@ -1,6 +1,6 @@
-# SPEC: my Sovran Advisor
+# SPEC: my Sovran Central
 
-What this app should do for its owner. It starts as Sovran Advisor's own description; the owner
+What this app should do for its owner. It starts as Sovran Central's own description; the owner
 (with their Claude) adds their own wishes here as the app grows with them.
 
 ## What it is for

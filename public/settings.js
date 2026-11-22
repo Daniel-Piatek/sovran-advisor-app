@@ -1,4 +1,4 @@
-// Settings (/settings, assistant/4): what your assistant may do alone, and what waits for
+// Settings (/settings, assistant/4): what Sovran Advisor may do alone, and what waits for
 // you. One switch per kind of action (Does it alone · Asks first), read at the moment of
 // each step, so it holds in every chat; what asks becomes an approval card in the chat.
 // Under the switches, the floor no switch moves, and the activity log: every switch you
@@ -91,16 +91,16 @@ function glossarySection() {
     problem, undoPlace, folded);
 }
 
-// Your assistant and mail (advanced/mail/11): the limits it is held to, read only. They are in code, not in a prompt, so there is nothing to switch.
+// Sovran Advisor and mail (advanced/mail/11): the limits it is held to, read only. They are in code, not in a prompt, so there is nothing to switch.
 function mailLimitsSection() {
   const list = el('ul', { class: 'allowed-list', 'aria-label': 'Limits' });
   request('GET', '/api/mail/limits').then((data) => {
     list.replaceChildren(...data.rules.map((r) => el('li', { class: 'allowed-row', 'data-rule': r.key }, icon('lock'), el('span', {}, r.text))),
       el('li', { class: 'empty' }, `Drafted today: ${data.drafted_today} of ${data.limits.drafts_per_day}.`));
   }).catch(() => list.replaceChildren(el('li', { class: 'empty' }, "The limits couldn't be loaded.")));
-  return el('section', { class: 'settings-part', 'aria-label': 'Your assistant and mail' },
-    el('h2', { class: 'settings-title' }, 'Your assistant and mail'),
-    el('p', { class: 'empty' }, 'While Mail is on, your assistant can search and read your mail, make a task of a conversation and draft a reply. These limits are checked in code on every draft, whatever it is told, and cannot be changed here.'),
+  return el('section', { class: 'settings-part', 'aria-label': 'Sovran Advisor and mail' },
+    el('h2', { class: 'settings-title' }, 'Sovran Advisor and mail'),
+    el('p', { class: 'empty' }, 'While Mail is on, Sovran Advisor can search and read your mail, make a task of a conversation and draft a reply. These limits are checked in code on every draft, whatever it is told, and cannot be changed here.'),
     list);
 }
 
@@ -257,7 +257,7 @@ function aiSection() {
     }
     const ai = AI[state.provider];
     status.textContent = state.ready[state.provider]
-      ? `Your assistant runs on your own ${ai.name} (${ai.program}), on this computer.`
+      ? `Sovran Advisor runs on your own ${ai.name} (${ai.program}), on this computer.`
       : ai.missing;
   };
   const check = checkPart();
@@ -266,8 +266,8 @@ function aiSection() {
   };
   request('GET', '/api/assistant/ai').then(show).catch(() => { status.textContent = 'Which AI you use couldn’t be loaded.'; });
   return el('section', { class: 'settings-part', 'aria-label': 'Which AI' },
-    el('h2', { class: 'settings-title' }, 'Your assistant’s AI'),
-    el('p', { class: 'empty' }, 'Choose the one you have a plan with. It answers in the Assistant and sorts your Inbox in the background. Your notes stay on this computer either way.'),
+    el('h2', { class: 'settings-title' }, 'Sovran Advisor’s AI'),
+    el('p', { class: 'empty' }, 'Choose the one you have a plan with. It answers in Sovran Advisor and sorts your Inbox in the background. Your notes stay on this computer either way.'),
     el('div', { class: 'library-key', role: 'group', 'aria-label': 'AI' }, ...buttons),
     status, check);
 }
@@ -280,7 +280,7 @@ function librarySection() {
   const remove = el('button', { type: 'button', class: 'button button-quiet', hidden: true }, 'Disconnect');
   const show = (state) => {
     status.textContent = state.connected
-      ? `Connected (key ending ${state.key_end}). Your assistant can now search the Sovran teaching and your own decodes.`
+      ? `Connected (key ending ${state.key_end}). Sovran Advisor can now search the Sovran teaching and your own decodes.`
       : 'Not connected. The app works fully without it.';
     status.classList.toggle('is-connected', Boolean(state.connected));
     remove.hidden = !state.connected;
@@ -293,7 +293,7 @@ function librarySection() {
   return el('section', { class: 'settings-part', id: 'sovran-library', 'aria-label': 'Sovran Library' },
     el('h2', { class: 'settings-title' }, 'Sovran Library'),
     status,
-    el('p', { class: 'empty' }, 'Paste the key you were given. Your assistant then reads the Sovran teaching and, if you have them, your own decodes. The key stays on this computer.'),
+    el('p', { class: 'empty' }, 'Paste the key you were given. Sovran Advisor then reads the Sovran teaching and, if you have them, your own decodes. The key stays on this computer.'),
     el('form', { class: 'library-key', onsubmit: (event) => { event.preventDefault(); if (input.value.trim()) save(input.value); } },
       input, el('button', { type: 'submit', class: 'button' }, 'Connect'), remove));
 }
@@ -467,8 +467,8 @@ export async function showSettings() {
     updatesSection(),
     librarySection(),
     ...(moduleOn('course') ? [courseSection()] : []),
-    el('section', { class: 'settings-part', 'aria-label': 'Your assistant' },
-      el('h2', { class: 'settings-title' }, 'What your assistant may do alone'),
+    el('section', { class: 'settings-part', 'aria-label': 'Sovran Advisor' },
+      el('h2', { class: 'settings-title' }, 'What Sovran Advisor may do alone'),
       el('p', { class: 'empty' }, 'Does it alone: it happens when you ask for it. Asks first: it waits for your yes on a card in the chat.'),
       rows, problem,
       el('div', { class: 'permission-floor', role: 'note', 'aria-label': 'Always' },
@@ -499,7 +499,7 @@ export async function showSettings() {
       allowedFold),
     el('section', { class: 'settings-part', 'aria-label': 'Activity' },
       el('h2', { class: 'settings-title' }, 'Activity'),
-      el('p', { class: 'empty' }, 'Every switch you changed and every step your assistant took, asked for or was refused, newest first.'),
+      el('p', { class: 'empty' }, 'Every switch you changed and every step Sovran Advisor took, asked for or was refused, newest first.'),
       logFold),
   );
   onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)

@@ -153,7 +153,7 @@ test('ask the assistant about chosen words: the answer beside them, kept, and ca
   const ask = pick.getByRole('button', { name: 'Ask about this' });
   await expect(ask.locator('[data-icon="assistant"]')).toHaveCount(1); // the Assistant's own robot face
   await ask.click();
-  const pop = page.getByRole('dialog', { name: 'Ask your assistant' });
+  const pop = page.getByRole('dialog', { name: 'Ask Sovran Advisor' });
   await pop.getByRole('textbox', { name: 'Your question' }).fill('What does this mean for my work?');
   await pop.getByRole('button', { name: 'Ask' }).click();
   // The stand-in answers with what it was sent: the question, the page, and the words with their section.
@@ -181,7 +181,7 @@ test('ask the assistant about chosen words: the answer beside them, kept, and ca
   expect(chats.map((c) => c.title)).toEqual(['Report: “notice things”']);
   await page.locator('#section-your-gifts mark.report-mark').click();
   await expect(pop.locator('.report-ask-q')).toHaveCount(2);
-  await pop.getByRole('link', { name: 'Open in Assistant' }).click();
+  await pop.getByRole('link', { name: 'Open in Sovran Advisor' }).click();
   await expect(page).toHaveURL(new RegExp(`/assistant/${chats[0].id}$`));
 });
 

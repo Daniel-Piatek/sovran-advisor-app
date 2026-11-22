@@ -207,7 +207,7 @@ export async function showNote(id) {
   let sentBody = null;
   const saver = makeSaver((changes, options) => {
     if ('body' in changes) sentBody = changes.body;
-    // A save says which version its text started from; if your assistant changed the note since, the two are merged line by line.
+    // A save says which version its text started from; if Sovran Advisor changed the note since, the two are merged line by line.
     return api.updateNote(id, outlineOn && 'body' in changes ? { ...changes, base_version: note.version ?? null } : changes, options);
   }, {
     status,

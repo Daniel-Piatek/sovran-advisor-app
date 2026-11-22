@@ -1,4 +1,4 @@
-// Tell Daniel (module tell, 2026-11-19, the owner's wish): a button beside Share to Group Circle on an Assistant answer,
+// Tell Daniel (module tell, 2026-11-19, the owner's wish): a button beside Share to Group Circle on a Sovran Advisor answer,
 // a note, a journal entry, a report passage, and on Help. It opens a small window: what kind of thing is it (Something
 // isn't working, Something seems off here, I have a question about this, Other), a box to say why, and the words that go
 // with it, shown in full before anything is sent. The server (tell-daniel.js) sends it to the Sovran cloud with the

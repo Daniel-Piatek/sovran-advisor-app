@@ -88,7 +88,7 @@ test('docs_read: a view or some words give the page, with its link to cite; read
 // Updating (2026-11-12): "how do I update this application?" gets the exact steps, Help pages on or off.
 test('updating: the assistant always knows the one line; with Help pages on, docs_read finds the Updating page', async () => {
   const { guide, UPDATE_LINE } = await import('../../assistant.js');
-  assert.equal(UPDATE_LINE, 'Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md');
+  assert.equal(UPDATE_LINE, 'Update Sovran Central by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md');
   assert.ok(guide().includes(UPDATE_LINE), 'Help pages off: the assistant still has the line');
   assert.match(guide(), /Codex must run on this computer, never in the cloud/);
   const page = docs.find((d) => d.id === 'updating');
@@ -99,5 +99,5 @@ test('updating: the assistant always knows the one line; with Help pages on, doc
   for (const words of ['How do I update this application?', 'new version', 'upgrade', 'how do I get the latest version', 'update']) {
     assert.equal(findDocs(db, { words })[0]?.id, 'updating', `"${words}" finds the Updating page first`);
   }
-  assert.match(runTool(db, 'docs_read', { words: 'how do I update' }), /cite it as \[Updating Sovran Advisor help\]\(\/help\/updating\)/);
+  assert.match(runTool(db, 'docs_read', { words: 'how do I update' }), /cite it as \[Updating Sovran Central help\]\(\/help\/updating\)/);
 });

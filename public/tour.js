@@ -16,10 +16,10 @@ import { moduleOn, switchModule } from './modules.js';
 const EXTRAS = [
   { id: 'group', module: 'group', title: 'Group Circle', kind: 'people', open: '/group', openLabel: 'Open Group Circle', src: '/tour/group.html',
     text: 'Your Quest group’s own space: announcements from Daniel, and a Circle to share with each other.' },
-  // Sovran Go (2026-11-22, the owner's choice): the name everywhere, and one film, the Sovran Go film of the setup guides
+  // go Sovran (2026-11-22, the owner's choice): the name everywhere, and one film, the go Sovran film of the setup guides
   // (sovran-go.html, made by build-sovran-go-film.py); the old "Phone Capture" film is retired.
-  { id: 'phone', module: 'phone-drop', title: 'Sovran Go', kind: 'people', open: '/settings', openLabel: 'Open Settings', src: '/tour/sovran-go.html',
-    text: 'Sovran Advisor on your phone. Ask your AI, write in your Journal, keep a thought, read your reports.' },
+  { id: 'phone', module: 'phone-drop', title: 'go Sovran', kind: 'people', open: '/settings', openLabel: 'Open Settings', src: '/tour/sovran-go.html',
+    text: 'Sovran Central on your phone. Ask your AI, write in your Journal, keep a thought, read your reports.' },
   { id: 'tasks', module: 'tasks', title: 'Tasks', kind: 'tasks', open: '/tasks', openLabel: 'Open Tasks',
     text: 'Today, Upcoming and Someday. Press q anywhere to add one in a line.' },
   { id: 'planner', module: 'planner', title: 'Planner', kind: 'planner', open: '/planner', openLabel: 'Open Planner',
@@ -68,12 +68,12 @@ function showList() {
       el('div', { class: 'tour-hero-text' },
         el('span', { class: 'tour-label' }, 'Start here'),
         el('h2', { class: 'tour-hero-title' }, 'The Basics'),
-        el('p', {}, 'What each part of Sovran Advisor is for, how they fit together, and what to try first. Everything in it works straight after you install.'),
+        el('p', {}, 'What each part of Sovran Central is for, how they fit together, and what to try first. Everything in it works straight after you install.'),
         el('a', { class: 'button button-primary', href: '/tour?film=basics' }, icon('play'), 'Watch'))),
     // The Library key first (2026-11-17, the owner's wish): most people will do this before the six below. Gold, a little raised.
     el('p', { class: 'tour-libline' }, el('span', { class: 'tour-label tour-libline-label' }, el('i', { class: 'tour-dot' }), 'Do this first'),
       el('b', {}, 'Your Sovran Library'),
-      ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
+      ' · paste the key you were sent into Settings › Sovran Library, and Sovran Advisor can read the teaching notes. ',
       el('a', { class: 'button tour-libline-go', href: '/settings#sovran-library' }, 'Paste your key →')),
     el('h2', { class: 'tour-label tour-extras-label' }, 'More in your app · one short video each'),
     el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, 'data-kind': extra.kind },

@@ -1,4 +1,4 @@
-// Moving to a new computer (myICOR advanced/everywhere/11, the Sovran Advisor way: no cloud account needed).
+// Moving to a new computer (myICOR advanced/everywhere/11, the Sovran Central way: no cloud account needed).
 // "Make a moving file" puts everything you wrote into one file: a whole copy of the database and every kept
 // file (pictures, PDFs). On the new computer, with the app installed, "Bring in a moving file" reads it,
 // checks it, shows what is in it and waits for your yes. Only then, on a restart, does it take the place of
@@ -31,7 +31,7 @@ const lastMoveFile = (dataDir) => path.join(dataDir, 'last-move.json');
 // What is in a database, in words a person knows (only rows that were not deleted).
 const COUNTED = [
   ['notes', 'notes'], ['journal_entries', 'journal entries'], ['people', 'people'], ['tasks', 'tasks'],
-  ['captures', 'Inbox items'], ['conversations', 'assistant chats'], ['files', 'pictures and files'],
+  ['captures', 'Inbox items'], ['conversations', 'Sovran Advisor chats'], ['files', 'pictures and files'],
 ];
 export function countsOf(db) {
   const tables = new Set(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name));
@@ -116,7 +116,7 @@ class TarReader extends Writable {
 
   _final(done) {
     this.closeEntry();
-    if (!this.ended && this.names.length === 0) return done(fail(400, 'That is not a moving file from Sovran Advisor.'));
+    if (!this.ended && this.names.length === 0) return done(fail(400, 'That is not a moving file from Sovran Central.'));
     done();
   }
 
@@ -146,7 +146,7 @@ class TarReader extends Writable {
       if (h.every((b) => b === 0)) { this.ended = true; continue; }
       let sum = 0;
       for (let i = 0; i < BLOCK; i++) sum += i >= 148 && i < 156 ? 32 : h[i];
-      if (parseInt(h.subarray(148, 156).toString('ascii').replace(/\0.*$/s, '').trim(), 8) !== sum) throw fail(400, 'That is not a moving file from Sovran Advisor (or it is damaged).');
+      if (parseInt(h.subarray(148, 156).toString('ascii').replace(/\0.*$/s, '').trim(), 8) !== sum) throw fail(400, 'That is not a moving file from Sovran Central (or it is damaged).');
       const name = h.subarray(0, 100).toString('utf8').replace(/\0.*$/s, '');
       const type = String.fromCharCode(h[156]);
       const size = parseInt(h.subarray(124, 136).toString('ascii').replace(/\0.*$/s, '').trim() || '0', 8);
@@ -172,19 +172,19 @@ export async function receiveMoveFile(dataDir, stream) {
       await pipeline(stream, zlib.createGunzip(), reader);
     } catch (err) {
       if (err.status) throw err;
-      throw fail(400, 'That is not a moving file from Sovran Advisor (or it is damaged).');
+      throw fail(400, 'That is not a moving file from Sovran Central (or it is damaged).');
     }
-    if (!reader.names.includes('app.db') || !reader.names.includes('sovran-move.json')) throw fail(400, 'That is not a moving file from Sovran Advisor.');
+    if (!reader.names.includes('app.db') || !reader.names.includes('sovran-move.json')) throw fail(400, 'That is not a moving file from Sovran Central.');
     let about;
     try { about = JSON.parse(fs.readFileSync(path.join(dir, 'sovran-move.json'), 'utf8')); } catch { about = null; }
-    if (about?.app !== 'sovran-advisor') throw fail(400, 'That is not a moving file from Sovran Advisor.');
+    if (about?.app !== 'sovran-advisor') throw fail(400, 'That is not a moving file from Sovran Central.');
     const copy = new DatabaseSync(path.join(dir, 'app.db'), { readOnly: true });
     let summary;
     try {
       const check = copy.prepare('PRAGMA integrity_check').all().map((r) => Object.values(r)[0]);
       if (check.length !== 1 || check[0] !== 'ok') throw fail(400, 'The database in the moving file is damaged. Nothing was changed. Make a new moving file on the old computer.');
       const version = copy.prepare('PRAGMA user_version').get().user_version;
-      if (version > SCHEMA_VERSION) throw fail(400, 'The moving file was made by a newer Sovran Advisor. Update this one first (ask Claude: "update Sovran Advisor"), then bring it in.');
+      if (version > SCHEMA_VERSION) throw fail(400, 'The moving file was made by a newer Sovran Central. Update this one first (ask Claude: "update Sovran Central"), then bring it in.');
       summary = { made_at: about.made_at, schema: version, counts: countsOf(copy), files: reader.names.filter((n) => n.startsWith('files/')).length };
     } finally { copy.close(); }
     fs.writeFileSync(path.join(dir, 'summary.json'), JSON.stringify(summary));

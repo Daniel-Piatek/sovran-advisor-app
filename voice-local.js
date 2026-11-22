@@ -56,7 +56,7 @@ export const modelReady = (dataDir, which = 'ears') => MODELS[which].keep.every(
 // { state: ready | getting | missing | failed | unavailable, percent?, message? }
 export function localStatus(dataDir, env = process.env, which = 'ears') {
   if (faked(which, env)) return { state: 'ready' };
-  if (!loadEngine()) return { state: 'unavailable', message: `The ${MODELS[which].label} can’t run on this computer: its engine (sherpa-onnx) is not installed. Ask Claude to “update Sovran Advisor”, or use an ElevenLabs key.` };
+  if (!loadEngine()) return { state: 'unavailable', message: `The ${MODELS[which].label} can’t run on this computer: its engine (sherpa-onnx) is not installed. Ask Claude to “update Sovran Central”, or use an ElevenLabs key.` };
   if (modelReady(dataDir, which)) return { state: 'ready' };
   const job = getting.get(`${dataDir}|${which}`);
   if (job && !job.error) return { state: 'getting', percent: job.total ? Math.floor((job.received / job.total) * 100) : 0 };

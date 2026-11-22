@@ -1,9 +1,9 @@
-// Your assistant suggests where a capture goes (assistant/3), read by the stand-in claude
+// Sovran Advisor suggests where a capture goes (assistant/3), read by the stand-in claude
 // command (tests/fake-claude.js): no test depends on a real AI model.
 import { test, expect } from './fixtures.js';
 
 const capture = (app, body) => fetch(`${app.url}/api/captures`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }) }).then((r) => r.json());
-const suggestion = (page) => page.getByRole('region', { name: 'Assistant suggestion' });
+const suggestion = (page) => page.getByRole('region', { name: 'Sovran Advisor suggestion' });
 const send = (app, method, url, body) => fetch(app.url + url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
 // On a phone the list comes first: a capture opens by tapping it.
 const current = (page) => page.getByRole('textbox', { name: 'Capture text' });
@@ -18,7 +18,7 @@ test('a long suggestion and its Home wrap inside the bar at every screen width',
   await capture(app, `book the car service before the trip. ${home}`);
   await page.goto(`${app.url}/inbox`);
   await showFirst(page);
-  await expect(suggestion(page)).toContainText('Your assistant suggests a task');
+  await expect(suggestion(page)).toContainText('Sovran Advisor suggests a task');
   const widths = testInfo.project.name === 'phone' ? [page.viewportSize().width] : [2400, 1440, 1280, 800, 700];
   for (const theme of ['light', 'dark']) {
     await page.evaluate((theme) => { document.documentElement.dataset.theme = theme; }, theme);
@@ -60,7 +60,7 @@ test('book the car service before the trip: a task is proposed with a reason; En
   const made = await capture(app, 'book the car service before the trip');
   await page.goto(`${app.url}/inbox`);
   await showFirst(page);
-  await expect(suggestion(page)).toContainText('Your assistant suggests a task');
+  await expect(suggestion(page)).toContainText('Sovran Advisor suggests a task');
   await expect(suggestion(page)).toContainText('“Book the car service before the trip”');
   // The reason is the bar's tooltip and its accessible description, not a line of its own.
   await expect(suggestion(page)).toHaveAttribute('title', 'It starts with something to do.');
@@ -79,7 +79,7 @@ test('book the car service before the trip: a task is proposed with a reason; En
   // Undo puts it back, with its suggestion.
   await page.getByRole('button', { name: 'Undo' }).click();
   await showFirst(page);
-  await expect(suggestion(page)).toContainText('Your assistant suggests a task');
+  await expect(suggestion(page)).toContainText('Sovran Advisor suggests a task');
 });
 
 test('the suggestion bar holds the Home box, the same value as the top bar\'s; the top bar\'s arrow opens it, and Accept uses it', async ({ page, app }) => {
@@ -125,7 +125,7 @@ test('pick a home right in the suggestion bar: the top bar follows, it is kept, 
   const made = await capture(app, 'Ideas for the shelves');
   await page.goto(`${app.url}/inbox`);
   await showFirst(page);
-  await expect(suggestion(page)).toContainText('Your assistant suggests a note');
+  await expect(suggestion(page)).toContainText('Sovran Advisor suggests a note');
   const inBar = suggestion(page).getByRole('button', { name: 'Give it a home' });
   await expect(inBar).toHaveText('No home yet');
   await expect(page.locator('.inbox-bar .home-dropdown')).toHaveText('No home yet');
@@ -174,9 +174,9 @@ test('saving never waits for the assistant: the capture is kept at once and the 
   await page.reload();
   await expect(page.locator('.inbox-item')).toHaveCount(1);
   await showFirst(page);
-  await expect(page.locator('.suggestion.is-reading')).toContainText('Your assistant is reading it…');
+  await expect(page.locator('.suggestion.is-reading')).toContainText('Sovran Advisor is reading it…');
   await expect(page.locator('.suggestion.is-reading').getByRole('button')).toHaveCount(0); // nothing to accept yet
-  await expect(suggestion(page)).toContainText('Your assistant suggests a note', { timeout: 10_000 });
+  await expect(suggestion(page)).toContainText('Sovran Advisor suggests a note', { timeout: 10_000 });
 });
 
 test('if the assistant can’t read it, the capture keeps its words and you sort it by hand', async ({ page, app }) => {

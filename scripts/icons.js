@@ -12,7 +12,7 @@ export const root = fileURLToPath(new URL('../', import.meta.url));
 export const sourceFile = `${root}design/icon.svg`;
 export const tokensFile = `${root}public/tokens.css`;
 export const outDir = `${root}public/icons/`;
-export const appName = 'Sovran Advisor';
+export const appName = 'Sovran Central';
 
 // The light theme's tokens (the first :root block), with references to other tokens resolved.
 export function readTokens(css = fs.readFileSync(tokensFile, 'utf8')) {

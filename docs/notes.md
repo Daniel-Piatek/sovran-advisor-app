@@ -13,7 +13,7 @@ Your notes: anything you want to keep and find again, each on its own page.
 - Type **/** at the start of a line for the menu: headings, lists, a to-do line, a picture or a file.
 - Paste or drop a picture or a file into a note, and it is kept with it.
 - **Delete** moves a note to **Recently deleted** (at the bottom of the list). Nothing is ever really gone: open it there and put it back.
-- The **Ask your notes** box at the bottom of every page asks your assistant about what you are looking at.
+- The **Ask your notes** box at the bottom of every page asks Sovran Advisor about what you are looking at.
 
 ## Boards
 

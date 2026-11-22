@@ -108,7 +108,7 @@ test('reading and searching mail, and a task from a conversation, respect the ow
 test('the mail tools are there only while Mail is on', () => {
   const { db } = demo();
   const names = () => offeredTools(db).map((t) => t.name).filter((n) => n.startsWith('mail_'));
-  setModule(db, 'mail', true); // off in a new install (Sovran Advisor)
+  setModule(db, 'mail', true); // off in a new install (Sovran Central)
   assert.deepEqual(names(), ['mail_search', 'mail_read', 'mail_draft', 'mail_to_task']);
   setModule(db, 'mail', false);
   assert.deepEqual(names(), []);

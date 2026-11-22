@@ -257,7 +257,7 @@ test('for ChatGPT the copied words ask for the Sovran Library and for the offer 
   const [opened] = await Promise.all([context.waitForEvent('page'), page.locator('#pick-ask').click()]);
   expect(opened.url()).toBe('https://chatgpt.com/');
   await page.bringToFront();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Sovran Pattern Report: “You notice what others walk past.”\n\nPlease use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.\n\nMy question: ');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Sovran Pattern Report: “You notice what others walk past.”\n\nPlease use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Central.\n\nMy question: ');
   expect(errors).toEqual([]);
   await context.close();
 });

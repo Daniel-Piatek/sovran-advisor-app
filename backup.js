@@ -1,4 +1,4 @@
-// The daily backup (Sovran Advisor): a whole copy of the database in data/backups, made when
+// The daily backup (Sovran Central): a whole copy of the database in data/backups, made when
 // the app starts (if today has none yet) and then once a day while it runs. The newest 14 are
 // kept; older ones are removed. A copy is made with VACUUM INTO, so it is complete and
 // consistent even while the app is in use. To go back to one: stop the app, put the copy in

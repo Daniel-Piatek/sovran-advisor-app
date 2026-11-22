@@ -4,7 +4,7 @@
 
 import { el, icon, request, timeAgo } from './ui.js';
 
-export const AUTHOR_WORDS = { me: 'You', assistant: 'Your assistant' };
+export const AUTHOR_WORDS = { me: 'You', assistant: 'Sovran Advisor' };
 
 // The Version list: a row each, newest first. selected: ids picked (at most two).
 export function versionList(versions, { selected = [], onPick = () => {} } = {}) {

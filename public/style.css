@@ -4221,7 +4221,7 @@ html[data-section] .page.mail-app-page { border-top: 0; }
 
 .mail-draft-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); border: var(--line); border-style: dashed; border-radius: var(--radius-md); background: var(--color-surface); }
 
-/* From the student app (Sovran Advisor, 2026-11-11) */
+/* From the student app (Sovran Central, 2026-11-11) */
 /* The Sovran Library key (public/settings.js) */
 .library-key { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .library-key .detail-input { flex: 1 1 240px; }

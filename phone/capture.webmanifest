@@ -1,7 +1,7 @@
 {
   "name": "go Sovran",
   "short_name": "go Sovran",
-  "description": "Ask your AI, write in your Journal, or keep a thought for the Inbox in Sovran Advisor on your computer.",
+  "description": "Ask your AI, write in your Journal, or keep a thought for the Inbox in Sovran Central on your computer.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

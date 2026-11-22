@@ -1,4 +1,4 @@
-// The Mac looks after Sovran Advisor (2026-11-17): a per-user launchd agent starts the app when the person logs in,
+// The Mac looks after Sovran Central (2026-11-17): a per-user launchd agent starts the app when the person logs in,
 // ends it when they log out, and starts it again if it ever stops by itself. Why: an app left running after a
 // log-out can no longer read the person's Keychain, so it can't see their Claude sign-in and the assistant says
 // "Not logged in". An app the Mac started for this log-in never outlives it.
@@ -25,7 +25,7 @@ export const agentFile = (home = os.homedir(), label = AGENT_LABEL) => path.join
 export const logFile = (home = os.homedir()) => path.join(home, 'Library', 'Logs', 'Sovran Advisor.log');
 
 // The agent's file. AssociatedBundleIdentifiers makes System Settings › Login Items show it as
-// "Sovran Advisor" with its icon (the Dock icon's id), rather than as "node".
+// "Sovran Central" with its icon (the Dock icon's id), rather than as "node".
 export function agentPlist({ root, node, home = os.homedir(), label = AGENT_LABEL, port = '3300', pathList }) {
   const dir = root.replace(/\/$/, '');
   const env = { PATH: pathList, PORT: port, DATA_DIR: path.join(dir, 'data'), SOVRAN_AGENT: label };
@@ -104,7 +104,7 @@ export async function ensureAgent({ root, node, home = os.homedir(), uid = proce
   const loading = await run(['bootstrap', `gui/${uid}`, file]);
   // Loaded already (a race with a log-in) counts as loaded.
   if (loading.code !== 0 && (await run(['print', target])).code !== 0) {
-    throw new Error(`The Mac would not start Sovran Advisor by itself (${loading.out.trim() || `launchctl ${loading.code}`}).`);
+    throw new Error(`The Mac would not start Sovran Central by itself (${loading.out.trim() || `launchctl ${loading.code}`}).`);
   }
   return { label, changed: true };
 }
@@ -125,12 +125,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     try {
       if (process.argv.includes('--remove')) {
         await removeAgent();
-        console.log('Sovran Advisor no longer starts by itself when you log in. Open it from its icon.');
+        console.log('Sovran Central no longer starts by itself when you log in. Open it from its icon.');
       } else {
         const done = await ensureAgent({ root, node: steadyNode(), pathList: launchPath() });
         console.log(done.other
-          ? `Another login agent (${done.other}) already starts this copy of Sovran Advisor. It was left as it is.`
-          : 'Sovran Advisor now starts when you log in, stops when you log out, and starts again if it ever stops.');
+          ? `Another login agent (${done.other}) already starts this copy of Sovran Central. It was left as it is.`
+          : 'Sovran Central now starts when you log in, stops when you log out, and starts again if it ever stops.');
       }
     } catch (error) { console.error(error.message); process.exitCode = 1; }
   }

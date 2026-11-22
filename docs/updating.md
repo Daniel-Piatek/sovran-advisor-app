@@ -1,8 +1,8 @@
 ---
-title: Updating Sovran Advisor
+title: Updating Sovran Central
 paths: ^/help/updating$
 ---
-To get the newest version of Sovran Advisor (an update, an upgrade, a new version), press one button in Settings.
+To get the newest version of Sovran Central (an update, an upgrade, a new version), press one button in Settings.
 
 ## How you use it
 
@@ -19,9 +19,9 @@ What is kept: everything you wrote (notes, journal, people, tasks), your setting
 
 **If the button can't do it** (for example the update clashes with a change you made to the app yourself, or git is not on your computer), it puts everything back as it was and shows this one line. Open **Claude Code**, start a new chat, paste it and press Enter. With ChatGPT, Codex must run on your own computer, not in the cloud (in the cloud it cannot find the app): open **Terminal**, type `cd ~/"Sovran Advisor"; codex`, press Enter, then paste the line:
 
-> Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
+> Update Sovran Central by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
 
-Claude Code (or Codex) then does the update with you and asks before combining your change with the new one. To go back that way, paste "Undo the last Sovran Advisor update".
+Claude Code (or Codex) then does the update with you and asks before combining your change with the new one. To go back that way, paste "Undo the last Sovran Central update".
 
 **Mac and Windows.** The button is made for both. It has not been tried on Windows yet, so if anything looks wrong there, use the Claude Code line above.
 

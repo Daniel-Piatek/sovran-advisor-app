@@ -1,4 +1,4 @@
-// Supabase web function phone-drop: the door between a student's phone and their Sovran Advisor (module phone-drop).
+// Supabase web function phone-drop: the door between a student's phone and their Sovran Central (module phone-drop).
 // Deploy with JWT checking off: each call carries its own box token instead. The phone page may only leave a sealed
 // note (action drop); the student's app may open a box, collect, mark as kept (which deletes) and close (open, take,
 // done, close), register its public key for saved chats (register; cloud/library-save/) and put sealed copies of the student's
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       const [{ r }] = await sql`SELECT phone_drop.drop_note(${box}, ${msg.drop}, ${msg.sealed}) AS r`;
       if (r === 'ok') return json(200, { kept: true });
       if (r === 'unknown') return json(404, { error: 'This link has been replaced. Open the new one from Settings on your computer.' });
-      if (r === 'full') return json(429, { error: 'The drop box is full. Open Sovran Advisor on your computer so it collects what waits.' });
+      if (r === 'full') return json(429, { error: 'The drop box is full. Open Sovran Central on your computer so it collects what waits.' });
       return json(400, { error: 'Not a sealed note.' });
     }
     if (msg.action === 'open') {

@@ -1,4 +1,4 @@
-// The course page (Sovran Advisor, 2026-11-10, the owner's wish): a Course link in the sidebar opens the
+// The course page (Sovran Central, 2026-11-10, the owner's wish): a Course link in the sidebar opens the
 // course's own page online (the session replays, the homework, questions), in the browser. The page lives
 // elsewhere; the app only knows its address. COURSE_URL is the address every install starts with: set it
 // here and publish an update, and every student's link follows. Another address can be set in Settings

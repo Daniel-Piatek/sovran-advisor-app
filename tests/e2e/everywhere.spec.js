@@ -1,4 +1,4 @@
-// Phone, backups and moving (myICOR advanced/everywhere 3, 8 and 11, the Sovran Advisor way): off in a new install.
+// Phone, backups and moving (myICOR advanced/everywhere 3, 8 and 11, the Sovran Central way): off in a new install.
 import fs from 'node:fs';
 import { test, expect } from './fixtures.js';
 
@@ -17,7 +17,7 @@ test('switch it on: the daily backups show, each checked, and Check them now che
   await expect(part.locator('.backup-row')).toContainText('the same as the app');
   await part.getByRole('button', { name: 'Check them now' }).click();
   await expect(part.getByRole('status').filter({ hasText: 'All 1 copy is complete.' })).toBeVisible();
-  await expect(part).toContainText('Ask Claude: “set up Sovran Advisor on my phone”');
+  await expect(part).toContainText('Ask Claude: “set up Sovran Central on my phone”');
 });
 
 test('make a moving file, bring it in: it shows what it holds and waits for your yes', async ({ page, app }, testInfo) => {

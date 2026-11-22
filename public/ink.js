@@ -1,6 +1,6 @@
 // The pen on a board (advanced/writing/8): ink as it was drawn. Every stroke is a list of points [x, y, pressure, ms]; the line is drawn
 // thicker where the pen pressed harder (a mouse presses at 0.5). Ink is drawn in its own layer over the board and is never deleted by reading
-// it as words: it fades below them. The words are read by your assistant (public/board.js asks, ink.js on the server keeps).
+// it as words: it fades below them. The words are read by Sovran Advisor (public/board.js asks, ink.js on the server keeps).
 
 const NS = 'http://www.w3.org/2000/svg';
 export const MIN_WIDTH = 3;

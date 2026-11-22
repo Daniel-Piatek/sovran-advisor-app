@@ -55,7 +55,7 @@ test('sealed to a public key, it opens only with the matching private key, and n
 
 test('the tool says when to offer and how to keep saving, and its log line never holds the words', () => {
   assert.equal(SAVE_TOOL.name, 'save_to_my_sovran_advisor');
-  for (const words of [SAVE_TOOL.description, SAVE_INSTRUCTIONS]) assert.match(words, /Would you like me to keep this chat saved to your Sovran Advisor\?/);
+  for (const words of [SAVE_TOOL.description, SAVE_INSTRUCTIONS]) assert.match(words, /Would you like me to keep this chat saved to your Sovran Central\?/);
   assert.match(SAVE_INSTRUCTIONS, /Never save without the student's yes/);
   const logged = redactSave(SAVE_TOOL.name, { chat_id: 'abcdefghij12', title: 'Secret title', turns: [{ number: 1, asked: 'my secret question', answer: 'a private answer' }] });
   assert.deepEqual(logged, { chat_id: 'abcdefghij12', turns: 1, chars: 34 });
@@ -140,7 +140,7 @@ test('an item you edited, sorted or deleted is left alone; what comes after star
 
 test('what the tool refuses, in words the AI can pass on', async (t) => {
   const { db, box, save, collects } = await student(t);
-  assert.match((await save({ turns: [{ number: 1, asked: 'Too early', answer: 'x' }] })).text, /^Not saved\. This Sovran Advisor is not set up for saving chats yet\..*Sovran Go/s, 'before the computer registered');
+  assert.match((await save({ turns: [{ number: 1, asked: 'Too early', answer: 'x' }] })).text, /^Not saved\. This Sovran Central is not set up for saving chats yet\..*go Sovran/s, 'before the computer registered');
   await collects();
   assert.match((await save({ turns: [] })).text, /^Not saved: send at least one turn/);
   assert.match((await save({ turns: [{ asked: 'No number', answer: 'x' }] })).text, /needs its number/);
