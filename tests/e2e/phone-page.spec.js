@@ -66,7 +66,7 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
   await expect(page.getByRole('radio')).toHaveText(['From Me', 'From Other', 'Journal']);
   await expect(page.getByRole('radio', { name: 'From Me' })).toBeChecked();
   expect(new Set(await page.getByRole('radio').evaluateAll((all) => all.map((c) => Math.round(c.getBoundingClientRect().top)))).size).toBe(1);
-  await expect(page.locator('#where')).toHaveText('Goes to your Inbox');
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Inner World');
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
   await expect(page.locator('.choice:visible strong')).toHaveText(['Ask my Sovran Advisor', 'My Reports']);
   const ask = page.getByRole('link', { name: /Ask my Sovran Advisor/ });
@@ -86,7 +86,7 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
 test('From Me and From Other are sealed and kept for the Inbox; Continue goes back to the first screen', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await page.locator('#text').fill('Ask Sam about the venue');
-  await expect(page.locator('#where')).toHaveText('Goes to your Inbox');
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Inner World');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Kept' })).toBeVisible();
   await expect(page.locator('#done-tag')).toHaveText('From Me');
@@ -97,6 +97,8 @@ test('From Me and From Other are sealed and kept for the Inbox; Continue goes ba
   await page.getByRole('radio', { name: 'From Other' }).click();
   await expect(page.getByRole('radio', { name: 'From Other' })).toBeChecked();
   await expect(page.locator('#text')).toBeFocused();
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Outer World');
+  expect(await page.locator('#where').evaluate((w) => w.getClientRects().length)).toBe(1); // on one line, beside Save
   await page.locator('#text').fill('Ana: “call me back”');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.locator('#done-tag')).toHaveText('From Other');
