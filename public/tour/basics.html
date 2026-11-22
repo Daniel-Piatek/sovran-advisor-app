@@ -39,7 +39,7 @@ html.in-app .back-all { background: var(--crimson); border-color: var(--crimson)
 })();
 </script>
 <style>
-/* A tour of Sovran Advisor as a student installs it today: only the parts that are on without changing a setting.
+/* A tour of Sovran Central as a student installs it today: only the parts that are on without changing a setting.
    Same engine and look as the approved journal film (writing-explainer.html). */
 :root {
   --bg: #FBFBFB; --frame: #ECEAEA; --page: #FBFBFB; --ink: #302D2D; --muted: #555151; --faint: #7B7777; --line: #D4D1D1; --surface: #ECEAEA;
@@ -211,7 +211,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .selects span.s { border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
 .askbox { border: 1px solid var(--ink); border-radius: 10px; padding: 10px; display: flex; gap: 8px; align-items: flex-end; min-height: 56px; }
 .askbox .t { flex: 1; }
-.askbox .t:empty::before { content: "Ask your assistant (Claude)"; color: var(--faint); }
+.askbox .t:empty::before { content: "Ask Sovran Advisor (Claude)"; color: var(--faint); }
 .askbox .b { font-family: var(--ui); font-size: .78rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 10px; }
 .msg { border-radius: 10px; padding: 8px 12px; font-size: .9rem; display: grid; gap: 4px; }
 .msg.me { justify-self: end; background: var(--surface); max-width: 80%; }
@@ -287,8 +287,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 </style>
 
 <div class="wrap">
-  <p class="eyebrow">Sovran Advisor · The tour</p>
-  <h1>A Tour of Sovran Advisor</h1>
+  <p class="eyebrow">Sovran Central · The tour</p>
+  <h1>A Tour of Sovran Central</h1>
   <p class="intro">What each part of the app is for, how the parts work together, and what to try first. It shows the app exactly as it is when you install it: nothing to switch on. Each instruction shows in red right where the step happens. Pause any time with the round button, a click on the screen, or the space bar. Press <b>Sound on</b> to hear it narrated.</p>
 
   <div class="cap">
@@ -305,7 +305,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
       <div class="nav" id="nav-timeline"><i style="background:var(--ink)"></i>Timeline</div>
       <div class="nav" id="nav-people"><i style="background:var(--people)"></i>People</div>
       <div class="nav" id="nav-inbox"><i style="border:1.5px solid var(--muted)"></i>Inbox<span class="count" id="inboxcount" hidden>1</span></div>
-      <div class="nav" id="nav-assistant"><i style="background:var(--gold)"></i>Assistant</div>
+      <div class="nav" id="nav-assistant"><i style="background:var(--gold)"></i>Sovran Advisor</div>
       <div class="grow"></div>
       <div class="nav" id="nav-settings"><i style="border:1.5px dashed var(--muted)"></i>Settings</div>
     </div>
@@ -329,7 +329,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
   </div>
 </div>
 
-<script type="application/json" id="vo">{"clips": {"scene:Welcome": "/tour/voice/basics/t01-00.mp3", "The first time you open it, it says welcome": "/tour/voice/basics/t01-01.mp3", "Type the name your Advisor should call you": "/tour/voice/basics/t01-02.mp3", "\u201cReady\u201d means your assistant runs on your own Claude": "/tour/voice/basics/t01-03.mp3", "Then: Write your first journal entry": "/tour/voice/basics/t01-04.mp3", "scene:The Map": "/tour/voice/basics/t02-00.mp3", "Everything lives in the sidebar": "/tour/voice/basics/t02-01.mp3", "Journal: your days, one entry at a time": "/tour/voice/basics/t02-02.mp3", "Notes: anything you want to keep": "/tour/voice/basics/t02-03.mp3", "Inbox: quick thoughts, waiting to be sorted": "/tour/voice/basics/t02-04.mp3", "People: who matters, and where you named them": "/tour/voice/basics/t02-05.mp3", "Timeline: everything, newest on top": "/tour/voice/basics/t02-06.mp3", "Assistant: your own AI, reading your pages": "/tour/voice/basics/t02-07.mp3", "Capture, at the top, catches a thought from anywhere": "/tour/voice/basics/t02-08.mp3", "Settings, at the bottom: your choices, and updates": "/tour/voice/basics/t02-09.mp3", "scene:Start with Your Journal": "/tour/voice/basics/t03-00.mp3", "Click Journal. It opens on today.": "/tour/voice/basics/t03-01.mp3", "Click + New entry": "/tour/voice/basics/t03-02.mp3", "Give it a title, press Enter, and write": "/tour/voice/basics/t03-03.mp3", "No Save button: it saves by itself": "/tour/voice/basics/t03-04.mp3", "The film \u201cWriting in your journal\u201d shows the rest": "/tour/voice/basics/t03-05.mp3", "scene:Capture a Thought, Sort It Later": "/tour/voice/basics/t04-00.mp3", "Press {MOD} K anywhere to capture": "/tour/voice/basics/t04-01.mp3", "Type the thought": "/tour/voice/basics/t04-02.mp3", "Press Enter to keep it": "/tour/voice/basics/t04-03.mp3", "Later, open the Inbox": "/tour/voice/basics/t04-04.mp3", "Your assistant suggests where it belongs": "/tour/voice/basics/t04-05.mp3", "Press N to make it a note, or J for a journal entry": "/tour/voice/basics/t04-06.mp3", "Empty your Inbox once a day": "/tour/voice/basics/t04-07.mp3", "scene:Notes, Links and People": "/tour/voice/basics/t05-00.mp3", "Click Notes, then + New note": "/tour/voice/basics/t05-01.mp3", "Type a title, press Enter, and write": "/tour/voice/basics/t05-02.mp3", "Type @ and a name to mention a person": "/tour/voice/basics/t05-03.mp3", "Press Enter to choose them": "/tour/voice/basics/t05-04.mp3", "Type [[ to link to another note": "/tour/voice/basics/t05-05.mp3", "Press Enter: it is now a link. Click it to go there.": "/tour/voice/basics/t05-06.mp3", "scene:People": "/tour/voice/basics/t06-00.mp3", "Click People": "/tour/voice/basics/t06-01.mp3", "Click a name to open their page": "/tour/voice/basics/t06-02.mp3", "Their details, and what you know about them": "/tour/voice/basics/t06-03.mp3", "\u201cMentioned in\u201d: every place you named them": "/tour/voice/basics/t06-04.mp3", "Set a rhythm to stay in touch": "/tour/voice/basics/t06-05.mp3", "scene:Timeline": "/tour/voice/basics/t07-00.mp3", "Click Timeline": "/tour/voice/basics/t07-01.mp3", "Today: your note, your capture, your entry": "/tour/voice/basics/t07-02.mp3", "Click a chip to show or hide a kind": "/tour/voice/basics/t07-03.mp3", "Click a row to open it where it lives": "/tour/voice/basics/t07-04.mp3", "scene:Your Assistant": "/tour/voice/basics/t08-00.mp3", "Click Assistant, then + New chat": "/tour/voice/basics/t08-01.mp3", "Ask it about what you wrote": "/tour/voice/basics/t08-02.mp3", "Press Enter to send": "/tour/voice/basics/t08-03.mp3", "It answers from your own pages, and shows which": "/tour/voice/basics/t08-04.mp3", "Model and Effort: Usual is fine to start": "/tour/voice/basics/t08-05.mp3", "Call: talk out loud instead of typing": "/tour/voice/basics/t08-06.mp3", "scene:Help on Every Page": "/tour/voice/basics/t09-00.mp3", "Click ? beside a title for its help page": "/tour/voice/basics/t09-01.mp3", "\u201cAsk your notes\u201d: a quick question, right here": "/tour/voice/basics/t09-02.mp3", "Hold {DICT} and speak, in any box": "/tour/voice/basics/t09-03.mp3", "Light or Dark: your choice": "/tour/voice/basics/t09-04.mp3", "scene:What to Try First": "/tour/voice/basics/t10-00.mp3", "1 \u00b7 Write today\u2019s journal entry": "/tour/voice/basics/t10-01.mp3", "2 \u00b7 Capture one thought, then sort it in the Inbox": "/tour/voice/basics/t10-02.mp3", "3 \u00b7 Ask your assistant one question": "/tour/voice/basics/t10-03.mp3", "Stuck? Click ? on any page, or ask the group": "/tour/voice/basics/t10-04.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"}</script>
+<script type="application/json" id="vo">{"clips": {"scene:Welcome": "/tour/voice/basics/t01-00n.mp3", "The first time you open it, it says welcome": "/tour/voice/basics/t01-01n.mp3", "Type the name your Advisor should call you": "/tour/voice/basics/t01-02.mp3", "\u201cReady\u201d means Sovran Advisor runs on your own Claude": "/tour/voice/basics/t01-03n.mp3", "Then: Write your first journal entry": "/tour/voice/basics/t01-04.mp3", "scene:The Map": "/tour/voice/basics/t02-00.mp3", "Everything lives in the sidebar": "/tour/voice/basics/t02-01.mp3", "Journal: your days, one entry at a time": "/tour/voice/basics/t02-02.mp3", "Notes: anything you want to keep": "/tour/voice/basics/t02-03.mp3", "Inbox: quick thoughts, waiting to be sorted": "/tour/voice/basics/t02-04.mp3", "People: who matters, and where you named them": "/tour/voice/basics/t02-05.mp3", "Timeline: everything, newest on top": "/tour/voice/basics/t02-06.mp3", "Sovran Advisor: your own AI, reading your pages": "/tour/voice/basics/t02-07n.mp3", "Capture, at the top, catches a thought from anywhere": "/tour/voice/basics/t02-08.mp3", "Settings, at the bottom: your choices, and updates": "/tour/voice/basics/t02-09.mp3", "scene:Start with Your Journal": "/tour/voice/basics/t03-00.mp3", "Click Journal. It opens on today.": "/tour/voice/basics/t03-01.mp3", "Click + New entry": "/tour/voice/basics/t03-02.mp3", "Give it a title, press Enter, and write": "/tour/voice/basics/t03-03.mp3", "No Save button: it saves by itself": "/tour/voice/basics/t03-04.mp3", "The film \u201cWriting in your journal\u201d shows the rest": "/tour/voice/basics/t03-05.mp3", "scene:Capture a Thought, Sort It Later": "/tour/voice/basics/t04-00.mp3", "Press {MOD} K anywhere to capture": "/tour/voice/basics/t04-01.mp3", "Type the thought": "/tour/voice/basics/t04-02.mp3", "Press Enter to keep it": "/tour/voice/basics/t04-03.mp3", "Later, open the Inbox": "/tour/voice/basics/t04-04.mp3", "Sovran Advisor suggests where it belongs": "/tour/voice/basics/t04-05n.mp3", "Press N to make it a note, or J for a journal entry": "/tour/voice/basics/t04-06.mp3", "Empty your Inbox once a day": "/tour/voice/basics/t04-07.mp3", "scene:Notes, Links and People": "/tour/voice/basics/t05-00.mp3", "Click Notes, then + New note": "/tour/voice/basics/t05-01.mp3", "Type a title, press Enter, and write": "/tour/voice/basics/t05-02.mp3", "Type @ and a name to mention a person": "/tour/voice/basics/t05-03.mp3", "Press Enter to choose them": "/tour/voice/basics/t05-04.mp3", "Type [[ to link to another note": "/tour/voice/basics/t05-05.mp3", "Press Enter: it is now a link. Click it to go there.": "/tour/voice/basics/t05-06.mp3", "scene:People": "/tour/voice/basics/t06-00.mp3", "Click People": "/tour/voice/basics/t06-01.mp3", "Click a name to open their page": "/tour/voice/basics/t06-02.mp3", "Their details, and what you know about them": "/tour/voice/basics/t06-03.mp3", "\u201cMentioned in\u201d: every place you named them": "/tour/voice/basics/t06-04.mp3", "Set a rhythm to stay in touch": "/tour/voice/basics/t06-05.mp3", "scene:Timeline": "/tour/voice/basics/t07-00.mp3", "Click Timeline": "/tour/voice/basics/t07-01.mp3", "Today: your note, your capture, your entry": "/tour/voice/basics/t07-02.mp3", "Click a chip to show or hide a kind": "/tour/voice/basics/t07-03.mp3", "Click a row to open it where it lives": "/tour/voice/basics/t07-04.mp3", "scene:Sovran Advisor": "/tour/voice/basics/t08-00n.mp3", "Click Sovran Advisor, then + New chat": "/tour/voice/basics/t08-01n.mp3", "Ask it about what you wrote": "/tour/voice/basics/t08-02.mp3", "Press Enter to send": "/tour/voice/basics/t08-03.mp3", "It answers from your own pages, and shows which": "/tour/voice/basics/t08-04.mp3", "Model and Effort: Usual is fine to start": "/tour/voice/basics/t08-05.mp3", "Call: talk out loud instead of typing": "/tour/voice/basics/t08-06.mp3", "scene:Help on Every Page": "/tour/voice/basics/t09-00.mp3", "Click ? beside a title for its help page": "/tour/voice/basics/t09-01.mp3", "\u201cAsk your notes\u201d: a quick question, right here": "/tour/voice/basics/t09-02n.mp3", "Hold {DICT} and speak, in any box": "/tour/voice/basics/t09-03.mp3", "Light or Dark: your choice": "/tour/voice/basics/t09-04.mp3", "scene:What to Try First": "/tour/voice/basics/t10-00.mp3", "1 \u00b7 Write today\u2019s journal entry": "/tour/voice/basics/t10-01.mp3", "2 \u00b7 Capture one thought, then sort it in the Inbox": "/tour/voice/basics/t10-02.mp3", "3 \u00b7 Ask Sovran Advisor one question": "/tour/voice/basics/t10-03n.mp3", "Stuck? Click ? on any page, or ask the group": "/tour/voice/basics/t10-04.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"}</script>
 <script>
 (() => {
 const $ = (id) => document.getElementById(id);
@@ -480,9 +480,9 @@ const ENTRY = ['08:12', 'Morning pages', 'Slept well. Three things I want from t
 function welcomePage() {
   place('welcome');
   const w = h('div', 'welcome'); w.style.display = 'grid'; w.style.gap = '10px';
-  w.append(h('h3', '', 'Welcome to Sovran Advisor'), h('div', 'sub', 'Your trusty companion on your Sovran Quest journey.'));
+  w.append(h('h3', '', 'Welcome to Sovran Central'), h('div', 'sub', 'Your trusty companion on your Sovran Quest journey.'));
   const p1 = h('div', 'wpart'); const name = h('div', 'field ph', 'Type your name here.'); p1.append(h('span', 'h', 'What should your Advisor call you?'), name);
-  const p2 = h('div', 'wpart'); const ready = h('div', '', '✓ Ready. It runs on your own Claude, on this computer.'); p2.append(h('span', 'h', 'Your assistant'), ready);
+  const p2 = h('div', 'wpart'); const ready = h('div', '', '✓ Ready. It runs on your own Claude, on this computer.'); p2.append(h('span', 'h', 'Sovran Advisor'), ready);
   const p3 = h('div', 'wpart'); const begin = h('div', 'begin', '<i class="dot" style="background:var(--journal)"></i>Write your first journal entry'); p3.append(h('span', 'h', 'To begin'), begin);
   w.append(p1, p2, p3); pagein.append(w); const ft = foot();
   return { name, ready, begin, ft };
@@ -512,12 +512,12 @@ function line(html = '') { const l = h('div', 'ln'); l.append(h('span', 't', htm
 async function typeTitle(name) { title.classList.remove('ph'); title.textContent = ''; await type(title, name, 70); clearCaret(); }
 
 const scenes = [
-  { t: 'Welcome', c: 'The first time you open Sovran Advisor it greets you. Tell it your name, check that your assistant is ready, and begin with your journal.',
+  { t: 'Welcome', c: 'The first time you open Sovran Central it greets you. Tell it your name, check that Sovran Advisor is ready, and begin with your journal.',
     async run() {
       const { name, ready, begin } = welcomePage();
       await step('The first time you open it, it says welcome', pagein.querySelector('h3'), null, 'below');
       await step('Type the name your Advisor should call you', name, async () => { await click(name, 20, 8); hidePointer(); name.classList.remove('ph'); name.textContent = ''; await type(name, 'Sam', 120); clearCaret(); }, 'below');
-      await step('“Ready” means your assistant runs on your own Claude', ready, null, 'below');
+      await step('“Ready” means Sovran Advisor runs on your own Claude', ready, null, 'below');
       await step('Then: Write your first journal entry', begin, async () => { await pointTo(begin, 60, 12); await sleep(600); }, 'above');
     } },
   { t: 'The Map', c: 'Everything lives in the sidebar on the left. Six places, plus Capture at the top and Settings at the bottom. Here is what each one is for.',
@@ -529,7 +529,7 @@ const scenes = [
         ['inbox', 'Inbox: quick thoughts, waiting to be sorted'],
         ['people', 'People: who matters, and where you named them'],
         ['timeline', 'Timeline: everything, newest on top'],
-        ['assistant', 'Assistant: your own AI, reading your pages'],
+        ['assistant', 'Sovran Advisor: your own AI, reading your pages'],
       ];
       await step('Everything lives in the sidebar', $('nav-notes'), null, 'right');
       for (const [id, words] of tour) {
@@ -572,11 +572,11 @@ const scenes = [
         const sp = h('div', 'split'); const list = h('div', 'list'); list.append(h('div', 'chips', '<span class="pill on">Sort 1</span><span class="pill">Snoozed</span>'),
           h('div', 'item', 'Ask Alex about the retreat dates<span class="small">Mon 16 Nov</span>'));
         const pn = h('div', 'panel'); pn.append(h('div', 'small', 'Captured Mon 16 Nov, 09:35 AM'), h('div', 'bigtext', 'Ask Alex about the retreat dates'));
-        const sg = h('div', 'suggest', '<i class="ai-i"></i><span class="sg">Your assistant is reading it…</span>'); pn.append(sg);
+        const sg = h('div', 'suggest', '<i class="ai-i"></i><span class="sg">Sovran Advisor is reading it…</span>'); pn.append(sg);
         pn.append(h('div', 'picks', 'Or make it <span class="pill" id="pickN"><kbd>N</kbd>A note</span><span class="pill" id="pickJ"><kbd>J</kbd>A journal entry</span><span class="pill"><kbd>D</kbd>Done</span><span class="pill"><kbd>⌫</kbd>Delete</span>'));
         sp.append(list, pn); pagein.append(sp); }, 'right');
       const sg = pagein.querySelector('.suggest');
-      await step('Your assistant suggests where it belongs', sg, async () => { await sleep(900); sg.innerHTML = '<i class="ai-i"></i><span>Add it to the note <b>Retreat plan</b></span><span class="acc">Accept</span>'; await sleep(900); }, 'below');
+      await step('Sovran Advisor suggests where it belongs', sg, async () => { await sleep(900); sg.innerHTML = '<i class="ai-i"></i><span>Add it to the note <b>Retreat plan</b></span><span class="acc">Accept</span>'; await sleep(900); }, 'below');
       const pk = $('pickN');
       await step('Press N to make it a note, or J for a journal entry', pk, async () => { await press('N'); pk.classList.add('press'); await sleep(700);
         $('inboxcount').hidden = true; pagein.querySelector('.split').innerHTML = '<div class="panel"><div class="bigtext">Nothing waits.</div><div class="small">Press ' + MOD + 'K anywhere to capture a thought; it waits here until you sort it.</div></div>'; }, 'below');
@@ -642,13 +642,13 @@ const scenes = [
       await step('Click a row to open it where it lives', first, async () => { await click(first, 120, 10); first.classList.add('fresh'); await sleep(500); hidePointer();
         writePage('notes', 'Retreat plan', '← Notes', 'Note'); line('Check the dates with <span class="mention">@Alex Rivers</span>, then book the venue from <span class="link"><i></i>Venue ideas</span>'); }, 'below');
     } },
-  { t: 'Your Assistant', c: 'Your own AI, running on your own Claude plan on this computer. Ask it about anything you wrote: it answers from your pages and shows which ones it used. Model and Effort can stay on Usual. Call lets you talk out loud instead of typing.',
+  { t: 'Sovran Advisor', c: 'Your own AI, running on your own Claude plan on this computer. Ask it about anything you wrote: it answers from your pages and shows which ones it used. Model and Effort can stay on Usual. Call lets you talk out loud instead of typing.',
     async run() {
       place('timeline'); head('Timeline'); foot();
       const na = $('nav-assistant');
       let box, at2;
-      await step('Click Assistant, then + New chat', na, async () => { await click(na, 30, 8);
-        place('assistant', { wide: true }); const { b } = head('Assistant', 'var(--gold)', '+ New chat');
+      await step('Click Sovran Advisor, then + New chat', na, async () => { await click(na, 30, 8);
+        place('assistant', { wide: true }); const { b } = head('Sovran Advisor', 'var(--gold)', '+ New chat');
         const sp = h('div', 'split'); const list = h('div', 'list'); list.append(h('div', 'lab', 'Chats'), h('span', 'small', 'No chats yet.'));
         const pn = h('div', 'panel'); pn.id = 'chat';
         const sel = h('div', 'selects', 'Model <span class="s" id="selm">Usual · Claude Code’s own choice ▾</span> Effort <span class="s">Usual ▾</span>');
@@ -660,7 +660,7 @@ const scenes = [
       await step('Press Enter to send', box, async () => { await press('Enter'); clearCaret();
         const pn = $('chat'); const q = h('div', 'msg me', t.textContent); t.textContent = '';
         pagein.querySelector('.list').innerHTML = '<div class="lab">Chats</div><div class="item">Retreat this week<span class="small">Today</span></div>';
-        const ai = h('div', 'msg ai'); ai.id = 'ai'; at2 = h('div', ''); ai.append(h('div', 'who', '<i class="ai-i"></i>Assistant'), at2);
+        const ai = h('div', 'msg ai'); ai.id = 'ai'; at2 = h('div', ''); ai.append(h('div', 'who', '<i class="ai-i"></i>Sovran Advisor'), at2);
         pn.insertBefore(q, box); pn.insertBefore(ai, box); await sleep(500); }, 'below');
       await step('It answers from your own pages, and shows which', $('ai'), async () => {
         await type(at2, 'You want to check the dates with Alex Rivers, then book the venue from Venue ideas. In this morning’s entry you also named three things you want from this week.', 22); clearCaret();
@@ -669,7 +669,7 @@ const scenes = [
       const call = box.querySelector('.b');
       await step('Call: talk out loud instead of typing', call, async () => { await pointTo(call, 20, 8); await sleep(600); }, 'above');
     } },
-  { t: 'Help on Every Page', c: `A “?” beside every page title opens a short help page. At the bottom of every page, “Ask your notes” asks your assistant about what you are looking at. Hold the Right Option key on a Mac (Right Alt on a PC) and speak to type with your voice; the first time it gets ready for a minute. Light or Dark is one click.`,
+  { t: 'Help on Every Page', c: `A “?” beside every page title opens a short help page. At the bottom of every page, “Ask your notes” asks Sovran Advisor about what you are looking at. Hold the Right Option key on a Mac (Right Alt on a PC) and speak to type with your voice; the first time it gets ready for a minute. Light or Dark is one click.`,
     async run() {
       const { q, ft } = dayPage([ENTRY]);
       await step('Click ? beside a title for its help page', q, async () => { await click(q, 6, 6); hidePointer();
@@ -690,9 +690,9 @@ const scenes = [
       const items = [
         ['1', 'Write today’s journal entry', 'Journal › + New entry. A few lines is plenty.', 'nav-journal'],
         ['2', 'Capture one thought, then sort it', `${MOD} K, type, Enter. Then Inbox: N or J.`, 'capture'],
-        ['3', 'Ask your assistant one question', 'Assistant › + New chat. Ask about what you wrote.', 'nav-assistant'],
+        ['3', 'Ask Sovran Advisor one question', 'Sovran Advisor › + New chat. Ask about what you wrote.', 'nav-assistant'],
       ];
-      const said = ['1 · Write today’s journal entry', '2 · Capture one thought, then sort it in the Inbox', '3 · Ask your assistant one question'];
+      const said = ['1 · Write today’s journal entry', '2 · Capture one thought, then sort it in the Inbox', '3 · Ask Sovran Advisor one question'];
       for (let i = 0; i < items.length; i++) {
         const [n, b, s, nav] = items[i];
         const el = h('div', 'first out'); el.append(h('span', 'num', n), h('div', '', `<b>${b}</b><span class="small">${s}</span>`)); list.append(el);
@@ -707,7 +707,7 @@ const scenes = [
 
 // ---- playing ----
 const bar = $('bar'), pp = $('pp');
-const chips = scenes.map((s, i) => { const SHORT = {"The Map": "Map", "Start with Your Journal": "Journal", "Capture a Thought, Sort It Later": "Capture", "Notes, Links and People": "Notes & Links", "Your Assistant": "Assistant", "Help on Every Page": "Help", "What to Try First": "Try First", "Put Capture on Your Phone": "Set Up", "Catch a Thought Anywhere": "Capture", "Today, Upcoming and Done": "Your Lists", "A Highlight, and Closing the Day": "Highlight & Close", "Your Events": "Events", "Add Your Google Calendar": "Google Calendar", "Think on a Board": "Use a Board", "Your Key Elements": "Key Elements", "Give Things a Home": "Homes", "What Group Circle Is": "What It Is", "Share from Your App": "Share", "When Something\u2019s Not Right": "Not Right?"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch On') ? 'Switch On' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
+const chips = scenes.map((s, i) => { const SHORT = {"The Map": "Map", "Start with Your Journal": "Journal", "Capture a Thought, Sort It Later": "Capture", "Notes, Links and People": "Notes & Links", "Sovran Advisor": "Sovran Advisor", "Help on Every Page": "Help", "What to Try First": "Try First", "Put Capture on Your Phone": "Set Up", "Catch a Thought Anywhere": "Capture", "Today, Upcoming and Done": "Your Lists", "A Highlight, and Closing the Day": "Highlight & Close", "Your Events": "Events", "Add Your Google Calendar": "Google Calendar", "Think on a Board": "Use a Board", "Your Key Elements": "Key Elements", "Give Things a Home": "Homes", "What Group Circle Is": "What It Is", "Share from Your App": "Share", "When Something\u2019s Not Right": "Not Right?"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch On') ? 'Switch On' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
 function reset() { hideTip(); hidePointer(); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
 function show(i) {
   cur = i; intro = 'scene:' + scenes[i].t;

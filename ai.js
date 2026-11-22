@@ -1,4 +1,4 @@
-// Which AI answers (Sovran Advisor): the owner's own Claude (Claude Code) or their own ChatGPT
+// Which AI answers (Sovran Central): the owner's own Claude (Claude Code) or their own ChatGPT
 // (OpenAI's Codex), chosen in Settings › Your assistant. Either one runs on this computer,
 // signed in with the owner's own plan, never an API key. Kept in settings (assistant.provider);
 // Claude unless the owner chose ChatGPT. Changing it never touches the owner's data: the next

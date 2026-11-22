@@ -1,4 +1,4 @@
-// Voice calls with your assistant (advanced/voice/3-7). No microphone and no voice model: the page's ears are stood in for
+// Voice calls with Sovran Advisor (advanced/voice/3-7). No microphone and no voice model: the page's ears are stood in for
 // (window.__sovranCallEar, which a test answers with what you "said"), the speaking voice is a short tone
 // (VOICE_FAKE_SPEECH) and the assistant is tests/fake-claude.js. Everything else is the app's own.
 import { test, expect } from './fixtures.js';
@@ -20,7 +20,7 @@ async function say(page, words) {
   await page.waitForFunction(() => typeof window.__hear === 'function');
   await page.evaluate((w) => { const hear = window.__hear; window.__hear = null; hear(w); }, words);
 }
-const callButton = (page) => page.getByRole('button', { name: /^Call your assistant/ });
+const callButton = (page) => page.getByRole('button', { name: /^Call Sovran Advisor/ });
 
 // Without an ElevenLabs key, as a student has it: the free voice on this computer.
 test.describe('without a key', () => {
@@ -53,14 +53,14 @@ test.describe('without a key', () => {
   });
 });
 
-test('a question for your assistant goes to the chat as a normal message; a slow answer gets one short true line first', async ({ page, app }) => {
+test('a question for Sovran Advisor goes to the chat as a normal message; a slow answer gets one short true line first', async ({ page, app }) => {
   await ears(page);
   await page.goto(`${app.url}/assistant`);
   await callButton(page).click();
   await say(page, 'slow: tell me about my notes');
   await expect(widget(page)).toContainText('Speaking');
   const chat = page.getByRole('log', { name: 'Conversation' });
-  await expect(chat.locator('[data-role="assistant"]').last()).toContainText('your assistant', { timeout: 20000 });
+  await expect(chat.locator('[data-role="assistant"]').last()).toContainText('Sovran Advisor', { timeout: 20000 });
   await expect(chat).toContainText('Said while it thought: “Let me look at your notes.”');
   await expect(chat.locator('[data-role="user"]')).toContainText('Said on a call');
 });

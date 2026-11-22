@@ -1,5 +1,5 @@
 // "Keep this chat saved": the one tool the Sovran Library (library-mcp) gains so that a student's AI can save a
-// chat to their Sovran Advisor. It runs inside library-mcp's own request (core.js: the key is already checked,
+// chat to their Sovran Central. It runs inside library-mcp's own request (core.js: the key is already checked,
 // the transaction runs as library_reader with library.student_id set). What it does:
 //   1. asks the drop box for the public key the student's computer registered (phone_drop.saver_key);
 //   2. seals the turns to that key (sealing.js): from here on only that computer can read them;
@@ -19,7 +19,7 @@ export const MAX_SAVE_CHARS = 30000; // one call; a longer chat goes in several 
 const MAX_TURNS = 40;
 const CHAT_ID = /^[a-z0-9]{12}$/;
 
-const OFFER = 'Would you like me to keep this chat saved to your Sovran Advisor?';
+const OFFER = 'Would you like me to keep this chat saved to your Sovran Central?';
 
 // The order matters and is said three times (here, in the tool's description, in its answer): the first live test
 // (18 Nov 2026) showed an assistant putting its answer only into the save and showing the student just "Saved".
@@ -28,14 +28,14 @@ const ANSWER_FIRST = 'The save is an extra copy, never the answer itself: always
   + 'A reply that only says it was saved is a mistake.';
 
 export const SAVE_INSTRUCTIONS = ' Saving: after your first answer in a chat that used this library, end that answer by asking once, in these words: '
-  + `"${OFFER}" If the student says yes, call save_to_my_sovran_advisor with every question and answer so far, word for word, and say in one short line: "Saved to your Sovran Advisor." `
+  + `"${OFFER}" If the student says yes, call save_to_my_sovran_advisor with every question and answer so far, word for word, and say in one short line: "Saved to your Sovran Central." `
   + 'For every later question in the same chat: answer it fully in the chat first, then call the tool again with only that new question and answer and the chat_id it gave you, and say nothing about the save. '
   + `${ANSWER_FIRST} If the student says no, do not ask again in this chat; save only if they ask ("save this"). `
   + 'Never save without the student\'s yes.';
 
 export const SAVE_TOOL = {
   name: 'save_to_my_sovran_advisor',
-  description: 'Saves this chat to the student\'s own Sovran Advisor, where it arrives in their Inbox as one item per chat. '
+  description: 'Saves this chat to the student\'s own Sovran Central, where it arrives in their Inbox as one item per chat. '
     + `Use it only after the student said yes to "${OFFER}" (ask that once, after your first answer in a chat that used this library), or when they ask you to save. `
     + 'First save: send every question and answer so far, word for word, with no chat_id; the answer gives you a chat_id. '
     + 'For each later question in the same chat: first write your full answer in the chat, then call this again with that chat_id and only the new turn, and say nothing about the save. '
@@ -63,8 +63,8 @@ export function redactSave(name, args) {
 }
 
 const newChatId = () => [...globalThis.crypto.getRandomValues(new Uint8Array(12))].map((b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
-const NOT_LINKED = 'Not saved. This Sovran Advisor is not set up for saving chats yet. Tell the student, in plain words: on their computer, '
-  + 'open Sovran Advisor, update it (Settings › Updates), switch on Sovran Go (Settings › Modules), and leave it open for a minute; then ask again. '
+const NOT_LINKED = 'Not saved. This Sovran Central is not set up for saving chats yet. Tell the student, in plain words: on their computer, '
+  + 'open Sovran Central, update it (Settings › Updates), switch on go Sovran (Settings › Modules), and leave it open for a minute; then ask again. '
   + 'Do not offer to save again in this chat.';
 
 // The tool. tx: library-mcp's transaction (a postgres.js tagged template); the student is already known to it.
@@ -88,13 +88,13 @@ export async function saveToAdvisor(tx, _student, args) {
     turns, at: new Date().toISOString() });
   const [{ r }] = await tx`SELECT phone_drop.save_note(${sealed}) AS r`;
   if (r === 'none') return said(NOT_LINKED);
-  if (r === 'full') return said('Not saved: too much is waiting for the student\'s computer. Ask them to open Sovran Advisor on their computer, then save again.');
+  if (r === 'full') return said('Not saved: too much is waiting for the student\'s computer. Ask them to open Sovran Central on their computer, then save again.');
   if (r === 'busy') return said('Not saved: too many saves in the last hour. Try again later; "save this" then sends what was missed.');
   if (r !== 'ok') return said('Not saved: the drop box refused it.');
   const numbers = turns.map((t) => t.n);
   const first = args.chat_id === undefined;
   return { results: turns.length, text: `Saved (${turns.length === 1 ? `question ${numbers[0]}` : `questions ${Math.min(...numbers)} to ${Math.max(...numbers)}`}). chat_id: ${chatId}. `
     + 'It will be in the student\'s Inbox when their computer is on. '
-    + (first ? 'Tell them in one short line: "Saved to your Sovran Advisor." ' : 'Say nothing about this save. If your answer to the student\'s last question is not already written in the chat, write it now, in full. ')
+    + (first ? 'Tell them in one short line: "Saved to your Sovran Central." ' : 'Say nothing about this save. If your answer to the student\'s last question is not already written in the chat, write it now, in full. ')
     + `For every later question in this chat: write your full answer in the chat first, then call this tool with chat_id ${chatId} and only the new turn. ${ANSWER_FIRST}` };
 }

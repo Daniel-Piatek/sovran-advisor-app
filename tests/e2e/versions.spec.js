@@ -23,7 +23,7 @@ test('the clock counts the saves; the dialog opens on the last two with the chan
   await expect(dialog.getByRole('button', { name: /Version 1.*First version/ })).toBeVisible();
 });
 
-test('your assistant’s saves carry its name; picking one version shows its text and Restore brings it back as the next version', async ({ page, app }) => {
+test('Sovran Advisor’s saves carry its name; picking one version shows its text and Restore brings it back as the next version', async ({ page, app }) => {
   const note = await app.createNote({ title: 'Pricing', body: 'first words' });
   await app.updateNote(note.id, { body: 'second words' });
   await app.updateNote(note.id, { body: 'third words' });

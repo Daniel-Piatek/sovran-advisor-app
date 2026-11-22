@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const demo = process.argv.includes('--demo');
-const name = demo ? 'Sovran Advisor Demo' : 'Sovran Advisor';
+const name = demo ? 'Sovran Central Demo' : 'Sovran Central';
 const bundle = path.join(root, `build/${name}.app`);
 if (demo) execFileSync(process.execPath, [path.join(root, 'scripts/demo-icon.js')], { stdio: 'inherit' });
 fs.mkdirSync(path.join(bundle, 'Contents/MacOS'), { recursive: true });

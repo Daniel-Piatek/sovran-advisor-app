@@ -10,15 +10,15 @@ import { icon } from './ui.js';
 // One short line under a name that doesn't explain itself (by the part's aria-label).
 const HINTS = {
   'Which AI': 'The AI that answers you: Claude or ChatGPT.',
-  Updates: 'Get the newest version of Sovran Advisor.',
+  Updates: 'Get the newest version of Sovran Central.',
   'Sovran Library': 'Your key to the Sovran teaching, your decodes and your reports.',
   Course: 'The link to your course page.',
-  'Your assistant': 'What your assistant does by itself, and what it asks you first.',
+  'Sovran Advisor': 'What Sovran Advisor does by itself, and what it asks you first.',
   Modules: 'Switch parts of the app on or off.',
   'Background jobs': 'What the app does by itself, and when it last did.',
   'Calendar timings': 'How quickly the Calendar and the Planner answer.',
   'Capture from anywhere': 'Send a thought to your Inbox from your browser or another app.',
-  'Sovran Go': 'Sovran Advisor on your phone: ask your AI, write, and read your reports.',
+  'go Sovran': 'Sovran Central on your phone: ask your AI, write, and read your reports.',
   'Phone, backups and moving': 'Your daily backups, and moving to a new computer.',
   Import: 'Bring in notes and contacts you already have.',
   Tags: 'Rename, join, group and pin your tags.',
@@ -27,12 +27,12 @@ const HINTS = {
   'Google Calendar': 'Your Google events on your days.',
   Dictation: 'Speak instead of typing.',
   Glossary: 'Names and words your dictation should get right.',
-  Voice: 'Talking with your assistant out loud.',
+  Voice: 'Talking with Sovran Advisor out loud.',
   'Voice log': 'When a part of a call failed.',
   Restart: 'Stop the app and start it again.',
-  'Always allowed': 'Steps your assistant no longer asks about.',
+  'Always allowed': 'Steps Sovran Advisor no longer asks about.',
   Activity: 'Everything that was switched or done, newest first.',
-  'Your assistant and mail': 'What your assistant may do with your mail.',
+  'Sovran Advisor and mail': 'What Sovran Advisor may do with your mail.',
 };
 
 const key = (name) => `settings-section:${name}`;

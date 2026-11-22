@@ -1,4 +1,4 @@
-// The welcome (Sovran Advisor): what a new student sees the first time the app opens. It
+// The welcome (Sovran Central): what a new student sees the first time the app opens. It
 // keeps two things in settings: their name (owner.name) and that the welcome was seen
 // (welcome.seen). It also says whether their assistant can start: the assistant is their
 // own Claude Code (or ChatGPT's Codex, chosen in Settings) on this computer, signed in with

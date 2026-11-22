@@ -1,4 +1,4 @@
-// The Check button (Settings › Your assistant’s AI, ai.js, 2026-11-12, the owner’s wish): asks the AI one tiny
+// The Check button (Settings › Sovran Advisor’s AI, ai.js, 2026-11-12, the owner’s wish): asks the AI one tiny
 // question and shows one plain result. Anything but “works” comes with every step to put it right, written for
 // someone who has never opened Terminal: how to open it, the exact line to type (with a Copy button), what the
 // browser shows, what to press, and to press Check again at the end. The words follow the install guide’s.
@@ -67,7 +67,7 @@ function claudeSignInSteps(state, k) {
     step(`**Your web browser opens a Claude page.** Sign in with the Claude account that has your paid plan (Pro or higher), and press **Authorize**. If the browser doesn’t open by itself, ${k.shell} shows a long web address starting with https: ${k.click}, or copy it into your browser.`),
     step(`**If the page shows a code instead,** press its Copy button, click inside the ${k.shell} window where it says “Paste code here”, paste with ${k.paste}, and press ${k.enter}.`),
     step(`**${k.shell} says the sign-in worked** (“Login successful”). ${k.close} It doesn’t need to stay open, and neither does the Claude app. You only do this once.`),
-    step('**Come back to this page and press Check again** (the button just above these steps). It should now say your assistant works.'));
+    step('**Come back to this page and press Check again** (the button just above these steps). It should now say Sovran Advisor works.'));
 }
 
 // ChatGPT: Codex signs in with the ChatGPT account (any plan; Plus or higher is best). The words are Codex’s own
@@ -80,7 +80,7 @@ function codexSignInSteps(state, k) {
     step(`**Your web browser opens an OpenAI sign-in page.** Sign in with your ChatGPT account (the same one you use in the ChatGPT app), and press **Continue** if it asks you to allow Codex. When the page says **Signed in to Codex**, you can close that browser tab. If the browser doesn’t open by itself, ${k.shell} says “If your browser did not open, navigate to this URL” with a long web address under it: ${k.click}, or copy it into your browser.`),
     step(`**If signing in in the browser doesn’t work** (the page hangs or shows an error): click inside the ${k.shell} window, press [control] + [C] to stop, then type this line and press ${k.enter}. ${k.shell} shows a link and a one-time code: open the link, sign in to ChatGPT, and type the code there. The code works for 15 minutes.`, typeLine(`${line} --device-auth`)),
     step(`**${k.shell} says “Successfully logged in”.** ${k.close} It doesn’t need to stay open, and neither does the ChatGPT app. You only do this once.`),
-    step('**Come back to this page and press Check again** (the button just above these steps). It should now say your assistant works.'));
+    step('**Come back to this page and press Check again** (the button just above these steps). It should now say Sovran Advisor works.'));
 }
 
 function installSteps(state, k) {
@@ -96,29 +96,29 @@ function installSteps(state, k) {
     step(`**Wait until it says it’s finished** (a minute or two) and you can type again.`),
     step(`**Sign in, in the same window.** Type this line and press ${k.enter}. Your browser opens a ${claude ? 'Claude' : 'ChatGPT'} page: sign in with your ${claude ? 'paid Claude account (Pro or higher) and press **Authorize**' : 'ChatGPT account and allow Codex'}.`, typeLine(claude ? 'claude auth login' : 'codex login')),
     step(`When ${k.shell} says the sign-in worked, close it. ${k.close}`),
-    step('**Restart Sovran Advisor** so it finds the new program: press **Restart the app** lower down on this page.'),
+    step('**Restart Sovran Central** so it finds the new program: press **Restart the app** lower down on this page.'),
     step('**Come back here and press Check again.**'));
 }
 
 // ChatGPT on a Mac: Codex comes inside OpenAI’s ChatGPT app (the install guide’s way), so the app first; Codex on
-// its own (npm, next to Node.js, which Sovran Advisor already uses) only if the app still can’t find it.
+// its own (npm, next to Node.js, which Sovran Central already uses) only if the app still can’t find it.
 function codexInstallSteps(state, k) {
   return el('ol', { class: 'ai-check-steps' },
     step('**Get the ChatGPT app** if it isn’t on this Mac yet. Press this link and choose the **Mac** download.',
       el('a', { href: 'https://openai.com/chatgpt/download/', target: '_blank', rel: 'noopener' }, 'Open the ChatGPT download')),
     step('**Open the download.** Click the downloaded file (it ends in **.dmg**) in your **Downloads** folder. In the small window that opens, drag the **ChatGPT** icon onto the **Applications** folder.'),
     step('**Open ChatGPT.** Press [⌘ command] + [space], type **ChatGPT**, and press [return]. If your Mac asks “Are you sure you want to open it?”, press **Open**. Sign in with your ChatGPT account.'),
-    step('**Restart Sovran Advisor** so it finds Codex inside the ChatGPT app: press **Restart the app** lower down on this page.'),
+    step('**Restart Sovran Central** so it finds Codex inside the ChatGPT app: press **Restart the app** lower down on this page.'),
     step('**Come back here and press Check again.** If it now says Codex isn’t signed in, follow the steps it shows.'),
-    step(`**If it still says Codex isn’t found,** install Codex on its own. ${k.open.replace('**Open Terminal.**', 'Open Terminal:')} Type this line and press [return] (if it asks for your Mac password, type it: nothing shows while you type). Wait until you can type again, then restart Sovran Advisor and press Check again.`, typeLine('npm install -g @openai/codex')));
+    step(`**If it still says Codex isn’t found,** install Codex on its own. ${k.open.replace('**Open Terminal.**', 'Open Terminal:')} Type this line and press [return] (if it asks for your Mac password, type it: nothing shows while you type). Wait until you can type again, then restart Sovran Central and press Check again.`, typeLine('npm install -g @openai/codex')));
 }
 
-// Restart Sovran Advisor first (2026-11-17): an app left running from before a log-out can't read the computer's
+// Restart Sovran Central first (2026-11-17): an app left running from before a log-out can't read the computer's
 // saved sign-ins, so it says “not signed in” even when you are. Starting it fresh fixes that; on a Mac the icon does.
 function freshStartStep(k) {
   return k.mac
-    ? step('**Restart Sovran Advisor first.** Click the **Sovran Advisor** icon in your Dock (or in your Applications folder). If Sovran Advisor was left running from before you last logged out, this starts it fresh. Wait until this page opens again.')
-    : step('**Restart Sovran Advisor first.** Close its black window, then double-click the **Sovran Advisor** shortcut on your desktop. Wait until this page opens again.');
+    ? step('**Restart Sovran Central first.** Click the **Sovran Central** icon in your Dock (or in your Applications folder). If Sovran Central was left running from before you last logged out, this starts it fresh. Wait until this page opens again.')
+    : step('**Restart Sovran Central first.** Close its black window, then double-click the **Sovran Central** shortcut on your desktop. Wait until this page opens again.');
 }
 
 // What a result says, and what to do: one block.
@@ -130,33 +130,33 @@ export function checkAdvice(state) {
     el('p', { class: 'ai-check-title' }, title), ...body);
   switch (state.result) {
     case 'working':
-      return box('working', `✓ Your assistant works. ${state.program} is installed, signed in${state.plan && PLANS[state.plan] ? ` (${name} ${PLANS[state.plan]} plan)` : ''} and answered.`);
+      return box('working', `✓ Sovran Advisor works. ${state.program} is installed, signed in${state.plan && PLANS[state.plan] ? ` (${name} ${PLANS[state.plan]} plan)` : ''} and answered.`);
     case 'missing':
       return box('missing', `${state.program} isn’t on this computer, or the app can’t find it.`,
-        el('p', {}, `Your assistant runs on ${state.program}, ${name}’s program. Install it once and sign in. It takes about five minutes.`),
+        el('p', {}, `Sovran Advisor runs on ${state.program}, ${name}’s program. Install it once and sign in. It takes about five minutes.`),
         installSteps(state, k), el('p', { class: 'empty' }, HELP_LINE));
     case 'signed_out':
       return box('signed_out', `${state.program} isn’t signed in to your ${name} account.`,
         el('ol', { class: 'ai-check-steps' },
           freshStartStep(k),
-          step('**Press Check again.** If it now says your assistant works, you’re done.'),
+          step('**Press Check again.** If it now says Sovran Advisor works, you’re done.'),
           step(`**If it still says you aren’t signed in,** sign in once, in ${k.shell}. It takes about two minutes.${claude ? '' : ' Any ChatGPT plan works; Plus or higher is best, Free and Go are for light use.'} Follow these steps:`, signInSteps(state, k))),
         el('p', { class: 'empty' }, HELP_LINE));
     case 'free':
       return box('free', 'Your Claude account is on the Free plan.',
-        el('p', {}, ...rich('The part of Claude that runs your assistant (Claude Code) needs **Pro or higher**. If you already pay for Claude, you may be signed in with a different account: skip step 1.')),
+        el('p', {}, ...rich('The part of Claude that runs Sovran Advisor (Claude Code) needs **Pro or higher**. If you already pay for Claude, you may be signed in with a different account: skip step 1.')),
         el('ol', { class: 'ai-check-steps' },
           step('**Upgrade your Claude account** to Pro or higher, inside the Claude app or on the plans page.',
             el('a', { href: 'https://claude.com/pricing', target: '_blank', rel: 'noopener' }, 'Open Claude’s plans page')),
           step(`**Then sign in again,** so ${state.program} sees your paid plan. Follow these steps:`, signInSteps(state, k))),
         el('p', { class: 'empty' }, HELP_LINE));
     default:
-      return box('other', 'Your assistant didn’t answer.',
+      return box('other', 'Sovran Advisor didn’t answer.',
         ...(state.detail ? [el('p', {}, 'It said: ', el('q', { class: 'ai-check-said' }, state.detail))] : []),
         el('ol', { class: 'ai-check-steps' },
           step('**Check that this computer is online:** open any web page.'),
           step(`**If it mentions a limit** (for example “usage limit” or “hit your limit”), your plan’s allowance is used up for now. It says when it starts again: wait until then.${claude ? '' : ' On ChatGPT Free or Go the allowance is small; Plus or higher gives much more.'}`),
-          step('**Restart Sovran Advisor:** press **Restart the app** lower down on this page.'),
+          step('**Restart Sovran Central:** press **Restart the app** lower down on this page.'),
           step('**Press Check again.**')),
         el('p', { class: 'empty' }, HELP_LINE));
   }
@@ -170,7 +170,7 @@ export function checkPart() {
   button.addEventListener('click', async () => {
     button.disabled = true;
     result.replaceChildren();
-    note.textContent = 'Checking… this can take up to a minute: it asks your assistant one tiny question.';
+    note.textContent = 'Checking… this can take up to a minute: it asks Sovran Advisor one tiny question.';
     try {
       const state = await request('POST', '/api/assistant/check', {});
       note.textContent = '';
@@ -182,7 +182,7 @@ export function checkPart() {
     button.disabled = false;
   });
   const part = el('div', { class: 'ai-check' },
-    el('p', { class: 'empty' }, 'Not sure it works? Press Check: it tests that your assistant is installed, signed in and answering, and tells you exactly what to do if not.'),
+    el('p', { class: 'empty' }, 'Not sure it works? Press Check: it tests that Sovran Advisor is installed, signed in and answering, and tells you exactly what to do if not.'),
     button, note, result);
   part.reset = () => { result.replaceChildren(); note.textContent = ''; button.textContent = 'Check'; };
   return part;

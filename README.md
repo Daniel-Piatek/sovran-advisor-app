@@ -1,16 +1,16 @@
-# Sovran Advisor
+# Sovran Central
 
 Your trusty companion on your Sovran Quest journey: a journal, the people who matter to you,
 notes, and an AI assistant that knows them, all on your own computer.
 
 - **Yours, on your computer.** Everything you write is kept in the app's `data` folder on your
   own computer. There is no account and no sign-in.
-- **Your assistant** is your own Claude (Claude Code, with your own Claude subscription) or,
+- **Sovran Advisor** is your own Claude (Claude Code, with your own Claude subscription) or,
   if you use ChatGPT instead, your own ChatGPT (OpenAI's Codex, with your own ChatGPT plan).
-  Choose in Settings › Your assistant's AI. It reads and writes your notes, journal and people
+  Choose in Settings › Sovran Advisor's AI. It reads and writes your notes, journal and people
   when you ask. The **Check** button there tests that it is installed, signed in and answering,
   and if not, gives every step to put it right.
-- **The Sovran Library.** Paste the key you were given in Settings, and your assistant can also
+- **The Sovran Library.** Paste the key you were given in Settings, and Sovran Advisor can also
   search the Sovran teaching and, if you have them, your own decodes.
 - **More when you want it.** Tasks, Planner, Calendar and My Life are built in and switched off.
   Switch them on in Settings › Modules. The Calendar shows a day, three days or a week.
@@ -18,7 +18,7 @@ notes, and an AI assistant that knows them, all on your own computer.
   "Run 3× a week") and **Mail** (your own mail kept in the app; it needs a Google sign-in of your
   own, and directions for setting that up will follow, so leave it off for now).
 - **Help pages** (off until you switch them on): a "?" after every page's title opens a short page on
-  what it is for and how to use it, and your assistant answers "how does this work?" from the same pages.
+  what it is for and how to use it, and Sovran Advisor answers "how does this work?" from the same pages.
 - **Model and effort** (on; switch it off in Settings › Modules): for each chat, choose which model answers
   (Claude: Haiku quick and light, Sonnet balanced, Opus deep thinking, Fable the most capable; ChatGPT:
   GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra) and how long it thinks (Low to Max). **Usual** leaves it to the AI itself.
@@ -27,12 +27,12 @@ notes, and an AI assistant that knows them, all on your own computer.
   join cards with arrows, and put cards in coloured groups that move together.
 - **Reports** (on from the start; switch it off in Settings › Modules): your own Sovran reports from your Sovran Library (with your Library key),
   to read section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments:
-  they stay only in your app, the report itself is never changed, and your assistant reads them with the report.
+  they stay only in your app, the report itself is never changed, and Sovran Advisor reads them with the report.
 - **A daily backup** of your database is kept in `data/backups` (the last 14 days).
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes
   everything to a new computer. No cloud account, nothing to pay.
-- **Sovran Go** (off until you switch it on; it was called Phone capture): Sovran Advisor, with the crown icon, on your iPhone or
+- **go Sovran** (off until you switch it on; it was called Sovran Go, and before that Phone capture): Sovran Central, with the crown icon, on your iPhone or
   Android phone. It asks what you would like to do: **Ask my AI** opens the Claude app; a **Journal entry**
   lands in your Journal on the day you wrote it; **My reports** lets you read your Sovran reports there, in
   the same Ivory & Gold look, and highlight or comment (it matches the computer); **My own thought** or **From someone else** (speak with
@@ -60,10 +60,10 @@ notes, and an AI assistant that knows them, all on your own computer.
 
 Paste this into Claude Code on your computer (or, if you use ChatGPT, into OpenAI's Codex app):
 
-> Install Sovran Advisor for me by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
+> Install Sovran Central for me by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
 
 It does the rest and tells you when it needs you. To get a newer version later, tell it:
-"update Sovran Advisor".
+"update Sovran Central".
 
 ## Make it your own
 
@@ -81,4 +81,4 @@ your changes stay safe when you update.
 - How the app is built and the rules Claude follows when changing it: `AGENTS.md`.
 
 Copyright (c) 2026 Daniel Piatek. All rights reserved; see `LICENSE`.
-- **Tags** (schema 78–79; Settings › Modules › Tags, off until switched on): **+ Tag** under a note, a journal entry, a person, a company, a task or an Inbox item, or **#word** in the writing. The **Tags** button over each list shows only what carries the tags you pick; the **Tags** tab in Notes lists them by your groups, and one tag's page shows each kind with its count and newest two, with **Open all** and **Narrow with another tag**. A tag can be pinned to the sidebar. Settings › Tags: groups of any size, rename, join, remove with Undo. Every tag has the same small tag shape and no colour of its own. Your assistant may suggest tags for an Inbox item; you tap to put one on. Each tag can have a few words on what it is and a picture; **Add the Sovran starter tags** adds the 13 characters and 5 Quests with theirs (the pictures come once from the Sovran cloud with your key). Tags stay on this computer.
+- **Tags** (schema 78–79; Settings › Modules › Tags, off until switched on): **+ Tag** under a note, a journal entry, a person, a company, a task or an Inbox item, or **#word** in the writing. The **Tags** button over each list shows only what carries the tags you pick; the **Tags** tab in Notes lists them by your groups, and one tag's page shows each kind with its count and newest two, with **Open all** and **Narrow with another tag**. A tag can be pinned to the sidebar. Settings › Tags: groups of any size, rename, join, remove with Undo. Every tag has the same small tag shape and no colour of its own. Sovran Advisor may suggest tags for an Inbox item; you tap to put one on. Each tag can have a few words on what it is and a picture; **Add the Sovran starter tags** adds the 13 characters and 5 Quests with theirs (the pictures come once from the Sovran cloud with your key). Tags stay on this computer.

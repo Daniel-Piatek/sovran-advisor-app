@@ -6,7 +6,7 @@
 import { randomUUID } from 'node:crypto';
 
 export const MODULES = [
-  // The sections (Sovran Advisor): whole parts of the app that a new install starts with switched off
+  // The sections (Sovran Central): whole parts of the app that a new install starts with switched off
   // (starter: false). A student switches one on in Settings › Modules when they want it; off again, it
   // leaves the sidebar and keeps everything written in it.
   {
@@ -73,7 +73,7 @@ export const MODULES = [
     // Nothing is stored for it: the pictures are drawn from the Planner's own day. Off, the Planner is as it was.
     id: 'calendar-plus',
     label: 'Calendar in depth',
-    description: 'The Planner’s day as its order (events and the gaps between them), or one, three or seven days in hours; tasks keep their place, never a time on the Calendar. Your assistant can look at your calendar and propose events as cards.',
+    description: 'The Planner’s day as its order (events and the gaps between them), or one, three or seven days in hours; tasks keep their place, never a time on the Calendar. Sovran Advisor can look at your calendar and propose events as cards.',
     tables: ['event_templates'],
     tools: ['calendar_list', 'calendar_propose'],
   },
@@ -116,7 +116,7 @@ export const MODULES = [
     starter: false,
   },
   {
-    // The manifest (advanced/everywhere 3, 8 and 11, the Sovran Advisor way: no cloud account, nothing to pay): a capture
+    // The manifest (advanced/everywhere 3, 8 and 11, the Sovran Central way: no cloud account, nothing to pay): a capture
     // page for the phone's home screen, the daily backups each checked, and a moving file for a new computer. Off, the
     // page and the Settings part are gone; the daily backup itself always runs.
     id: 'everywhere',
@@ -126,21 +126,21 @@ export const MODULES = [
     public: ['GET /quick'],
   },
   {
-    // Sovran Go (called "Phone capture" until 2026-11-22; the id stays phone-drop, so nothing changes for a student who
+    // go Sovran (called "Phone capture" until 2026-11-22; the id stays phone-drop, so nothing changes for a student who
     // already switched it on) through the Sovran drop box (phone-drop.js, phone/, cloud/). The crown icon on an
     // iPhone or Android phone: Ask my AI opens the AI's own app; what you say or type there is sealed on the phone, waits
     // in the drop box and comes into the Inbox here (a journal entry into the Journal). Off, the box in the cloud is closed and the Settings part is gone.
     id: 'phone-drop',
     starter: false, // off in a new install: switch it on in Settings › Modules
-    label: 'Sovran Go',
-    description: 'Sovran Advisor, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, read your Sovran reports and highlight them, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
+    label: 'go Sovran',
+    description: 'Sovran Central, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, read your Sovran reports and highlight them, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
   },
   {
     // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title
     // that opens it beside the page (public/help.js), and the assistant's docs_read. Off, the "?" and the tool go.
     id: 'help', // on in a new install (2026-11-12, the owner's wish)
     label: 'Help pages',
-    description: 'A “?” after every page’s title opens a short page on what it is for and how to use it. Your assistant reads the same pages when you ask “how does this work?”.',
+    description: 'A “?” after every page’s title opens a short page on what it is for and how to use it. Sovran Advisor reads the same pages when you ask “how does this work?”.',
     tools: ['docs_read'],
   },
   {
@@ -167,11 +167,11 @@ export const MODULES = [
   {
     // Reports (2026-11-16, from APP Daniel; reports.js, public/reports.js, report-marks.js): your own Sovran reports to read,
     // the Layered Portrait first once it begins. They come from the Sovran Library with your own key (Settings › Sovran Library);
-    // nothing is kept on this computer except your own highlights and comments (report_marks), which your assistant reads too.
+    // nothing is kept on this computer except your own highlights and comments (report_marks), which Sovran Advisor reads too.
     // On in a new install and for everyone who never switched it (the owner's wish, 2026-11-17).
     id: 'reports',
     label: 'Reports',
-    description: 'A Reports page with your own Sovran reports to read, section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments; your assistant reads them with the report.',
+    description: 'A Reports page with your own Sovran reports to read, section by section, with the PDF and the file for your AI to download. Highlight words and add your own comments; Sovran Advisor reads them with the report.',
     nav: ['Reports'],
     tools: ['reports_read'],
   },

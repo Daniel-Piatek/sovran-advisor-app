@@ -1,4 +1,4 @@
-// The Check button under Settings › Your assistant’s AI: one plain result, and for a problem every step to fix it.
+// The Check button under Settings › Sovran Advisor’s AI: one plain result, and for a problem every step to fix it.
 // The claude command is a stand-in (tests/fake-claude.js); a test sets its sign-in in the data folder.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,7 +10,7 @@ test('Check says the assistant works', async ({ page, app }) => {
   await page.goto(`${app.url}/settings`);
   await part(page).getByRole('button', { name: 'Check', exact: true }).click();
   await expect(part(page).locator('.ai-check-result')).toHaveAttribute('data-result', 'working');
-  await expect(part(page).locator('.ai-check-title')).toHaveText('✓ Your assistant works. Claude Code is installed, signed in (Claude Pro plan) and answered.');
+  await expect(part(page).locator('.ai-check-title')).toHaveText('✓ Sovran Advisor works. Claude Code is installed, signed in (Claude Pro plan) and answered.');
   await expect(part(page).getByRole('button', { name: 'Check again' })).toBeVisible();
 });
 
@@ -23,8 +23,8 @@ test('not signed in: every step, the line to type, then Check again works', asyn
   await expect(result).toHaveAttribute('data-result', 'signed_out');
   await expect(result.locator('.ai-check-title')).toHaveText('Claude Code isn’t signed in to your Claude account.');
   // First a fresh start: an app left running from before a log-out can't see the sign-in (2026-11-17).
-  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Restart Sovran Advisor first');
-  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Sovran Advisor icon in your Dock');
+  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Restart Sovran Central first');
+  await expect(result.locator('.ai-check-steps > li').first()).toContainText('Sovran Central icon in your Dock');
   await expect(result).toContainText('Open Terminal');
   await expect(result).toContainText('Finder');
   await expect(result).toContainText('Authorize');

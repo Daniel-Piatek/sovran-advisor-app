@@ -942,7 +942,7 @@ export async function showMailApp() {
   try { accounts = (await request('GET', '/api/mail')).accounts; } catch { accounts = []; }
   await refresh();
   if (params.get('draft')) {
-    // Edit on a draft card from your assistant: its conversation opens and the draft is in the composer, to change and send.
+    // Edit on a draft card from Sovran Advisor: its conversation opens and the draft is in the composer, to change and send.
     try {
       const draft = await request('GET', `/api/mail/drafts/${params.get('draft')}`);
       openId = draft.thread_id;

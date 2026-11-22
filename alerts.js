@@ -1,5 +1,5 @@
 // Alerts (2026-11-22, the owner's wish): when something new happens, a normal Mac or Windows alert, shown by the page
-// (public/alerts.js) while Sovran Advisor is open, and the count in the sidebar goes up. Clicking one opens that post.
+// (public/alerts.js) while Sovran Central is open, and the count in the sidebar goes up. Clicking one opens that post.
 //
 // Each kind has its own switch (settings alerts.switches). A student's kinds, from the Sovran cloud (group_feed.alerts,
 // cloud/group-alerts.sql, asked with the library key through group-feed.js):
@@ -8,7 +8,7 @@
 //   due      homework due today or tomorrow that isn't ticked done          on   (said once for each homework)
 //   answer   Daniel has dealt with something they told him                  on
 //   feed     any new post in the Circle                                     off  (so it isn't noisy)
-// and one from this computer: update, a new version of Sovran Advisor is ready (on), which public/update-nudge.js says.
+// and one from this computer: update, a new version of Sovran Central is ready (on), which public/update-nudge.js says.
 // APP Daniel (the guide key) has its own: report (a new student report), flag (a post was flagged), reply (a student
 // commented on your post).
 //
@@ -23,7 +23,7 @@ const STUDENT_KINDS = [
   { id: 'reply', label: 'Someone replied to your post or comment', on: true },
   { id: 'due', label: 'Homework is due tomorrow (if not ticked done)', on: true },
   { id: 'answer', label: 'Daniel has dealt with something you told him', on: true },
-  { id: 'update', label: 'A new version of Sovran Advisor is ready', on: true },
+  { id: 'update', label: 'A new version of Sovran Central is ready', on: true },
   { id: 'feed', label: 'Any new post in the Circle', on: false },
 ];
 const GUIDE_KINDS = [

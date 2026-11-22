@@ -1,4 +1,4 @@
-// The Sovran Library (Sovran Advisor): D's teaching and, for a client, their own decodes, kept
+// The Sovran Library (Sovran Central): D's teaching and, for a client, their own decodes, kept
 // online. A student pastes the key D gave them in Settings; from then on their assistant has the
 // library's tools (mcp__library__…) next to the app's own. The key is kept in this computer's
 // database only (settings: library.key), never sent to a page in full, and goes nowhere but the

@@ -124,7 +124,7 @@ async function showReport(name) {
     el('article', { class: 'report-paper' },
       cover,
       el('div', { class: 'report-comments-head' }, el('p', { class: 'report-comments-title' }, 'Your comments'),
-        el('p', { class: 'report-comments-hint' }, 'Select any words in the report to highlight them, add a comment or ask your assistant about them. Your comments and answers show here, level with their words.')),
+        el('p', { class: 'report-comments-hint' }, 'Select any words in the report to highlight them, add a comment or ask Sovran Advisor about them. Your comments and answers show here, level with their words.')),
       ...(contents ? [contents] : []),
       list,
       body),

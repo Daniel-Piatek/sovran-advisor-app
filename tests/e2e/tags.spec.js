@@ -52,7 +52,7 @@ test.describe('switched on', () => {
     await expect(page.locator('.note-card')).toHaveCount(3);
   });
 
-  test('your assistant offers tags on a capture; nothing goes on until you tap one', async ({ page, app }) => {
+  test('Sovran Advisor offers tags on a capture; nothing goes on until you tap one', async ({ page, app }) => {
     await app.createNote({ title: 'Venues', body: 'For the #retreat' });
     const capture = await send(app, 'POST', '/api/captures', { body: 'Book the hall for the retreat suggest-tag:venues' });
     await page.goto(`${app.url}/inbox?c=${capture.id}`);

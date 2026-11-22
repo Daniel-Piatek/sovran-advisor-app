@@ -1,4 +1,4 @@
-// Planning and closing the day with your assistant (the assistant steps of time/3 and
+// Planning and closing the day with Sovran Advisor (the assistant steps of time/3 and
 // time/4), with the stand-in claude command: no test depends on a real AI model.
 import { test, expect } from './fixtures.js';
 
@@ -21,7 +21,7 @@ test('plan my week with me: a card with its reason on the board; Apply moves the
   await say(page, 'Plan my week with me');
   await expect(bubbles(page, 'assistant').last().locator('.chat-text')).toContainText('holds too much, over by 40 minutes');
   await page.goto(`${app.url}/planner?view=week`);
-  const board = page.getByRole('region', { name: 'Your assistant suggests' });
+  const board = page.getByRole('region', { name: 'Sovran Advisor suggests' });
   const card = board.locator('.action-card');
   await expect(card).toContainText('Move “Sort the attic” to');
   await expect(card).toContainText('over budget by 40 min');
@@ -34,7 +34,7 @@ test('plan my week with me: a card with its reason on the board; Apply moves the
   expect((await tasks(app)).find((t) => t.text === 'Sort the attic').due).toBe(today);
 });
 
-test('let’s shut down the day: your assistant suggests a line, and nothing is saved until you say yes', async ({ page, app }) => {
+test('let’s shut down the day: Sovran Advisor suggests a line, and nothing is saved until you say yes', async ({ page, app }) => {
   const today = localDay();
   const offer = await post(app, '/api/tasks', { text: 'Write the offer', due: today });
   await fetch(`${app.url}/api/tasks/${offer.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: true }) });

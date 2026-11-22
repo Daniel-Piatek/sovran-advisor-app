@@ -1,6 +1,6 @@
-# Making Sovran Advisor your own
+# Making Sovran Central your own
 
-Your copy of Sovran Advisor is yours. You can change how it looks and what it does, the same way
+Your copy of Sovran Central is yours. You can change how it looks and what it does, the same way
 your mentor changes theirs: by asking Claude.
 
 ## How to change it
@@ -13,7 +13,7 @@ your mentor changes theirs: by asking Claude.
    - "Switch the Planner on."
 3. Claude explains what it will do, makes the change, checks it, and tells you when to look.
 
-**Not sure how to start?** Ask the assistant inside Sovran Advisor, for example "I'd like the
+**Not sure how to start?** Ask Sovran Advisor, the assistant inside Sovran Central, for example "I'd like the
 journal to look different, how do I do that?". It can't change the app itself (it only works
 with your notes, and the app is running while you talk to it), but it helps you put your wish
 into words, shows you how to open Claude Code in the right folder, and gives you the sentence
@@ -25,7 +25,7 @@ Claude leaves that folder alone.
 ## Keeping your changes safe when you update
 
 Now and then your mentor publishes a newer version. You get it by telling Claude
-"update Sovran Advisor". Here is how your own changes survive that.
+"update Sovran Central". Here is how your own changes survive that.
 
 **The safest changes are the ones that never touch the app's files:**
 
@@ -62,7 +62,7 @@ want the same spot. Nothing is lost while it waits for you. You choose one of th
   you can update another day.
 
 If you are not sure, say "Combine them and show me". If something looks wrong after an update,
-say "undo the last Sovran Advisor update".
+say "undo the last Sovran Central update".
 
 ## Good habits
 

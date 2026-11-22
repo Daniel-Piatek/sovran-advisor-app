@@ -1,7 +1,7 @@
 // The update nudge (2026-11-15, the owner's wish): when the app's daily look has found a new version, the student sees it
 // without opening Settings. Two things, both from GET /api/update (app-update.js), never installing anything by themselves:
 //   the badge    "Update" beside Settings in the sidebar, there while a new version waits
-//   the notice   once per new version, at the foot of the window in the Notice's look: "A new version of Sovran Advisor
+//   the notice   once per new version, at the foot of the window in the Notice's look: "A new version of Sovran Central
 //                is ready." Update now starts the same update as Settings › Updates (a whole copy of the notes first) and
 //                opens Settings to follow it; Later hides it until the next new version. Not shown on Settings itself.
 
@@ -46,7 +46,7 @@ function showNotice(key) {
     },
   }, 'Update now');
   box = el('div', { class: 'undo-bar notice update-notice', role: 'status' },
-    el('span', { class: 'notice-text' }, 'A new version of Sovran Advisor is ready.'),
+    el('span', { class: 'notice-text' }, 'A new version of Sovran Central is ready.'),
     el('span', { class: 'notice-actions' }, now, later));
   stack().append(box);
 }

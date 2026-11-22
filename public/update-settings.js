@@ -57,7 +57,7 @@ export function updatesSection() {
   const title = el('h2', { class: 'settings-title' }, titleWords);
   const body = el('div', { class: 'update-body', 'aria-live': 'polite' });
   const section = el('section', { class: 'settings-part', 'aria-label': 'Updates' }, title,
-    el('p', { class: 'empty' }, 'Get the newest version of Sovran Advisor. Your notes, journal, people, tasks and settings stay as they are, and a whole copy of them is made first.'),
+    el('p', { class: 'empty' }, 'Get the newest version of Sovran Central. Your notes, journal, people, tasks and settings stay as they are, and a whole copy of them is made first.'),
     body);
   let state = null;
   let confirming = false;

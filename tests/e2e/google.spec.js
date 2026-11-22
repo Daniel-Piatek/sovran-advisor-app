@@ -31,7 +31,7 @@ test('Mail has no row in Modules yet; Google follows it: it stays while Google C
   await setMail(app, false);
   await page.reload();
   await expect(google(page)).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Your assistant and mail' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Sovran Advisor and mail' })).toHaveCount(0);
   // Both off: it goes.
   await calendarRow.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(google(page)).toHaveCount(0);

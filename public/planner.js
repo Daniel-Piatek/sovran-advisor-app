@@ -34,7 +34,7 @@
 // Due (missed on an earlier day, with that day), Upcoming (a later day: pull it in early)
 // and No date. Plan my day (p) is a short dialog: what is still free, tick what belongs,
 // Put them in the day; the five planning steps are behind Step by step instead.
-// What your assistant proposes when it plans with you (a task to another day, a Highlight,
+// What Sovran Advisor proposes when it plans with you (a task to another day, a Highlight,
 // a block) shows as cards above the board: Apply or Dismiss, then Undo. Nothing moves
 // until you apply it.
 
@@ -172,7 +172,7 @@ export async function showPlanner(dayParam) {
   const undoPlace = el('div', {});
   const settingsPlace = el('section', { class: 'planner-settings', 'aria-label': 'Planner settings', hidden: true });
   const status = el('p', { class: 'journal-tools-message', role: 'status' });
-  const suggestPlace = el('section', { class: 'plan-suggestions', 'aria-label': 'Your assistant suggests', hidden: true });
+  const suggestPlace = el('section', { class: 'plan-suggestions', 'aria-label': 'Sovran Advisor suggests', hidden: true });
   let plans = [];
   const tray = el('aside', { class: 'tray', 'aria-label': 'Tasks to place' });
   const dayStrip = el('nav', { class: 'day-strip', 'aria-label': 'This week' });
@@ -979,7 +979,7 @@ export async function showPlanner(dayParam) {
     const inQuarter = view === 'quarter';
     suggestPlace.hidden = !plans.length;
     suggestPlace.replaceChildren(...(plans.length ? [
-      el('h2', { class: 'plan-suggestions-title' }, icon('assistant'), 'Your assistant suggests'),
+      el('h2', { class: 'plan-suggestions-title' }, icon('assistant'), 'Sovran Advisor suggests'),
       ...plans.map((card) => cardNode(card, () => load())),
     ] : []));
     layout.classList.toggle('is-quarter', inQuarter);

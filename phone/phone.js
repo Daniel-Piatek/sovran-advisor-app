@@ -31,7 +31,7 @@ const AIS = {
   // ask: a line added to the copied words. ChatGPT answers a pasted passage by itself and never opens the Sovran Library,
   // so it never meets the offer to keep the chat (seen with a student's phone, 18 Nov 2026). The line asks for both.
   chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching',
-    ask: 'Please use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.' },
+    ask: 'Please use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Central.' },
 };
 const asked = new URLSearchParams(location.search).get('ai');
 if (asked && AIS[asked]) store.set(AI, asked);

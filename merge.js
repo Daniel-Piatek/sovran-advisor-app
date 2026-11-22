@@ -120,7 +120,7 @@ export function resolveClash(db, id, choice) {
   const clash = db.prepare('SELECT * FROM note_clashes WHERE id = ?').get(id);
   if (!clash) throw fail(404, 'No such clash.');
   if (clash.state !== 'open') throw fail(409, 'That clash was settled already.');
-  if (!['mine', 'theirs', 'both'].includes(choice)) throw fail(400, 'Choose yours, the assistant’s, or both.');
+  if (!['mine', 'theirs', 'both'].includes(choice)) throw fail(400, 'Choose yours, Sovran Advisor’s, or both.');
   const note = getNote(db, clash.note_id);
   if (!note) throw fail(404, 'No such note.');
   let body = note.body;
@@ -131,7 +131,7 @@ export function resolveClash(db, id, choice) {
     const replacement = choice === 'theirs' ? clash.theirs : `${clash.mine}${gap}${clash.theirs}`;
     body = clash.mine ? body.slice(0, at) + replacement + body.slice(at + clash.mine.length) : `${body}\n${replacement}`;
   }
-  const label = { mine: 'Kept yours', theirs: 'Took the assistant’s side', both: 'Kept both' }[choice];
+  const label = { mine: 'Kept yours', theirs: 'Took Sovran Advisor’s side', both: 'Kept both' }[choice];
   db.exec('SAVEPOINT clash');
   try {
     if (body !== note.body) updateNote(db, note.id, { body, label });

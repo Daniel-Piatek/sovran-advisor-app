@@ -19,8 +19,8 @@ import { checkBackup, rowCounts, backupsDir } from './backup.js';
 export const REMOTE = 'origin';
 export const REPO_URL = 'https://github.com/Daniel-Piatek/sovran-advisor-app.git';
 export const BRANCH = 'main';
-export const UPDATE_LINE = 'Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md';
-export const UNDO_LINE = 'Undo the last Sovran Advisor update';
+export const UPDATE_LINE = 'Update Sovran Central by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md';
+export const UNDO_LINE = 'Undo the last Sovran Central update';
 export const CHECK_EVERY_MS = 24 * 60 * 60 * 1000; // the daily look (the owner's choice, 2026-11-14): it only looks, never installs
 const KEEP_COPIES = 3; // before-update and before-undo copies kept, newest first
 

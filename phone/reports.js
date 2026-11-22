@@ -130,7 +130,7 @@ export function setupReports({ link, store, show, leave, ai, call }) {
     const draw = async () => {
       const list = (await open('list'))?.reports ?? [];
       $('reports-list').replaceChildren(...(list.length ? list.map(card)
-        : [el('p', { class: 'reports-empty' }, 'Nothing here yet. Your reports appear here once your computer has been on, with Sovran Advisor up to date and Reports and Sovran Go switched on.')]));
+        : [el('p', { class: 'reports-empty' }, 'Nothing here yet. Your reports appear here once your computer has been on, with Sovran Central up to date and Reports and Sovran Go switched on.')]));
     };
     await draw();
     if (await refresh() && !$('reports').hidden) await draw();

@@ -99,7 +99,7 @@ test('the one public address: it answers the pixel to anyone, counts only what i
   const app = await startServer({ port: 0, dataDir, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, mailSyncEvery: 0, google: { env: { ...google.env, ...gmail.env }, keyStore: fileKeyStore(storeDir) } });
   t.after(async () => { await app.close(); await google.close(); await gmail.close(); fs.rmSync(dataDir, { recursive: true, force: true }); fs.rmSync(storeDir, { recursive: true, force: true }); });
   const json = async (method, url, body) => { const res = await fetch(app.url + url, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }); return { status: res.status, body: await res.json().catch(() => null) }; };
-  await json('PATCH', '/api/modules', { id: 'mail', on: true }); // off in a new install (Sovran Advisor)
+  await json('PATCH', '/api/modules', { id: 'mail', on: true }); // off in a new install (Sovran Central)
   const follow = async (connected) => { const toGoogle = await fetch(connected.url, { redirect: 'manual' }); await fetch(toGoogle.headers.get('location'), { redirect: 'manual' }); };
   await json('PUT', '/api/google/client', { client_id: FAKE_CLIENT_ID, client_secret: FAKE_CLIENT_SECRET });
   await follow((await json('POST', '/api/google/connect', {})).body);

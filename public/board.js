@@ -50,7 +50,7 @@ export function boardCard(item, { selected = false, onRemove = null } = {}) {
   const node = el('div', {
     class: `board-card is-${item.kind}${item.live ? ` is-live is-${item.live.kind}` : ''}${item.origin === 'assistant' ? ' is-assistant' : ''}${selected ? ' is-selected' : ''}`,
     'data-item': item.id, 'data-kind': item.kind, role: 'group', 'aria-label': item.kind === 'text' ? `Text: ${item.text}` : `Card: ${item.live?.title ?? item.text}`,
-  }, ...cardBody(item), ...(item.origin === 'assistant' ? [el('span', { class: 'board-tag' }, 'Your assistant')] : []),
+  }, ...cardBody(item), ...(item.origin === 'assistant' ? [el('span', { class: 'board-tag' }, 'Sovran Advisor')] : []),
   ...(onRemove ? [el('button', { type: 'button', class: 'board-remove', 'aria-label': 'Take it off the board', onclick: (event) => { event.stopPropagation(); onRemove(); } }, icon('close'))] : []));
   node.style.left = `${item.x}px`;
   node.style.top = `${item.y}px`;

@@ -32,9 +32,9 @@ export const DEFAULT_COMMAND = ['claude'];
 const SAVE_EVERY_MS = 1000;
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
 // The one line a student pastes into Claude Code or Codex to update (INSTALL.md, "updating it"); docs/updating.md says the same.
-export const UPDATE_LINE = 'Update Sovran Advisor by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md';
+export const UPDATE_LINE = 'Update Sovran Central by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md';
 export const guide = () => [
-  'You are the assistant inside the owner’s personal app (notes, journal, tasks, planner, people, My Life).',
+  'You are Sovran Advisor, the assistant inside the owner’s own app, Sovran Central (notes, journal, tasks, planner, people, My Life).',
   `Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${localDay()}.`,
   'Answer plainly and briefly. Your own files go in this conversation’s folder.',
   'The app’s tools (mcp__app__…) reach the owner’s data: search_notes and read_note to find and read, list_tasks for tasks.',
@@ -51,19 +51,19 @@ export const guide = () => [
   // Updating (2026-11-12, the owner's wish): always known, Help pages on or off, so "how do I update?" gets the exact steps.
   'When the owner asks how to update this app (a newer or new version, an upgrade, getting the latest), you cannot do it from here, but they can with one button: Settings › Updates › Check for updates, then Update now. It keeps a whole copy of their notes first, keeps their own changes, ticks off each step and restarts the app; Go back to the version before undoes it. The app also looks once a day by itself and shows Update ready, never installing without them.',
   'If the button says it cannot (a clash with their own change to the app, no git on this computer, or anything else), give them these steps, plainly and numbered:',
-  'open Claude Code, the same way they installed Sovran Advisor, start a new chat there, paste this one line and press Enter (with ChatGPT: Codex must run on this computer, never in the cloud, where it cannot find the app: open Terminal, type cd ~/"Sovran Advisor"; codex and press Enter, then paste the line):',
+  'open Claude Code, the same way they installed Sovran Central, start a new chat there, paste this one line and press Enter (with ChatGPT: Codex must run on this computer, never in the cloud, where it cannot find the app: open Terminal, type cd ~/"Sovran Advisor"; codex and press Enter, then paste the line):',
   `“${UPDATE_LINE}”. That is all: it finds the app by itself (they need not open its folder first), stops it, brings in the new version and starts it again; if it asks a question, they answer it.`,
   'Their notes, journal, people, tasks, settings and their own changes to the app are kept. When it says it is done, they reload this page. If nothing new is out, it says the app is already up to date.',
-  'To go back that way, they paste “Undo the last Sovran Advisor update” the same way. If docs_read is offered, the Updating Sovran Advisor help page says the same: cite it.',
+  'To go back that way, they paste “Undo the last Sovran Central update” the same way. If docs_read is offered, the Updating Sovran Central help page says the same: cite it.',
   'When you use a page, cite it as a Markdown link to its path, like [Bank call](/notes/<id>). Quote the owner’s words when they ask what they wrote.',
-  'The owner chooses which AI answers here (Claude or ChatGPT) in Settings › Your assistant’s AI; you cannot switch it yourself, so point them there when they ask.',
+  'The owner chooses which AI answers here (Claude or ChatGPT) in Settings › Sovran Advisor’s AI; you cannot switch it yourself, so point them there when they ask.',
   // Making the app their own (CUSTOMISING.md): the assistant in the app cannot change the app, so it walks the owner through it.
   'When the owner wants to change the app itself (how it looks, a new box or section, a new feature), you cannot make that change from here, and say so: you have no commands, and the app is running.',
   'Walk them through it instead. Help them say clearly what they want, in their own words. Then tell them to open Claude Code in their Sovran Advisor folder',
   `(${APP_DIR}): on a Mac in Terminal, on Windows in PowerShell, type cd followed by that folder in quotes, press Enter, then type claude and press Enter;`,
   'and give them one sentence to paste there, starting with “Following CUSTOMISING.md and AGENTS.md, …”. That Claude makes the change, checks it and keeps a list of their changes in MY-CHANGES.md.',
   'If they ask how their changes stay safe: settings and their own additions are never touched by an update; a change to the app’s own files is usually combined with the update;',
-  'when both changed the very same lines, Claude stops and they choose keep mine, take the new one, combine them, or not now (which undoes the update). Saying “undo the last Sovran Advisor update” puts the app back. Their notes are never part of any of it.',
+  'when both changed the very same lines, Claude stops and they choose keep mine, take the new one, combine them, or not now (which undoes the update). Saying “undo the last Sovran Central update” puts the app back. Their notes are never part of any of it.',
   `The whole guide is ${path.join(APP_DIR, 'CUSTOMISING.md')}: read it when they want more.`,
 ].join(' ');
 
@@ -200,7 +200,7 @@ export const toolsFor = (conversationId) => running.get(conversationId)?.tools ?
 export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, provider = 'claude', send = () => {}, mcp = null, context = null, notes = [], library = null, images = [], pick = null }) {
   let conversation = getConversation(db, id);
   if (!conversation) throw fail(404, 'There is no such conversation.');
-  if (running.has(id)) throw fail(409, 'The assistant is still answering here. Stop it first.');
+  if (running.has(id)) throw fail(409, 'Sovran Advisor is still answering here. Stop it first.');
   const words = text.trim();
   addMessage(db, id, 'user', words, 'done', context);
   if (!conversation.title) db.prepare('UPDATE conversations SET title = ? WHERE id = ?').run(words.split('\n')[0].slice(0, 80), id);
@@ -274,7 +274,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
     try {
       child = spawn(command[0], args, { cwd: folder, env: provider === 'codex' ? codexEnv(mcp?.secret) : claudeEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
     } catch (err) {
-      answer = 'The assistant could not start.';
+      answer = 'Sovran Advisor could not start.';
       save('failed');
       resolve(getMessage(db, answerId));
       return;
@@ -355,7 +355,7 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
       else if (!result || result.is_error || (code !== 0 && code !== null)) {
         state = 'failed';
         const reason = (result?.is_error && result.result) || reader.state.problem || problem.trim().split('\n').filter((l) => !/^WARNING|^\d{4}-\d\d-\d\dT/.test(l))[0] || `It stopped (${code}).`;
-        answer = answer ? `${answer}\n\n(${reason})` : `The assistant couldn't answer: ${reason}`;
+        answer = answer ? `${answer}\n\n(${reason})` : `Sovran Advisor couldn't answer: ${reason}`;
       }
       if (!answer && result?.result) answer = result.result;
       if (provider === 'codex' && !model && reader.state.thread) model = codexModel(reader.state.thread);

@@ -23,7 +23,7 @@ test('select words, press Comment: the words are underlined and the thread is un
   await comment(page, 'Price it as a fixed package', 'Is this price too low for Nordlicht?');
   const thread = page.getByRole('article', { name: 'Comment on “Price it as a fixed package”' });
   await expect(thread).toContainText('Is this price too low for Nordlicht?');
-  await expect(thread.getByRole('button', { name: 'Ask my assistant now' })).toBeVisible();
+  await expect(thread.getByRole('button', { name: 'Ask Sovran Advisor now' })).toBeVisible();
   await expect(thread.getByRole('button', { name: 'Later', exact: true })).toBeVisible();
   await expect(text(page).locator('.has-comment')).toHaveText('Price it as a fixed package');
   expect((await threadsOf(app, note.id))[0]).toMatchObject({ anchor: 'Price it as a fixed package', author: 'me', ask: '' });
@@ -40,24 +40,24 @@ test('Ask my assistant now: its answer is a reply in the thread, signed as the a
   const note = await openNote(page, app);
   await comment(page, 'Price it as a fixed package', 'Is this price too low?');
   const thread = page.getByRole('article', { name: /Comment on/ });
-  await thread.getByRole('button', { name: 'Ask my assistant now' }).click();
+  await thread.getByRole('button', { name: 'Ask Sovran Advisor now' }).click();
   await expect(thread.locator('.comment-reply[data-author="assistant"]')).toContainText('Not too low if the prep is included.');
-  await expect(thread.locator('.comment-reply strong')).toHaveText('Your assistant ');
-  await expect(thread.getByRole('button', { name: 'Ask my assistant now' })).toHaveCount(0); // answered
+  await expect(thread.locator('.comment-reply strong')).toHaveText('Sovran Advisor ');
+  await expect(thread.getByRole('button', { name: 'Ask Sovran Advisor now' })).toHaveCount(0); // answered
   const chats = await fetch(`${app.url}/api/conversations`).then((r) => r.json());
   expect(chats.length).toBe(1);
-  await thread.getByRole('link', { name: 'See the turn in the Assistant' }).click();
+  await thread.getByRole('link', { name: 'See the turn in Sovran Advisor' }).click();
   await expect(page).toHaveURL(/\/assistant\//);
   await expect(page.locator('.chat-bubble[data-role="user"]')).toContainText('Price it as a fixed package');
   expect((await threadsOf(app, note.id))[0]).toMatchObject({ ask: 'answered' });
 });
 
-test('Later: it waits on your assistant’s list, and "go through my comments" answers each in its thread', async ({ page, app }) => {
+test('Later: it waits on Sovran Advisor’s list, and "go through my comments" answers each in its thread', async ({ page, app }) => {
   const note = await openNote(page, app);
   await comment(page, 'Two quiet mornings', 'Why only mornings?');
   const thread = page.getByRole('article', { name: /Comment on/ });
   await thread.getByRole('button', { name: 'Later', exact: true }).click();
-  await expect(thread.getByRole('button', { name: 'Later: on your assistant’s list' })).toBeDisabled();
+  await expect(thread.getByRole('button', { name: 'Later: on Sovran Advisor’s list' })).toBeDisabled();
   expect((await threadsOf(app, note.id))[0].ask).toBe('later');
 
   await page.goto(`${app.url}/assistant`);

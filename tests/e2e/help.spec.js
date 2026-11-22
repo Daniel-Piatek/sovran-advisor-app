@@ -41,8 +41,8 @@ test('/help lists every page of the modules that are on, and opens one', async (
   await switchOn(page, app);
   await page.goto(`${app.url}/help`);
   await expect(page.getByRole('link', { name: 'Journal' }).last()).toBeVisible();
-  await page.locator('.help-list-link', { hasText: 'Assistant' }).click();
+  await page.locator('.help-list-link', { hasText: 'Sovran Advisor' }).click();
   await expect(page).toHaveURL(/\/help\/assistant$/);
-  await expect(page.getByRole('heading', { name: 'Assistant', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sovran Advisor', level: 1 })).toBeVisible();
   await expect(page.locator('details.help-how')).toHaveAttribute('open', '');
 });
