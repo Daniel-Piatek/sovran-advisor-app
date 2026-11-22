@@ -248,6 +248,19 @@ test('Ask my AI opens the AI’s own app with the words in its box, and copies t
   await context.close();
 });
 
+test('for ChatGPT the copied words ask for the Sovran Library and for the offer to keep the chat', async ({ browser }, testInfo) => {
+  const { page, context, errors } = await phone(browser, testInfo, { query: '?ai=chatgpt' });
+  await openPattern(page);
+  await select(page, 'your-gifts', 'You notice what others walk past.');
+  await context.route('https://chatgpt.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>ChatGPT</title>' }));
+  const [opened] = await Promise.all([context.waitForEvent('page'), page.locator('#pick-ask').click()]);
+  expect(opened.url()).toBe('https://chatgpt.com/');
+  await page.bringToFront();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nPlease use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.\n\nMy question: ');
+  expect(errors).toEqual([]);
+  await context.close();
+});
+
 test('a report already on the phone reads without signal; a highlight made then goes when signal is back', async ({ browser }, testInfo) => {
   const { page, context, dropped, online } = await phone(browser, testInfo);
   await openPattern(page);
