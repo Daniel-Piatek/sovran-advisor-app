@@ -40,8 +40,8 @@ const ai = AIS[store.get(AI)] ?? AIS.claude;
 // What can be written here. A journal entry goes to the Journal; the other two to the Inbox, as before.
 const KINDS = {
   journal: { title: 'Journal entry', where: 'Goes into today’s Journal', done: 'Added', place: 'Journal', world: 'inner' },
-  inner: { title: 'From Me', where: 'Goes to your Inbox', done: 'Kept', place: 'Inbox', world: 'inner' },
-  outer: { title: 'From Other', where: 'Goes to your Inbox', done: 'Kept', place: 'Inbox', world: 'outer' },
+  inner: { title: 'From Me', where: 'Goes to your Inbox – Inner World', done: 'Kept', place: 'Inbox', world: 'inner' },
+  outer: { title: 'From Other', where: 'Goes to your Inbox – Outer World', done: 'Kept', place: 'Inbox', world: 'outer' },
 };
 const two = (n) => String(n).padStart(2, '0');
 const localDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
