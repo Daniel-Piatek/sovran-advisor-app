@@ -6,8 +6,8 @@
 // and comments. This page reads the shelf with the phone's own token, opens the copies with the key in its link
 // (seal.js) and keeps them on the phone, so a report can be read without signal.
 //
-// Select words: Highlight, Comment, or Ask my AI. A highlight or comment shows at once and travels sealed to the
-// computer as a note (kind mark); until the computer has it, it is kept here (sovran.phone.marks). Ask my AI copies
+// Select words: Highlight, Comment, or Ask my Sovran Advisor. A highlight or comment shows at once and travels sealed to the
+// computer as a note (kind mark); until the computer has it, it is kept here (sovran.phone.marks). Ask my Sovran Advisor copies
 // the words and opens the AI's own app: the student pastes them and asks there.
 
 import { unseal } from './seal.js';
@@ -64,7 +64,7 @@ export function stillPending(fromComputer, ops, nowMs = Date.now()) {
 }
 
 // store: { get, set }; show(name): the page's screens; leave(note): seals a note and leaves it in the drop box (or keeps
-// it for later); ai: { href, name } the AI that Ask my AI opens; call(body): one call to the drop box, answering its JSON.
+// it for later); ai: { href, name } the AI that Ask my Sovran Advisor opens; call(body): one call to the drop box, answering its JSON.
 export function setupReports({ link, store, show, leave, ai, call }) {
   const read = (key, fallback) => { try { return JSON.parse(store.get(key) ?? '') ?? fallback; } catch { return fallback; } };
   let shelf = read(SHELF, {});
@@ -301,11 +301,11 @@ export function setupReports({ link, store, show, leave, ai, call }) {
   }
   $('pick-highlight').addEventListener('click', () => keep(''));
   $('pick-comment').addEventListener('click', () => { if (chosen) { const held = chosen; commentSheet({ quote: held.quote, save: (words) => { chosen = held; return keep(words); } }); chosen = held; } });
-  // Ask my AI: a real link the person taps (so the phone hands it to the AI's own app). Where the AI's app takes words
+  // Ask my Sovran Advisor: a real link the person taps (so the phone hands it to the AI's own app). Where the AI's app takes words
   // in its address (Claude), they arrive in its box; they are copied as well, for a paste.
   const ask = $('pick-ask');
   ask.href = ai.href;
-  $('pick-ask-words').textContent = 'Ask my AI';
+  $('pick-ask-words').textContent = 'Ask my Sovran Advisor';
   ask.addEventListener('click', () => {
     if (!chosen || !reading) return;
     const words = `From my ${reading.report.title.replace(/^Your\s+/i, '')}: “${chosen.quote.replace(/\s+/g, ' ')}”\n\n${ai.ask ? ai.ask + '\n\n' : ''}My question: `;

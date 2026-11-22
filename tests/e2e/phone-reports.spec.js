@@ -139,7 +139,8 @@ test('selected words can be highlighted: it shows at once, goes sealed to the co
   await expect(page.locator('#pick')).toBeHidden();
   expect(await select(page, 'your-gifts', 'uiet knowin')).toBe(true); // part of two words: taken whole
   await expect(page.locator('#pick')).toBeVisible();
-  await expect(page.locator('#pick button, #pick a')).toHaveText(['Highlight', 'Comment', 'Ask my AI']);
+  await expect(page.locator('#pick button, #pick a')).toHaveText(['Highlight', 'Comment', 'Ask my Sovran Advisor']);
+  expect(await page.locator('#pick').evaluate((bar) => { const r = bar.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && bar.scrollWidth <= bar.clientWidth + 1; })).toBe(true); // the longer name still fits the bar
   for (const h of await page.locator('#pick button, #pick a').evaluateAll((all) => all.map((b) => b.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44);
   // Clear of the phone's own bars: never on the bottom edge (Android's search bar sits there), at the top when the words are low.
   const place = await page.locator('#pick').evaluate((bar) => ({ top: bar.classList.contains('is-top'), gap: window.innerHeight - bar.getBoundingClientRect().bottom, y: bar.getBoundingClientRect().top }));
@@ -228,7 +229,7 @@ test('highlights, comments and questions made on the computer show on the phone,
   await context.close();
 });
 
-test('Ask my AI opens the AI’s own app with the words in its box, and copies them too', async ({ browser }, testInfo) => {
+test('Ask my Sovran Advisor opens the AI’s own app with the words in its box, and copies them too', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await openPattern(page);
   await select(page, 'your-gifts', 'You notice what others walk past.');

@@ -24,7 +24,7 @@ const $ = (id) => document.getElementById(id);
 const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
-// The AI that Ask my AI opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
+// The AI that Ask my Sovran Advisor opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
 const AIS = {
   // fill: an address that opens the AI's app with words already in its box (tried on a real Android phone with the Claude app).
   claude: { name: 'Claude', href: 'https://claude.ai/new', fill: 'https://claude.ai/new?q=', line: 'Ask for insight from your reports, your charts and the Sovran Library' },
