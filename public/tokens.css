@@ -139,7 +139,7 @@
   --card-preview-lines: 5;
   --task-place-width: 200px;    /* the Tasks page's Home and Written in columns */
   --task-schedule-width: 220px; /* … and its Schedule column */
-  --sidebar-width: 168px;       /* Notes, Journal on the left */
+  --sidebar-width: 180px;       /* Notes, Journal on the left; 180 so "Sovran Advisor" fits on one line (2026-11-22) */
   --bottom-bar-height: 56px;    /* the same on a phone, along the bottom */
   --entry-when-width: 64px;     /* the time (or day) in front of a journal entry */
   --mini-month-width: 216px;    /* the small month beside a journal day */
