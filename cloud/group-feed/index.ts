@@ -8,10 +8,13 @@
 // POST {action:'tell', kind, why, place, context, version}; {action:'tells', status?, before?}; {action:'tell_status', id, status, note?}
 //      Tell Daniel (cloud/tell-daniel.sql)
 // POST {action:'alerts', since?}  what is new for this key since that moment: {now, items} (cloud/group-alerts.sql)
+// POST {action:'push_key'} | {action:'push_sub', endpoint, kinds, old?} | {action:'push_state'|'push_take', endpoint}
+//      alerts on the phone (cloud/group-push.sql, push.js): a phone keeps its push address, then fetches what waits
 // POST {action:'picture_put', jpeg: <base64>}   a picture the app already shrank; returns {path}
 // GET  .../group-feed/picture/<group>/<name>.jpg   the picture's bytes, if the key holder may see it
 // Pictures live in the private storage bucket group-feed, reached with the service role key the function is given.
 import postgres from 'npm:postgres@3.4.5';
+import { makeVapid, wake } from './push.js';
 
 const sql = postgres(Deno.env.get('SUPABASE_DB_URL')!, { prepare: false, max: 3 });
 const STORAGE = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/group-feed`;
@@ -19,6 +22,8 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type, authorization' };
 const json = (code: number, body: unknown) =>
   new Response(JSON.stringify(body), { status: code, headers: { ...cors, 'content-type': 'application/json' } });
+const SUBJECT = 'https://daniel-piatek.github.io/sovran-advisor-app/'; // Sovran Go's own page, named in every wake
+const WRITES = new Set(['post', 'comment', 'tell_status']); // after these, phones are looked at straight away
 const KEY = /^(sovran|guide|phone)_[A-Za-z0-9_-]{20,200}$/; // phone_: a student's phone (Sovran Go), Group Circle only
 const PATH = /^[A-Z0-9-]{2,20}\/[A-Za-z0-9_-]{22}\.jpg$/;
 const MAX_PICTURE = 450000; // the app sends about 200 KB; this leaves room and refuses anything big
@@ -55,6 +60,31 @@ function answer(r: any) {
   return json(200, r);
 }
 
+// The sending key pair, made the first time it is needed and kept in the database.
+async function vapid() {
+  let [row] = await sql`SELECT public_key, private_jwk FROM group_feed.push_vapid`;
+  if (!row) {
+    const made = await makeVapid();
+    await sql`INSERT INTO group_feed.push_vapid (public_key, private_jwk) VALUES (${made.public_key}, ${sql.json(made.private_jwk)}) ON CONFLICT DO NOTHING`;
+    [row] = await sql`SELECT public_key, private_jwk FROM group_feed.push_vapid`;
+  }
+  return row;
+}
+
+// Wakes the phones that have something new (group_feed.push_run decides, and keeps what they will fetch).
+async function pushRun(force: boolean) {
+  try {
+    const keys = await vapid();
+    const due = await sql`SELECT sub_id, endpoint FROM group_feed.push_run(${force})`;
+    for (const { sub_id, endpoint } of due) {
+      const how = await wake(endpoint, keys, SUBJECT);
+      await sql`SELECT group_feed.push_result(${sub_id}, ${how === 'sent' ? null : how === 'gone'})`;
+    }
+  } catch { /* the next call tries again */ }
+}
+const later = (work: Promise<unknown>) => { const rt = (globalThis as any).EdgeRuntime; if (rt?.waitUntil) rt.waitUntil(work); };
+const endpoint = (x: unknown) => (typeof x === 'string' && x.startsWith('https://') && x.length <= 1000 ? x : null);
+
 async function removePictures(list: string[]) {
   if (!list.length) return;
   await fetch(STORAGE, { method: 'DELETE', headers: { authorization: `Bearer ${SERVICE}`, 'content-type': 'application/json' }, body: JSON.stringify({ prefixes: list }) }).catch(() => {});
@@ -81,6 +111,15 @@ Deno.serve(async (req) => {
     let msg: any;
     try { msg = JSON.parse(await req.text()); } catch { return json(400, { error: 'Not valid JSON' }); }
     if (typeof msg !== 'object' || msg === null) return json(400, { error: 'Not valid JSON' });
+    const res = await act(h, msg);
+    later(pushRun(WRITES.has(msg.action) && res.ok));
+    return res;
+  } catch {
+    return json(500, { error: 'Group had a problem. Try again in a minute.' });
+  }
+});
+
+async function act(h: string, msg: any): Promise<Response> {
     const one = async (q: Promise<any>) => answer((await q)[0].r);
     switch (msg.action) {
       case 'latest': return one(sql`SELECT group_feed.latest(${h}) AS r`);
@@ -129,9 +168,11 @@ Deno.serve(async (req) => {
       case 'tells': return one(sql`SELECT tell_daniel.list(${h}, ${['new', 'digging', 'done'].includes(msg.status) ? msg.status : null}, ${id(msg.before)}) AS r`);
       case 'tell_status': return one(sql`SELECT tell_daniel.set_status(${h}, ${id(msg.id)}, ${text(msg.status, 10)}, ${text(msg.note, 4001) || null}) AS r`);
       case 'manage': return one(sql`SELECT group_feed.manage(${h}, ${text(msg.what, 20)}, ${text(msg.student, 40) || null}, ${text(msg.value, 80) || null}) AS r`);
+      // alerts on the phone (cloud/group-push.sql): only a phone's own key keeps a push address
+      case 'push_key': return json(200, { key: (await vapid()).public_key });
+      case 'push_sub': return one(sql`SELECT group_feed.push_sub(${h}, ${endpoint(msg.endpoint)}, ${Array.isArray(msg.kinds) ? msg.kinds.filter((k: unknown) => typeof k === 'string').slice(0, 10) : []}::text[], ${endpoint(msg.old)}) AS r`);
+      case 'push_state': return one(sql`SELECT group_feed.push_state(${h}, ${endpoint(msg.endpoint) ?? ''}) AS r`);
+      case 'push_take': return one(sql`SELECT group_feed.push_take(${h}, ${endpoint(msg.endpoint) ?? ''}) AS r`);
       default: return json(400, { error: `Unknown action: ${msg.action}` });
     }
-  } catch {
-    return json(500, { error: 'Group had a problem. Try again in a minute.' });
-  }
-});
+}

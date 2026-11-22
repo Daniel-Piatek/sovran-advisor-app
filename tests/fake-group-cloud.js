@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
   const sha = (text) => createHash('sha256').update(text).digest('hex');
@@ -55,6 +55,23 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
         for (const [h, id] of state.phones) if (id === s.id) state.phones.delete(h);
         if (msg.phone_hash) state.phones.set(msg.phone_hash, s.id);
         return json(200, { phone: Boolean(msg.phone_hash) });
+      }
+      // alerts on the phone (cloud/group-push.sql): a phone's address and switches; what waits for it is put in `waiting`
+      case 'push_key': return json(200, { key: 'BPkQ1ozOsbX1H0Lb3n7qY8n6S0p0bW7j2rS0vYqJcQ0eYvK8m4v5mV9l8dYgk3vK5o8n2q1w6eJ8tC3yR7uZ0aU' });
+      case 'push_sub': {
+        if (!phoneOf(keyOf(auth))) return err('nokey', 401);
+        if (msg.old) state.pushes.delete(msg.old);
+        if (!msg.endpoint) return json(200, { on: false });
+        const kinds = (msg.kinds ?? []).filter((k) => ['news', 'feed', 'reply', 'due', 'answer'].includes(k)).sort();
+        state.pushes.set(msg.endpoint, { student: s.id, kinds, waiting: state.pushes.get(msg.endpoint)?.waiting ?? [] });
+        return json(200, { on: true, kinds });
+      }
+      case 'push_state': { const p = state.pushes.get(msg.endpoint); return json(200, { on: Boolean(p), kinds: p?.kinds ?? ['answer', 'due', 'news', 'reply'] }); }
+      case 'push_take': {
+        const p = state.pushes.get(msg.endpoint);
+        if (!p || p.student !== s.id) return json(200, { items: [] });
+        const items = p.waiting; p.waiting = [];
+        return json(200, { items });
       }
       case 'set_name': s.name = msg.name; return json(200, { name: msg.name });
       case 'post': {

@@ -37,7 +37,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(() => server.close());
 
-async function phone(browser, testInfo, { withGroup = true } = {}) {
+async function phone(browser, testInfo, { withGroup = true, before = async () => {} } = {}) {
   const link = { box: randomB64(16), drop: randomB64(32), key: randomB64(32) };
   const phoneKey = `phone_${randomB64(32)}`;
   const cloud = fakeGroupCloud({
@@ -59,13 +59,14 @@ async function phone(browser, testInfo, { withGroup = true } = {}) {
     if (msg.action === 'shelf') return reply(200, { shelf: shelf.map((it) => ({ ...it, ...(msg.have?.[it.name] === it.updated_at ? { sealed: undefined } : {}) })) });
     return reply(400, { error: `Unknown action: ${msg.action}` });
   });
-  await page.route(`${GROUP}**`, async (route) => {
+  await context.route(`${GROUP}**`, async (route) => { // the context's, so the service worker's asks come here too
     const req = route.request();
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
     const answer = await cloud.fetcher(req.url(), { method: req.method(), headers: { authorization: req.headers().authorization }, body: req.postData() });
     return route.fulfill({ status: answer.status, headers: { ...CORS, 'content-type': 'application/json' }, body: await answer.text() });
   });
   await context.addInitScript(() => { try { localStorage.setItem('sovran.phone.setup-seen', '1'); } catch { /* not yet */ } });
+  await before(context);
   await page.goto(`${origin}/#v1.${link.box}.${link.drop}.${link.key}`);
   return { page, context, cloud, errors, phoneKey };
 }
@@ -113,5 +114,68 @@ test('Group Circle on the phone: homework ticked, a post, a comment and a reply,
     expect(cloud.state.asked.length).toBeGreaterThan(3);
     expect(errors).toEqual([]);
     void phoneKey;
+  } finally { await context.close(); }
+});
+
+// Alerts on the phone (push.js, sw.js). The phone's push service is stood in for: subscribing gives a made-up address,
+// and the wake is delivered by the browser's own developer tools, as Apple or Google would.
+const ENDPOINT = 'https://fcm.googleapis.com/fcm/send/made-up-for-the-test';
+const standInPush = (context) => context.addInitScript((endpoint) => {
+  const sub = { endpoint, unsubscribe: async () => { localStorage.removeItem('test.sub'); return true; } };
+  PushManager.prototype.getSubscription = async () => (localStorage.getItem('test.sub') ? sub : null);
+  PushManager.prototype.subscribe = async (options) => { localStorage.setItem('test.sub', String(options.applicationServerKey?.byteLength)); return sub; };
+}, ENDPOINT);
+
+test('alerts on the phone: allow them, choose which, a wake shows what waits, an alert opens its post, and stop', async ({ browser }, testInfo) => {
+  const { page, context, cloud, errors } = await phone(browser, testInfo, { before: standInPush });
+  await context.grantPermissions(['notifications'], { origin });
+  try {
+    await page.locator('#group-circle').click();
+    await expect(page.getByRole('heading', { name: 'Alerts on this phone' })).toBeVisible();
+    await page.getByRole('button', { name: 'Allow alerts' }).click();
+    await expect(page.getByText('Alerts are on. Choose which:')).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('test.sub'))).toBe('65'); // the cloud's public key, as the raw point
+    await expect(page.getByLabel('A new announcement from Daniel')).toBeChecked();
+    await expect(page.getByLabel('Any new post in the Circle')).not.toBeChecked();
+    expect(cloud.state.pushes.get(ENDPOINT).kinds).toEqual(['answer', 'due', 'news', 'reply']);
+    await page.getByLabel('Any new post in the Circle').check();
+    await expect.poll(() => cloud.state.pushes.get(ENDPOINT).kinds).toEqual(['answer', 'due', 'feed', 'news', 'reply']);
+
+    // The cloud keeps what is new and wakes the phone with an empty message; the phone fetches it with its own key.
+    cloud.state.pushes.get(ENDPOINT).waiting = [{ kind: 'reply', post: 2, tab: 'feed', author: 'Jon', on_mine: false, text: 'Same here, every morning.', at: ago(1) }];
+    const cdp = await context.newCDPSession(page);
+    const found = new Promise((resolve) => cdp.on('ServiceWorker.workerRegistrationUpdated', ({ registrations }) => {
+      const r = registrations.find((x) => x.scopeURL.startsWith(origin) && !x.isDeleted); if (r) resolve(r.registrationId);
+    }));
+    await cdp.send('ServiceWorker.enable');
+    await cdp.send('ServiceWorker.deliverPushMessage', { origin, registrationId: await found, data: '' });
+    await expect.poll(() => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).map((n) => [n.title, n.body, n.data.open])))
+      .toEqual([['Jon replied to you', 'Same here, every morning.', './?open=group&tab=feed&post=2']]);
+    expect(cloud.state.pushes.get(ENDPOINT).waiting).toEqual([]); // fetched once, then let go
+
+    // Tapping it opens Sovran Go at that post.
+    await page.goto(`${origin}/?open=group&tab=feed&post=2`);
+    await expect(page.getByRole('heading', { name: 'Group Circle' })).toBeVisible();
+    await expect(page.locator('#group-tabs [data-tab="feed"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-post="2"]')).toHaveClass(/g-asked/);
+    expect(new URL(page.url()).search).toBe('');
+
+    await page.getByRole('button', { name: 'Stop alerts on this phone' }).click();
+    await expect(page.getByRole('button', { name: 'Allow alerts' })).toBeVisible();
+    expect(cloud.state.pushes.size).toBe(0);
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
+test('alerts blocked in the phone’s settings: Sovran Go says where to switch them on', async ({ browser }, testInfo) => {
+  const { page, context, errors } = await phone(browser, testInfo, { before: async (c) => {
+    await standInPush(c);
+    await c.addInitScript(() => Object.defineProperty(Notification, 'permission', { get: () => 'denied' }));
+  } });
+  try {
+    await page.locator('#group-circle').click();
+    await expect(page.getByText('Alerts are switched off for Sovran Go in this phone’s settings.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Allow alerts' })).toHaveCount(0);
+    expect(errors).toEqual([]);
   } finally { await context.close(); }
 });

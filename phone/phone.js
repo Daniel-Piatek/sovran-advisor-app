@@ -139,10 +139,15 @@ function start() {
   $('my-reports').addEventListener('click', () => { history.pushState({ view: 'reports' }, ''); reports.showList(); });
   $('reports-back').addEventListener('click', () => history.back());
   // Group Circle (group.js): with the phone's own key, from the shelf. The choice shows once the key is there.
-  const group = setupGroup({ store, show, openShelf: reports.open, refreshShelf: reports.refresh });
+  const group = setupGroup({ store, show, openShelf: reports.open, refreshShelf: reports.refresh, ios, installed });
   $('group-circle').addEventListener('click', () => { history.pushState({ view: 'group' }, ''); group.open(); });
   $('group-back').addEventListener('click', () => history.back());
-  group.check().then(async () => { if (await reports.refresh()) await group.check(); });
+  // From an alert (sw.js): ?open=group&tab=…&post=… opens Group Circle at that post once the key is known.
+  const asked = new URLSearchParams(location.search);
+  const fromAlert = asked.get('open') === 'group' ? { tab: asked.get('tab'), post: asked.get('post') } : null;
+  if (fromAlert) history.replaceState(null, '', location.pathname);
+  const openFromAlert = () => { if (fromAlert && group.available() && $('group').hidden) { history.pushState({ view: 'group' }, ''); group.open(fromAlert); } };
+  group.check().then(async () => { openFromAlert(); if (await reports.refresh()) { await group.check(); openFromAlert(); } });
   $('report-back').addEventListener('click', () => history.back());
 
   // The phone's own Back goes from writing to the choices, as ‹ Back does.

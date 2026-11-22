@@ -246,3 +246,12 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .g-name { font: inherit; font-size: 1.0625rem; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
 .g-label { font-family: var(--ui); font-weight: 700; }
 .g-tabs button:focus-visible, .g-like:focus-visible, .g-link:focus-visible, .g-send:focus-visible, .g-add:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* Alerts on this phone (push.js), at the foot of Group Circle; a post opened from an alert is outlined in gold. */
+.g-alerts { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; }
+.g-alerts:empty { display: none; }
+.g-alerts-title { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; line-height: 1.36; }
+.g-alert-row { display: flex; align-items: center; gap: 10px; font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; min-height: 44px; }
+.g-alert-row input { width: 22px; height: 22px; flex: none; accent-color: var(--crimson); }
+.g-allow { align-self: flex-start; }
+.g-alerts .g-link { align-self: flex-start; }
+.g-asked { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 14px; }

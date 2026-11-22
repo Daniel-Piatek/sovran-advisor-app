@@ -5,7 +5,9 @@
 // The phone has its own Group Circle key, made by the student's computer and left on the phone's sealed shelf
 // (phone-shelf.js, item "group"). With it the Sovran cloud (cloud/group-feed.sql) lets this phone read and write Group
 // Circle as that student, and nothing else. No key on the shelf (Group Circle switched off, or the computer hasn't
-// been on since the update): the Group Circle choice doesn't show.
+// been on since the update): the Group Circle choice doesn't show. Alerts on this phone: push.js and sw.js.
+
+import { setupPush } from './push.js';
 
 const $ = (id) => document.getElementById(id);
 const SEEN = 'sovran.phone.group-seen'; // the newest post seen in each tab here, for the counts
@@ -61,7 +63,7 @@ const toBase64 = async (blob) => {
 };
 
 // openShelf(name): the sealed shelf item, opened (reports.js). show(id): the screen to show (phone.js).
-export function setupGroup({ store, show, openShelf, refreshShelf }) {
+export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, installed = false }) {
   let access = null; // { key, url }
   let me = null;
   let tab = 'news';
@@ -222,14 +224,22 @@ export function setupGroup({ store, show, openShelf, refreshShelf }) {
       ...(posts.length ? posts.map((p) => card(p, canWrite)) : [el('p', { class: 'g-note' }, tab === 'news' ? 'Nothing from Daniel yet.' : 'Nothing here yet. Be the first to share something.')]));
   }
 
-  async function open() {
+  // Opens Group Circle; from an alert, at its tab and post.
+  async function open({ tab: wanted, post } = {}) {
     show('group');
     $('group-title').textContent = 'Group Circle';
+    if (wanted === 'news' || wanted === 'feed') tab = wanted;
     await draw();
+    if (post) {
+      const card = document.querySelector(`#group-list [data-post="${Number(post)}"]`);
+      if (card) { card.classList.add('g-asked'); card.scrollIntoView({ block: 'start' }); }
+    }
+    await push.draw();
   }
+  const push = setupPush({ ask, access: () => access, ios, installed });
 
   document.querySelectorAll('#group-tabs button').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; draw(); }));
   document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && $('group').hidden) { await refreshShelf(); await check(); } });
 
-  return { check, open };
+  return { check, open, available: () => Boolean(access) };
 }
