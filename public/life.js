@@ -17,7 +17,7 @@
 // asks for action; and lists the notes at home in it (a note's Home chip, public/home.js).
 
 import { createEditor, catchPageDrops, linkShape } from './editor.js';
-import { api, el, icon, makeSaver, undoBar, linkedFromSection, dayOf, today, addDays } from './ui.js';
+import { api, el, icon, makeSaver, undoBar, linkedFromSection, dayOf, today, addDays, showPicked } from './ui.js';
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
 import { addBar, flagChip } from './quick-add.js';
 import { dueLabel } from './due.js';
@@ -228,6 +228,7 @@ export async function showLife(id) {
   const deleted = takeFlash();
   const layout = el('div', { class: `life-layout${id ? ' life-layout-item' : ''}` }, list, main);
   screen.replaceChildren(overviewTop, layout);
+  showPicked(list);
   if (deleted?.kind === 'life') {
     layout.after(undoBar(`“${deleted.title}” deleted.`, async () => {
       await api.restoreLifeItem(deleted.id);

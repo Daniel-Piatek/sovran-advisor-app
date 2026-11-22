@@ -4041,6 +4041,16 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 @media (min-width: 601px) {
   .inbox-list-panel, .inbox-current { position: sticky; top: var(--space-3); max-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); overflow-y: auto; }
 }
+/* The same for My Life, the Assistant and Mail (2026-11-22, the owner's wish): the list on the left and what is open
+   beside it each scroll on their own, so something picked far down a long list still shows. Only where they sit side
+   by side; on a phone or a narrow window they stack, as before. */
+@media (min-width: 601px) {
+  .life-list, .life-main { position: sticky; top: var(--space-3); max-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); overflow-y: auto; }
+}
+@media (min-width: 901px) {
+  .assistant-page .chat-list, .assistant-page .chat-pane,
+  .mail-app-page .mail-list-panel, .mail-app-page .mail-reader-col { position: sticky; top: var(--space-3); max-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); overflow-y: auto; }
+}
 /* The Assistant's title and New chat sit in a wide, low white bar across the top, with its section line. */
 .assistant-page .top-bar, .inbox-page .top-bar, .planner-page .top-bar {
   margin: 0 0 var(--space-3);

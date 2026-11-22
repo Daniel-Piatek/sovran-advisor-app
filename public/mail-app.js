@@ -443,6 +443,7 @@ export async function showMailApp() {
     list.querySelectorAll('.mail-row-open').forEach((row) => row.setAttribute('aria-current', String(row.dataset.thread === thread.id)));
     list.querySelector(`.mail-row-open[data-thread="${thread.id}"]`)?.scrollIntoView({ block: 'nearest' });
     reader.replaceChildren(el('h2', { class: 'mail-reader-subject' }, thread.subject || '(no subject)'), el('p', { class: 'mail-snippet' }, thread.snippet));
+    readerCol.scrollTop = 0; // a new conversation opens at its top
     open(thread.id);
   }
 

@@ -12,7 +12,7 @@
 // box at the bottom of every page (public/shell.js) asks from that page.
 
 import markdownit from '/vendor/markdown-it/index.mjs';
-import { el, icon, request, undoBar, clockTime } from './ui.js';
+import { el, icon, request, undoBar, clockTime, showPicked } from './ui.js';
 import { AI_NAMES, aiLabel } from './ai-names.js';
 import { app, screen, onLeave, takeQuestion } from './shell.js';
 import { startGroupDraft } from './group.js';
@@ -344,6 +344,7 @@ export async function showAssistant(id) {
       ...(chats.length ? chats.map((c) => el('a', {
         class: 'chat-list-item', href: `/assistant/${c.id}`, ...(c.id === conversation?.id ? { 'aria-current': 'page' } : {}),
       }, el('span', { class: 'chat-list-name' }, c.title || 'New chat'))) : [el('p', { class: 'plan-empty' }, 'No chats yet.')]));
+    showPicked(list);
   }
 
   function drawThread() {
