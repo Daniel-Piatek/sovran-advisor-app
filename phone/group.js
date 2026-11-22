@@ -6,6 +6,10 @@
 // (phone-shelf.js, item "group"). With it the Sovran cloud (cloud/group-feed.sql) lets this phone read and write Group
 // Circle as that student, and nothing else. No key on the shelf (Group Circle switched off, or the computer hasn't
 // been on since the update): the Group Circle choice doesn't show. Alerts on this phone: push.js and sw.js.
+//
+// Daniel's own go Sovran (2026-11-22, the owner's wish) gets its key from APP Daniel, made with the guide key, so the
+// cloud knows this phone as the guide (me.guide): it sees every group, posts announcements (homework with a due date,
+// reminders) and Circle posts, and answers questions. Hiding, pausing and the flags list stay on the computer.
 
 import { setupPush } from './push.js';
 
@@ -14,6 +18,7 @@ const SEEN = 'sovran.phone.group-seen'; // the newest post seen in each tab here
 const LONG_SIDE = 1600;
 const TARGET_BYTES = 230_000;
 const KINDS = { homework: 'Homework', reminder: 'Reminder', announcement: 'Announcement' };
+const GUIDE_KINDS = ['announcement', 'reminder', 'homework'];
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -67,8 +72,9 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
   let access = null; // { key, url }
   let me = null;
   let tab = 'news';
+  let groups = null; // the guide only: [{ code, title }], asked once
   const pictures = new Map(); // path → object URL, fetched once while the page is open
-  const readSeen = () => { try { return { news: 0, feed: 0, ...JSON.parse(store.get(SEEN) ?? '{}') }; } catch { return { news: 0, feed: 0 }; } };
+  const readSeen = () => { try { return { news: 0, feed: 0, comments: 0, ...JSON.parse(store.get(SEEN) ?? '{}') }; } catch { return { news: 0, feed: 0, comments: 0 }; } };
   const keepSeen = (seen) => store.set(SEEN, JSON.stringify(seen));
 
   async function ask(body) {
@@ -92,11 +98,14 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       const latest = await ask({ action: 'latest' });
       const seen = readSeen();
       const newer = (ids, after) => (Array.isArray(ids) ? ids.filter((id) => Number(id) > after).length : 0);
-      const waiting = newer(latest.news_new_ids, seen.news) + newer(latest.feed_new_ids, seen.feed);
+      // The guide: new Circle posts and new questions and comments from students, in every group.
+      const waiting = newer(latest.news_new_ids, seen.news) + newer(latest.feed_new_ids, seen.feed) + newer(latest.comment_new_ids, seen.comments);
       $('group-count').textContent = waiting ? String(waiting) : '';
       $('group-count').hidden = !waiting;
       // One short line on the tile: what is new, else the group's own name.
-      $('group-line').textContent = waiting ? `${waiting} new` : (latest.me?.group_title || 'Announcements and the Circle');
+      const flagged = latest.me?.guide && latest.flags ? `${latest.flags} flagged` : '';
+      $('group-line').textContent = [waiting ? `${waiting} new` : '', flagged].filter(Boolean).join(', ')
+        || (latest.me?.guide ? 'You are the guide' : (latest.me?.group_title || 'Announcements and the Circle'));
     } catch { $('group-count').hidden = true; }
   }
 
@@ -136,17 +145,22 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
   }
 
   function card(p, canWrite) {
+    const guide = Boolean(me?.guide);
     const like = el('button', { type: 'button', class: 'g-like', 'aria-pressed': String(Boolean(p.liked)) }, p.liked ? '♥' : '♡', ` ${p.likes || ''}`);
     like.addEventListener('click', async () => { like.disabled = true; try { await ask({ action: 'like', post: p.id, on: !p.liked }); await draw(); } catch (err) { say(err.message); like.disabled = false; } });
     const parts = [
       el('header', { class: 'g-by' }, el('strong', {}, p.author), p.by_guide ? el('span', { class: 'g-badge' }, 'Guide') : null, el('span', { class: 'g-when' }, ago(p.created_at))),
+      guide && p.hidden ? el('p', { class: 'g-note' }, 'Hidden from the group') : null,
+      guide && (groups?.length ?? 0) > 1 ? el('p', { class: 'g-note' }, p.group ? groupTitle(p.group) : 'Every group') : null,
+      guide && p.flagged ? el('p', { class: 'g-note' }, `${p.flagged} asked you to look at this`) : null,
       p.tab === 'news' && KINDS[p.kind] ? el('span', { class: `g-kind g-kind-${p.kind}` }, KINDS[p.kind]) : null,
       p.body ? el('p', { class: 'g-body' }, p.body) : null,
       p.pictures?.length ? el('div', { class: 'g-pictures' }, ...p.pictures.map(picture)) : null,
       p.kind === 'homework' && p.due_on ? el('p', { class: 'g-due' }, `Due ${dueWords(p.due_on)}`) : null,
     ];
     const actions = el('div', { class: 'g-actions' }, like);
-    if (p.kind === 'homework') {
+    if (p.kind === 'homework' && guide) actions.append(el('span', { class: 'g-done' }, `${Number(p.done) || 0} done`));
+    else if (p.kind === 'homework') {
       const done = el('input', { type: 'checkbox', id: `g-done-${p.id}`, checked: p.done ? true : null });
       done.addEventListener('change', async () => { try { await ask({ action: 'done', post: p.id, on: done.checked }); } catch (err) { say(err.message); done.checked = !done.checked; } });
       actions.append(el('label', { class: 'g-done', for: `g-done-${p.id}` }, done, ' Mark as done'));
@@ -163,8 +177,29 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
     return el('article', { class: p.tab === 'news' ? 'g-post g-announcement' : 'g-post', 'data-post': p.id }, ...parts);
   }
 
+  const groupTitle = (code) => groups?.find((g) => g.code === code)?.title || code;
+
+  // The guide's extra choices: what kind (Announcements), the due day (homework), and which group when there are more.
+  function guideChoices() {
+    const news = tab === 'news';
+    const open = (groups ?? []).filter((g) => !g.closed);
+    const kind = news ? el('select', { class: 'g-name', 'aria-label': 'Kind of post' }, ...GUIDE_KINDS.map((k) => el('option', { value: k }, KINDS[k]))) : null;
+    const due = news ? el('input', { class: 'g-name', type: 'date', 'aria-label': 'Due day', hidden: true }) : null;
+    kind?.addEventListener('change', () => { due.hidden = kind.value !== 'homework'; });
+    const to = open.length > 1 ? el('select', { class: 'g-name', 'aria-label': 'Which group' },
+      ...(news ? [el('option', { value: '' }, 'Every group')] : []), ...open.map((g) => el('option', { value: g.code }, g.title))) : null;
+    const group = () => (to ? to.value : (news ? '' : open[0]?.code ?? '')) || null;
+    return {
+      nodes: [kind, due, to].filter(Boolean),
+      group,
+      fields: () => ({ kind: kind?.value ?? null, group: group(), due_on: kind?.value === 'homework' && due.value ? due.value : null }),
+    };
+  }
+
   function composer() {
-    const text = el('textarea', { class: 'g-write', rows: 3, maxlength: 5000, placeholder: 'Share something with your group', 'aria-label': 'Write a post' });
+    const guide = me?.guide ? guideChoices() : null;
+    const words = !guide ? 'Share something with your group' : tab === 'news' ? 'Write to your students' : 'Share something with the group';
+    const text = el('textarea', { class: 'g-write', rows: 3, maxlength: 5000, placeholder: words, 'aria-label': 'Write a post' });
     const photo = el('input', { type: 'file', accept: 'image/*', hidden: true });
     const chosen = [];
     const thumbs = el('div', { class: 'g-thumbs' });
@@ -179,7 +214,7 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       say('Making it smaller on this phone…');
       try {
         const blob = await shrink(file);
-        const { path } = await ask({ action: 'picture_put', jpeg: await toBase64(blob) });
+        const { path } = await ask({ action: 'picture_put', jpeg: await toBase64(blob), ...(guide ? { group: guide.group() } : {}) });
         chosen.push(path);
         thumbs.append(el('img', { class: 'g-thumb', src: URL.createObjectURL(blob), alt: 'Your picture' }));
         say('');
@@ -189,9 +224,9 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       const body = text.value.trim();
       if (!body && !chosen.length) { text.focus(); return; }
       post.disabled = true;
-      try { await ask({ action: 'post', tab: 'feed', body, pictures: chosen }); await draw(); } catch (err) { say(err.message); post.disabled = false; }
+      try { await ask({ action: 'post', tab: guide ? tab : 'feed', body, pictures: chosen, ...(guide ? guide.fields() : {}) }); await draw(); } catch (err) { say(err.message); post.disabled = false; }
     });
-    return el('div', { class: 'g-composer' }, text, thumbs, el('div', { class: 'g-composer-row' }, add, post), photo);
+    return el('div', { class: 'g-composer' }, text, ...(guide?.nodes ?? []), thumbs, el('div', { class: 'g-composer-row' }, add, post), photo);
   }
 
   function namePicker() {
@@ -214,14 +249,21 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
     }
     me = page.me;
     if (!me?.name) { namePicker(); return; }
+    if (me.guide && !groups) { try { groups = (await ask({ action: 'groups' })).groups ?? []; } catch { groups = []; } }
     const canWrite = !me.paused && !me.closed;
     const posts = page.posts ?? [];
-    if (posts.length) { const seen = readSeen(); seen[tab] = Math.max(seen[tab], ...posts.map((p) => Number(p.id))); keepSeen(seen); }
+    if (posts.length) {
+      const seen = readSeen();
+      seen[tab] = Math.max(seen[tab], ...posts.map((p) => Number(p.id)));
+      if (me.guide) seen.comments = Math.max(seen.comments, ...posts.flatMap((p) => (p.comments ?? []).map((c) => Number(c.id))));
+      keepSeen(seen);
+    }
     const notes = [];
-    if (me.closed) notes.push(el('p', { class: 'g-note' }, 'This group has finished. You can still read everything.'));
+    if (me.guide) { /* the guide writes in both tabs */ }
+    else if (me.closed) notes.push(el('p', { class: 'g-note' }, 'This group has finished. You can still read everything.'));
     else if (me.paused) notes.push(el('p', { class: 'g-note' }, 'Posting is paused for you. Daniel can tell you more.'));
     else if (tab === 'news') notes.push(el('p', { class: 'g-note' }, 'Only Daniel posts here.'));
-    $('group-list').replaceChildren(...notes, ...(tab === 'feed' && canWrite ? [composer()] : []),
+    $('group-list').replaceChildren(...notes, ...((tab === 'feed' || me.guide) && canWrite ? [composer()] : []),
       ...(posts.length ? posts.map((p) => card(p, canWrite)) : [el('p', { class: 'g-note' }, tab === 'news' ? 'Nothing from Daniel yet.' : 'Nothing here yet. Be the first to share something.')]));
   }
 
@@ -235,7 +277,8 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       const card = document.querySelector(`#group-list [data-post="${Number(post)}"]`);
       if (card) { card.classList.add('g-asked'); card.scrollIntoView({ block: 'start' }); }
     }
-    await push.draw();
+    if (me?.guide) $('group-alerts').replaceChildren(); // alerts on the phone are for students' phones for now
+    else await push.draw();
   }
   const push = setupPush({ ask, access: () => access, ios, installed });
 

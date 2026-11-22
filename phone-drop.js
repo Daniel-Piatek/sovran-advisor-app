@@ -22,7 +22,7 @@ import { libraryKey } from './sovran-library.js';
 import { takePhoneMark } from './report-marks.js';
 import { syncShelf } from './phone-shelf.js';
 import { getProvider } from './ai.js';
-import { askCloud, groupOn, isGuideApp, GROUP_URL } from './group-feed.js';
+import { askCloud, groupOn, hasGroupKey, GROUP_URL } from './group-feed.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -102,12 +102,13 @@ async function ensureSaver(db, fetcher) {
 // Group Circle on Sovran Go (2026-11-22, the owner's wish): the phone gets its own Group Circle key, made here and
 // registered in the Sovran cloud with this computer's library key (only its SHA-256 goes there). It reaches the phone
 // sealed, on the shelf (phone-shelf.js). The phone then reads and writes Group Circle as this student, and nothing
-// else. A new link makes a new key (the old one stops); Group Circle switched off takes it away. Not in APP Daniel.
+// else. A new link makes a new key (the old one stops); Group Circle switched off takes it away. In APP Daniel the same
+// is done with the guide key: Daniel's phone is then the guide in Group Circle (cloud/group-feed.sql, phone_key).
 // Returns { key, url } for the shelf, or null.
 async function ensurePhoneGroup(db) {
   const box = readBox(db);
-  if (!box || isGuideApp()) return null;
-  const want = groupOn(db) && Boolean(libraryKey(db));
+  if (!box) return null;
+  const want = groupOn(db) && hasGroupKey(db);
   if (!want) {
     if (box.group_key) {
       try { await askCloud(db, { action: 'phone_key', phone_hash: null }); } catch { /* the library key is gone: so is the phone's */ }

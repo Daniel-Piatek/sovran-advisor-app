@@ -37,7 +37,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(() => server.close());
 
-async function phone(browser, testInfo, { withGroup = true, before = async () => {} } = {}) {
+async function phone(browser, testInfo, { withGroup = true, guide = false, before = async () => {} } = {}) {
   const link = { box: randomB64(16), drop: randomB64(32), key: randomB64(32) };
   const phoneKey = `phone_${randomB64(32)}`;
   const cloud = fakeGroupCloud({
@@ -46,8 +46,10 @@ async function phone(browser, testInfo, { withGroup = true, before = async () =>
       { id: 1, tab: 'news', kind: 'homework', body: 'Week 2: meet your Tyrant. Write one page in your Journal.', due_on: '2026-11-24', created_at: ago(90) },
       { id: 2, tab: 'feed', kind: 'post', student: 'client-bbbbbbbbbbbb', body: 'Took my Tyrant for a walk up the ridge.', created_at: ago(30) },
     ],
+    guides: { guide_madeupmadeupmadeupmadeupmadeup: 'Daniel' },
   });
-  cloud.state.phones.set(sha(phoneKey), 'client-aaaaaaaaaaaa'); // what Maya's computer registered
+  if (guide) cloud.state.guidePhones.set(sha(phoneKey), 'Daniel'); // what APP Daniel registered with the guide key
+  else cloud.state.phones.set(sha(phoneKey), 'client-aaaaaaaaaaaa'); // what Maya's computer registered
   const context = await browser.newContext({ ...(testInfo.project.name === 'phone' ? ANDROID : IPHONE) });
   const page = await context.newPage();
   const errors = [];
@@ -121,6 +123,50 @@ test('Group Circle on the phone: homework ticked, a post, a comment and a reply,
     expect(cloud.state.asked.length).toBeGreaterThan(3);
     expect(errors).toEqual([]);
     void phoneKey;
+  } finally { await context.close(); }
+});
+
+// Daniel's own go Sovran (2026-11-22): the key on its shelf was made by APP Daniel with the guide key, so the phone is
+// the guide: it counts new Circle posts and questions, posts homework with a due day, posts in the Circle, answers.
+test('Daniel’s go Sovran is the guide: homework with a due day, a Circle post, an answer to a question', async ({ browser }, testInfo) => {
+  const { page, context, cloud, errors } = await phone(browser, testInfo, { guide: true });
+  try {
+    cloud.state.posts.find((p) => p.id === 1).comments.push({ id: 50, student: 'client-bbbbbbbbbbbb', body: 'Is one page enough?', created_at: ago(10) });
+    await page.reload();
+    await expect(page.locator('#group-circle')).toBeVisible();
+    await expect(page.locator('#group-line')).toHaveText('2 new'); // Jon's post and Jon's question
+    await page.locator('#group-circle').click();
+    await expect(page.getByText('Week 2: meet your Tyrant.')).toBeVisible();
+    await expect(page.getByText('Only Daniel posts here.')).toHaveCount(0);
+    await expect(page.locator('.g-post[data-post="1"]')).toContainText('0 done'); // the guide sees how many, no tick box
+    await expect(page.getByLabel('Mark as done')).toHaveCount(0);
+    await expect(page.locator('#group-alerts')).toBeEmpty(); // phone alerts are for students' phones for now
+
+    const first = page.locator('.g-post[data-post="1"]');
+    await first.getByRole('button', { name: 'Reply' }).click();
+    await first.getByLabel('Reply to Jon').fill('Yes, one page is plenty.');
+    await first.getByRole('button', { name: 'Send' }).first().click();
+    await expect(first.locator('.g-reply')).toContainText('Yes, one page is plenty.');
+    expect(cloud.state.posts.find((p) => p.id === 1).comments.at(-1)).toMatchObject({ student: null, reply_to: 50 });
+
+    await page.getByLabel('Kind of post').selectOption('homework');
+    await page.getByLabel('Due day').fill('2026-11-30');
+    await page.getByLabel('Write a post').fill('Week 3: write to your Tyrant.');
+    await page.getByRole('button', { name: 'Post', exact: true }).click();
+    await expect(page.locator('.g-post').first()).toContainText('Week 3: write to your Tyrant.');
+    expect(cloud.state.posts.find((p) => p.body === 'Week 3: write to your Tyrant.')).toMatchObject({ tab: 'news', kind: 'homework', due_on: '2026-11-30', group: null });
+
+    await page.getByRole('button', { name: 'Circle', exact: true }).click();
+    await expect(page.getByText('Took my Tyrant for a walk up the ridge.')).toBeVisible();
+    await expect(page.getByLabel('Kind of post')).toHaveCount(0); // the Circle has no kinds
+    await page.getByLabel('Write a post').fill('Lovely work this week, everyone.');
+    await page.getByRole('button', { name: 'Post', exact: true }).click();
+    await expect(page.locator('.g-post').first()).toContainText('Lovely work this week, everyone.');
+    expect(cloud.state.posts.find((p) => p.body === 'Lovely work this week, everyone.')).toMatchObject({ tab: 'feed', group: 'SQ01' });
+
+    await page.goBack();
+    await expect(page.locator('#group-count')).toBeHidden(); // all seen
+    expect(errors).toEqual([]);
   } finally { await context.close(); }
 });
 

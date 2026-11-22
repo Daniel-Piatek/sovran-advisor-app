@@ -142,5 +142,18 @@ BEGIN
   PERFORM pg_temp.ok(group_feed.who(repeat('7', 64)) IS NULL, 'a switched-off library key switches her phone off too');
   UPDATE library.students SET active = true WHERE id = 'client-aaaaaaaaaaaa';
   PERFORM group_feed.phone_key(A, NULL);
+  -- The guide's phone (go Sovran, 2026-11-22): APP Daniel registers it with the guide key; it is the guide too.
+  r := group_feed.phone_key(G, repeat('6', 64));
+  PERFORM pg_temp.ok((r->>'phone')::boolean AND (r->>'guide')::boolean, 'APP Daniel registers Daniel''s phone');
+  PERFORM pg_temp.ok((group_feed.who(repeat('6', 64))->>'guide')::boolean AND group_feed.who(repeat('6', 64))->>'name' = 'Daniel', 'the phone is Daniel, the guide');
+  PERFORM pg_temp.ok(group_feed.post(repeat('6', 64), 'news', 'reminder', NULL, 'From my phone', '{}', NULL, NULL)->>'id' IS NOT NULL, 'Daniel posts an announcement from the phone');
+  PERFORM pg_temp.ok(group_feed.phone_key(repeat('6', 64), repeat('5', 64))->>'error' = 'nokey', 'the guide''s phone cannot make another phone');
+  PERFORM pg_temp.ok(jsonb_typeof(group_feed.latest(repeat('6', 64))->'comment_new_ids') = 'array', 'the guide''s phone gets the new questions for its count');
+  PERFORM group_feed.phone_key(G, repeat('4', 64));
+  PERFORM pg_temp.ok(group_feed.who(repeat('6', 64)) IS NULL AND (group_feed.who(repeat('4', 64))->>'guide')::boolean, 'a new guide phone replaces the old one');
+  PERFORM pg_temp.ok((SELECT count(*) FROM group_feed.guides) = 2, 'one guide key, one phone');
+  PERFORM group_feed.phone_key(G, NULL);
+  PERFORM pg_temp.ok(group_feed.who(repeat('4', 64)) IS NULL AND (group_feed.who(G)->>'guide')::boolean, 'taken away, the guide key itself still works');
+  PERFORM pg_temp.ok(group_feed.phone_key(G, G)->>'error' = 'bad', 'the guide key cannot be its own phone');
   RAISE NOTICE 'ALL GROUP FEED CHECKS PASSED';
 END $$;
