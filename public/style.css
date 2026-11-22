@@ -4495,10 +4495,12 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .tour-hero-still:hover .tour-play, .tour-hero-still:focus-visible .tour-play { transform: scale(1.06); }
 .tour-extras-label { margin-bottom: var(--space-3); }
 .tour-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
-.tour-card { border: var(--line); border-left: calc(var(--border-width) * 4) solid var(--tour-kind); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
+.tour-card { border: var(--line); border-left: calc(var(--border-width) * 4) solid var(--kind-assistant); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); align-content: start; }
 .tour-card p { margin: 0; font-size: var(--text-sm); line-height: 1.36; color: var(--color-text-muted); }
 .tour-card-title { font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-base); margin: 0; display: flex; align-items: center; gap: var(--space-2); }
-.tour-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tour-kind, var(--kind-assistant)); flex: none; display: inline-block; }
+/* Each card's bar in its part's own colour. */
+.tour-card[data-kind="people"] { border-left-color: var(--kind-people); } .tour-card[data-kind="tasks"] { border-left-color: var(--kind-tasks); } .tour-card[data-kind="planner"] { border-left-color: var(--kind-planner); } .tour-card[data-kind="time"] { border-left-color: var(--kind-time); } .tour-card[data-kind="notes"] { border-left-color: var(--kind-notes); } .tour-card[data-kind="life"] { border-left-color: var(--kind-life); }
+.tour-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--kind-assistant); flex: none; display: inline-block; }
 .tour-card { grid-template-rows: auto 1fr auto; }
 .tour-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding-top: var(--space-1); }
 .tour-watch { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-ui); font-weight: var(--weight-button); font-size: var(--text-sm); color: var(--color-text); text-decoration: none; }
@@ -4515,11 +4517,11 @@ body.quick { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .tour-on { font-size: var(--text-xs); font-weight: var(--weight-button); border-radius: 999px; padding: 1px var(--space-2); border: var(--border-width) solid var(--kind-life); }
 .tour-open { color: var(--color-text); font-weight: var(--weight-bold); }
 .tour-libline .tour-dot { margin-right: var(--space-2); background: var(--kind-assistant); }
-/* Above the six cards, in gold: a gold wash, a gold edge and bar, a soft shadow, so it stands out a little. */
-.tour-libline { margin: 0 0 var(--space-6); padding: var(--space-4); background: var(--kind-assistant-wash); border: var(--border-width) solid var(--kind-assistant); border-left: calc(var(--border-width) * 6) solid var(--kind-assistant); border-radius: var(--radius-md); box-shadow: 0 2px 10px rgb(0 0 0 / 0.08); color: var(--kind-assistant-ink); font-size: var(--text-sm); line-height: 1.36; }
+/* Above the cards, in gold: a gold wash, a gold edge and bar, so it stands out a little (flat, like every surface). */
+.tour-libline { margin: 0 0 var(--space-6); padding: var(--space-4); background: var(--kind-assistant-wash); border: var(--border-width) solid var(--kind-assistant); border-left: calc(var(--border-width) * 6) solid var(--kind-assistant); border-radius: var(--radius-md); color: var(--kind-assistant-ink); font-size: var(--text-sm); line-height: 1.36; }
 .tour-libline .tour-libline-label { color: var(--kind-assistant-ink); }
 .tour-libline-label { display: flex; align-items: center; margin: 0 0 var(--space-2); }
-.tour-libline-go { margin-left: var(--space-1); border: var(--border-width) solid var(--kind-assistant-ink); background: #FBFBFB; color: var(--kind-assistant-ink); font-weight: var(--weight-bold); padding: 2px var(--space-3); }
+.tour-libline-go { margin-left: var(--space-1); border: var(--border-width) solid var(--kind-assistant-ink); background: transparent; color: var(--kind-assistant-ink); font-weight: var(--weight-bold); padding: 2px var(--space-3); }
 .tour-libline-go:hover { background: var(--kind-assistant); color: var(--kind-assistant-ink); }
 .tour-film-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin: calc(-1 * var(--space-3)) 0 var(--space-3); }
 .tour-film-head .top-bar-title { margin: 0; }
@@ -4732,7 +4734,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .group-problem:empty, .group-status:empty { display: none; }
 .group-problem, .group-status { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
 .group-composer { display: flex; flex-direction: column; gap: var(--space-2); border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-5); background: var(--color-bg); }
+  border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-4); background: var(--color-bg); }
 .group-text { width: 100%; resize: vertical; min-height: 4.5em; border: 0; background: transparent; color: var(--color-text);
   font: inherit; line-height: var(--line-height-base); outline: none; }
 .group-composer-row { display: flex; align-items: center; gap: var(--space-2); }

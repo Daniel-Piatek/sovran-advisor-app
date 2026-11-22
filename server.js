@@ -1852,7 +1852,7 @@ export function startServer({
     //   GET  /api/phone-drop/qr.svg       the link as a code for the phone's camera
     //   POST /api/phone-drop/check {}     collects what waits now: { collected }
     if (url.pathname === '/api/phone-drop' || url.pathname.startsWith('/api/phone-drop/')) {
-      if (!moduleOn(db, 'phone-drop')) return sendJson(res, 409, { error: 'Phone capture is switched off (Settings › Modules).' });
+      if (!moduleOn(db, 'phone-drop')) return sendJson(res, 409, { error: 'Sovran Go is switched off (Settings › Modules).' });
       if (url.pathname === '/api/phone-drop' && req.method === 'GET') return sendJson(res, 200, phoneDropState(db));
       if (url.pathname === '/api/phone-drop/link' && req.method === 'POST') {
         const input = await readJson(req);

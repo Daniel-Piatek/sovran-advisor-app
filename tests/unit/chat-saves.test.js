@@ -140,7 +140,7 @@ test('an item you edited, sorted or deleted is left alone; what comes after star
 
 test('what the tool refuses, in words the AI can pass on', async (t) => {
   const { db, box, save, collects } = await student(t);
-  assert.match((await save({ turns: [{ number: 1, asked: 'Too early', answer: 'x' }] })).text, /^Not saved\. This Sovran Advisor is not set up for saving chats yet\..*Phone capture/s, 'before the computer registered');
+  assert.match((await save({ turns: [{ number: 1, asked: 'Too early', answer: 'x' }] })).text, /^Not saved\. This Sovran Advisor is not set up for saving chats yet\..*Sovran Go/s, 'before the computer registered');
   await collects();
   assert.match((await save({ turns: [] })).text, /^Not saved: send at least one turn/);
   assert.match((await save({ turns: [{ asked: 'No number', answer: 'x' }] })).text, /needs its number/);

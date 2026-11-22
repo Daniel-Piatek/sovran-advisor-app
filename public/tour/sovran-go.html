@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sovran Go</title>
+<style>
+@font-face { font-family: "Gloock"; font-weight: 400; font-display: swap; src: url("/fonts/gloock-400.ttf") format("truetype"); }
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("/fonts/inter-400.ttf") format("truetype"); }
+@font-face { font-family: "Inter"; font-weight: 500 600; font-display: swap; src: url("/fonts/inter-600.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 500; font-display: swap; src: url("/fonts/plus-jakarta-sans-500.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 600; font-display: swap; src: url("/fonts/plus-jakarta-sans-600.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 700; font-display: swap; src: url("/fonts/plus-jakarta-sans-700.ttf") format("truetype"); }
+:root { --display: "Gloock", Georgia, serif; --ui: "Plus Jakarta Sans", system-ui, sans-serif; --body: "Inter", system-ui, sans-serif; }
+html, body { margin: 0; background: transparent; }
+body { font-family: var(--body); font-size: 16px; line-height: 1.44; color: #302D2D; padding: 4px 0 16px; }
+
+.filmbox { background: #FBFBFB; color: #302D2D; border-radius: 16px; padding: 18px 16px 20px; margin: 18px 0; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.gf { --ink: #302D2D; --muted: #555151; --line: #D4D1D1; --crimson: #C71F42; --gold: #D9C14B; display: grid; gap: 12px; justify-items: center; text-align: left; }
+.gf * { box-sizing: border-box; }
+.gf-cap { width: 100%; max-width: 560px; display: grid; gap: 2px; min-height: 104px; align-content: start; }
+.gf-cap .n { font-family: var(--ui); font-size: .78rem; font-weight: 600; color: var(--crimson); letter-spacing: .04em; }
+.gf-cap h3 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 0; line-height: 1.2; color: var(--ink); }
+.gf-cap p { margin: 0; line-height: 1.36; color: var(--ink); font-size: .95rem; }
+.gf-now { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.gf-pp { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--crimson); color: #FFFFFF; cursor: pointer; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.gf-pp.sm { width: 24px; height: 24px; font-size: 9px; background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.gf-pp:focus-visible, .gf-btn:focus-visible, .gf-scene:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.gf-say { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.gf-hint { flex-basis: 100%; font-family: var(--ui); font-size: .72rem; color: #7B7777; line-height: 1.36; }
+.gf-phone { width: 316px; max-width: 100%; background: #302D2D; border-radius: 34px; padding: 8px; box-shadow: 0 10px 28px rgba(48,45,45,.28); cursor: pointer; }
+.gf-screen { position: relative; width: 100%; aspect-ratio: 390 / 760; border-radius: 27px; overflow: hidden; background: #FBFBFB; }
+.gf-screen > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gf-dot { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(48,45,45,.32); border: 2px solid rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  z-index: 7; pointer-events: none; opacity: 0; left: 50%; top: 90%; transition: left .9s ease, top .9s ease, opacity .3s; }
+.gf-dot.show { opacity: 1; }
+.gf-ripple { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 3px solid var(--crimson); z-index: 6; pointer-events: none; animation: gf-ripple .6s ease-out forwards; }
+@keyframes gf-ripple { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.gf-tip { position: absolute; left: 10px; right: 10px; z-index: 8; background: var(--crimson); color: #FFFFFF; font-family: var(--ui); font-size: .86rem; font-weight: 600; line-height: 1.36;
+  border-radius: 10px; padding: 9px 12px; box-shadow: 0 6px 18px rgba(48,45,45,.3); pointer-events: none; transition: transform .5s ease, opacity .25s; }
+.gf-tip[hidden] { display: none; }
+.gf-veil { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(251,251,251,.4); z-index: 9; }
+.gf-veil[hidden] { display: none; }
+.gf-veil span { font-family: var(--ui); font-weight: 700; font-size: .9rem; background: var(--crimson); color: #FFFFFF; border-radius: 999px; padding: 10px 18px; }
+/* Claude's screen, drawn */
+.gf-claude { position: absolute; inset: 0; background: #262624; color: #F5F4EE; display: flex; flex-direction: column; font-family: var(--body); font-size: 13px; line-height: 1.44; z-index: 3; }
+.gf-claude[hidden] { display: none; }
+.gf-claude.gpt { background: #212121; }
+.gf-claude.gpt .gf-box { background: #303030; border-color: #424242; }
+.gf-claude.gpt .send { background: #FFFFFF; color: #212121; }
+.gf-claude.gpt .gf-user { background: #303030; }
+.gf-claude.gpt .gf-ans p { font-family: var(--body); }
+.gf-paste { position: absolute; left: 22px; bottom: 74px; background: #F5F4EE; color: #262624; font-family: var(--ui); font-size: 12px; font-weight: 600; border-radius: 8px; padding: 6px 12px; box-shadow: 0 4px 12px rgba(0,0,0,.4); z-index: 4; }
+.gf-ctop { padding: 12px 14px 8px; font-family: var(--ui); font-weight: 600; font-size: 13px; color: #C2C0B6; display: flex; justify-content: space-between; }
+.gf-msgs { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 6px 14px 10px; }
+.gf-user { align-self: flex-end; max-width: 86%; background: #141413; border-radius: 12px; padding: 8px 11px; white-space: pre-wrap; }
+.gf-ans { display: grid; gap: 7px; }
+.gf-ans i { display: block; height: 8px; border-radius: 4px; background: #4A4946; }
+.gf-ans p { margin: 4px 0 0; font-family: Georgia, "Times New Roman", serif; font-size: 14px; line-height: 1.36; }
+.gf-box { margin: 0 8px 10px; background: #30302E; border: 1px solid #4A4946; border-radius: 18px; padding: 10px 12px 8px; display: grid; gap: 8px; }
+.gf-warn { background: #5A1414; color: #F3C9C9; border-radius: 10px; padding: 6px 9px; font-size: 10.5px; line-height: 1.36; }
+.gf-warn[hidden] { display: none; }
+.gf-in { min-height: 20px; white-space: pre-wrap; }
+.gf-in.ph { color: #8F8D85; }
+.gf-caret { display: inline-block; width: 1.5px; height: 1.05em; background: #F5F4EE; vertical-align: text-bottom; animation: gf-blink 1s steps(1) infinite; }
+@keyframes gf-blink { 50% { opacity: 0; } }
+.gf-row { display: flex; align-items: center; gap: 8px; }
+.gf-row .plus { width: 26px; height: 26px; border-radius: 50%; background: #3D3D3A; display: grid; place-items: center; color: #F5F4EE; font-size: 15px; }
+.gf-row .model { background: #3D3D3A; border-radius: 999px; padding: 3px 10px; font-size: 11px; color: #C2C0B6; }
+.gf-row .send { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: #D97757; color: #FFFFFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+.gf-below { width: 100%; max-width: 560px; display: grid; gap: 10px; }
+.gf-bar { flex: 1 1 160px; height: 4px; background: #ECEAEA; border-radius: 4px; overflow: hidden; }
+.gf-bar span { display: block; height: 100%; width: 0; background: var(--crimson); }
+.gf-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gf-btn { font: inherit; font-family: var(--ui); font-weight: 700; font-size: .85rem; cursor: pointer; border-radius: 8px; padding: 7px 14px; border: 2px solid var(--line); background: transparent; color: var(--ink); }
+.gf-scene { font: inherit; font-family: var(--ui); font-size: .68rem; font-weight: 600; cursor: pointer; border: 1px solid var(--line); background: #FBFBFB; color: var(--muted); border-radius: 999px; padding: 2px 8px; }
+#gf-scenes { gap: 4px; }
+#gf-scenes::before { content: "Chapters"; font-family: var(--ui); font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.gf-ends { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; }
+.gf-scene[aria-current="true"] { color: var(--ink); border-color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .gf * { transition: none !important; animation: none !important; } }
+
+.filmbox { margin: 0; box-shadow: none; border: 1px solid #D4D1D1; }
+html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent; }
+.gf-back { text-decoration: none; background: #C71F42; border-color: #C71F42; color: #FFFFFF; }
+</style>
+<script>
+// Embedded on the Start Here page (?embed): tell it the height, so there is one scroll bar.
+(() => {
+  if (!/[?&]embed\b/.test(location.search)) return;
+  const root = document.documentElement; root.classList.add('embedded');
+  const tell = () => parent.postMessage({ film: 'height', h: root.scrollHeight }, '*');
+  addEventListener('load', () => { tell(); new ResizeObserver(tell).observe(root); });
+})();
+</script>
+<div class="filmbox"><div class="gf" id="gf">
+  <div class="gf-cap"><span class="n" id="gf-n">Chapter 1 of 6</span><h3 id="gf-h">This is Sovran Go</h3><p id="gf-p"></p></div>
+  <div class="gf-phone" id="gf-phone" title="Tap to pause or play"><div class="gf-screen" id="gf-screen" aria-hidden="true">
+    <img id="gf-img" alt="">
+    <div class="gf-claude" id="gf-claude" hidden>
+      <div class="gf-ctop"><span>☰</span><span id="gf-ainame">Claude</span><span>＋</span></div>
+      <div class="gf-msgs" id="gf-msgs"></div>
+      <div class="gf-box"><div class="gf-warn" id="gf-warn" hidden>⚠ Use caution before sending. Malicious content could trick Claude into harmful actions or sharing your data.</div>
+        <div class="gf-in" id="gf-in"></div>
+        <div class="gf-row"><span class="plus">+</span><span class="model" id="gf-aimodel">Claude</span><span class="send" id="gf-send">↑</span></div></div>
+    </div>
+    <div class="gf-dot" id="gf-dot"></div>
+    <div class="gf-tip" id="gf-tip" hidden></div>
+    <div class="gf-veil" id="gf-veil" hidden><span>Paused · tap to play</span></div>
+  </div></div>
+  <div class="gf-below">
+    <div class="gf-now"><button class="gf-pp sm" type="button" id="gf-prev" aria-label="Previous chapter" title="Previous chapter">⏮</button><button class="gf-pp" type="button" id="gf-pp" aria-label="Pause">❚❚</button><button class="gf-pp sm" type="button" id="gf-next" aria-label="Next chapter" title="Next chapter">⏭</button>
+      <div class="gf-bar" aria-hidden="true"><span id="gf-bar"></span></div><span class="gf-say" id="gf-ppl">Pause</span><span class="gf-hint">Tap the phone screen or press the space bar to pause · ← → for chapters</span></div>
+    <div class="gf-ctrl" id="gf-scenes" role="group" aria-label="Chapters"></div>
+    <div class="gf-ctrl gf-ends"><button class="gf-btn" type="button" id="gf-again">Start Again</button><a class="gf-btn gf-back" id="gf-back" href="/tour" target="_top">← Back to All Videos</a></div></div>
+</div></div>
+<script>
+(() => {
+const F = {"home": "sovran-go/home.jpg", "journal": "sovran-go/journal.jpg", "journal-t1": "sovran-go/journal-t1.jpg", "journal-t2": "sovran-go/journal-t2.jpg", "journal-t3": "sovran-go/journal-t3.jpg", "journal-done": "sovran-go/journal-done.jpg", "inner": "sovran-go/inner.jpg", "inner-t1": "sovran-go/inner-t1.jpg", "inner-t2": "sovran-go/inner-t2.jpg", "inner-t3": "sovran-go/inner-t3.jpg", "inner-done": "sovran-go/inner-done.jpg", "list": "sovran-go/list.jpg", "cover": "sovran-go/cover.jpg", "gifts": "sovran-go/gifts.jpg", "sel1": "sovran-go/sel1.jpg", "marked": "sovran-go/marked.jpg", "sel2": "sovran-go/sel2.jpg"}, M = {"ask":[0.5,0.20707236842105264],"journal":[0.5,0.33472450657894737],"inner":[0.5,0.4498560855263158],"outer":[0.5,0.5649876644736842],"reports":[0.5,0.7071134868421053],"text":[0.5,0.4299342105263158],"jkeep":[0.5,0.6529605263157895],"another":[0.49997996794871796,0.649157072368421],"back":[0.11141826923076924,0.11381578947368422],"itext":[0.5,0.3381578947368421],"ikeep":[0.5,0.5085526315789474],"card":[0.5,0.5001747532894737],"words1":[0.7257011217948718,0.4152960526315789],"hl":[0.20897435897435898,0.8315789473684211],"cm":[0.46041666666666664,0.8315789473684211],"pask":[0.7514423076923077,0.8315789473684211],"words2":[0.49423076923076925,0.7324629934210526],"pask2":[0.7514423076923077,0.04736842105263158]}, AI = "Claude", FILL = true;
+const $ = (id) => document.getElementById(id);
+const screen = $('gf-screen'), img = $('gf-img'), dot = $('gf-dot'), tip = $('gf-tip'), veil = $('gf-veil');
+const claude = $('gf-claude'), msgs = $('gf-msgs'), box = $('gf-in'), warn = $('gf-warn'), send = $('gf-send');
+const SLOW = 1.66; // the owner's speed for these films
+let token = 0, paused = false;
+class Stop extends Error {}
+const sleep = (ms, t = token) => new Promise((resolve, reject) => {
+  let left = ms * SLOW;
+  const tick = () => { if (t !== token) return reject(new Stop()); if (!paused) left -= 50; if (left <= 0) return resolve(); setTimeout(tick, 50); };
+  setTimeout(tick, 0);
+});
+const sleepRaw = (ms) => sleep(ms / SLOW); // reading time is not slowed
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const frame = (n) => { img.src = F[n]; claude.hidden = true; };
+const WORDS = 'From my Sovran Pattern Report: “There is a steadiness in you that others lean on.”\n\nMy question: ';
+const of = (el) => { const s = screen.getBoundingClientRect(), r = el.getBoundingClientRect(); return [(r.left + r.width / 2 - s.left) / s.width, (r.top + r.height / 2 - s.top) / s.height]; };
+async function moveTo(p) { dot.classList.add('show'); dot.style.left = p[0] * 100 + '%'; dot.style.top = p[1] * 100 + '%'; await sleep(650); }
+async function tap(p) {
+  await moveTo(p);
+  const r = h('span', 'gf-ripple'); r.style.left = p[0] * 100 + '%'; r.style.top = p[1] * 100 + '%'; screen.append(r); setTimeout(() => r.remove(), 600);
+  await sleep(380);
+}
+const hideDot = () => dot.classList.remove('show');
+// The crimson box: shown still while it is read, then it moves aside while the step happens.
+async function step(text, y, action, shift = -1) {
+  tip.textContent = text; tip.style.transition = 'none'; tip.style.transform = 'none'; tip.style.opacity = '0'; tip.style.top = y * 100 + '%'; tip.hidden = false;
+  tip.getBoundingClientRect(); tip.style.transition = ''; tip.style.opacity = '1';
+  const words = text.split(/\s+/).length;
+  await sleepRaw(Math.min(3000, Math.max(1500, 600 + words * 170)));
+  if (action) { tip.style.transform = `translateY(${shift * 22}px)`; await sleepRaw(500); await action(); }
+  await sleep(500);
+}
+async function typed(prefix) { for (const n of ['t1', 't2', 't3']) { frame(`${prefix}-${n}`); await sleep(420); } }
+// Claude's screen
+$('gf-ainame').textContent = AI; $('gf-aimodel').textContent = AI; claude.classList.toggle('gpt', !FILL);
+function openClaude(words) { msgs.replaceChildren(); claude.querySelectorAll('.gf-paste').forEach((e) => e.remove()); claude.hidden = false; warn.hidden = !words; setBox(words || ''); }
+function setBox(text) { box.replaceChildren(); if (!text) { box.classList.add('ph'); box.textContent = FILL ? 'Chat with Claude' : 'Ask anything'; return; } box.classList.remove('ph'); box.append(document.createTextNode(text), h('span', 'gf-caret')); }
+async function typeBox(text) { let now = box.classList.contains('ph') ? '' : box.textContent; for (const ch of text) { now += ch; setBox(now); await sleep(38); } }
+async function sendIt() { await tap(of(send)); msgs.append(h('div', 'gf-user', box.textContent)); setBox(''); warn.hidden = true; hideDot(); await sleep(500); }
+function answer(words) { const a = h('div', 'gf-ans'); for (const w of [96, 88, 92, 60]) { const l = h('i'); l.style.width = w + '%'; a.append(l); } if (words) a.append(h('p', '', words)); msgs.append(a); }
+function says(words) { const a = h('div', 'gf-ans'); a.append(h('p', '', words)); msgs.append(a); }
+
+const scenes = [
+  { t: 'This Is Sovran Go', c: 'It opens from the crown on your phone’s home screen. Five choices, each one tap.',
+    async run() {
+      frame('home');
+      await step('Sovran Go on your phone. Choose what you would like to do.', .83, null);
+      for (const k of ['ask', 'journal', 'inner', 'outer', 'reports']) await moveTo(M[k]);
+      hideDot();
+    } },
+  { t: 'Ask My AI', c: `Opens ${AI}, which can read your reports and the teaching. ${AI} can keep the whole chat saved to your Inbox.`,
+    async run() {
+      frame('home');
+      await step('Tap Ask my AI', .83, async () => { await tap(M.ask); openClaude(''); hideDot(); }, 1);
+      await step(`${AI} opens. Ask your question.`, .5, async () => { await typeBox('What does my Pattern Report say about rest?'); await sendIt(); answer('Would you like me to keep this chat saved to your Sovran Advisor?'); });
+      await sleep(900);
+      await step(`${AI} asks if you would like the chat kept. Answer yes.`, .12, async () => { await typeBox('yes'); await sendIt(); says('Saved to your Sovran Advisor.'); }, 0);
+      await step('The whole chat is now in your Inbox on your computer.', .12, null);
+    } },
+  { t: 'Journal Entry', c: 'Goes straight into today in your Journal.',
+    async run() {
+      frame('home');
+      await step('Tap Journal entry', .83, async () => { await tap(M.journal); frame('journal'); hideDot(); }, 1);
+      await step('Write your words, or speak them', .72, async () => { await tap(M.text); hideDot(); await typed('journal'); }, 1);
+      await step('Tap Add to my Journal', .72, async () => { await tap(M.jkeep); frame('journal-done'); hideDot(); }, 1);
+      await step('It is in your Journal, on today.', .72, null);
+    } },
+  { t: 'My Own Thought', c: 'Kept in your Inbox on your computer. From someone else works the same way, for something you heard or read.',
+    async run() {
+      frame('home');
+      await step('Tap My own thought', .83, async () => { await tap(M.inner); frame('inner'); hideDot(); }, 1);
+      await step('Write the thought', .62, async () => { await tap(M.itext); hideDot(); await typed('inner'); }, 1);
+      await step('Tap Keep in Inbox', .62, async () => { await tap(M.ikeep); frame('inner-done'); hideDot(); }, 1);
+      await step('It waits in your Inbox, ready to sort.', .72, null);
+    } },
+  { t: 'My Reports', c: 'Read your Sovran reports on your phone. Highlights and comments match on your phone and your computer.',
+    async run() {
+      frame('home');
+      await step('Tap My reports', .83, async () => { await tap(M.reports); frame('list'); hideDot(); }, 1);
+      await step('Tap the report you want to read', .84, async () => { await tap(M.card); frame('cover'); hideDot(); }, 1);
+      await step('Scroll down to read', .02, async () => { await moveTo([.5, .75]); await moveTo([.5, .3]); frame('gifts'); hideDot(); }, 0);
+      await step('Press and hold on some words to select them', .02, async () => { await tap(M.words1); frame('sel1'); hideDot(); }, 0);
+      await step('A bar shows. Tap Highlight.', .62, async () => { await tap(M.hl); frame('marked'); hideDot(); }, -1);
+      await step('Highlighted. Comment works the same way.', .02, null);
+    } },
+  { t: 'Ask About Words in a Report', c: FILL ? 'Select words, tap Ask my AI, and Claude opens with those words already in its box.' : 'Select words and tap Ask my AI. The words are copied and ChatGPT opens. Paste them in and add your question.',
+    async run() {
+      frame('marked');
+      await step('Select the words you want to ask about', .3, async () => { await tap(M.words2); frame('sel2'); hideDot(); }, -1);
+      if (FILL) {
+        await step('Tap Ask my AI', .14, async () => { await tap(M.pask2); openClaude(WORDS); hideDot(); }, 1);
+        await step('The words you highlighted are in Claude’s box. Add your question.', .1, async () => { await typeBox('What does this mean for me?'); }, 0);
+      } else {
+        await step('Tap Ask my AI', .14, async () => { await tap(M.pask2); frame('asked'); hideDot(); }, 1);
+        await step('Your words are copied. ChatGPT opens.', .3, async () => { openClaude(''); }, 0);
+        await step('Press and hold in the box, then tap Paste', .1, async () => {
+          await tap(of(box)); const chip = h('div', 'gf-paste', 'Paste'); claude.append(chip); await sleep(500);
+          await tap(of(chip)); chip.remove(); setBox(WORDS); hideDot();
+        }, 0);
+        await step('Your words are in the box. Add your question.', .1, async () => { await typeBox('What does this mean for me?'); }, 0);
+      }
+      await step('Tap the arrow to send', .1, async () => { await sendIt(); answer(); }, 0);
+      await sleep(1200);
+    } },
+];
+
+const bar = $('gf-bar'), pp = $('gf-pp');
+const chips = scenes.map((s, i) => { const SHORT = {"This Is Sovran Go": "Sovran Go", "Ask About Words in a Report": "Ask About Words"}; const b = h('button', 'gf-scene', SHORT[s.t] || s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('gf-scenes').append(b); return b; });
+function show(i) {
+  now = i; $('gf-n').textContent = `Chapter ${i + 1} of ${scenes.length}`; $('gf-h').textContent = scenes[i].t; $('gf-p').textContent = scenes[i].c;
+  chips.forEach((c, j) => c.setAttribute('aria-current', String(i === j)));
+  bar.style.width = (i / scenes.length * 100) + '%';
+}
+function setPaused(v) { paused = v; pp.textContent = v ? '▶' : '❚❚'; $('gf-ppl').textContent = v ? 'Play' : 'Pause'; pp.setAttribute('aria-label', v ? 'Play' : 'Pause'); veil.hidden = !v; }
+async function loop(start) {
+  const t = ++token;
+  for (let i = start; ; i = (i + 1) % scenes.length) {
+    tip.hidden = true; hideDot(); show(i);
+    try { await scenes[i].run(); await sleep(700, t); } catch (e) { if (e instanceof Stop) return; console.error(e); return; }
+    if (t !== token) return;
+    bar.style.width = ((i + 1) / scenes.length * 100) + '%';
+  }
+}
+function go(i) { setPaused(false); loop(i); }
+pp.addEventListener('click', () => setPaused(!paused));
+$('gf-phone').addEventListener('click', () => setPaused(!paused));
+$('gf-again').addEventListener('click', () => go(0));
+let now = 0;
+$('gf-prev').addEventListener('click', () => go((now - 1 + scenes.length) % scenes.length));
+$('gf-next').addEventListener('click', () => go((now + 1) % scenes.length));
+// The first frame is the real first screen, so a still picture already shows Sovran Go. It plays once it is on screen.
+frame('home'); show(0);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('gf-prev').click(); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); $('gf-next').click(); }
+  if (e.code === 'Space' && !e.target.closest?.('button, a')) { e.preventDefault(); setPaused(!paused); }
+});
+$('gf-back').addEventListener('click', (e) => {
+  if (document.documentElement.classList.contains('embedded')) { e.preventDefault(); parent.postMessage({ film: 'back' }, '*'); return; }
+  try { window.parent.document.dispatchEvent(new CustomEvent('app-navigate', { detail: '/tour' })); e.preventDefault(); } catch { /* the link goes there itself */ }
+});
+setTimeout(() => go(0), 800);
+})();
+</script>

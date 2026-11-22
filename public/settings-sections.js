@@ -18,7 +18,7 @@ const HINTS = {
   'Background jobs': 'What the app does by itself, and when it last did.',
   'Calendar timings': 'How quickly the Calendar and the Planner answer.',
   'Capture from anywhere': 'Send a thought to your Inbox from your browser or another app.',
-  'Phone capture': 'A Capture app on your phone that lands in your Inbox.',
+  'Sovran Go': 'Sovran Advisor on your phone: ask your AI, write, and read your reports.',
   'Phone, backups and moving': 'Your daily backups, and moving to a new computer.',
   Import: 'Bring in notes and contacts you already have.',
   Tags: 'Rename, join, group and pin your tags.',

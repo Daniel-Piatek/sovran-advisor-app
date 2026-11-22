@@ -3,7 +3,7 @@ import fs from 'node:fs';
 // switch on, in the owner's order, each with its own short film and "Switch it on".
 import { test, expect } from './fixtures.js';
 
-const ORDER = ['Group Circle', 'Phone Capture', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
+const ORDER = ['Group Circle', 'Sovran Go', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
 
 test('Tour sits just above Settings, and opens the films', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
@@ -91,4 +91,18 @@ test('Group Circle has its own film: on already, it opens the group, and the Gro
   await expect(film.locator('.tour-note')).toBeHidden(); // "click Tour in your sidebar" is for the shared web page only
   await expect(film.locator('#scenes .scene')).toHaveCount(6);
   expect(fs.readFileSync(new URL('../../docs/group.md', import.meta.url), 'utf8')).toContain('(/tour?film=group)');
+});
+
+test('the Sovran Go card plays the Sovran Go film, and its Back to All Videos comes back', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour`);
+  await page.locator('.tour-card[data-film="phone"]').getByRole('link', { name: 'Watch' }).click();
+  await expect(page.getByRole('heading', { name: 'Sovran Go', level: 1 })).toBeVisible();
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#gf-h')).toHaveText('This Is Sovran Go');
+  await expect(film.locator('#gf-img')).toHaveJSProperty('complete', true);
+  expect(await film.locator('#gf-img').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
+  await film.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(film.locator('#gf-h')).toHaveText('Ask My AI');
+  await film.getByRole('link', { name: '← Back to All Videos' }).click();
+  await expect(page.locator('.tour-card')).toHaveCount(7);
 });

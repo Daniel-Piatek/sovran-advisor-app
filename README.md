@@ -32,7 +32,7 @@ notes, and an AI assistant that knows them, all on your own computer.
 - **Phone, backups and moving** (off until you switch it on): a Capture icon for your phone's home
   screen (two taps to your Inbox), your daily backups each checked, and one moving file that takes
   everything to a new computer. No cloud account, nothing to pay.
-- **Phone capture** (off until you switch it on): **Sovran Go**, with the crown icon, on your iPhone or
+- **Sovran Go** (off until you switch it on; it was called Phone capture): Sovran Advisor, with the crown icon, on your iPhone or
   Android phone. It asks what you would like to do: **Ask my AI** opens the Claude app; a **Journal entry**
   lands in your Journal on the day you wrote it; **My reports** lets you read your Sovran reports there, in
   the same Ivory & Gold look, and highlight or comment (it matches the computer); **My own thought** or **From someone else** (speak with
