@@ -134,6 +134,7 @@ const icons = {
   search: svg('<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>'),
   assistant: svg('<path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H7l-3 2.5v-2.5H2.5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/><path d="M5 7.5h.01M8 7.5h.01M11 7.5h.01"/>'),
   lock: svg('<rect x="3" y="7" width="10" height="7.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/>'),
+  tag: svg('<path d="M8.6 1.8h4.6a1 1 0 0 1 1 1v4.6a1 1 0 0 1-.3.7l-6 6a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 .7-.3z"/><circle cx="11" cy="5" r="1"/>'), // Tags (2026-11-22)
   pin: svg('<path d="M9.5 1.5l5 5-2 .5-2.5 2.5.5 3-1 1-3-3-4.5 4.5"/><path d="M6.5 4.5l-1 .5-2 2 6 6 2-2 .5-1"/>'),
   // A play triangle in a circle: the Tour's films (2026-11-16).
   play: svg('<circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.4l4 2.6-4 2.6z"/>'),

@@ -31,6 +31,7 @@ import {
 import { readLink, fetchTitle } from './link-titles.js';
 import { linkedFrom, linkTarget, suggestLinks } from './links.js';
 import { listModules, checkModuleInput, setModule, moduleOn } from './modules.js';
+import { listTags, ensureTag, itemsWithTags, tagOverview, updateTag, deleteTag, restoreTag, joinTags, createGroup, updateGroup, deleteGroup, restoreGroup, checkItem, tagsOf, addItemTag, removeItemTag } from './tags.js';
 import { createGoogleEvent, answerGoogleEvent, changeGoogleEvent, sendDue as sendGoogleCalendar, resolveClash as resolveGoogleClash, retryChange, listOutbox as listGoogleOutbox, getGuards, setGuards, startGoogleCalendarSend } from './gcal-write.js';
 import { readGoogleCalendar, startGoogleCalendarRead, writableCalendars, googleCalendarState, googleCalendarJob, googleCalendarSendJob } from './gcal.js';
 import { checkTemplateInput, listTemplates, createTemplate, removeTemplate, restoreTemplate, placeTemplate } from './templates.js';
@@ -423,6 +424,75 @@ export function startServer({
       const block = setFolded(db, bulletMatch[1], input.folded);
       return block ? sendJson(res, 200, block) : sendJson(res, 404, { error: 'No such bullet' });
     }
+    // Tags (tags.js, module tags): one list of tags shared by notes, journal entries, people, companies, tasks and the Inbox.
+    //   GET    /api/tags                       every tag (most used first, with counts by kind) and the groups
+    //   POST   /api/tags                       make one (or find it): { name, color?, group_id? }
+    //   GET    /api/tags/items?tags=a,b&kind=  the items of one kind that carry every one of these tags
+    //   GET    /api/tags/:id?and=b,c           a tag's page: per kind, how many and the newest two (with and: only items with those too)
+    //   PATCH  /api/tags/:id                   { name?, color?, group_id?, pinned? }; a name another tag has: 409
+    //   DELETE /api/tags/:id                   take it off everything (the items stay); POST /api/tags/:id/restore undoes it
+    //   POST   /api/tags/:id/join              { into }: its items get the other tag instead; restore undoes it
+    //   POST   /api/tag-groups                 { name }; PATCH / DELETE /api/tag-groups/:id; POST /api/tag-groups/:id/restore
+    //   GET    /api/item-tags?kind=&id=        an item's tags; POST /api/item-tags { kind, id, tag_id | name } puts one on;
+    //   POST   /api/item-tags/remove           { kind, id, tag_id } takes one off
+    const tagsPath = url.pathname.match(/^\/api\/(tags|tag-groups|item-tags)(?:\/([0-9a-f-]{36}|items|remove))?(?:\/(restore|join))?$/);
+    if (tagsPath) {
+      const [, area, which, action] = tagsPath;
+      const off = () => sendJson(res, 409, { error: 'Tags is switched off (Settings › Modules).' });
+      const writing = req.method !== 'GET';
+      try {
+        if (writing && !moduleOn(db, 'tags')) { await readJson(req); return off(); }
+        if (area === 'tags' && !which) {
+          if (req.method === 'GET') return sendJson(res, 200, listTags(db));
+          if (req.method === 'POST') { const input = (await readJson(req)) ?? {}; return sendJson(res, 201, ensureTag(db, input.name, { color: input.color, group_id: input.group_id })); }
+        }
+        if (area === 'tags' && which === 'items' && req.method === 'GET') {
+          const ids = (url.searchParams.get('tags') ?? '').split(',').filter(Boolean);
+          return sendJson(res, 200, itemsWithTags(db, ids, url.searchParams.get('kind') ?? ''));
+        }
+        if (area === 'tags' && which && !action) {
+          if (req.method === 'GET') {
+            const page = tagOverview(db, which, { and: (url.searchParams.get('and') ?? '').split(',').filter(Boolean) });
+            return page ? sendJson(res, 200, page) : sendJson(res, 404, { error: 'No such tag' });
+          }
+          if (req.method === 'PATCH') {
+            const input = (await readJson(req)) ?? {};
+            try {
+              const tag = updateTag(db, which, input);
+              return tag ? sendJson(res, 200, tag) : sendJson(res, 404, { error: 'No such tag' });
+            } catch (err) { if (err.status === 409) return sendJson(res, 409, { error: err.message, other: err.other }); throw err; }
+          }
+          if (req.method === 'DELETE') { const tag = deleteTag(db, which); return tag ? sendJson(res, 200, tag) : sendJson(res, 404, { error: 'No such tag' }); }
+        }
+        if (area === 'tags' && which && action && req.method === 'POST') {
+          const input = (await readJson(req)) ?? {};
+          if (action === 'restore') { const tag = restoreTag(db, which); return tag ? sendJson(res, 200, tag) : sendJson(res, 404, { error: 'No such tag' }); }
+          return sendJson(res, 200, joinTags(db, which, input.into));
+        }
+        if (area === 'tag-groups') {
+          const input = writing ? (await readJson(req)) ?? {} : {};
+          if (!which && req.method === 'POST') return sendJson(res, 201, createGroup(db, input));
+          if (which && action === 'restore' && req.method === 'POST') { const g = restoreGroup(db, which); return g ? sendJson(res, 200, g) : sendJson(res, 404, { error: 'No such group' }); }
+          if (which && !action && req.method === 'PATCH') { const g = updateGroup(db, which, input); return g ? sendJson(res, 200, g) : sendJson(res, 404, { error: 'No such group' }); }
+          if (which && !action && req.method === 'DELETE') { const g = deleteGroup(db, which); return g ? sendJson(res, 200, g) : sendJson(res, 404, { error: 'No such group' }); }
+        }
+        if (area === 'item-tags') {
+          if (!which && req.method === 'GET') {
+            const kind = url.searchParams.get('kind') ?? '';
+            const id = url.searchParams.get('id') ?? '';
+            const problem = checkItem(kind, id);
+            return problem ? sendJson(res, 400, { error: problem }) : sendJson(res, 200, tagsOf(db, kind, id));
+          }
+          if (req.method === 'POST') {
+            const input = (await readJson(req)) ?? {};
+            if (which === 'remove') return sendJson(res, 200, removeItemTag(db, input.kind, input.id, input.tag_id));
+            if (!which) return sendJson(res, 200, addItemTag(db, input.kind, input.id, { tag_id: input.tag_id, name: input.name }));
+          }
+        }
+        return sendJson(res, 405, { error: 'Method not allowed' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
+    }
+
     if (url.pathname === '/api/notes') {
       if (req.method === 'GET') {
         if (url.searchParams.get('deleted') === '1') return sendJson(res, 200, listDeletedNotes(db));

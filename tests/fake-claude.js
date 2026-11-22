@@ -195,9 +195,13 @@ if (/plan my week with me/i.test(prompt)) {
   const kind = /^(book|call|send|buy|fix|pay|ask|email|write)\b/i.test(words) ? 'task'
     : /^(slept|felt|today)\b/i.test(words) ? 'journal' : /^spam\b/i.test(words) ? 'let_go' : 'note';
   const why = { task: 'It starts with something to do.', journal: 'It says how the day went.', let_go: 'It needs nothing from you.', note: 'It is something to keep.' }[kind];
+  // Tags (module tags): the owner's own whose names are in the words, and a new one asked for with "suggest-tag:name".
+  const ownTags = /The owner’s tags:\n((?:- .*\n?)*)/.exec(prompt)?.[1].split('\n').filter(Boolean).map((line) => line.slice(2)) ?? [];
+  const tags = /The owner’s tags:/.test(prompt) ? [...ownTags.filter((name) => words.toLowerCase().includes(name.toLowerCase())),
+    ...[...words.matchAll(/suggest-tag:(\S+)/g)].map((m) => m[1])] : undefined;
   answer = JSON.stringify({
     title: words[0].toUpperCase() + words.slice(1, 60), summary: words.slice(0, 120), kind,
-    day: kind === 'task' && /tomorrow/i.test(words) ? day : '', home_id: home?.[1] ?? '', connects, why,
+    day: kind === 'task' && /tomorrow/i.test(words) ? day : '', home_id: home?.[1] ?? '', connects, why, tags,
   });
 } else if (about) {
   const found = await tool('search_notes', { query: about[1] });

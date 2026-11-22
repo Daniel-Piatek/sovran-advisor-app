@@ -81,3 +81,4 @@ your changes stay safe when you update.
 - How the app is built and the rules Claude follows when changing it: `AGENTS.md`.
 
 Copyright (c) 2026 Daniel Piatek. All rights reserved; see `LICENSE`.
+- **Tags** (schema 78; Settings › Modules › Tags, off until switched on): **+ Tag** under a note, a journal entry, a person, a company, a task or an Inbox item, or **#word** in the writing. The **Tags** button over each list shows only what carries the tags you pick; the **Tags** tab in Notes lists them by your groups, and one tag's page shows each kind with its count and newest two, with **Open all** and **Narrow with another tag**. A tag can be pinned to the sidebar. Settings › Tags: groups of any size, rename, join, remove with Undo. Every tag has the same small tag shape and no colour of its own. Your assistant may suggest tags for an Inbox item; you tap to put one on. Tags stay on this computer.

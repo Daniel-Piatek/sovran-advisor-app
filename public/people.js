@@ -5,6 +5,7 @@
 //   /companies/:id      a company: card, website, notes, its people, what mentions it
 // A person is told from a company by shape: initials in a circle, or in a square.
 
+import { tagRow, tagFilter } from './tags.js';
 import { createEditor, catchPageDrops, showTaskAt } from './editor.js';
 import { api, el, icon, request, makeSaver, undoBar, linkedFromSection } from './ui.js';
 import { createTimeline } from './timeline.js';
@@ -49,6 +50,9 @@ export async function showPeople(kind = 'person') {
   let query = new URLSearchParams(location.search).get('q') ?? '';
 
   const list = el('div', { class: 'people-list' });
+  // The Tags button (module tags): only the people (or companies) that carry every tag picked.
+  let tagged = null;
+  const byTag = tagFilter(kind, async () => { tagged = await byTag.ids().catch(() => null); load(); });
   const search = el('input', {
     type: 'search', class: 'search-input', placeholder: isPeople ? 'Search people' : 'Search companies',
     'aria-label': isPeople ? 'Search people' : 'Search companies', autocomplete: 'off',
@@ -110,6 +114,7 @@ export async function showPeople(kind = 'person') {
       el('label', { class: 'search' }, icon('search'), search),
       ...(isPeople && moduleOn('people-plus') ? [el('button', { type: 'button', class: 'button', onclick: () => openImport({ onDone: () => navigate('/people', { replace: true }) }) }, 'Import')] : [])),
     tabs,
+    byTag.element,
     adding,
     duplicatesPlace,
     reconnectPlace,
@@ -127,17 +132,18 @@ export async function showPeople(kind = 'person') {
   let run = 0;
   async function load() {
     const mine = ++run;
-    history.replaceState(null, '', `${isPeople ? '/people' : '/companies'}${query.trim() ? `?q=${encodeURIComponent(query)}` : ''}`);
+    const keep = [...(query.trim() ? [`q=${encodeURIComponent(query)}`] : []), ...(byTag.picked().length ? [`tags=${byTag.picked().join(',')}`] : [])];
+    history.replaceState(null, '', `${isPeople ? '/people' : '/companies'}${keep.length ? `?${keep.join('&')}` : ''}`);
     try {
       const found = isPeople ? await api.listPeople(query) : await api.listCompanies(query);
       if (mine !== run) return;
-      items = found;
+      items = tagged ? found.filter((item) => tagged.has(item.id)) : found;
     } catch {
       list.replaceChildren(el('p', { class: 'empty' }, "These couldn't be loaded. Is the app still running?"));
       return;
     }
     if (!items.length) {
-      list.replaceChildren(el('p', { class: 'empty' }, query.trim()
+      list.replaceChildren(el('p', { class: 'empty' }, tagged ? (isPeople ? 'Nobody has these tags.' : 'No company has these tags.') : query.trim()
         ? `Nobody matches “${query.trim()}”.`
         : isPeople ? 'No people yet. Press n or New person to add someone.' : 'No companies yet. Press n or New company to add one.'));
       return;
@@ -153,6 +159,7 @@ export async function showPeople(kind = 'person') {
         : plural(item.people_count, 'person', 'people'))),
     el('span', { class: 'person-row-count' }, item.mention_count ? plural(item.mention_count, 'mention', 'mentions') : ''))));
   }
+  if (byTag.picked().length) tagged = await byTag.ids().catch(() => null);
   await load();
 }
 
@@ -192,7 +199,9 @@ export async function showContact(kind, id) {
   }
   document.title = item.name;
 
-  const saver = makeSaver((changes, options) => (isPerson ? api.updatePerson(id, changes, options) : api.updateCompany(id, changes, options)), { status });
+  // Their tags (module tags): under the name. A #word in their notes puts one on too.
+  const tagsRow = tagRow(kind, id);
+  const saver = makeSaver((changes, options) => (isPerson ? api.updatePerson(id, changes, options) : api.updateCompany(id, changes, options)), { status, onSaved: (saved) => { if ('body' in saved) void tagsRow.refresh(); } });
 
   const deleteButton = el('button', {
     type: 'button', class: 'button button-quiet',
@@ -291,7 +300,7 @@ export async function showContact(kind, id) {
     placeholderText: isPerson ? 'What you know about them' : 'What you know about this company',
   });
   const stopDrops = catchPageDrops(editor);
-  onLeave(async () => { await saver.close(); stopDrops(); editor.destroy(); });
+  onLeave(async () => { tagsRow.close(); await saver.close(); stopDrops(); editor.destroy(); });
 
   // People in depth: how often you want to be in touch, under their name.
   const rhythm = isPerson && moduleOn('people-plus') ? cadenceChip(item) : null;
@@ -341,7 +350,7 @@ export async function showContact(kind, id) {
     choose(new URLSearchParams(location.search).get('tab') === 'timeline' ? 'timeline' : 'page');
   }
   screen.append(
-    el('div', { class: 'contact-card' }, bigFace, el('div', { class: 'contact-card-text' }, name, sub, ...(rhythm ? [rhythm.element] : []))),
+    el('div', { class: 'contact-card' }, bigFace, el('div', { class: 'contact-card-text' }, name, sub, ...(rhythm ? [rhythm.element] : []), tagsRow.element)),
     ...tabsPart.slice(0, 1),
     pagePart,
     ...tabsPart.slice(1),

@@ -21,6 +21,7 @@
 // a day, flag and home of its own (its words are changed in its page). Add task, at the top, opens the same
 // pop-up empty. Enter, Escape, Close or a click outside close it, keeping what changed. Keys shows the keys (also ?).
 
+import { tagFilter } from './tags.js';
 import { api, el, icon, undoBar, giveCursorBack } from './ui.js';
 import { app, screen, setFooterLink, onLeave } from './shell.js';
 import { dueLabel, todayDay, addDays, estimateLabel, timeLabel, isSpeedy } from './due.js';
@@ -135,12 +136,16 @@ export async function showTasks() {
     },
   });
   search.value = query;
+  // The Tags button (module tags): only the tasks that carry every tag picked, in every view.
+  let tagged = null;
+  const byTag = tagFilter('task', async () => { tagged = await byTag.ids().catch(() => null); keepAddress(); draw(); });
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Tasks'),
       el('button', { type: 'button', class: 'button button-primary page-add', onclick: () => addTask() }, icon('plus'), 'Add task'),
       el('label', { class: 'search' }, icon('search'), search, el('kbd', { class: 'sidebar-key' }, '/')),
       el('button', { type: 'button', class: 'button button-quiet', title: 'The keys for working through tasks (?)', onclick: () => showKeys() }, 'Keys')),
     tabs,
+    byTag.element,
     selection,
     status,
     list,
@@ -148,7 +153,9 @@ export async function showTasks() {
   );
   setFooterLink(null);
 
-  let view = shownViews().find((v) => v.key === new URLSearchParams(location.search).get('view')) ?? VIEWS[0];
+  // Opened from a tag's page (?tags= and no view): All, so every task with the tag shows.
+  const asked = new URLSearchParams(location.search);
+  let view = shownViews().find((v) => v.key === asked.get('view')) ?? (asked.get('tags') ? shownViews().find((v) => v.key === 'all') : null) ?? VIEWS[0];
   let tasks = [];
   let done = [];
   let alarms = [];            // the alarms already ended (Reminders view): struck through under the waiting ones
@@ -375,7 +382,8 @@ export async function showTasks() {
     const params = new URLSearchParams();
     if (view !== VIEWS[0]) params.set('view', view.key);
     if (query.trim()) params.set('q', query.trim());
-    history.replaceState(null, '', `/tasks${params.size ? `?${params}` : ''}`);
+    if (byTag.picked().length) params.set('tags', byTag.picked().join(','));
+    history.replaceState(null, '', `/tasks${params.size ? `?${params.toString().replace(/%2C/g, ',')}` : ''}`);
   }
 
   // Every word searched for is somewhere in the task, its home or its page.
@@ -401,10 +409,12 @@ export async function showTasks() {
     const today = todayDay();
     drawTabs(today);
     const wanted = words();
+    const open = tagged ? tasks.filter((t) => tagged.has(t.id)) : tasks;
+    const finished = tagged ? done.filter((t) => tagged.has(t.id)) : done;
     const found = wanted.length
-      ? [{ name: 'Found', tasks: tasks.filter((t) => matches(t, wanted)) }, { name: 'Done', tasks: done.filter((t) => matches(t, wanted)) }]
+      ? [{ name: 'Found', tasks: open.filter((t) => matches(t, wanted)) }, { name: 'Done', tasks: finished.filter((t) => matches(t, wanted)) }]
       : null;
-    const shown = (found ?? view.groups(tasks, today, done)).filter((g) => g.tasks.length);
+    const shown = (found ?? view.groups(open, today, finished)).filter((g) => g.tasks.length);
     order = shown.flatMap((g) => g.tasks.map((t) => t.id));
     const picked = order.filter((id) => selected.has(id)).length;
     selection.textContent = picked > 1 ? `${picked} tasks selected · e done · t today · m tomorrow · Esc clears` : '';
@@ -418,7 +428,7 @@ export async function showTasks() {
       el('div', { class: 'task-rows' }, ...group.tasks.flatMap((task) => [row(task, {
         showDue: !group.day && group.name !== 'Today',
       })]))))]
-      : [el('p', { class: 'empty' }, found ? `No task matches “${query.trim()}”.` : {
+      : [el('p', { class: 'empty' }, found ? `No task matches “${query.trim()}”.` : tagged ? `No task in ${view.name} has these tags.` : {
         today: 'Nothing for today. Add a task above, or start a line with [] in any note.',
         done: 'Nothing done yet.',
         missed: 'Nothing missed. What you plan for a day and do not finish waits here, with its old day, until you decide.',
@@ -515,5 +525,10 @@ export async function showTasks() {
     document.querySelectorAll('dialog.task-modal').forEach((d) => d.remove());
     undoPlace.replaceChildren();
   });
+  if (byTag.picked().length) tagged = await byTag.ids().catch(() => null);
   await load();
+  // ?open=<id> (a tag's page, or a link): that task opens in its pop-up.
+  const wantedOpen = new URLSearchParams(location.search).get('open');
+  const toOpen = wantedOpen && taskOf(wantedOpen);
+  if (toOpen) open(toOpen);
 }

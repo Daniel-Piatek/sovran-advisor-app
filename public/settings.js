@@ -4,6 +4,7 @@
 // Under the switches, the floor no switch moves, and the activity log: every switch you
 // changed and every step it took, asked for or was refused.
 
+import { tagsSection } from './tags-settings.js';
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
 import { app, screen, loadCourse, onLeave } from './shell.js';
 import { foldSettings } from './settings-sections.js';
@@ -412,6 +413,13 @@ export async function showSettings() {
     if (moduleOn('phone-drop') && !there) phoneDropPlace.replaceChildren(phoneDropSection());
     else if (!moduleOn('phone-drop') && there) phoneDropPlace.replaceChildren();
   };
+  // Tags (module tags): your tags and groups, there while it is on.
+  const tagsPlace = el('div', {});
+  const drawTagsPart = () => {
+    const there = tagsPlace.childElementCount > 0;
+    if (moduleOn('tags') && !there) tagsPlace.replaceChildren(tagsSection());
+    else if (!moduleOn('tags') && there) tagsPlace.replaceChildren();
+  };
   const moduleProblem = el('p', { class: 'capture-problem', role: 'alert' });
 
   // One row a module: its name and what it does, and an On · Off switch.
@@ -422,7 +430,7 @@ export async function showSettings() {
         ...[[true, 'On'], [false, 'Off']].map(([on, label]) => el('button', {
           type: 'button', class: 'switch-button switch-button-text', 'aria-pressed': String(m.on === on),
           onclick: async () => {
-            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); drawPhoneDrop(); } catch (err) { moduleProblem.textContent = err.message; }
+            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); drawPhoneDrop(); drawTagsPart(); } catch (err) { moduleProblem.textContent = err.message; }
           },
         }, label))))));
   }
@@ -443,6 +451,7 @@ export async function showSettings() {
   drawImport();
   drawEverywhere();
   drawPhoneDrop();
+  drawTagsPart();
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
     aiSection(),
@@ -469,6 +478,7 @@ export async function showSettings() {
     capturePlace,
     phoneDropPlace,
     everywherePlace,
+    tagsPlace,
     importPlace,
     googlePlace,
     dictationPlace,

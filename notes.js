@@ -4,6 +4,7 @@
 // and nothing clears deleted notes on its own.
 
 import { randomUUID } from 'node:crypto';
+import { syncTextTags } from './tags.js';
 import { syncLinks } from './links.js';
 import { syncBlocksIfOn } from './blocks.js';
 import { writeVersion } from './versions.js';
@@ -40,6 +41,7 @@ export function createNote(db, { title = '', body = '', origin = 'typed', captur
     .run(id, title, body, origin, capture_id, time, time);
   syncLinks(db, 'note', id, body);
   syncTasks(db, 'note', id, body);
+  syncTextTags(db, 'note', id, body);
   syncBlocksIfOn(db, id, body);
   writeVersion(db, id, { title, body, author: origin === 'assistant' ? 'assistant' : 'me' });
   return getNote(db, id);
@@ -122,6 +124,7 @@ export function updateNote(db, id, { title, body, home_id: homeId, author = 'me'
     if (next.body !== note.body) {
       syncLinks(db, 'note', id, next.body);
       syncTasks(db, 'note', id, next.body);
+      syncTextTags(db, 'note', id, next.body);
       syncBlocksIfOn(db, id, next.body);
     }
     if (next.body !== note.body || next.title !== note.title) writeVersion(db, id, { title: next.title, body: next.body, author, label });
@@ -135,6 +138,7 @@ export function setNoteBody(db, id, body) {
   db.prepare('UPDATE notes SET body = ?, updated_at = ? WHERE id = ?').run(body, now(), id);
   syncLinks(db, 'note', id, body);
   syncTasks(db, 'note', id, body);
+  syncTextTags(db, 'note', id, body);
   syncBlocksIfOn(db, id, body);
   const note = db.prepare('SELECT title FROM notes WHERE id = ?').get(id);
   writeVersion(db, id, { title: note?.title ?? '', body });

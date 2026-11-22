@@ -13,6 +13,7 @@ import { MAX_BODY_LENGTH } from './notes.js';
 import { createNote, getNote, deleteNote, setNoteBody, updateNote } from './notes.js';
 import { createEntry, getEntry, deleteEntry, localDay, isDay } from './entries.js';
 import { insertTask, getTask } from './tasks.js';
+import { syncTextTags, copyItemTags } from './tags.js';
 
 const now = () => new Date().toISOString();
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -56,6 +57,7 @@ export function createCapture(db, { body, world = 'inner', device = null }) {
   const time = now();
   db.prepare('INSERT INTO captures (id, created_at, updated_at, origin, body, captured_at, world, device_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
     .run(id, time, time, device ? 'captured' : 'typed', body, time, world, device);
+  syncTextTags(db, 'capture', id, body);
   return getCapture(db, id);
 }
 
@@ -132,6 +134,7 @@ export function updateCapture(db, id, { body, home_id: homeId }) {
   }
   if (next.body === capture.body && next.home_id === capture.home_id) return capture;
   db.prepare('UPDATE captures SET body = ?, home_id = ?, updated_at = ? WHERE id = ?').run(next.body, next.home_id, now(), id);
+  if (next.body !== capture.body) syncTextTags(db, 'capture', id, next.body);
   return getCapture(db, id);
 }
 
@@ -159,6 +162,7 @@ function markSorted(db, id, { state, into = null, made = null, noteBody = null }
   const time = now();
   db.prepare(`UPDATE captures SET state = ?, sorted_at = ?, sorted_into = ?, sorted_id = ?, sorted_note_body = ?, updated_at = ?
     WHERE id = ?`).run(state, time, into, made, noteBody, time, id);
+  if (made && into) copyItemTags(db, 'capture', id, into === 'journal' ? 'entry' : into, made); // what it became carries its tags
 }
 
 const inTransaction = (db, work) => {

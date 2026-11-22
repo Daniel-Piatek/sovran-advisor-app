@@ -14,6 +14,7 @@ import { getCapture, sortCapture, letGo, updateCapture, homeOf } from './capture
 import { findPage } from './assistant-tools.js';
 import { localDay } from './entries.js';
 import { moduleOn } from './modules.js';
+import { cleanName, nameKey, MAX_TAG_NAME } from './tags.js';
 import { claudeEnv, DEFAULT_COMMAND } from './assistant.js';
 import { codexArgs, codexEnv, lineReader } from './codex.js';
 
@@ -25,13 +26,14 @@ export const KINDS = ['task', 'note', 'journal', 'let_go'];
 export const READER = 'inbox';     // the tools' name for this reader (read-only, mcp.js)
 const MAX_TRIES = 3;
 const READ_FOR_MS = 3 * 60_000;
-const COLUMNS = 'capture_id, state, title, summary, kind, day, home_id, connects, why, tries, read_at';
+const COLUMNS = 'capture_id, state, title, summary, kind, day, home_id, connects, tags, why, tries, read_at';
+const MAX_SUGGESTED_TAGS = 3;
 
 export function suggestionOf(db, captureId) {
   const row = db.prepare(`SELECT ${COLUMNS} FROM capture_suggestions WHERE capture_id = ?`).get(captureId);
   if (!row) return null;
   const home = row.home_id ? db.prepare('SELECT id, kind, title FROM life_items WHERE id = ? AND deleted_at IS NULL').get(row.home_id) : null;
-  return { ...row, connects: JSON.parse(row.connects), home: home ? { ...home } : null };
+  return { ...row, connects: JSON.parse(row.connects), tags: JSON.parse(row.tags || '[]'), home: home ? { ...home } : null };
 }
 
 // Read it again: after its words changed.
@@ -41,13 +43,13 @@ export function forgetSuggestion(db, captureId) {
 
 function keep(db, captureId, fields) {
   const time = now();
-  const row = { state: 'reading', title: '', summary: '', kind: '', day: '', home_id: null, connects: '[]', why: '', ...fields };
-  db.prepare(`INSERT INTO capture_suggestions (id, created_at, updated_at, origin, capture_id, state, title, summary, kind, day, home_id, connects, why, tries, read_at)
-      VALUES (?, ?, ?, 'assistant', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  const row = { state: 'reading', title: '', summary: '', kind: '', day: '', home_id: null, connects: '[]', tags: '[]', why: '', ...fields };
+  db.prepare(`INSERT INTO capture_suggestions (id, created_at, updated_at, origin, capture_id, state, title, summary, kind, day, home_id, connects, tags, why, tries, read_at)
+      VALUES (?, ?, ?, 'assistant', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (capture_id) DO UPDATE SET updated_at = excluded.updated_at, state = excluded.state, title = excluded.title,
       summary = excluded.summary, kind = excluded.kind, day = excluded.day, home_id = excluded.home_id,
-      connects = excluded.connects, why = excluded.why, tries = excluded.tries, read_at = excluded.read_at`)
-    .run(captureId, time, time, captureId, row.state, row.title, row.summary, row.kind, row.day, row.home_id, row.connects, row.why,
+      connects = excluded.connects, tags = excluded.tags, why = excluded.why, tries = excluded.tries, read_at = excluded.read_at`)
+    .run(captureId, time, time, captureId, row.state, row.title, row.summary, row.kind, row.day, row.home_id, row.connects, row.tags, row.why,
       row.tries ?? 0, row.read_at ?? null);
 }
 
@@ -56,6 +58,10 @@ function promptFor(db, capture) {
   const homes = db.prepare(`SELECT id, kind, title FROM life_items WHERE deleted_at IS NULL AND state = 'active'
     ORDER BY kind = 'project' DESC, kind = 'goal' DESC, title COLLATE NOCASE LIMIT 80`).all()
     .map((h) => `- ${h.id} (${h.kind.replace('_', ' ')}) ${h.title}`).join('\n') || '(none yet)';
+  // Tags (module tags): the owner's own, the most used first.
+  const tagsOn = moduleOn(db, 'tags');
+  const tags = tagsOn ? db.prepare(`SELECT t.name FROM tags t LEFT JOIN item_tags i ON i.tag_id = t.id AND i.deleted_at IS NULL
+    WHERE t.deleted_at IS NULL GROUP BY t.id ORDER BY COUNT(i.id) DESC, t.name COLLATE NOCASE LIMIT 120`).all().map((t) => `- ${t.name}`).join('\n') || '(none yet)' : '';
   return [
     'You sort one capture from the owner’s Inbox. Do not change anything: only read, then answer.',
     `Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${localDay()}.`,
@@ -63,12 +69,14 @@ function promptFor(db, capture) {
     'Answer with one JSON object and nothing else:',
     '{"title": "a short title", "summary": "one line", "kind": "task" | "note" | "journal" | "let_go",',
     ' "day": "YYYY-MM-DD for a task that has a day, else empty", "home_id": "an id from the homes below, or empty",',
-    ' "connects": ["ids of the notes, entries or people it connects to"], "why": "one short line of why"}',
+    ` "connects": ["ids of the notes, entries or people it connects to"],${tagsOn ? ' "tags": ["up to three tag names"],' : ''} "why": "one short line of why"}`,
     'A task is something to do; a note is something to keep and think with; the journal is how a day went; let it go when it needs nothing.',
     ...(capture.world === 'outer' && moduleOn(db, 'tasks-plus')
       ? ['This capture is from the Outer World: something someone else made (an article, a newsletter, a link). Suggest a note to keep, or let it go; do not make it a task of the owner’s.'] : []),
     'Homes in My Life:',
     homes,
+    ...(tagsOn ? ['Tags: suggest at most three, only when they clearly fit. Use the owner’s own tags below, spelled the same; suggest a new one only when none fits. They are only offered: the owner taps to put one on.',
+      'The owner’s tags:', tags] : []),
     'The capture:',
     '"""',
     capture.body,
@@ -97,8 +105,28 @@ export function readAnswer(db, text, { world = 'inner' } = {}) {
     day: answer.kind === 'task' && isDay(String(answer.day ?? '')) ? answer.day : '',
     home_id: answer.kind === 'task' || answer.kind === 'note' ? home?.id ?? null : null,
     connects: JSON.stringify(connects),
+    tags: JSON.stringify(suggestedTags(db, answer.tags)),
     why: String(answer.why ?? '').trim().slice(0, 200),
   };
+}
+
+// Suggested tags: at most three names, each spelled as the owner's own tag when there is one. Only names are
+// kept; nothing is put on until the owner taps one in the Inbox.
+function suggestedTags(db, names) {
+  if (!moduleOn(db, 'tags') || !Array.isArray(names)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const raw of names) {
+    if (typeof raw !== 'string') continue;
+    const name = cleanName(raw.replace(/^#/, ''));
+    const key = nameKey(name);
+    if (!name || name.length > MAX_TAG_NAME || seen.has(key)) continue;
+    seen.add(key);
+    const own = db.prepare('SELECT name FROM tags WHERE name_key = ? AND deleted_at IS NULL').get(key);
+    out.push(own ? own.name : name);
+    if (out.length === MAX_SUGGESTED_TAGS) break;
+  }
+  return out;
 }
 
 // The reader: one capture at a time, in the background.

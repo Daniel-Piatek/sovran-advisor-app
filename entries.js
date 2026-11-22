@@ -4,6 +4,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { searchQuery, PREVIEW_LENGTH, MAX_TITLE_LENGTH, MAX_BODY_LENGTH } from './notes.js';
+import { syncTextTags } from './tags.js';
 import { syncLinks } from './links.js';
 import { syncTasks } from './tasks.js';
 
@@ -108,6 +109,7 @@ export function createEntry(db, { journal_id, day = localDay(), title = '', body
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, time, time, origin, capture_id, journal.id, day, written_at ?? time, title, body);
   syncLinks(db, 'entry', id, body);
   syncTasks(db, 'entry', id, body);
+  syncTextTags(db, 'entry', id, body);
   return getEntry(db, id);
 }
 
@@ -156,6 +158,7 @@ export function updateEntry(db, id, { title, body, journal_id }) {
   if (next.body !== entry.body) {
     syncLinks(db, 'entry', id, next.body);
     syncTasks(db, 'entry', id, next.body);
+    syncTextTags(db, 'entry', id, next.body);
   }
   return getEntry(db, id);
 }

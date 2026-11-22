@@ -4,6 +4,7 @@
 // deleted_at, as everywhere.
 
 import { randomUUID } from 'node:crypto';
+import { syncTextTags } from './tags.js';
 import { syncLinks } from './links.js';
 import { syncTasks } from './tasks.js';
 import { MAX_BODY_LENGTH } from './notes.js';
@@ -59,6 +60,7 @@ export function createCompany(db, { name, website = '', body = '' }) {
   db.prepare('INSERT INTO companies (id, created_at, updated_at, name, website, body) VALUES (?, ?, ?, ?, ?, ?)')
     .run(id, time, time, name.trim(), website, body);
   syncLinks(db, 'company', id, body);
+  syncTextTags(db, 'company', id, body);
   syncTasks(db, 'company', id, body);
   return getCompany(db, id);
 }
@@ -90,6 +92,7 @@ export function updateCompany(db, id, changes) {
     .run(next.name.trim() || company.name, next.website, next.body, now(), id);
   if (next.body !== company.body) {
     syncLinks(db, 'company', id, next.body);
+    syncTextTags(db, 'company', id, next.body);
     syncTasks(db, 'company', id, next.body);
   }
   return getCompany(db, id);
@@ -105,6 +108,7 @@ export function createPerson(db, { name, company_id = null, role = '', emails = 
   db.prepare(`INSERT INTO people (id, created_at, updated_at, name, company_id, role, emails, phones, how_met, body)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, time, time, name.trim(), company_id, role, emails, phones, how_met, body);
   syncLinks(db, 'person', id, body);
+  syncTextTags(db, 'person', id, body);
   syncTasks(db, 'person', id, body);
   return getPerson(db, id);
 }
@@ -144,6 +148,7 @@ export function updatePerson(db, id, changes) {
     next.how_met, next.body, now(), id);
   if (next.body !== person.body) {
     syncLinks(db, 'person', id, next.body);
+    syncTextTags(db, 'person', id, next.body);
     syncTasks(db, 'person', id, next.body);
   }
   return getPerson(db, id);

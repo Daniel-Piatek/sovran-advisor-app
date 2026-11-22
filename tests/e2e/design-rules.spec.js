@@ -14,6 +14,9 @@ const mailbox = async (app) => {
 
 // Every screen of the app, with some test data, and what shows once it is drawn.
 // Add each new screen here.
+// Tags is off in a new install: its screens are checked with it switched on.
+const tagsOn = (app) => fetch(`${app.url}/api/modules`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'tags', on: true }) });
+
 const screens = [
   { name: 'the notes list', ready: '.note-card', open: async (app) => { await app.createNote({ title: 'A note', body: 'Text' }); return '/'; } },
   { name: 'a note', ready: '.note-info', open: async (app) => `/notes/${(await app.createNote({ title: 'A note', body: 'Text' })).id}` },
@@ -35,6 +38,14 @@ const screens = [
   { name: 'a capture in the Inbox', ready: '.inbox-choices', open: async (app) => {
     const res = await fetch(`${app.url}/api/captures`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"body":"A thought"}' });
     return `/inbox?c=${(await res.json()).id}`;
+  } },
+  // Tags (module tags): the index, one tag's page.
+  { name: 'Tags', ready: '.tags-index-row', open: async (app) => { await tagsOn(app); await app.createNote({ title: 'Venues', body: 'For the #retreat' }); return '/tags'; } },
+  { name: 'a tag', ready: '.tagged-row', open: async (app) => {
+    await tagsOn(app);
+    await app.createNote({ title: 'Venues', body: 'For the #retreat' });
+    const { tags } = await (await fetch(`${app.url}/api/tags`)).json();
+    return `/tags/${tags[0].id}`;
   } },
   { name: 'People', ready: '.person-row', open: async (app) => {
     await fetch(`${app.url}/api/people`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Lena Fischer"}' });
