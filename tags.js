@@ -266,6 +266,7 @@ export function restoreGroup(db, id) {
 
 // The 13 characters and the 5 Quests, each in its group, with a few words and a Sovran picture. The characters' words are
 // the brand's own (live-sovran-brand, BRAND.md, "Represents"); the Quests' come from D's teaching (The Quests, 2026-08-30).
+// A Quest's tag is its whole title, "Hero Quest" (D, 2026-11-22); its picture is named by the first word.
 // Added with one tap in Settings › Tags, never by themselves; a tag that is already there keeps its own words, picture and group.
 export const STARTER_TAGS = [
   { group: 'Characters', tags: [
@@ -284,11 +285,11 @@ export const STARTER_TAGS = [
     ['Mystic', 'Complete trust in life: deep peace while fully engaging with life.'],
   ] },
   { group: 'Quests', tags: [
-    ['Hero', 'The Hero Quest: 6 weeks. It teaches and trains STOP. Take command and come to your own rescue.'],
-    ['Phoenix', 'The Phoenix Quest: 6 weeks. It teaches and trains Unraveling, building on STOP. A partner for life.'],
-    ['Quantum', 'The Quantum Quest: 12 weeks. It teaches and trains Not-Knowing, building on STOP and Unraveling.'],
-    ['Sovran', 'The Sovran Quest: 12 weeks. The Hero and Phoenix Quests, with more of its own. It initiates Sovran Vocation.'],
-    ['Destiny', 'The Destiny Quest: 12 weeks. Actualize Sovran Vocation: creating your original offer.'],
+    ['Hero Quest', 'The Hero Quest: 6 weeks. It teaches and trains STOP. Take command and come to your own rescue.'],
+    ['Phoenix Quest', 'The Phoenix Quest: 6 weeks. It teaches and trains Unraveling, building on STOP. A partner for life.'],
+    ['Quantum Quest', 'The Quantum Quest: 12 weeks. It teaches and trains Not-Knowing, building on STOP and Unraveling.'],
+    ['Sovran Quest', 'The Sovran Quest: 12 weeks. The Hero and Phoenix Quests, with more of its own. It initiates Sovran Vocation.'],
+    ['Destiny Quest', 'The Destiny Quest: 12 weeks. Actualize Sovran Vocation: creating your original offer.'],
   ] },
 ];
 
@@ -311,7 +312,7 @@ export function addStarterTags(db) {
         if (!before) added += 1;
         updateTag(db, tag.id, {
           ...(tag.description ? {} : { description }),
-          ...(tag.picture ? {} : { picture: `sovran:${name.toLowerCase()}` }),
+          ...(tag.picture ? {} : { picture: `sovran:${name.split(' ')[0].toLowerCase()}` }),
           ...(tag.group_id ? {} : { group_id: groupId }),
         });
       }

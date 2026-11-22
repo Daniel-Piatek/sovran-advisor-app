@@ -212,9 +212,10 @@ test('the Sovran starter tags come in with one tap, and leave your own words, pi
   const medusa = tags.find((t) => t.name === 'medusa');
   assert.equal(medusa.description, 'My own words.');
   assert.equal(medusa.picture, 'sovran:medusa');
-  const hero = tags.find((t) => t.name === 'Hero');
+  const hero = tags.find((t) => t.name === 'Hero Quest');
   assert.equal(hero.group_id, groups[1].id);
   assert.match(hero.description, /STOP/);
+  assert.equal(hero.picture, 'sovran:hero');
   assert.equal(tags.find((t) => t.name === 'Gremlin').picture_url, '/api/tag-pictures/gremlin');
   assert.equal(addStarterTags(db).added, 0);
   assert.equal(listTags(db).tags.length, 18);

@@ -123,11 +123,11 @@ test.describe('without a Sovran key', () => {
     await expect(part.locator('[data-tag-id]')).toHaveCount(18);
     await part.locator('[data-fold="tags-list"] summary').click();
     await expect(part.getByLabel('Description of Medusa')).toHaveValue(/Fear, anxiety, worry/);
-    await part.getByLabel('Description of Hero').fill('Six weeks of STOP.');
-    await part.getByLabel('Description of Hero').blur();
+    await part.getByLabel('Description of Hero Quest').fill('Six weeks of STOP.');
+    await part.getByLabel('Description of Hero Quest').blur();
     await expect(part.locator('[data-tag-id] .tag-settings-note', { hasText: 'Description saved.' })).toHaveCount(1);
     const { tags } = await send(app, 'GET', '/api/tags');
-    expect(tags.find((t) => t.name === 'Hero').description).toBe('Six weeks of STOP.');
+    expect(tags.find((t) => t.name === 'Hero Quest').description).toBe('Six weeks of STOP.');
     // No Sovran key in a test: the picture can't be had, so the tag shape stands in.
     await expect(part.locator('[data-tag-id] .tag-mark').first()).toBeVisible();
   });
