@@ -237,11 +237,11 @@ test('Ask my AI opens the AI’s own app with the words in its box, and copies t
   await expect(ask).toHaveAttribute('target', '_blank');
   await context.route('https://claude.ai/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Claude</title>' }));
   const [opened] = await Promise.all([context.waitForEvent('page'), ask.click()]);
-  const words = 'From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ';
+  const words = 'From my Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ';
   expect(opened.url()).toBe('https://claude.ai/new?q=' + encodeURIComponent(words)); // the words arrive in Claude's box
   await opened.close();
   await expect(page.locator('#toast')).toHaveText('Opening Claude with your words in the box. Add your question.');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Sovran Pattern Report: “You notice what others walk past.”\n\nMy question: ');
   await expect(page.locator('#pick')).toBeHidden();
   expect(dropped).toEqual([]); // asking leaves no highlight
   expect(errors).toEqual([]);
@@ -256,7 +256,7 @@ test('for ChatGPT the copied words ask for the Sovran Library and for the offer 
   const [opened] = await Promise.all([context.waitForEvent('page'), page.locator('#pick-ask').click()]);
   expect(opened.url()).toBe('https://chatgpt.com/');
   await page.bringToFront();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Your Sovran Pattern Report: “You notice what others walk past.”\n\nPlease use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.\n\nMy question: ');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('From my Sovran Pattern Report: “You notice what others walk past.”\n\nPlease use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.\n\nMy question: ');
   expect(errors).toEqual([]);
   await context.close();
 });

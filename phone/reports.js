@@ -308,7 +308,7 @@ export function setupReports({ link, store, show, leave, ai, call }) {
   $('pick-ask-words').textContent = 'Ask my AI';
   ask.addEventListener('click', () => {
     if (!chosen || !reading) return;
-    const words = `From my ${reading.report.title}: “${chosen.quote.replace(/\s+/g, ' ')}”\n\n${ai.ask ? ai.ask + '\n\n' : ''}My question: `;
+    const words = `From my ${reading.report.title.replace(/^Your\s+/i, '')}: “${chosen.quote.replace(/\s+/g, ' ')}”\n\n${ai.ask ? ai.ask + '\n\n' : ''}My question: `;
     copy(words); // always, so a paste still works where the app opens with an empty box
     const fills = Boolean(ai.fill) && words.length <= 1800; // a very long passage would make too long an address
     ask.href = fills ? ai.fill + encodeURIComponent(words) : ai.href;
