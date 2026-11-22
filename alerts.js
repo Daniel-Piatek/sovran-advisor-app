@@ -93,7 +93,7 @@ export function alertWords(item, { today, tomorrow }) {
       return { title: item.due_on === today ? 'Homework due today' : 'Homework due tomorrow', body: short(item.text), path: at };
     }
     case 'answer': return { title: 'Daniel has dealt with what you told him', body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path: null };
-    case 'report': return { title: `${by} sent you a report`, body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path: '/student-reports' };
+    case 'report': return { title: `${by} sent you a report`, body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path: '/group/reports' };
     case 'flag': return { title: `Something ${by} wrote was flagged`, body: short(item.text), path: at };
     default: return null;
   }
