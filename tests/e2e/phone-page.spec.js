@@ -207,7 +207,7 @@ test('the first visit shows how to add go Sovran to the home screen; without a l
   expect([manifest.name, manifest.short_name]).toEqual(['go Sovran', 'go Sovran']);
 });
 
-test('in the dark the boxes stay readable and Save turns gold', async ({ browser }, testInfo) => {
+test('in the dark the boxes stay readable and Save stays red', async ({ browser }, testInfo) => {
   const { page, context } = await phone(browser, testInfo);
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.locator('#text').fill('Night thought');
@@ -216,7 +216,7 @@ test('in the dark the boxes stay readable and Save turns gold', async ({ browser
     words: getComputedStyle(document.getElementById('text')).color, save: getComputedStyle(document.getElementById('keep')).backgroundColor }));
   expect(lum(seen.page)).toBeLessThan(60);
   expect(lum(seen.words) - lum(seen.card)).toBeGreaterThan(150);
-  expect(seen.save).toBe('rgb(217, 193, 75)');
+  expect(seen.save).toBe('rgb(199, 31, 66)'); // red in the dark too, the owner's call (22 Nov 2026)
   await page.emulateMedia({ colorScheme: 'light' });
   expect(await page.evaluate(() => getComputedStyle(document.getElementById('keep')).backgroundColor)).toBe('rgb(199, 31, 66)'); // red, the owner's call
   await context.close();
