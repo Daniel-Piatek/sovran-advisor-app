@@ -348,5 +348,5 @@ export function setupReports({ link, store, show, leave, ai, call }) {
     if (!$('report').hidden && reading) await drawMarks(); else if (!$('reports').hidden) await showList();
   });
 
-  return { showList, showReport, leaveReports: () => { closeAll(); reading = null; document.body.classList.remove('reading'); }, refresh };
+  return { showList, showReport, leaveReports: () => { closeAll(); reading = null; document.body.classList.remove('reading'); }, refresh, open };
 }

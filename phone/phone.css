@@ -110,7 +110,7 @@ a { color: var(--muted); font-family: var(--ui); }
 .choice-crown { width: 40px; height: 40px; flex: none; object-fit: contain; }
 .choice-go { margin-left: auto; font-family: var(--ui); font-size: 1.5rem; line-height: 1; color: var(--charcoal); }
 body.reading { background: var(--paper); color: var(--ink); }
-body.reading .foot { display: none; }
+body.reading .foot, body.in-group .foot { display: none; } /* Group Circle posts are for the group to read, not sealed */
 body.reading .back, body.reading .title { color: var(--ink); }
 .reports, .report { display: flex; flex-direction: column; gap: 14px; }
 .reports-list { display: grid; gap: 14px; }
@@ -201,3 +201,57 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
   background: var(--charcoal); color: var(--white); border-radius: 10px; font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; text-align: center;
 }
 .copy-box { position: fixed; top: 0; left: -200vw; opacity: 0; }
+
+/* Group Circle (group.js): the choice on the first screen, then Announcements and the Circle on white. */
+.disc-group circle:first-child { fill: var(--violet); }
+.disc-group g { stroke: var(--white); }
+.g-count { margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.875rem; line-height: 1.36; text-align: center; }
+.g-count + .choice-go { margin-left: 10px; }
+.group { display: flex; flex-direction: column; gap: 14px; }
+.g-tabs { display: flex; gap: 8px; }
+.g-tabs button { flex: 1; font-family: var(--ui); font-weight: 700; font-size: 1rem; padding: 10px; border-radius: 999px; border: 1.5px solid var(--border); background: none; color: var(--text); cursor: pointer; }
+.g-tabs button[aria-pressed="true"] { background: var(--charcoal); border-color: var(--charcoal); color: var(--white); }
+.g-list { display: flex; flex-direction: column; gap: 16px; }
+.g-note { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.44; }
+.g-post { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
+.g-announcement { border: 1.5px solid var(--gold); border-radius: 14px; padding: 14px; }
+.g-by { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-family: var(--ui); font-size: 1rem; line-height: 1.36; }
+.g-when { color: var(--faint); font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
+.g-badge { font-family: var(--ui); font-weight: 700; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--gold); color: var(--charcoal); }
+.g-kind { align-self: flex-start; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.g-kind-homework { color: var(--crimson); }
+.g-body { margin: 0; font-size: 1.0625rem; line-height: 1.44; white-space: pre-wrap; overflow-wrap: anywhere; }
+.g-pictures { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; }
+.g-picture { width: 100%; border-radius: 10px; display: block; background: var(--border); min-height: 80px; object-fit: cover; }
+.g-due { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1.36; }
+.g-actions { display: flex; align-items: center; gap: 16px; }
+.g-like { background: none; border: 0; padding: 6px 0; font-family: var(--ui); font-size: 1.125rem; color: var(--crimson); cursor: pointer; }
+.g-done { font-family: var(--ui); font-size: 0.9375rem; display: flex; align-items: center; gap: 6px; }
+.g-done input { width: 20px; height: 20px; accent-color: var(--crimson); }
+.g-comments { display: flex; flex-direction: column; gap: 8px; }
+.g-comment { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.g-reply { margin-left: 22px; padding-left: 10px; border-left: 2px solid var(--border); }
+.g-bubble { margin: 0; font-size: 0.9375rem; line-height: 1.36; background: rgba(127, 127, 127, 0.1); padding: 8px 12px; border-radius: 12px; overflow-wrap: anywhere; }
+.g-bubble .g-badge { margin-left: 6px; }
+.g-link { background: none; border: 0; padding: 2px 0; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; color: var(--muted); cursor: pointer; }
+.g-comment-box { display: flex; gap: 8px; align-items: flex-end; width: 100%; }
+.g-write { width: 100%; font: inherit; font-size: 1rem; line-height: 1.44; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); resize: vertical; }
+.g-write-small { min-height: 44px; }
+.g-send, .g-add { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: none; color: var(--text); cursor: pointer; }
+.g-composer { display: flex; flex-direction: column; gap: 10px; }
+.g-composer-row { display: flex; gap: 10px; align-items: center; }
+.g-post-button { flex: 1; padding: 12px; }
+.g-thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.g-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+.g-name { font: inherit; font-size: 1.0625rem; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
+.g-label { font-family: var(--ui); font-weight: 700; }
+.g-tabs button:focus-visible, .g-like:focus-visible, .g-link:focus-visible, .g-send:focus-visible, .g-add:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* Alerts on this phone (push.js), at the foot of Group Circle; a post opened from an alert is outlined in gold. */
+.g-alerts { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; }
+.g-alerts:empty { display: none; }
+.g-alerts-title { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; line-height: 1.36; }
+.g-alert-row { display: flex; align-items: center; gap: 10px; font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; min-height: 44px; }
+.g-alert-row input { width: 22px; height: 22px; flex: none; accent-color: var(--crimson); }
+.g-allow { align-self: flex-start; }
+.g-alerts .g-link { align-self: flex-start; }
+.g-asked { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 14px; }

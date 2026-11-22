@@ -53,6 +53,7 @@ import { showGroup } from './group.js';
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
+import './alerts.js'; // a Mac or Windows alert when something new happens in Group Circle (Settings › Alerts)
 import './update-nudge.js'; // "Update" beside Settings, and a notice once, when a new version is ready
 
 await loadModules(); // which optional parts are on, before any screen is drawn

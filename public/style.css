@@ -2115,6 +2115,9 @@ html[data-people-plus="off"] .page-link-kind.page-link-company { display: none; 
 .notice-text { flex: 1; min-width: 0; }
 
 .notice-text .icon svg { width: var(--text-sm); height: var(--text-sm); vertical-align: calc(var(--border-width) * -2); }
+.alert-notice .notice-text { display: flex; flex-direction: column; gap: var(--space-1); line-height: 1.36; }
+.alert-notice-body { color: var(--color-text-muted); }
+.alerts-allowed { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
 
 .notice-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
 
@@ -4759,6 +4762,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--kind-assistant
 .group-list { display: flex; flex-direction: column; gap: var(--space-4); }
 .group-post { display: flex; flex-direction: column; gap: var(--space-3); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-4); }
 .group-announcement { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+.group-post-asked { outline: calc(var(--border-width) * 2) solid var(--color-accent); outline-offset: var(--space-2); border-radius: var(--radius-md); }
 .group-post-head { display: flex; align-items: center; gap: var(--space-3); }
 .group-avatar { flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; color: var(--color-on-avatar);
   font-family: var(--font-ui); font-weight: var(--weight-bold); font-size: var(--text-sm); }

@@ -10,6 +10,7 @@
 //                      sections: [{ section_key, title, level, part, html }] } }   html: drawn here, as the app draws it
 //   marks            { at, marks: [{ id, report, version, section_key, quote, prefix, suffix, comment, created_at,
 //                      updated_at, asks: [{ role, text }] }] }   the highlights and comments (report-marks.js)
+//   group            { at, group: { key, url } }   the phone's own Group Circle key (phone-drop.js), while Group Circle is on
 // Highlights and comments made on the phone come back as sealed notes (kind mark, phone-drop.js → takePhoneMark).
 // So a new report, or a highlight made on the computer, reaches the phone once this computer has been on.
 
@@ -22,7 +23,7 @@ import { markBreaks } from './public/report-break.js';
 import { aboutOf } from './public/report-about.js';
 
 export const SHELF_READ_EVERY = 6 * 3600_000; // the library is asked for the reports again this often, and at each start
-export const MAX_SHELF_REPORTS = 10;          // the shelf holds 12 things: the list, the marks, and ten reports
+export const MAX_SHELF_REPORTS = 9;           // the shelf holds 12 things: the list, the marks, Group Circle and nine reports
 const PART_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']; // as public/reports.js
 const markdown = markdownit({ html: false, linkify: true }); // as the Reports page draws a report: no HTML inside it is ever drawn
 const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
@@ -49,7 +50,7 @@ export function shelfMarks(db, reports) {
 
 // Keeps the shelf as it should be. box: this computer's box (phone-drop.js); put(name, sealed): the drop box call.
 // Returns what to remember in the box: { shelf: { name: hash }, shelf_read_at, shelf_reports: [...] } or null (nothing changed).
-export async function syncShelf(db, box, put, { force = false } = {}) {
+export async function syncShelf(db, box, put, { force = false, group = null } = {}) {
   const had = box.shelf ?? {};
   const want = new Map(); // name → the words to seal (a string)
   let readAt = box.shelf_read_at ?? null;
@@ -72,6 +73,7 @@ export async function syncShelf(db, box, put, { force = false } = {}) {
     want.set('marks', JSON.stringify({ marks: shelfMarks(db, names) }));
   }
   else { readAt = null; names = []; asked.delete(box.box); } // Reports switched off: the shelf is emptied, and read afresh when it is on again
+  if (group?.key) want.set('group', JSON.stringify({ group })); else want.delete('group'); // Group Circle on the phone
   const shelf = {};
   let changed = false;
   for (const [name, words] of want) {

@@ -41,6 +41,7 @@ async function phone(browser, testInfo, { answer = () => ({ status: 200, body: {
   const dropped = [];
   await page.route(DROP, async (route) => {
     const msg = JSON.parse(route.request().postData());
+    if (msg.action === 'shelf') return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"shelf":[]}' }); // nothing on the shelf
     const reply = answer(msg, dropped.length);
     if (reply === 'offline') return route.abort('internetdisconnected');
     if (reply.status < 300) dropped.push(await unseal(link.key, msg.sealed));
@@ -56,14 +57,14 @@ test('Sovran Go opens on its choices, My reports last, and Ask my AI is a link t
   await expect(page).toHaveTitle('Sovran Go');
   await expect(page.locator('.band-name')).toHaveText('Sovran Go');
   await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeVisible();
-  await expect(page.locator('.choice strong')).toHaveText(['Ask my AI', 'Journal entry', 'My own thought', 'From someone else', 'My reports']);
+  await expect(page.locator('.choice:visible strong')).toHaveText(['Ask my AI', 'Journal entry', 'My own thought', 'From someone else', 'My reports']);
   const ask = page.getByRole('link', { name: /Ask my AI/ });
   await expect(ask).toHaveAttribute('href', 'https://claude.ai/new');
   await expect(ask).toHaveAttribute('target', '_blank'); // a real tapped link: the phone hands it to the Claude app
   await expect(ask).toContainText('Ask Claude');
   // Nothing is wider than the screen, and every choice is a full finger tall.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  for (const box of await page.locator('.choice').evaluateAll((all) => all.map((c) => c.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(56);
+  for (const box of await page.locator('.choice:visible').evaluateAll((all) => all.map((c) => c.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(56);
   expect(errors).toEqual([]);
   await context.close();
 });

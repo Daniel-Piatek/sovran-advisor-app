@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 // A stand-in for the Sovran cloud's group-feed function (cloud/group-feed/index.ts), for the tests and the demo.
 // It keeps one group in memory and follows the same main rules: only keys it knows, students post to the Circle only,
 // a name before posting, your own posts to change. The real rules are checked against Postgres in cloud/group-feed.test.sql.
@@ -5,10 +7,12 @@
 export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], tells: [], groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
-  const who = (auth) => students[keyOf(auth)] ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
+  const sha = (text) => createHash('sha256').update(text).digest('hex');
+  const phoneOf = (key) => { const id = state.phones.get(sha(key)); return id ? Object.values(students).find((x) => x.id === id) : undefined; }; // a student's phone (Sovran Go)
+  const who = (auth) => students[keyOf(auth)] ?? phoneOf(keyOf(auth)) ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
   const nameOf = (id) => Object.values(students).find((s) => s.id === id)?.name ?? 'A student';
   const view = (p, me) => ({
     id: p.id, group: p.group, tab: p.tab, kind: p.kind, body: p.body, due_on: p.due_on ?? null, pictures: p.pictures, comments_on: p.comments_on,
@@ -45,6 +49,29 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       case 'read': {
         const list = live(msg.tab, s, msg.group).filter((p) => !msg.before || p.id < msg.before).slice(0, msg.limit ?? 20);
         return json(200, { me: meOf(s), posts: list.map((p) => view(p, s)) });
+      }
+      case 'phone_key': { // only with the library key itself
+        if (!students[keyOf(auth)]) return err('nokey', 401);
+        for (const [h, id] of state.phones) if (id === s.id) state.phones.delete(h);
+        if (msg.phone_hash) state.phones.set(msg.phone_hash, s.id);
+        return json(200, { phone: Boolean(msg.phone_hash) });
+      }
+      // alerts on the phone (cloud/group-push.sql): a phone's address and switches; what waits for it is put in `waiting`
+      case 'push_key': return json(200, { key: 'BPkQ1ozOsbX1H0Lb3n7qY8n6S0p0bW7j2rS0vYqJcQ0eYvK8m4v5mV9l8dYgk3vK5o8n2q1w6eJ8tC3yR7uZ0aU' });
+      case 'push_sub': {
+        if (!phoneOf(keyOf(auth))) return err('nokey', 401);
+        if (msg.old) state.pushes.delete(msg.old);
+        if (!msg.endpoint) return json(200, { on: false });
+        const kinds = (msg.kinds ?? []).filter((k) => ['news', 'feed', 'reply', 'due', 'answer'].includes(k)).sort();
+        state.pushes.set(msg.endpoint, { student: s.id, kinds, waiting: state.pushes.get(msg.endpoint)?.waiting ?? [] });
+        return json(200, { on: true, kinds });
+      }
+      case 'push_state': { const p = state.pushes.get(msg.endpoint); return json(200, { on: Boolean(p), kinds: p?.kinds ?? ['answer', 'due', 'news', 'reply'] }); }
+      case 'push_take': {
+        const p = state.pushes.get(msg.endpoint);
+        if (!p || p.student !== s.id) return json(200, { items: [] });
+        const items = p.waiting; p.waiting = [];
+        return json(200, { items });
       }
       case 'set_name': s.name = msg.name; return json(200, { name: msg.name });
       case 'post': {
@@ -96,7 +123,36 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       }
       case 'flags_clear': { const p = post(msg.post); p?.flags.filter((f) => (f.comment ?? null) === (msg.comment ?? null)).forEach((f) => { f.resolved = true; }); return json(200, { cleared: true }); }
       case 'groups': return json(200, { groups: state.groups.map((g) => ({ ...g, members: Object.values(students).filter((m) => m.group === g.code)
-        .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
+        .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, phone: [...state.phones.values()].includes(m.id), done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
+      // Alerts (cloud/group-alerts.sql): what is new since a moment, in the same shape, with the main rules
+      case 'alerts': {
+        const since = Math.max(msg.since ? Date.parse(msg.since) : Date.now(), Date.now() - 7 * 86_400_000);
+        const after = (at) => at && Date.parse(at) > since;
+        const cut = (t) => String(t ?? '').slice(0, 160);
+        const items = [];
+        if (s.guide) {
+          for (const r of state.tells) if (after(r.created_at)) items.push({ kind: 'report', report: r.id, report_kind: r.kind, place: r.place, author: r.student, text: cut(r.why), at: r.created_at });
+          for (const p of state.posts) if (!p.deleted) {
+            for (const f of p.flags) if (!f.resolved && after(f.at)) items.push({ kind: 'flag', post: p.id, comment: f.comment ?? null, tab: p.tab, author: p.student ? nameOf(p.student) : 'Daniel', text: cut(p.body), at: f.at });
+            if (!p.student) for (const c of p.comments) if (c.student && !c.deleted && after(c.created_at)) items.push({ kind: 'reply', post: p.id, comment: c.id, tab: p.tab, author: nameOf(c.student), text: cut(c.body), at: c.created_at });
+          }
+        } else {
+          const today = new Date(); const day = (n) => new Date(today.getTime() + n * 86_400_000).toISOString().slice(0, 10);
+          for (const tab of ['news', 'feed']) for (const p of live(tab, s)) {
+            if (after(p.created_at) && p.student !== s.id) items.push({ kind: tab, post: p.id, tab, post_kind: p.kind, due_on: p.due_on ?? null, author: p.student ? nameOf(p.student) : 'Daniel', text: cut(p.body), pictures: p.pictures.length, at: p.created_at });
+            for (const c of p.comments) {
+              if (c.deleted || c.hidden || c.student === s.id || !after(c.created_at)) continue;
+              const inThread = c.reply_to && p.comments.some((m) => m.student === s.id && !m.deleted && (m.id === c.reply_to || m.reply_to === c.reply_to));
+              if (p.student === s.id || inThread) items.push({ kind: 'reply', post: p.id, comment: c.id, tab, author: c.student ? nameOf(c.student) : 'Daniel', text: cut(c.body), at: c.created_at, on_mine: p.student === s.id });
+            }
+            if (tab === 'news' && p.kind === 'homework' && p.due_on >= day(-1) && p.due_on <= day(2) && !p.done.includes(s.id))
+              items.push({ kind: 'due', post: p.id, tab: 'news', post_kind: p.kind, due_on: p.due_on, author: 'Daniel', text: cut(p.body), at: p.created_at });
+          }
+          for (const r of state.tells) if (r.student_id === s.id && r.status === 'done' && after(r.status_at)) items.push({ kind: 'answer', report: r.id, report_kind: r.kind, place: r.place, text: cut(r.why), at: r.status_at });
+        }
+        items.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+        return json(200, { now: new Date().toISOString(), items: items.slice(0, 30) });
+      }
       // Tell Daniel (cloud/tell-daniel.sql)
       case 'tell': {
         if (s.guide) return err('unknown', 401);
@@ -126,6 +182,7 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
           case 'name': if (m) m.name = msg.value || null; break;
           case 'move': if (!m) return err('nostudent', 404); m.group = msg.value; break;
           case 'leave': if (m) m.group = null; break;
+          case 'phone_off': for (const [h, id] of state.phones) if (id === msg.student) state.phones.delete(h); break;
           case 'close': case 'open': if (g) g.closed = msg.what === 'close'; break;
           case 'new_group': state.groups.push({ code: String(msg.student).toUpperCase(), title: msg.value, closed: false }); break;
           default: return err('bad');
