@@ -4,10 +4,12 @@
 // entry, your own thought or something from someone else is written here, sealed (seal.js) and left in the Sovran
 // drop box. The person's own computer collects it (a journal entry into the Journal, a thought into the Inbox) and
 // the box forgets it. Without signal, the words wait on this phone and go later. My reports (reports.js) reads the
-// sealed copies of the person's reports that their computer puts on the box's shelf.
+// sealed copies of the person's reports that their computer puts on the box's shelf. Group Circle (group.js) uses the
+// phone's own Group Circle key, which the computer also leaves on the shelf.
 
 import { seal, readLinkPart } from './seal.js';
 import { setupReports } from './reports.js';
+import { setupGroup } from './group.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 const LINK = 'sovran.phone.link';
@@ -66,7 +68,7 @@ const say = (words) => { $('status').textContent = words; };
 const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signal.`;
 
 function show(name) {
-  for (const id of ['choose', 'form', 'done', 'setup', 'nolink', 'reports', 'report']) $(id).hidden = id !== name;
+  for (const id of ['choose', 'form', 'done', 'setup', 'nolink', 'reports', 'report', 'group']) $(id).hidden = id !== name;
   document.body.classList.toggle('choosing', name === 'choose');
   scrollTo(0, 0);
 }
@@ -135,6 +137,11 @@ function start() {
     leave: async (note) => { try { await send(note); await flush(); } catch (err) { if (!err.refused) keepWaiting([...waiting(), note]); } } });
   $('my-reports').addEventListener('click', () => { history.pushState({ view: 'reports' }, ''); reports.showList(); });
   $('reports-back').addEventListener('click', () => history.back());
+  // Group Circle (group.js): with the phone's own key, from the shelf. The choice shows once the key is there.
+  const group = setupGroup({ store, show, openShelf: reports.open, refreshShelf: reports.refresh });
+  $('group-circle').addEventListener('click', () => { history.pushState({ view: 'group' }, ''); group.open(); });
+  $('group-back').addEventListener('click', () => history.back());
+  group.check().then(async () => { if (await reports.refresh()) await group.check(); });
   $('report-back').addEventListener('click', () => history.back());
 
   // The phone's own Back goes from writing to the choices, as ‹ Back does.
@@ -143,9 +150,10 @@ function start() {
   addEventListener('popstate', () => {
     if (!$('form').hidden) drafts[kind] = text.value;
     const to = history.state;
-    if (to?.view === 'report') reports.showReport(to.report);
+    if (to?.view === 'group') group.open();
+    else if (to?.view === 'report') reports.showReport(to.report);
     else if (to?.view === 'reports') reports.showList();
-    else { reports.leaveReports(); choose(); }
+    else { reports.leaveReports(); choose(); group.check(); }
   });
   $('another').addEventListener('click', () => write(kind));
 

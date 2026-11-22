@@ -168,3 +168,44 @@ test('a 20,000-character thought, of the widest characters, still fits the drop 
   const fn = fs.readFileSync(new URL('../../cloud/phone-drop/index.ts', import.meta.url), 'utf8');
   assert.match(fn, /\{30,170000\}/);
 });
+
+// Group Circle on Sovran Go (2026-11-22): the phone gets its own Group Circle key, sealed on the shelf; the cloud gets
+// only its SHA-256, registered with the library key. A new link makes a new key; Group Circle off takes it away.
+test('the phone gets its own Group Circle key on the shelf; a new link replaces it; switching Group Circle off takes it away', async (t) => {
+  const { setLibraryKey } = await import('../../sovran-library.js');
+  const { useGroup } = await import('../../group-feed.js');
+  const { setModule } = await import('../../modules.js');
+  const { fakeGroupCloud } = await import('../fake-group-cloud.js');
+  const KEY = 'sovran_madeupmadeupmadeupmadeup';
+  const db = openDatabase(temp(t));
+  setLibraryKey(db, KEY);
+  const cloud = fakeGroupCloud({ students: { [KEY]: { id: 'client-aaaaaaaaaaaa', name: 'Maya' } } });
+  useGroup({ fetch: cloud.fetcher, url: 'https://cloud.test/group-feed' });
+  const box = fakeBox();
+  const link = readLinkPart((await linkPhone(db, { fetcher: box.fetcher })).link.split('#')[1]);
+  await collect(db, { fetcher: box.fetcher });
+  const shelfItem = () => box.calls.filter((c) => c.action === 'shelf_put' && c.name === 'group').at(-1);
+  const { group } = await unseal(link.key, shelfItem().sealed);
+  assert.match(group.key, /^phone_[A-Za-z0-9_-]{43}$/);
+  assert.equal(cloud.state.phones.get(sha(group.key)), 'client-aaaaaaaaaaaa', 'the cloud knows only its fingerprint, as Maya’s phone');
+  assert.ok(!JSON.stringify(cloud.state.asked).includes(group.key), 'the key itself never goes to the cloud');
+  // The phone, with that key, reads Group Circle as Maya.
+  const latest = await cloud.fetcher('https://cloud.test/group-feed', { method: 'POST', headers: { authorization: `Bearer ${group.key}` }, body: JSON.stringify({ action: 'latest' }) });
+  assert.equal((await latest.json()).me.name, 'Maya');
+  // asked again: the same key, nothing new on the shelf
+  const puts = box.calls.length;
+  await collect(db, { fetcher: box.fetcher });
+  assert.equal(box.calls.filter((c, i) => i >= puts && c.action === 'shelf_put').length, 0);
+  // A new link: a new key, and the old one stops.
+  const fresh = readLinkPart((await linkPhone(db, { fetcher: box.fetcher, fresh: true })).link.split('#')[1]);
+  await collect(db, { fetcher: box.fetcher });
+  const second = (await unseal(fresh.key, shelfItem().sealed)).group.key;
+  assert.notEqual(second, group.key);
+  assert.deepEqual([...cloud.state.phones.keys()], [sha(second)]);
+  // Group Circle switched off: the key comes off the shelf and the cloud forgets the phone.
+  setModule(db, 'group', false);
+  await collect(db, { fetcher: box.fetcher });
+  assert.equal(shelfItem().sealed, '');
+  assert.equal(cloud.state.phones.size, 0);
+  db.close();
+});

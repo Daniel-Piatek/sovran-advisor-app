@@ -22,6 +22,7 @@ import { libraryKey } from './sovran-library.js';
 import { takePhoneMark } from './report-marks.js';
 import { syncShelf } from './phone-shelf.js';
 import { getProvider } from './ai.js';
+import { askCloud, groupOn, isGuideApp, GROUP_URL } from './group-feed.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -98,6 +99,36 @@ async function ensureSaver(db, fetcher) {
   if (box) writeBox(db, { ...box, seal: box.seal ?? seal, ...(registered ? { saver: wanted, saver_asked: null } : { saver_asked: wanted, saver_asked_at: now() }) });
 }
 
+// Group Circle on Sovran Go (2026-11-22, the owner's wish): the phone gets its own Group Circle key, made here and
+// registered in the Sovran cloud with this computer's library key (only its SHA-256 goes there). It reaches the phone
+// sealed, on the shelf (phone-shelf.js). The phone then reads and writes Group Circle as this student, and nothing
+// else. A new link makes a new key (the old one stops); Group Circle switched off takes it away. Not in APP Daniel.
+// Returns { key, url } for the shelf, or null.
+async function ensurePhoneGroup(db) {
+  const box = readBox(db);
+  if (!box || isGuideApp()) return null;
+  const want = groupOn(db) && Boolean(libraryKey(db));
+  if (!want) {
+    if (box.group_key) {
+      try { await askCloud(db, { action: 'phone_key', phone_hash: null }); } catch { /* the library key is gone: so is the phone's */ }
+      const { group_key: _gone, group_key_box: _box, ...rest } = readBox(db) ?? box;
+      writeBox(db, rest);
+    }
+    return null;
+  }
+  if (box.group_key && box.group_key_box === box.box) return { key: box.group_key, url: GROUP_URL };
+  if (box.group_key_tried && Date.now() - new Date(box.group_key_tried).getTime() < 3600_000) return null; // asked again in an hour
+  const key = `phone_${randomB64(32)}`;
+  try { await askCloud(db, { action: 'phone_key', phone_hash: sha(key) }); } catch {
+    writeBox(db, { ...(readBox(db) ?? box), group_key_tried: now() });
+    return null;
+  }
+  const latest = readBox(db);
+  if (latest?.box !== box.box) return null; // a new link meanwhile: next time
+  writeBox(db, { ...latest, group_key: key, group_key_box: box.box, group_key_tried: null });
+  return { key, url: GROUP_URL };
+}
+
 // A journal entry from the phone: the day the phone said (its own calendar day), else the day of its time here.
 // Written at the time it was kept on the phone, so the day's entries stay in the order they were written.
 function journalDay(note, at) {
@@ -161,7 +192,9 @@ export async function collect(db, { fetcher = fetch } = {}) {
   try {
     latest = readBox(db);
     if (latest.shelf_problem && Date.now() - new Date(latest.shelf_tried_at ?? 0).getTime() < 600_000) return total; // tried again every ten minutes
-    const kept = await syncShelf(db, latest, (name, sealed) => call(fetcher, { action: 'shelf_put', box: latest.box, pull: latest.pull, name, sealed }), { force: shelfDue });
+    const group = await ensurePhoneGroup(db);
+    latest = readBox(db);
+    const kept = await syncShelf(db, latest, (name, sealed) => call(fetcher, { action: 'shelf_put', box: latest.box, pull: latest.pull, name, sealed }), { force: shelfDue, group });
     shelfDue = false;
     if (kept && readBox(db)?.box === latest.box) writeBox(db, { ...readBox(db), ...kept, shelf_problem: null });
   } catch (err) { // an older drop box has no shelf yet, or no signal: the notes above are in all the same

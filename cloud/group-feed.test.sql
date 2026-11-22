@@ -124,5 +124,23 @@ BEGIN
   PERFORM group_feed.manage(G, 'move', 'client-cccccccccccc', 'SQ01');
   PERFORM pg_temp.ok(jsonb_array_length(group_feed.read(C, 'news', NULL, NULL, 20)->'posts') = 2, 'moving a student to SQ01 shows them SQ01');
   PERFORM pg_temp.ok(jsonb_array_length(group_feed.groups_list(G)->'groups') = 2, 'the guide lists the groups');
+  -- A student's phone (Sovran Go)
+  PERFORM pg_temp.ok(group_feed.phone_key(A, repeat('9', 64))->>'phone' = 'true', 'Maya''s computer registers her phone');
+  PERFORM pg_temp.ok(group_feed.who(repeat('9', 64))->>'student' = 'client-aaaaaaaaaaaa', 'the phone is Maya in Group Circle');
+  PERFORM pg_temp.ok(group_feed.phone_key(repeat('9', 64), repeat('8', 64))->>'error' = 'nokey', 'a phone cannot register another phone');
+  PERFORM pg_temp.ok(group_feed.phone_key(A, 'nothex')->>'error' = 'bad', 'a phone key fingerprint must look right');
+  PERFORM pg_temp.ok(group_feed.who(repeat('9', 64)) IS NULL, 'a refused new phone also took the old one away');
+  PERFORM group_feed.phone_key(A, repeat('9', 64));
+  PERFORM group_feed.phone_key(A, repeat('7', 64));
+  PERFORM pg_temp.ok(group_feed.who(repeat('9', 64)) IS NULL AND group_feed.who(repeat('7', 64)) IS NOT NULL, 'a new phone replaces the old one');
+  PERFORM pg_temp.ok(EXISTS (SELECT 1 FROM jsonb_array_elements(group_feed.groups_list(G)->'groups') gl(x), jsonb_array_elements(gl.x->'members') ml(y)
+    WHERE ml.y->>'student_id' = 'client-aaaaaaaaaaaa' AND (ml.y->>'phone')::boolean), 'Daniel sees she has a phone');
+  PERFORM group_feed.manage(G, 'phone_off', 'client-aaaaaaaaaaaa', NULL);
+  PERFORM pg_temp.ok(group_feed.who(repeat('7', 64)) IS NULL, 'Daniel can switch her phone off');
+  PERFORM group_feed.phone_key(A, repeat('7', 64));
+  UPDATE library.students SET active = false WHERE id = 'client-aaaaaaaaaaaa';
+  PERFORM pg_temp.ok(group_feed.who(repeat('7', 64)) IS NULL, 'a switched-off library key switches her phone off too');
+  UPDATE library.students SET active = true WHERE id = 'client-aaaaaaaaaaaa';
+  PERFORM group_feed.phone_key(A, NULL);
   RAISE NOTICE 'ALL GROUP FEED CHECKS PASSED';
 END $$;

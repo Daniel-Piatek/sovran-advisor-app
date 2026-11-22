@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <title>Sovran Go</title>
-  <meta name="description" content="Sovran Go: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, or read your Sovran reports.">
+  <meta name="description" content="Sovran Go: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, read your Sovran reports, or open your Group Circle.">
   <meta name="apple-mobile-web-app-title" content="Sovran Go">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -42,12 +42,30 @@
         <svg class="disc disc-outer" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><rect x="8" y="8" width="8" height="8" rx="1"/></g></svg>
         <span class="choice-words"><strong>From someone else</strong><span>Something you heard or read</span></span>
       </button>
+      <button type="button" class="choice choice-group" id="group-circle" hidden>
+        <svg class="disc disc-group" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="8.4" r="2.2"/><circle cx="7.6" cy="14.6" r="2.2"/><circle cx="16.4" cy="14.6" r="2.2"/></g></svg>
+        <span class="choice-words"><strong>Group Circle</strong><span id="group-line">Announcements and the Circle</span></span>
+        <span class="g-count" id="group-count" hidden></span>
+        <span class="choice-go" aria-hidden="true">›</span>
+      </button>
       <button type="button" class="choice choice-reports" id="my-reports">
         <img class="choice-crown" src="brand/official-crimson-crown.png" alt="" width="40" height="40">
         <span class="choice-words"><strong>My reports</strong><span>Read your Sovran reports, highlight and comment</span></span>
         <span class="choice-go" aria-hidden="true">›</span>
       </button>
       <p class="status" id="waiting-line" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Group Circle: Announcements and the Circle (group.js). -->
+    <section class="group" id="group" hidden>
+      <button type="button" class="back" id="group-back">‹ Back</button>
+      <h1 class="title" id="group-title">Group Circle</h1>
+      <div class="g-tabs" id="group-tabs" role="group" aria-label="Group Circle">
+        <button type="button" data-tab="news" aria-pressed="true">Announcements</button>
+        <button type="button" data-tab="feed" aria-pressed="false">Circle</button>
+      </div>
+      <p class="status" id="group-status" role="status" aria-live="polite"></p>
+      <div class="g-list" id="group-list"></div>
     </section>
 
     <!-- My reports: the list, then one report to read (reports.js). -->

@@ -1,6 +1,6 @@
 // Supabase web function group-feed: the door to Group (module group-feed). Deploy with JWT checking off: each call
 // carries a key instead, as "Authorization: Bearer <key>". A student's key is their Sovran Library key (sovran_...);
-// D's is a guide key (guide_...). Only the SHA-256 of a key reaches the database, and every rule (which group a
+// D's is a guide key (guide_...); a student's phone has its own (phone_..., Group Circle only). Only the SHA-256 of a key reaches the database, and every rule (which group a
 // student sees, who may post announcements, pausing, closing) is in cloud/group-feed.sql, which finds the group from
 // the key and never from what the app asks for.
 //
@@ -19,7 +19,7 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type, authorization' };
 const json = (code: number, body: unknown) =>
   new Response(JSON.stringify(body), { status: code, headers: { ...cors, 'content-type': 'application/json' } });
-const KEY = /^(sovran|guide)_[A-Za-z0-9_-]{20,200}$/;
+const KEY = /^(sovran|guide|phone)_[A-Za-z0-9_-]{20,200}$/; // phone_: a student's phone (Sovran Go), Group Circle only
 const PATH = /^[A-Z0-9-]{2,20}\/[A-Za-z0-9_-]{22}\.jpg$/;
 const MAX_PICTURE = 450000; // the app sends about 200 KB; this leaves room and refuses anything big
 const ERRORS: Record<string, [number, string]> = {
@@ -87,6 +87,8 @@ Deno.serve(async (req) => {
       // what is new for this key since a moment (cloud/group-alerts.sql), for the app's alerts
       case 'alerts': return one(sql`SELECT group_feed.alerts(${h}, ${moment(msg.since)}::timestamptz) AS r`);
       case 'read': return one(sql`SELECT group_feed.read(${h}, ${text(msg.tab, 8)}, ${text(msg.group, 20) || null}, ${id(msg.before)}, ${id(msg.limit) ?? 20}) AS r`);
+      // the student's computer registers its phone's key (only with the library key itself; null takes it away)
+      case 'phone_key': return one(sql`SELECT group_feed.phone_key(${h}, ${typeof msg.phone_hash === 'string' && /^[0-9a-f]{64}$/.test(msg.phone_hash) ? msg.phone_hash : null}) AS r`);
       case 'set_name': return one(sql`SELECT group_feed.set_name(${h}, ${text(msg.name, 80)}) AS r`);
       case 'post': return one(sql`SELECT group_feed.post(${h}, ${text(msg.tab, 8)}, ${text(msg.kind, 20) || null}, ${text(msg.group, 20) || null},
         ${text(msg.body, 5001)}, ${paths(msg.pictures)}::text[], ${day(msg.due_on)}::date, ${msg.comments_on === false ? false : true}) AS r`);

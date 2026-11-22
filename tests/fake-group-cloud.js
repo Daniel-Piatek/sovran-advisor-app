@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 // A stand-in for the Sovran cloud's group-feed function (cloud/group-feed/index.ts), for the tests and the demo.
 // It keeps one group in memory and follows the same main rules: only keys it knows, students post to the Circle only,
 // a name before posting, your own posts to change. The real rules are checked against Postgres in cloud/group-feed.test.sql.
@@ -5,10 +7,12 @@
 export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], tells: [], groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
-  const who = (auth) => students[keyOf(auth)] ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
+  const sha = (text) => createHash('sha256').update(text).digest('hex');
+  const phoneOf = (key) => { const id = state.phones.get(sha(key)); return id ? Object.values(students).find((x) => x.id === id) : undefined; }; // a student's phone (Sovran Go)
+  const who = (auth) => students[keyOf(auth)] ?? phoneOf(keyOf(auth)) ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
   const nameOf = (id) => Object.values(students).find((s) => s.id === id)?.name ?? 'A student';
   const view = (p, me) => ({
     id: p.id, group: p.group, tab: p.tab, kind: p.kind, body: p.body, due_on: p.due_on ?? null, pictures: p.pictures, comments_on: p.comments_on,
@@ -45,6 +49,12 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       case 'read': {
         const list = live(msg.tab, s, msg.group).filter((p) => !msg.before || p.id < msg.before).slice(0, msg.limit ?? 20);
         return json(200, { me: meOf(s), posts: list.map((p) => view(p, s)) });
+      }
+      case 'phone_key': { // only with the library key itself
+        if (!students[keyOf(auth)]) return err('nokey', 401);
+        for (const [h, id] of state.phones) if (id === s.id) state.phones.delete(h);
+        if (msg.phone_hash) state.phones.set(msg.phone_hash, s.id);
+        return json(200, { phone: Boolean(msg.phone_hash) });
       }
       case 'set_name': s.name = msg.name; return json(200, { name: msg.name });
       case 'post': {

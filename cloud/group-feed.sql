@@ -28,6 +28,16 @@ CREATE TABLE IF NOT EXISTS group_feed.members (
   joined_at  timestamptz NOT NULL DEFAULT now()
 );
 
+-- A student's phone (Sovran Go, 2026-11-22): its own key, made by the student's computer and registered here with the
+-- student's library key (group_feed.phone_key). It reads and writes Group Circle as that student, and nothing else:
+-- the library, the reports and Tell Daniel still need the library key. One phone per student; a new one replaces it.
+CREATE TABLE IF NOT EXISTS group_feed.phone_keys (
+  key_hash   text PRIMARY KEY CHECK (key_hash ~ '^[0-9a-f]{64}$'), -- SHA-256 of the phone key; the key itself is never stored
+  student_id text NOT NULL UNIQUE,                           -- library.students.id
+  made_at    timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE group_feed.phone_keys ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS group_feed.guides (
   key_hash   text PRIMARY KEY CHECK (key_hash ~ '^[0-9a-f]{64}$'), -- SHA-256 of the guide key; the key itself is never stored
   name       text NOT NULL CHECK (length(name) BETWEEN 1 AND 40),
@@ -120,6 +130,10 @@ BEGIN
   SELECT * INTO g FROM group_feed.guides WHERE key_hash = p_key_hash;
   IF FOUND THEN RETURN jsonb_build_object('guide', true, 'name', g.name); END IF;
   SELECT id INTO s FROM library.students WHERE key_hash = p_key_hash AND active;
+  IF s IS NULL THEN -- a student's phone: the same student, while their library key is on
+    SELECT st.id INTO s FROM group_feed.phone_keys pk JOIN library.students st ON st.id = pk.student_id AND st.active
+      WHERE pk.key_hash = p_key_hash;
+  END IF;
   IF s IS NULL THEN RETURN NULL; END IF;
   SELECT * INTO m FROM group_feed.members WHERE student_id = s;
   IF NOT FOUND THEN RETURN NULL; END IF;
@@ -412,6 +426,22 @@ BEGIN
 EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
 END $$;
 
+-- The student's computer registers its phone's key (p_phone_hash), or takes it away (NULL). Only with the library key
+-- itself, never with a phone key, so a phone cannot make more phones.
+CREATE OR REPLACE FUNCTION group_feed.phone_key(p_key_hash text, p_phone_hash text) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+DECLARE s text;
+BEGIN
+  SELECT id INTO s FROM library.students WHERE key_hash = p_key_hash AND active;
+  IF s IS NULL THEN RETURN jsonb_build_object('error', 'nokey'); END IF;
+  DELETE FROM group_feed.phone_keys WHERE student_id = s;
+  IF p_phone_hash IS NULL THEN RETURN jsonb_build_object('phone', false); END IF;
+  IF p_phone_hash !~ '^[0-9a-f]{64}$' OR p_phone_hash = p_key_hash THEN RETURN jsonb_build_object('error', 'bad'); END IF;
+  INSERT INTO group_feed.phone_keys (key_hash, student_id) VALUES (p_phone_hash, s);
+  RETURN jsonb_build_object('phone', true);
+EXCEPTION WHEN unique_violation THEN RETURN jsonb_build_object('error', 'bad');
+END $$;
+
 -- ---------- the guide only ----------
 CREATE OR REPLACE FUNCTION group_feed.is_guide(p_key_hash text) RETURNS boolean
 LANGUAGE sql STABLE AS $$ SELECT EXISTS (SELECT 1 FROM group_feed.guides WHERE key_hash = p_key_hash) $$;
@@ -465,6 +495,7 @@ BEGIN
   RETURN jsonb_build_object('groups', coalesce((SELECT jsonb_agg(jsonb_build_object('code', g.code, 'title', g.title,
     'closed', g.closed_at IS NOT NULL, 'members', coalesce((SELECT jsonb_agg(jsonb_build_object('student_id', m.student_id,
       'name', m.name, 'paused', m.paused_at IS NOT NULL, 'key_on', coalesce((SELECT s.active FROM library.students s WHERE s.id = m.student_id), false),
+      'phone', EXISTS (SELECT 1 FROM group_feed.phone_keys pk WHERE pk.student_id = m.student_id),
       'done', coalesce((SELECT jsonb_agg(d.post_id) FROM group_feed.done d WHERE d.student_id = m.student_id), '[]'::jsonb)) ORDER BY m.joined_at)
       FROM group_feed.members m WHERE m.group_code = g.code), '[]'::jsonb)) ORDER BY g.created_at)
     FROM group_feed.groups g), '[]'::jsonb));
@@ -484,6 +515,7 @@ BEGIN
       INSERT INTO group_feed.members (student_id, group_code) VALUES (p_student, p_value)
         ON CONFLICT (student_id) DO UPDATE SET group_code = excluded.group_code;
     WHEN 'leave'   THEN DELETE FROM group_feed.members WHERE student_id = p_student;
+    WHEN 'phone_off' THEN DELETE FROM group_feed.phone_keys WHERE student_id = p_student; -- their phone reads Group Circle no more
     WHEN 'close'   THEN UPDATE group_feed.groups SET closed_at = now() WHERE code = p_value;
     WHEN 'open'    THEN UPDATE group_feed.groups SET closed_at = NULL WHERE code = p_value;
     WHEN 'new_group' THEN INSERT INTO group_feed.groups (code, title) VALUES (upper(p_student), p_value);
