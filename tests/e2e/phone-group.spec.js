@@ -1,4 +1,4 @@
-// Group Circle on Sovran Go (phone/group.js, 2026-11-22): with the phone's own Group Circle key, which the student's
+// Group Circle on go Sovran (once Sovran Go) (phone/group.js, 2026-11-22): with the phone's own Group Circle key, which the student's
 // computer leaves sealed on the drop box's shelf, the phone reads Announcements and the Circle, ticks homework, posts,
 // comments and replies, as that student. The folder is served as it is; the drop box and the Sovran cloud are stood in
 // for (tests/fake-group-cloud.js). Each test runs at an iPhone's size and on an Android phone.
@@ -74,7 +74,7 @@ async function phone(browser, testInfo, { withGroup = true, before = async () =>
 test('no Group Circle key on the shelf: no Group Circle choice', async ({ browser }, testInfo) => {
   const { page, context, errors } = await phone(browser, testInfo, { withGroup: false });
   try {
-    await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeAttached();
     await page.waitForTimeout(500);
     await expect(page.locator('#group-circle')).toBeHidden();
     expect(errors).toEqual([]);
@@ -87,6 +87,7 @@ test('Group Circle on the phone: homework ticked, a post, a comment and a reply,
     const choice = page.locator('#group-circle');
     await expect(choice).toBeVisible();
     await expect(page.locator('#group-count')).toHaveText('2');
+    await expect(page.locator('#group-line')).toHaveText('2 new'); // one short line on the tile
     await choice.click();
     await expect(page.getByRole('heading', { name: 'Group Circle' })).toBeVisible();
     await expect(page.getByText('Week 2: meet your Tyrant.')).toBeVisible();
@@ -153,7 +154,7 @@ test('alerts on the phone: allow them, choose which, a wake shows what waits, an
       .toEqual([['Jon replied to you', 'Same here, every morning.', './?open=group&tab=feed&post=2']]);
     expect(cloud.state.pushes.get(ENDPOINT).waiting).toEqual([]); // fetched once, then let go
 
-    // Tapping it opens Sovran Go at that post.
+    // Tapping it opens go Sovran at that post.
     await page.goto(`${origin}/?open=group&tab=feed&post=2`);
     await expect(page.getByRole('heading', { name: 'Group Circle' })).toBeVisible();
     await expect(page.locator('#group-tabs [data-tab="feed"]')).toHaveAttribute('aria-pressed', 'true');
@@ -167,14 +168,14 @@ test('alerts on the phone: allow them, choose which, a wake shows what waits, an
   } finally { await context.close(); }
 });
 
-test('alerts blocked in the phone’s settings: Sovran Go says where to switch them on', async ({ browser }, testInfo) => {
+test('alerts blocked in the phone’s settings: go Sovran says where to switch them on', async ({ browser }, testInfo) => {
   const { page, context, errors } = await phone(browser, testInfo, { before: async (c) => {
     await standInPush(c);
     await c.addInitScript(() => Object.defineProperty(Notification, 'permission', { get: () => 'denied' }));
   } });
   try {
     await page.locator('#group-circle').click();
-    await expect(page.getByText('Alerts are switched off for Sovran Go in this phone’s settings.')).toBeVisible();
+    await expect(page.getByText('Alerts are switched off for go Sovran in this phone’s settings.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Allow alerts' })).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally { await context.close(); }

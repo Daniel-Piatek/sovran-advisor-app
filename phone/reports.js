@@ -1,4 +1,4 @@
-// My reports on Sovran Go (2026-11-18, the owner's wish): the student's own Sovran reports to read on the phone, in the
+// My reports on go Sovran (2026-11-18, the owner's wish): the student's own Sovran reports to read on the phone, in the
 // report's Ivory & Gold look, with highlights and comments that match the computer's.
 //
 // The phone holds no library key. The student's own computer puts sealed copies on a shelf in the phone's drop box
@@ -130,7 +130,7 @@ export function setupReports({ link, store, show, leave, ai, call }) {
     const draw = async () => {
       const list = (await open('list'))?.reports ?? [];
       $('reports-list').replaceChildren(...(list.length ? list.map(card)
-        : [el('p', { class: 'reports-empty' }, 'Nothing here yet. Your reports appear here once your computer has been on, with Sovran Advisor up to date and Reports and Sovran Go switched on.')]));
+        : [el('p', { class: 'reports-empty' }, 'Nothing here yet. Your reports appear here once your computer has been on, with Sovran Advisor up to date and Reports and go Sovran switched on.')]));
     };
     await draw();
     if (await refresh() && !$('reports').hidden) await draw();
@@ -144,7 +144,7 @@ export function setupReports({ link, store, show, leave, ai, call }) {
       el('span', { class: 'report-card-rule', 'aria-hidden': 'true' }),
       r.about ? el('span', { class: 'report-card-about' }, r.about) : null,
       el('span', { class: 'report-card-meta' }, metaLine(r)),
-      el('span', { class: 'report-card-open' }, 'Read it here ›'));
+      el('span', { class: 'report-card-open' }, 'Open report'));
   }
 
   // ---- One report ----

@@ -1,6 +1,8 @@
-/* Sovran Go, the phone page (module phone-drop). The brand's colours and type (Visual Identity Guide v3), as in the
-   app. A white band with the crown on every screen; the choices on Charcoal with white cards; writing on white.
-   Crimson only ever sits on white. Line heights: 1.44 for reading and writing, 1.36 for short text. */
+/* go Sovran, the phone page (module phone-drop). The look of 2026-11-22 (the owner's design): a white page, the
+   go Sovran logo centred at the top, and grey boxes (the brand grey #555151) with white words; the writing box comes
+   first. The brand's colours and type (Visual Identity Guide v3). Save is Crimson on the grey box (the owner's choice);
+   in the dark theme the boxes are a lighter charcoal and Save is Gold. Line heights: 1.44 for reading and writing,
+   1.36 for short text. */
 @font-face { font-family: "Gloock"; font-weight: 400; font-display: swap; src: url("fonts/gloock-400.ttf") format("truetype"); }
 @font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("fonts/inter-400.ttf") format("truetype"); }
 @font-face { font-family: "Plus Jakarta Sans"; font-weight: 500; font-display: swap; src: url("fonts/plus-jakarta-sans-500.ttf") format("truetype"); }
@@ -10,114 +12,136 @@
   --white: #fbfbfb; --charcoal: #302d2d; --crimson: #c71f42; --gold: #d9c14b;
   --yellow: #ffe500; --violet: #733bc4; --turquoise: #2fc5c9; --turquoise-text: #177f82; --green: #059e30;
   --bg: #fbfbfb; --text: #302d2d; --muted: #555151; --faint: #7b7777; --border: #d4d1d1;
-  --kind: var(--charcoal); --kind-text: var(--charcoal);
+  /* A box: its ground, the words on it, its quieter words, its hairline, a chip inside it, and its Save. */
+  --card: #555151; --on-card: #fbfbfb; --on-card-muted: #eceaea; --card-line: #6f6a6a; --card-edge: transparent; --chip: #686363;
+  --save: #c71f42; --on-save: #fbfbfb; --soft: #eceaea;
   --heading: "Gloock", Georgia, serif;
   --ui: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #1f1d1d; --text: #eceaea; --muted: #aaa6a6; --faint: #8c8888; --border: #413d3d; --violet-text: #a585e0; --turquoise-text: #2fc5c9; }
+  :root {
+    --bg: #1f1d1d; --text: #eceaea; --muted: #aaa6a6; --faint: #8c8888; --border: #413d3d; --turquoise-text: #2fc5c9;
+    --card: #2a2727; --card-line: #3a3636; --card-edge: #3a3636; --chip: #363232; --save: #d9c14b; --on-save: #302d2d; --soft: #363232;
+  }
 }
 * { box-sizing: border-box; }
 html { height: 100%; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); -webkit-text-size-adjust: 100%; }
 body { min-height: 100dvh; display: flex; flex-direction: column; }
-body.choosing { background: var(--charcoal); }
 [hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* The band: the crown and the name, on white in both themes (Crimson only sits on white), a gold line under it. */
+/* The band: the go Sovran logo, as supplied, centred. */
 .band {
-  flex: none; display: flex; align-items: center; gap: 10px; background: var(--white); border-bottom: 2px solid var(--gold);
-  padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+  flex: none; display: flex; justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
-.band img { width: 30px; height: 30px; border-radius: 50%; display: block; }
-.band-name { font-family: var(--heading); font-size: 1.375rem; line-height: 1; color: var(--crimson); }
+.band-logo { height: 56px; width: auto; max-width: 100%; object-fit: contain; display: block; }
 
 .page {
   flex: 1; width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;
-  padding: 20px max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  padding: 16px max(14px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 }
-.choose, .form, .setup { display: flex; flex-direction: column; gap: 14px; }
-.title { font-family: var(--heading); font-weight: 400; font-size: 2rem; line-height: 1.15; margin: 0; }
+.choose, .setup { display: flex; flex-direction: column; gap: 12px; }
+.title { font-family: var(--heading); font-weight: 400; font-size: 1.75rem; line-height: 1.15; margin: 0; }
 
-/* The choices: white cards on Charcoal, each with its kind's disc. Shape tells them apart as well as colour. */
-.lead { font-family: var(--ui); font-weight: 500; font-size: 1.0625rem; line-height: 1.36; margin: 0 0 2px; color: var(--white); }
+/* The writing box: the words, the kind chips, where it goes and Save. */
+.card { display: flex; flex-direction: column; background: var(--card); color: var(--on-card); border: 1px solid var(--card-edge); border-radius: 26px; padding: 18px 18px 14px; }
+.day { margin: 0 0 6px; font-family: var(--ui); font-weight: 500; font-size: 0.8125rem; line-height: 1.36; color: var(--on-card-muted); }
+.text {
+  display: block; width: 100%; min-height: 7rem; max-height: 50dvh; padding: 0; margin: 0; border: 0; border-radius: 0; resize: none; background: none;
+  font: inherit; font-size: 1.0625rem; line-height: 1.44; color: var(--on-card); caret-color: var(--on-card);
+}
+.text:focus { outline: none; }
+.text::placeholder { font-family: var(--heading); font-size: 1.4375rem; line-height: 1.25; color: var(--on-card); opacity: 1; }
+.chips { display: flex; gap: 5px; margin: 12px 0 14px; }
+.chip {
+  flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 4px 9px 4px 5px; margin: 0;
+  border: 1.5px solid transparent; border-radius: 999px; background: var(--chip); color: var(--on-card); cursor: pointer; white-space: nowrap;
+  font-family: var(--ui); font-weight: 700; font-size: 0.78125rem; line-height: 1; -webkit-tap-highlight-color: transparent;
+}
+.chip .disc { width: 24px; height: 24px; }
+.chip[aria-checked="true"] { background: transparent; border-color: var(--on-card); }
+.cardfoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--card-line); padding-top: 12px; }
+.where { font-family: var(--ui); font-weight: 500; font-size: 0.75rem; line-height: 1.36; color: var(--on-card); }
+.keep {
+  font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1; padding: 12px 20px; min-height: 44px; border: 0; border-radius: 999px;
+  background: var(--save); color: var(--on-save); cursor: pointer; white-space: nowrap;
+}
+.keep:disabled { opacity: 0.6; }
+.card .status { color: var(--on-card); }
+.card .status:empty { display: none; }
+.card .status { margin-top: 10px; min-height: 0; }
+.status { margin: 0; min-height: 1.36em; color: var(--muted); font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; }
+
+/* Under the box: Ask my Sovran Advisor (wide), then My Reports and Group Circle side by side. Each is a grey box
+   with its kind's disc. Shape tells them apart as well as colour. */
 .choice {
-  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; text-decoration: none; cursor: pointer;
-  background: var(--white); color: var(--charcoal); border: 0; border-radius: 14px; padding: 14px 16px; margin: 0; font: inherit;
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; text-decoration: none; cursor: pointer;
+  background: var(--card); color: var(--on-card); border: 1px solid var(--card-edge); border-radius: 22px; padding: 14px; margin: 0; font: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.choice:active { background: #eceaea; }
-.choice:focus-visible, .back:focus-visible, .another:focus-visible, .keep:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.choice:active { opacity: 0.85; }
+.choice:focus-visible, .chip:focus-visible, .back:focus-visible, .another:focus-visible, .keep:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .choice-words { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.choice-words strong { font-family: var(--ui); font-weight: 700; font-size: 1.125rem; line-height: 1.36; color: var(--charcoal); }
-.choice-words span { font-family: var(--ui); font-weight: 500; font-size: 0.875rem; line-height: 1.36; color: #555151; }
-.disc { width: 40px; height: 40px; flex: none; display: block; }
+.choice-words strong { font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1.36; color: var(--on-card); }
+.choice-words span { font-family: var(--ui); font-weight: 500; font-size: 0.6875rem; line-height: 1.36; color: var(--on-card-muted); }
+.choice-go { margin-left: auto; font-family: var(--ui); font-size: 1.375rem; line-height: 1; color: var(--on-card-muted); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { flex-direction: column; align-items: flex-start; gap: 14px; }
+.pair:has(#group-circle[hidden]) .tile { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; }
+.tile-picture { width: 40px; height: 40px; flex: none; border-radius: 9px; object-fit: contain; display: block; }
+.disc { width: 36px; height: 36px; flex: none; display: block; }
 .disc g { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--charcoal); }
 .disc-ask circle:first-child { fill: var(--gold); }
 .disc-journal circle:first-child { fill: var(--yellow); }
 .disc-inner circle:first-child { fill: var(--violet); }
 .disc-inner g { stroke: var(--white); }
 .disc-outer circle:first-child { fill: var(--turquoise); }
-body.choosing .status, body.choosing .foot { color: #aaa6a6; }
 
-/* Writing. The title takes the kind's colour (set on the form by phone.js). */
-.form[data-kind="inner"] { --kind-text: var(--violet-text, var(--violet)); }
-.form[data-kind="outer"] { --kind-text: var(--turquoise-text); }
-.form[data-kind="journal"] { --kind-text: var(--text); }
-.back { align-self: flex-start; background: none; border: 0; padding: 4px 8px 4px 0; margin: 0; font-family: var(--ui); font-weight: 500; font-size: 1rem; color: var(--muted); cursor: pointer; }
-.titled { display: flex; align-items: center; gap: 12px; }
-.titled .title { color: var(--kind-text); }
-.day { margin: -6px 0 0; font-family: var(--ui); font-weight: 500; font-size: 1rem; line-height: 1.36; color: var(--muted); }
-.text {
-  font: inherit; font-size: 1.0625rem; line-height: 1.44; color: var(--text); background: var(--bg);
-  min-height: 11rem; resize: vertical; padding: 12px; width: 100%; border: 1px solid var(--border); border-radius: 10px;
+/* The top of every inner screen: a round Back and the title. */
+.top { display: flex; align-items: center; gap: 12px; }
+.back {
+  flex: none; width: 40px; height: 40px; display: grid; place-items: center; padding: 0 0 3px; margin: 0; border: 0; border-radius: 50%;
+  background: var(--card); color: var(--on-card); font-family: var(--ui); font-weight: 500; font-size: 1.375rem; line-height: 1; cursor: pointer;
 }
-.form[data-kind="journal"] .text { min-height: 16rem; }
-.text:focus { outline: 2px solid var(--text); outline-offset: 2px; }
-.text::placeholder { color: var(--faint); }
-.keep {
-  font-family: var(--ui); font-weight: 700; font-size: 1.125rem; padding: 16px; border: 0; border-radius: 8px;
-  background: var(--crimson); color: var(--white); cursor: pointer; width: 100%;
-}
-.keep:disabled { opacity: 0.6; }
-.status { margin: 0; min-height: 1.36em; color: var(--muted); font-family: var(--ui); font-size: 0.9375rem; line-height: 1.36; }
+.back-words { width: auto; height: auto; min-height: 40px; align-self: flex-start; padding: 0 16px; border-radius: 999px; font-size: 0.9375rem; font-weight: 700; }
 
 /* Kept. */
 .done { margin: auto 0; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
-.tick { width: 64px; height: 64px; }
+.tick { width: 72px; height: 72px; }
 .tick circle { fill: var(--green); }
 .tick path { fill: none; stroke: var(--white); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.tag { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 0.875rem; line-height: 1.36; padding: 4px 12px; border-radius: 999px; background: var(--violet); color: var(--white); }
+.done .title { font-size: 2.125rem; }
+.tag { margin: 0; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; padding: 4px 12px; border-radius: 999px; background: var(--violet); color: var(--white); }
 .tag[data-kind="outer"] { background: var(--turquoise); color: var(--charcoal); }
 .tag[data-kind="journal"] { background: var(--yellow); color: var(--charcoal); }
-.done-words { margin: 0; max-width: 30ch; font-size: 1.0625rem; line-height: 1.36; color: var(--muted); }
-.another { font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; padding: 12px 20px; border: 1.5px solid var(--text); border-radius: 8px; background: transparent; color: var(--text); cursor: pointer; }
+.done-words { margin: 0; max-width: 28ch; font-size: 0.9375rem; line-height: 1.36; color: var(--muted); }
+.another { font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; min-height: 44px; padding: 12px 24px; border: 1px solid var(--card-edge); border-radius: 999px; background: var(--card); color: var(--on-card); cursor: pointer; }
 
 .setup p, .steps { margin: 0; font-size: 1.0625rem; line-height: 1.44; }
 .steps { padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
+.setup .keep { align-self: flex-start; }
 a { color: var(--muted); font-family: var(--ui); }
-.foot { margin: auto 0 0; color: var(--muted); font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
-.done ~ .foot { margin-top: 0; }
+/* The privacy line: read once, while linking the phone (phone.js sets with-foot). */
+.foot { display: none; margin: auto 0 0; color: var(--muted); font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
+body.with-foot .foot { display: block; }
 
 /* ---- My reports (reports.js): the report's own Ivory & Gold look, as on the computer's Reports page ----
    A warm ivory page in both themes (a report reads like its paper), charcoal words, gold labels and rules, the
    crimson drop cap. Reading text 1.44; cards, labels and comments 1.36. */
 :root { --paper: #fbf8ef; --ink: #302d2d; --ink-muted: #555151; --rule: #d9c14b; --wash: #efe3a5; --paper-line: #d4d1d1; }
-.choice-reports { margin-top: 10px; background: var(--paper); border: 1.5px solid var(--gold); }
-.choice-reports:active { background: #f3eedd; }
-.choice-crown { width: 40px; height: 40px; flex: none; object-fit: contain; }
-.choice-go { margin-left: auto; font-family: var(--ui); font-size: 1.5rem; line-height: 1; color: var(--charcoal); }
 body.reading { background: var(--paper); color: var(--ink); }
-body.reading .foot, body.in-group .foot { display: none; } /* Group Circle posts are for the group to read, not sealed */
-body.reading .back, body.reading .title { color: var(--ink); }
+body.reading .title { color: var(--ink); }
+body.reading .back { background: var(--ink); color: var(--paper); }
 .reports, .report { display: flex; flex-direction: column; gap: 14px; }
 .reports-list { display: grid; gap: 14px; }
 .reports-empty { margin: 0; font-size: 1.0625rem; line-height: 1.44; color: var(--ink-muted); }
 .report-card {
-  display: grid; gap: 8px; justify-items: start; width: 100%; text-align: left; cursor: pointer; font: inherit; line-height: 1.36;
-  background: var(--paper); color: var(--ink); border: 1px solid var(--paper-line); border-left: 4px solid var(--rule); border-radius: 10px; padding: 16px;
+  display: grid; gap: 10px; justify-items: center; width: 100%; text-align: center; cursor: pointer; font: inherit; line-height: 1.36;
+  background: var(--paper); color: var(--ink); border: 1.5px solid var(--rule); border-radius: 26px; padding: 26px 20px 20px;
   -webkit-tap-highlight-color: transparent;
 }
 .report-card:focus-visible, .report-contents-link:focus-visible, .report-note:focus-visible, .pick button:focus-visible, .pick a:focus-visible, .sheet button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
@@ -130,7 +154,7 @@ body.reading .back, body.reading .title { color: var(--ink); }
 .report-card-rule { width: 120px; height: 4px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .report-card-about { font-size: 1rem; line-height: 1.44; }
 .report-card-meta { font-family: var(--ui); font-size: 0.875rem; color: var(--ink-muted); }
-.report-card-open { font-family: var(--ui); font-weight: 700; color: var(--crimson); }
+.report-card-open { margin-top: 4px; padding: 11px 20px; border-radius: 999px; background: var(--ink); color: var(--paper); font-family: var(--ui); font-weight: 700; font-size: 0.875rem; line-height: 1; }
 
 .report-paper { color: var(--ink); }
 .report-cover { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 0 20px; }
@@ -194,7 +218,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .sheet-text { width: 100%; min-height: 6rem; padding: 12px; border: 1px solid var(--paper-line); border-radius: 10px; background: var(--white); color: var(--ink); font: inherit; font-size: 1.0625rem; line-height: 1.44; resize: vertical; }
 .sheet-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .sheet-quiet { min-height: 48px; padding: 0 4px; border: 0; background: none; font-family: var(--ui); font-weight: 500; font-size: 1rem; color: var(--ink-muted); cursor: pointer; }
-.sheet-save { min-height: 48px; padding: 0 22px; border: 0; border-radius: 8px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; cursor: pointer; }
+.sheet-save { min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 1.0625rem; cursor: pointer; }
 .sheet-waiting { margin: 0; font-family: var(--ui); font-size: 0.8125rem; color: var(--ink-muted); }
 .toast {
   position: fixed; z-index: 35; left: 16px; right: 16px; bottom: max(76px, calc(env(safe-area-inset-bottom) + 62px)); margin: 0 auto; max-width: 420px; padding: 12px 16px;
@@ -202,19 +226,29 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 }
 .copy-box { position: fixed; top: 0; left: -200vw; opacity: 0; }
 
-/* Group Circle (group.js): the choice on the first screen, then Announcements and the Circle on white. */
-.disc-group circle:first-child { fill: var(--violet); }
-.disc-group g { stroke: var(--white); }
-.g-count { margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.875rem; line-height: 1.36; text-align: center; }
-.g-count + .choice-go { margin-left: 10px; }
+/* Group Circle (group.js): on the first screen a Violet box with white words, to call attention to it; then
+   Announcements and the Circle, each post a grey box with white words. */
+.choice-group, .choice-group:active { background: var(--violet); border-color: var(--violet); }
+.choice-group .choice-words span { color: #e3d6f6; }
+.disc-group circle:first-child { fill: var(--white); }
+.disc-group g { stroke: var(--violet); }
+.g-count { position: absolute; top: 12px; right: 12px; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--white); color: var(--violet); font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; text-align: center; }
 .group { display: flex; flex-direction: column; gap: 14px; }
-.g-tabs { display: flex; gap: 8px; }
-.g-tabs button { flex: 1; font-family: var(--ui); font-weight: 700; font-size: 1rem; padding: 10px; border-radius: 999px; border: 1.5px solid var(--border); background: none; color: var(--text); cursor: pointer; }
-.g-tabs button[aria-pressed="true"] { background: var(--charcoal); border-color: var(--charcoal); color: var(--white); }
-.g-list { display: flex; flex-direction: column; gap: 16px; }
+.g-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px; border-radius: 999px; background: var(--soft); }
+.g-tabs button { font-family: var(--ui); font-weight: 700; font-size: 0.875rem; min-height: 40px; padding: 9px; border-radius: 999px; border: 0; background: none; color: var(--muted); cursor: pointer; }
+.g-tabs button[aria-pressed="true"] { background: var(--card); color: var(--on-card); }
+.g-list { display: flex; flex-direction: column; gap: 10px; }
 .g-note { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.44; }
-.g-post { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
-.g-announcement { border: 1.5px solid var(--gold); border-radius: 14px; padding: 14px; }
+.g-post {
+  --text: var(--on-card); --muted: var(--on-card-muted); --faint: var(--on-card-muted); --border: var(--card-line);
+  display: flex; flex-direction: column; gap: 10px; background: var(--card); color: var(--on-card); border: 1px solid var(--card-edge); border-radius: 22px; padding: 16px;
+}
+.g-announcement { border: 1.5px solid var(--gold); }
+.g-post .g-kind-homework { color: var(--gold); }
+.g-post .g-like { color: var(--on-card); }
+.g-post .g-bubble { background: rgba(255, 255, 255, 0.12); }
+.g-post .g-write { background: var(--white); color: var(--charcoal); border-color: var(--white); }
+.g-post .g-done input { accent-color: var(--gold); }
 .g-by { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-family: var(--ui); font-size: 1rem; line-height: 1.36; }
 .g-when { color: var(--faint); font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
 .g-badge { font-family: var(--ui); font-weight: 700; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--gold); color: var(--charcoal); }
@@ -240,7 +274,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .g-send, .g-add { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: none; color: var(--text); cursor: pointer; }
 .g-composer { display: flex; flex-direction: column; gap: 10px; }
 .g-composer-row { display: flex; gap: 10px; align-items: center; }
-.g-post-button { flex: 1; padding: 12px; }
+.g-post-button { flex: 1; }
 .g-thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
 .g-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
 .g-name { font: inherit; font-size: 1.0625rem; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
@@ -254,4 +288,5 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .g-alert-row input { width: 22px; height: 22px; flex: none; accent-color: var(--crimson); }
 .g-allow { align-self: flex-start; }
 .g-alerts .g-link { align-self: flex-start; }
-.g-asked { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 14px; }
+.g-asked { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 22px; }
+#group-status:empty { min-height: 0; }
