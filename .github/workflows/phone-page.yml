@@ -34,5 +34,9 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: phone
+      # GitHub sometimes does not list the upload yet when the next step asks for it ("No artifacts named
+      # github-pages", three times on 22 Nov 2026). A short wait lets it appear.
+      - name: Wait for the upload to be listed
+        run: sleep 15
       - id: deployment
         uses: actions/deploy-pages@v4
