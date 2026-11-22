@@ -31,8 +31,19 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   height: 100vh;
-  padding: calc(var(--space-8) + var(--space-2)) var(--space-3); /* Capture sits a little below the panels' top edge (2026-11-10, the owner's wish) */
+  padding: 22px var(--space-3) calc(var(--space-8) + var(--space-2)); /* Sovran Central's name on top, then Capture (2026-11-22) */
 }
+
+/* Sovran Central's name at the top of the sidebar (2026-11-22, the owner's pick "D"):
+   the official crimson crown beside "Sovran" in Gloock, CENTRAL spaced out under it.
+   Crimson words in light; on dark, white with gold, never crimson. */
+.sidebar-brand { display: flex; align-items: center; gap: 10px; margin: 0 0 22px; padding: 0 4px 0 6px; }
+.sidebar-brand-crown { width: 40px; height: auto; flex: none; }
+.sidebar-brand-words { display: flex; flex-direction: column; }
+.sidebar-brand-name { font-family: var(--font-heading); font-weight: 400; font-size: 22px; line-height: 1; color: #302D2D; }
+.sidebar-brand-sub { font-family: var(--font-ui); font-weight: 700; font-size: 9.5px; line-height: 1.36; letter-spacing: 0.42em; text-transform: uppercase; margin-top: 4px; color: #C71F42; }
+html[data-theme="dark"] .sidebar-brand-name { color: #FBFBFB; }
+html[data-theme="dark"] .sidebar-brand-sub { color: #D9C14B; }
 
 .sidebar-link {
   font-weight: var(--weight-medium);
@@ -622,6 +633,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   .search { order: 1; flex-basis: 100%; max-width: none; }
 
   /* The sidebar becomes a bar along the bottom, always in reach of a thumb. */
+  .sidebar-brand { display: none; }
   .layout { display: block; padding-bottom: var(--bottom-bar-height); }
   .sidebar {
     position: fixed;
