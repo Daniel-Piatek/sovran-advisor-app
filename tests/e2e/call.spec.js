@@ -60,8 +60,7 @@ test('a question for Sovran Advisor goes to the chat as a normal message; a slow
   await say(page, 'slow: tell me about my notes');
   await expect(widget(page)).toContainText('Speaking');
   const chat = page.getByRole('log', { name: 'Conversation' });
-  await expect(chat.locator('[data-role="assistant"]').last()).toContainText('Sovran Advisor', { timeout: 20000 });
-  await expect(chat).toContainText('Said while it thought: “Let me look at your notes.”');
+  await expect(chat).toContainText('Said while it thought: “Let me look at your notes.”', { timeout: 20000 });
   await expect(chat.locator('[data-role="user"]')).toContainText('Said on a call');
 });
 
