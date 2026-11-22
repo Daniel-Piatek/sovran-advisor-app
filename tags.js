@@ -66,7 +66,16 @@ export function textTags(markdown) {
 
 // ---- Tags ----
 
-const TAG_COLUMNS = 't.id, t.name, t.color, t.group_id, t.pinned, t.created_at, t.updated_at, t.deleted_at';
+const TAG_COLUMNS = 't.id, t.name, t.color, t.group_id, t.pinned, t.description, t.picture, t.created_at, t.updated_at, t.deleted_at';
+export const MAX_TAG_DESCRIPTION = 1000;
+
+// A tag's picture (2026-11-22, D's wish): nothing, a picture kept in the app's files (its SHA-256), or one of the Sovran
+// pictures of the starter tags ("sovran:medusa"), fetched once from the Sovran cloud with the library key (tag-pictures.js).
+export const SOVRAN_PICTURES = ['medusa', 'gremlin', 'werewolf', 'mummy', 'zombie', 'tyrant', 'gollum', 'vampire', 'kraken', 'manticore', 'troll', 'gryphon', 'mystic',
+  'hero', 'phoenix', 'quantum', 'sovran', 'destiny'];
+export const pictureUrl = (picture) => (/^[0-9a-f]{64}$/.test(picture ?? '') ? `/files/${picture}`
+  : /^sovran:[a-z]+$/.test(picture ?? '') ? `/api/tag-pictures/${picture.slice(7)}` : null);
+const shown = (t) => ({ ...t, pinned: Boolean(t.pinned), picture_url: pictureUrl(t.picture) });
 
 function liveGroup(db, id) {
   return id ? db.prepare('SELECT id FROM tag_groups WHERE id = ? AND deleted_at IS NULL').get(id) ?? null : null;
@@ -75,7 +84,7 @@ function liveGroup(db, id) {
 export function getTag(db, id, { deleted = false } = {}) {
   const tag = db.prepare(`SELECT ${TAG_COLUMNS} FROM tags t WHERE t.id = ? ${deleted ? '' : 'AND t.deleted_at IS NULL'}`).get(id);
   if (!tag) return null;
-  return { ...tag, pinned: Boolean(tag.pinned), group_id: liveGroup(db, tag.group_id)?.id ?? null };
+  return { ...shown(tag), group_id: liveGroup(db, tag.group_id)?.id ?? null };
 }
 
 const findByKey = (db, key) => db.prepare('SELECT id FROM tags WHERE name_key = ? AND deleted_at IS NULL').get(key)?.id ?? null;
@@ -96,7 +105,7 @@ export function listTags(db) {
   const groups = plain(db.prepare('SELECT id, name, position, created_at, updated_at FROM tag_groups WHERE deleted_at IS NULL ORDER BY position, name COLLATE NOCASE').all());
   const groupIds = new Set(groups.map((g) => g.id));
   const tags = db.prepare(`SELECT ${TAG_COLUMNS} FROM tags t WHERE t.deleted_at IS NULL`).all()
-    .map((t) => ({ ...t, pinned: Boolean(t.pinned), group_id: groupIds.has(t.group_id) ? t.group_id : null, count: by.get(t.id)?.count ?? 0, counts: by.get(t.id)?.counts ?? {} }))
+    .map((t) => ({ ...shown(t), group_id: groupIds.has(t.group_id) ? t.group_id : null, count: by.get(t.id)?.count ?? 0, counts: by.get(t.id)?.counts ?? {} }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   return { tags, groups };
 }
@@ -117,11 +126,11 @@ export function ensureTag(db, name, { origin = 'typed', color, group_id: groupId
   return getTag(db, id);
 }
 
-// Changes a tag's name, colour, group or pin. A name another tag already has is refused (409): join them instead.
+// Changes a tag's name, colour, group, pin, description or picture. A name another tag already has is refused (409): join them instead.
 export function updateTag(db, id, input) {
   const tag = getTag(db, id);
   if (!tag) return null;
-  const next = { name: tag.name, color: tag.color, group_id: tag.group_id, pinned: tag.pinned };
+  const next = { name: tag.name, color: tag.color, group_id: tag.group_id, pinned: tag.pinned, description: tag.description, picture: tag.picture };
   if ('name' in input) {
     const problem = checkTagName(input.name);
     if (problem) throw fail(400, problem);
@@ -142,8 +151,21 @@ export function updateTag(db, id, input) {
     if (typeof input.pinned !== 'boolean') throw fail(400, 'pinned is true or false.');
     next.pinned = input.pinned;
   }
-  db.prepare('UPDATE tags SET name = ?, name_key = ?, color = ?, group_id = ?, pinned = ?, updated_at = ? WHERE id = ?')
-    .run(next.name, nameKey(next.name), next.color, next.group_id, next.pinned ? 1 : 0, now(), id);
+  if ('description' in input) {
+    if (typeof input.description !== 'string') throw fail(400, 'description is words.');
+    const words = input.description.replace(/\r\n?/g, '\n').trim();
+    if (words.length > MAX_TAG_DESCRIPTION) throw fail(400, `A tag’s description is at most ${MAX_TAG_DESCRIPTION} characters.`);
+    next.description = words;
+  }
+  if ('picture' in input) {
+    const picture = input.picture ?? '';
+    if (picture && !pictureUrl(picture)) throw fail(400, 'picture is a kept picture’s SHA-256, a Sovran picture, or nothing.');
+    if (/^[0-9a-f]{64}$/.test(picture) && !db.prepare("SELECT 1 FROM files WHERE sha256 = ? AND type LIKE 'image/%'").get(picture)) throw fail(400, 'That picture isn’t kept here.');
+    if (picture.startsWith('sovran:') && !SOVRAN_PICTURES.includes(picture.slice(7))) throw fail(400, 'There is no such Sovran picture.');
+    next.picture = picture;
+  }
+  db.prepare('UPDATE tags SET name = ?, name_key = ?, color = ?, group_id = ?, pinned = ?, description = ?, picture = ?, updated_at = ? WHERE id = ?')
+    .run(next.name, nameKey(next.name), next.color, next.group_id, next.pinned ? 1 : 0, next.description, next.picture, now(), id);
   return getTag(db, id);
 }
 
@@ -238,6 +260,65 @@ export function restoreGroup(db, id) {
   if (!group) return null;
   db.prepare('UPDATE tag_groups SET deleted_at = NULL, updated_at = ? WHERE id = ?').run(now(), id);
   return getGroup(db, id);
+}
+
+// ---- Starter tags (2026-11-22, D's list) ----
+
+// The 13 characters and the 5 Quests, each in its group, with a few words and a Sovran picture. The characters' words are
+// the brand's own (live-sovran-brand, BRAND.md, "Represents"); the Quests' come from D's teaching (The Quests, 2026-08-30).
+// Added with one tap in Settings › Tags, never by themselves; a tag that is already there keeps its own words, picture and group.
+export const STARTER_TAGS = [
+  { group: 'Characters', tags: [
+    ['Medusa', 'Fear, anxiety, worry; overwhelm, numbness, dissociation.'],
+    ['Gremlin', 'Agitating thoughts, emotions, feelings and sensations: the mischievous troublemaker.'],
+    ['Werewolf', 'Animalistic drives and desires.'],
+    ['Mummy', 'Feeling stuck, trapped and hopeless.'],
+    ['Zombie', 'Unresolved trauma from the past.'],
+    ['Tyrant', 'The harsh critic, judge and executioner.'],
+    ['Gollum', 'Shame, self-loathing and regret.'],
+    ['Vampire', 'Predatory people and situations.'],
+    ['Kraken', 'A persistent, soul-level theme that is pervasive.'],
+    ['Manticore', 'Self-doubt, impostor syndrome, hesitation and unworthiness.'],
+    ['Troll', 'The Voice of Autopilot: the incessant narrator and commentator.'],
+    ['Gryphon', 'Protector and liberator of the Sovran Throne.'],
+    ['Mystic', 'Complete trust in life: deep peace while fully engaging with life.'],
+  ] },
+  { group: 'Quests', tags: [
+    ['Hero', 'The Hero Quest: 6 weeks. It teaches and trains STOP. Take command and come to your own rescue.'],
+    ['Phoenix', 'The Phoenix Quest: 6 weeks. It teaches and trains Unraveling, building on STOP. A partner for life.'],
+    ['Quantum', 'The Quantum Quest: 12 weeks. It teaches and trains Not-Knowing, building on STOP and Unraveling.'],
+    ['Sovran', 'The Sovran Quest: 12 weeks. The Hero and Phoenix Quests, with more of its own. It initiates Sovran Vocation.'],
+    ['Destiny', 'The Destiny Quest: 12 weeks. Actualize Sovran Vocation: creating your original offer.'],
+  ] },
+];
+
+// Which starter tags are there already (by name), for Settings to say what one tap would add.
+export function starterState(db) {
+  const all = STARTER_TAGS.flatMap((g) => g.tags.map(([name]) => name));
+  const there = all.filter((name) => findByKey(db, nameKey(name)));
+  return { total: all.length, there: there.length };
+}
+
+export function addStarterTags(db) {
+  let added = 0;
+  db.exec('SAVEPOINT starter_tags');
+  try {
+    for (const { group, tags } of STARTER_TAGS) {
+      const groupId = db.prepare('SELECT id FROM tag_groups WHERE lower(name) = lower(?) AND deleted_at IS NULL').get(group)?.id ?? createGroup(db, { name: group }).id;
+      for (const [name, description] of tags) {
+        const before = findByKey(db, nameKey(name));
+        const tag = before ? getTag(db, before) : ensureTag(db, name, { group_id: groupId });
+        if (!before) added += 1;
+        updateTag(db, tag.id, {
+          ...(tag.description ? {} : { description }),
+          ...(tag.picture ? {} : { picture: `sovran:${name.toLowerCase()}` }),
+          ...(tag.group_id ? {} : { group_id: groupId }),
+        });
+      }
+    }
+    db.exec('RELEASE starter_tags');
+  } catch (err) { db.exec('ROLLBACK TO starter_tags'); db.exec('RELEASE starter_tags'); throw err; }
+  return { added, ...starterState(db) };
 }
 
 // ---- Tags on items ----

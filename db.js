@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 78;
+export const SCHEMA_VERSION = 79;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -400,6 +400,12 @@ const steps = {
   78(db) {
     const columns = db.prepare("SELECT name FROM pragma_table_info('capture_suggestions')").all().map((c) => c.name);
     if (columns.length && !columns.includes('tags')) db.exec("ALTER TABLE capture_suggestions ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'");
+  },
+  // 79: a tag's description and picture (tags.js, 2026-11-22): tags.description and tags.picture.
+  79(db) {
+    const columns = db.prepare("SELECT name FROM pragma_table_info('tags')").all().map((c) => c.name);
+    if (columns.length && !columns.includes('description')) db.exec("ALTER TABLE tags ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+    if (columns.length && !columns.includes('picture')) db.exec("ALTER TABLE tags ADD COLUMN picture TEXT NOT NULL DEFAULT ''");
   },
 };
 

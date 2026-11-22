@@ -1,11 +1,12 @@
 // Settings › Tags (module tags, 2026-11-22, the owner's wish): your tags and your groups, all in your hands.
 //   Groups   make one, rename it, move it up or down, remove it (its tags stay, in no group; Undo puts them back)
 //   Tags     rename one (a name another tag has offers to join the two), put it in a group, pin it to the sidebar, join it into another, or remove it (it comes
-//            off every item, the items stay; Undo puts it back on exactly those)
+//            off every item, the items stay; Undo puts it back on exactly those), and give it a few words on what it is (2026-11-22)
+//   Starter  one tap adds the Sovran tags: the 13 characters and the 5 Quests, each with its description and picture
 
 import { el, icon, request, undoBar } from './ui.js';
 import { fold } from './fold.js';
-import { forgetTags, tagMark } from './tags.js';
+import { forgetTags, tagPicture } from './tags.js';
 import { refreshSidebar } from './shell.js';
 
 const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
@@ -18,6 +19,19 @@ export function tagsSection() {
   const find = el('input', { type: 'search', class: 'search-input', placeholder: 'Find a tag', 'aria-label': 'Find a tag in Settings', autocomplete: 'off', oninput: () => drawTags() });
   const tagFold = fold('tags-list', 'Your tags', el('label', { class: 'search tag-settings-find' }, icon('search'), find), tagRows);
   let data = { tags: [], groups: [] };
+
+  // ---- The Sovran starter tags (2026-11-22, D's wish) ----
+  const starter = el('div', { class: 'tag-settings-starter', hidden: true });
+  async function drawStarter() {
+    let state;
+    try { state = await request('GET', '/api/tags/starter'); } catch { starter.hidden = true; return; }
+    starter.hidden = state.there >= state.total;
+    const missing = state.total - state.there;
+    starter.replaceChildren(
+      el('p', {}, state.there ? `${missing} of the Sovran starter tags aren't here yet.` : 'The Sovran starter tags: the 13 characters and the 5 Quests, each with a few words on what it is and its picture.'),
+      el('button', { type: 'button', class: 'button', onclick: () => act(async () => { await request('POST', '/api/tags/starter', {}); await changed(); }) },
+        state.there ? `Add the other ${missing}` : 'Add the Sovran starter tags'));
+  }
 
   const changed = async () => { forgetTags(); await refreshSidebar(); await load(); };
   const act = async (work) => {
@@ -84,8 +98,11 @@ export function tagsSection() {
       group.value = tag.group_id ?? '';
       const into = el('select', { class: 'detail-input', 'aria-label': `Join ${tag.name} into another tag`, onchange: () => { const other = data.tags.find((t) => t.id === into.value); if (other) join(tag, other); } },
         el('option', { value: '' }, 'Join into…'), ...data.tags.filter((t) => t.id !== tag.id).sort(byName).map((t) => el('option', { value: t.id }, t.name)));
+      const about = el('textarea', { class: 'detail-input tag-settings-description', rows: 1, maxlength: 1000, placeholder: 'A few words on what this tag is', 'aria-label': `Description of ${tag.name}` });
+      about.value = tag.description ?? '';
+      about.addEventListener('change', () => act(async () => { await request('PATCH', `/api/tags/${tag.id}`, { description: about.value }); forgetTags(); note.textContent = 'Description saved.'; }));
       return el('div', { class: 'tag-settings-row', 'data-tag-id': tag.id },
-        tagMark(),
+        tagPicture(tag, { small: true }),
         name,
         el('span', { class: 'tag-settings-count' }, `${tag.count} ${tag.count === 1 ? 'item' : 'items'}`),
         group,
@@ -97,6 +114,7 @@ export function tagsSection() {
           offerUndo(`Tag “${tag.name}” removed from ${tag.count} ${tag.count === 1 ? 'item' : 'items'}. The items are untouched.`, () => request('POST', `/api/tags/${tag.id}/restore`, {}));
           await changed();
         }) }, icon('trash')),
+        about,
         note);
     }) : [el('p', { class: 'empty' }, data.tags.length ? 'No tag has those letters.' : 'No tags yet. Put one on a note with + Tag, or type #word in your writing.')]));
   }
@@ -110,12 +128,14 @@ export function tagsSection() {
     try { data = await request('GET', '/api/tags'); } catch { problem.textContent = "Your tags couldn't be loaded. Is the app still running?"; return; }
     drawGroups();
     drawTags();
+    await drawStarter();
   }
   void load();
 
   return el('section', { class: 'settings-part', 'aria-label': 'Tags', id: 'tags' },
     el('h2', { class: 'settings-title' }, 'Tags'),
     el('p', { class: 'empty' }, 'Your groups and your tags. A group holds as many or as few tags as you like; a tag is in one group or none.'),
+    starter,
     el('h3', { class: 'settings-subtitle' }, 'Groups'),
     groupRows,
     el('h3', { class: 'settings-subtitle' }, 'Tags'),
