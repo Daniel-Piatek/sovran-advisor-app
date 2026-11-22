@@ -137,7 +137,7 @@ export const removePost = (db, id) => cloud(db, { action: 'delete_post', id: pos
 export async function addComment(db, post, input) {
   const body = words(input?.body, 2000, 'A comment');
   if (!body) throw fail(400, 'Write your comment first.');
-  return cloud(db, { action: 'comment', post: postId(post), body });
+  return cloud(db, { action: 'comment', post: postId(post), body, reply_to: input?.reply_to ? postId(input.reply_to) : null });
 }
 export async function changeComment(db, id, input) {
   const body = words(input?.body, 2000, 'A comment');

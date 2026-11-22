@@ -374,7 +374,27 @@ function postCard(p, { me, canWrite, reload, showGroup: withGroup = false }) {
     : null;
   card.append(el('div', { class: 'group-actions' }, doneBox, el('span', { class: 'group-spacer' }), likeButton, commentCount));
   // Comments (questions, under an announcement)
-  const comments = el('div', { class: 'group-comments' }, ...p.comments.map((c) => commentRow(c, p, { me, reload })));
+  // Replies (2026-11-22, the owner's wish) sit under the comment they answer, one level deep; a reply whose comment
+  // has gone shows on its own.
+  const ids = new Set(p.comments.map((c) => c.id));
+  const firsts = p.comments.filter((c) => !c.reply_to || !ids.has(c.reply_to));
+  const canReply = canWrite && p.comments_on;
+  const comments = el('div', { class: 'group-comments' }, ...firsts.map((c) => {
+    const replies = el('div', { class: 'group-replies' }, ...p.comments.filter((r) => r.reply_to === c.id).map((r) => commentRow(r, p, { me, reload, onReply: canReply ? () => replyBox(c, r) : null })));
+    function replyBox(first, to) {
+      replies.querySelector('.group-reply-form')?.remove();
+      const box = el('input', { class: 'group-comment-input', maxlength: 2000, 'aria-label': `Reply to ${to.author}`, placeholder: `Reply to ${to.author}…` });
+      const problem = el('span', { class: 'group-status', role: 'status' });
+      const form = el('form', { class: 'group-comment-form group-reply-form', onsubmit: async (event) => {
+        event.preventDefault();
+        if (!box.value.trim()) return;
+        try { await request('POST', `/api/group/posts/${p.id}/comments`, { body: box.value, reply_to: first.id }); reload(); } catch (err) { problem.textContent = err.message; }
+      } }, avatar(me.name, Boolean(me.guide), true), box, problem);
+      replies.append(form);
+      box.focus();
+    }
+    return el('div', { class: 'group-thread' }, commentRow(c, p, { me, reload, onReply: canReply ? () => replyBox(c, c) : null }), replies);
+  }));
   if (canWrite && p.comments_on) {
     const box = el('input', { class: 'group-comment-input', maxlength: 2000, 'aria-label': p.tab === 'news' ? 'Ask a question' : 'Write a comment',
       placeholder: p.tab === 'news' ? 'Ask a question…' : 'Write a comment…' });
@@ -389,7 +409,7 @@ function postCard(p, { me, canWrite, reload, showGroup: withGroup = false }) {
   return card;
 }
 
-function commentRow(c, p, { me, reload }) {
+function commentRow(c, p, { me, reload, onReply = null }) {
   const row = el('div', { class: c.hidden ? 'group-comment group-hidden' : 'group-comment' }, avatar(c.author, c.by_guide, true));
   const bubble = el('div', { class: 'group-bubble' }, el('span', { class: 'group-name' }, c.author, c.by_guide ? el('span', { class: 'group-badge' }, 'Guide') : null), ' ', bodyText(c.body));
   const items = me.guide
@@ -402,7 +422,8 @@ function commentRow(c, p, { me, reload }) {
       await request('POST', `/api/group/posts/${p.id}/flag`, { comment: c.id }).catch(() => {});
       row.append(el('span', { class: 'group-status', role: 'status' }, 'Thank you. Daniel will take a look.'));
     } }];
-  row.append(bubble, moreMenu('More', items));
+  const reply = onReply ? el('button', { type: 'button', class: 'button button-quiet group-reply', onclick: onReply }, 'Reply') : null;
+  row.append(el('div', { class: 'group-comment-main' }, bubble, reply), moreMenu('More', items));
   return row;
 }
 

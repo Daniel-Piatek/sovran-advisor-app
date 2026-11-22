@@ -137,13 +137,15 @@ export function findShadowsAndGradients(text, extension) {
 // building blocks, copied as they are by `npm run vendor` (they hold no styles).
 const generatedIcons = path.join(root, 'public', 'icons');
 const vendored = path.join(root, 'public', 'vendor');
+// The Tour's films are made from the published film pages (build-app-films.py) and carry the brand guide's own colours.
+const films = path.join(root, 'public', 'tour');
 
 function appFiles() {
   const files = [];
   const walk = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      if (full === generatedIcons || full === vendored) continue;
+      if (full === generatedIcons || full === vendored || full === films) continue;
       if (entry.isDirectory()) walk(full);
       else files.push(full);
     }

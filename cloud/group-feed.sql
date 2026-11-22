@@ -66,8 +66,11 @@ CREATE TABLE IF NOT EXISTS group_feed.comments (
   edited_at  timestamptz,
   hidden_at  timestamptz,
   deleted_at timestamptz,
+  reply_to   bigint REFERENCES group_feed.comments (id) ON DELETE CASCADE, -- a reply sits under this comment (one level)
   CHECK ((student_id IS NULL) <> (guide_name IS NULL))
 );
+-- Replies (2026-11-22, the owner's wish): a reply tucked under the comment it answers. Added to a live table here.
+ALTER TABLE group_feed.comments ADD COLUMN IF NOT EXISTS reply_to bigint REFERENCES group_feed.comments (id) ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS comments_post ON group_feed.comments (post_id, id);
 
 CREATE TABLE IF NOT EXISTS group_feed.likes (
@@ -174,7 +177,7 @@ BEGIN
         'flagged', CASE WHEN is_guide THEN (SELECT count(*) FROM group_feed.flags f WHERE f.post_id = p.id AND f.comment_id IS NULL AND f.resolved_at IS NULL)
                         ELSE EXISTS (SELECT 1 FROM group_feed.flags f WHERE f.post_id = p.id AND f.comment_id IS NULL AND f.student_id = me)::int END,
         'comments', coalesce((SELECT jsonb_agg(jsonb_build_object('id', c.id, 'body', c.body, 'created_at', c.created_at,
-            'edited_at', c.edited_at, 'hidden', c.hidden_at IS NOT NULL, 'author', group_feed.author_name(c.student_id, c.guide_name),
+            'edited_at', c.edited_at, 'hidden', c.hidden_at IS NOT NULL, 'reply_to', c.reply_to, 'author', group_feed.author_name(c.student_id, c.guide_name),
             'by_guide', c.student_id IS NULL, 'student', CASE WHEN is_guide THEN c.student_id END, 'mine', CASE WHEN is_guide THEN c.student_id IS NULL ELSE c.student_id = me END) ORDER BY c.id)
           FROM group_feed.comments c WHERE c.post_id = p.id AND c.deleted_at IS NULL AND (is_guide OR c.hidden_at IS NULL)), '[]'::jsonb)
       ) x
@@ -308,9 +311,12 @@ BEGIN
   RETURN jsonb_build_object('deleted', p.id, 'pictures', to_jsonb(p.pictures));
 END $$;
 
-CREATE OR REPLACE FUNCTION group_feed.comment(p_key_hash text, p_post bigint, p_body text) RETURNS jsonb
+-- A comment, or (p_reply_to) a reply under a comment on the same post. A reply to a reply goes under the same first
+-- comment, so a thread is one level deep.
+DROP FUNCTION IF EXISTS group_feed.comment(text, bigint, text);
+CREATE OR REPLACE FUNCTION group_feed.comment(p_key_hash text, p_post bigint, p_body text, p_reply_to bigint DEFAULT NULL) RETURNS jsonb
 LANGUAGE plpgsql AS $$
-DECLARE w jsonb := group_feed.who(p_key_hash); why text := group_feed.may_write(w); p group_feed.posts; new_id bigint;
+DECLARE w jsonb := group_feed.who(p_key_hash); why text := group_feed.may_write(w); p group_feed.posts; new_id bigint; parent group_feed.comments;
 BEGIN
   IF why IS NOT NULL THEN RETURN jsonb_build_object('error', why); END IF;
   p := group_feed.visible_post(w, p_post);
@@ -318,9 +324,14 @@ BEGIN
   IF NOT p.comments_on AND NOT (w->>'guide')::boolean THEN RETURN jsonb_build_object('error', 'nocomments'); END IF;
   IF NOT (w->>'guide')::boolean AND (SELECT count(*) FROM group_feed.comments WHERE student_id = w->>'student' AND created_at > now() - interval '1 day') >= 100 THEN
     RETURN jsonb_build_object('error', 'toomany'); END IF;
-  INSERT INTO group_feed.comments (post_id, student_id, guide_name, body)
+  IF p_reply_to IS NOT NULL THEN
+    SELECT * INTO parent FROM group_feed.comments WHERE id = p_reply_to AND post_id = p.id AND deleted_at IS NULL
+      AND ((w->>'guide')::boolean OR hidden_at IS NULL);
+    IF parent.id IS NULL THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+  END IF;
+  INSERT INTO group_feed.comments (post_id, student_id, guide_name, body, reply_to)
     VALUES (p.id, CASE WHEN (w->>'guide')::boolean THEN NULL ELSE w->>'student' END,
-            CASE WHEN (w->>'guide')::boolean THEN w->>'name' END, p_body)
+            CASE WHEN (w->>'guide')::boolean THEN w->>'name' END, p_body, coalesce(parent.reply_to, parent.id))
     RETURNING id INTO new_id;
   RETURN jsonb_build_object('id', new_id);
 EXCEPTION WHEN check_violation OR not_null_violation THEN RETURN jsonb_build_object('error', 'bad');

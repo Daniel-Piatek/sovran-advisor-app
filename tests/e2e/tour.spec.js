@@ -1,8 +1,9 @@
+import fs from 'node:fs';
 // The Tour (public/tour.js): Tour sits just above Settings; the basics film first, then a card for each part you can
 // switch on, in the owner's order, each with its own short film and "Switch it on".
 import { test, expect } from './fixtures.js';
 
-const ORDER = ['Phone Capture', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
+const ORDER = ['Group Circle', 'Phone Capture', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life'];
 
 test('Tour sits just above Settings, and opens the films', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
@@ -45,7 +46,7 @@ test('a film plays inside the app, without its own title, and All Videos and Bac
   await expect(film.locator('.wrap > h1')).toBeHidden();
   await expect(page.getByRole('link', { name: 'All Videos', exact: true })).toBeVisible();
   await film.getByRole('link', { name: '← Back to All Videos' }).click();
-  await expect(page.locator('.tour-card')).toHaveCount(6);
+  await expect(page.locator('.tour-card')).toHaveCount(7);
 });
 
 test('the basics film and its voice are served by the app', async ({ page, app }) => {
@@ -77,4 +78,17 @@ test('the next and previous chapter buttons and the arrow keys move a chapter, w
   await expect(film.locator('#caph')).toHaveText('A Highlight, and Closing the Day');
   await film.getByRole('button', { name: 'Previous chapter' }).click();
   await expect(film.locator('#caph')).toHaveText('Plan Your Day');
+});
+
+test('Group Circle has its own film: on already, it opens the group, and the Group Circle help links to it', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour`);
+  const card = page.locator('.tour-card[data-film="group"]');
+  await expect(card.getByRole('link', { name: 'Open →' })).toHaveAttribute('href', '/group');
+  await card.getByRole('link', { name: 'Watch' }).click();
+  await expect(page).toHaveURL(/\/tour\?film=group$/);
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#caph')).toHaveText('What Group Circle Is');
+  await expect(film.locator('.tour-note')).toBeHidden(); // "click Tour in your sidebar" is for the shared web page only
+  await expect(film.locator('#scenes .scene')).toHaveCount(6);
+  expect(fs.readFileSync(new URL('../../docs/group.md', import.meta.url), 'utf8')).toContain('(/tour?film=group)');
 });

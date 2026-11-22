@@ -15,7 +15,7 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
     created_at: p.created_at, edited_at: p.edited_at ?? null, hidden: Boolean(p.hidden), author: p.student ? nameOf(p.student) : 'Daniel',
     by_guide: !p.student, mine: me.guide ? !p.student : p.student === me.id, student: me.guide ? p.student ?? null : undefined, likes: p.likes.length, liked: p.likes.includes(me.id),
     done: p.kind !== 'homework' ? null : me.guide ? p.done.length : p.done.includes(me.id), flagged: me.guide ? p.flags.filter((f) => !f.comment).length : p.flags.some((f) => f.by === me.id && !f.comment) ? 1 : 0,
-    comments: p.comments.filter((c) => !c.deleted && (me.guide || !c.hidden)).map((c) => ({ id: c.id, body: c.body, created_at: c.created_at, edited_at: null, hidden: Boolean(c.hidden),
+    comments: p.comments.filter((c) => !c.deleted && (me.guide || !c.hidden)).map((c) => ({ id: c.id, body: c.body, created_at: c.created_at, edited_at: null, hidden: Boolean(c.hidden), reply_to: c.reply_to ?? null,
       author: c.student ? nameOf(c.student) : 'Daniel', by_guide: !c.student, mine: me.guide ? !c.student : c.student === me.id, student: me.guide ? c.student ?? null : undefined })),
   });
   const live = (tab, me, pick = null) => state.posts.filter((p) => p.tab === tab && !p.deleted && (me.guide
@@ -70,7 +70,8 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
         return json(200, { id: p.id });
       }
       case 'delete_post': { const p = post(msg.id); if (!p || (!s.guide && p.student !== s.id)) return err('notyours', 403); p.deleted = true; return json(200, { deleted: p.id }); }
-      case 'comment': { const p = post(msg.post); if (!p) return err('gone', 404); const c = { id: ++state.nextId, student: s.guide ? null : s.id, body: msg.body, created_at: new Date().toISOString() }; p.comments.push(c); return json(200, { id: c.id }); }
+      case 'comment': { const p = post(msg.post); if (!p) return err('gone', 404); const parent = msg.reply_to ? p.comments.find((x) => x.id === msg.reply_to && !x.deleted) : null; if (msg.reply_to && !parent) return err('gone', 404);
+        const c = { id: ++state.nextId, student: s.guide ? null : s.id, body: msg.body, created_at: new Date().toISOString(), reply_to: parent ? (parent.reply_to ?? parent.id) : null }; p.comments.push(c); return json(200, { id: c.id }); }
       case 'delete_comment': { for (const p of state.posts) for (const c of p.comments) if (c.id === msg.id && (s.guide || c.student === s.id)) { c.deleted = true; return json(200, { deleted: c.id }); } return err('notyours', 403); }
       case 'like': { const p = post(msg.post); if (!p) return err('gone', 404); p.likes = p.likes.filter((x) => x !== s.id); if (msg.on) p.likes.push(s.id); return json(200, { likes: p.likes.length, liked: msg.on }); }
       case 'done': { const p = post(msg.post); if (!p || p.kind !== 'homework') return err('gone', 404); p.done = p.done.filter((x) => x !== s.id); if (msg.on) p.done.push(s.id); return json(200, { done: msg.on }); }
