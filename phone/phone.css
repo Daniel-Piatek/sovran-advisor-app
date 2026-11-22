@@ -95,7 +95,9 @@ body { min-height: 100dvh; display: flex; flex-direction: column; }
 .tile-picture { width: 40px; height: 40px; flex: none; border-radius: 9px; object-fit: contain; display: block; }
 .disc { width: 36px; height: 36px; flex: none; display: block; }
 .disc g { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--charcoal); }
-.disc-ask circle:first-child { fill: var(--gold); }
+/* The Advisor's disc is flipped (the owner, 22 Nov 2026): a charcoal disc with the face drawn in Gold, so it reads gold, not yellow. */
+.disc-ask circle:first-child { fill: var(--charcoal); }
+.disc-ask g { stroke: var(--gold); }
 .disc-journal circle:first-child { fill: var(--yellow); }
 .disc-inner circle:first-child { fill: var(--violet); }
 .disc-inner g { stroke: var(--white); }
