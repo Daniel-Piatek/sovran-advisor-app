@@ -94,6 +94,7 @@ test('Group Circle on the phone: homework ticked, a post, a comment and a reply,
     await expect.poll(() => cloud.state.posts.find((p) => p.id === 1).done).toEqual(['client-aaaaaaaaaaaa']);
 
     await page.getByRole('button', { name: 'Circle', exact: true }).click();
+    await expect(page.locator('.foot')).toBeHidden(); // posts are not sealed, so the sealed-words line is not said here
     await expect(page.getByText('Took my Tyrant for a walk up the ridge.')).toBeVisible();
     await page.getByLabel('Write a post').fill('Sat by the lake before work.');
     await page.getByRole('button', { name: 'Post', exact: true }).click();

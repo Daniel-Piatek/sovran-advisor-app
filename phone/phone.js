@@ -70,6 +70,7 @@ const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signa
 function show(name) {
   for (const id of ['choose', 'form', 'done', 'setup', 'nolink', 'reports', 'report', 'group']) $(id).hidden = id !== name;
   document.body.classList.toggle('choosing', name === 'choose');
+  document.body.classList.toggle('in-group', name === 'group');
   scrollTo(0, 0);
 }
 
