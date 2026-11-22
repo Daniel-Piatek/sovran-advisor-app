@@ -57,6 +57,14 @@ BEGIN
   PERFORM pg_temp.ok((group_feed.like(B, p1, true)->>'likes')::int = 1, 'liking twice still counts once');
   r := group_feed.read(A, 'feed', NULL, NULL, 20)->'posts'->0;
   PERFORM pg_temp.ok((r->>'mine')::boolean AND r->>'author' = 'Maya' AND jsonb_array_length(r->'comments') = 1, 'the author sees it as theirs, with the comment');
+  -- Replies (2026-11-22): under the comment they answer, one level deep, never across posts.
+  PERFORM pg_temp.ok((group_feed.comment(A, p1, 'Thank you', c1)->>'id') IS NOT NULL, 'a reply under a comment');
+  PERFORM pg_temp.ok((group_feed.comment(B, p1, 'You are welcome', (SELECT max(id) FROM group_feed.comments))->>'id') IS NOT NULL, 'a reply to a reply');
+  PERFORM pg_temp.ok((SELECT count(*) FROM group_feed.comments WHERE reply_to = c1) = 2, 'a reply to a reply joins the same thread');
+  PERFORM pg_temp.ok(group_feed.comment(A, p1, 'x', 999999)->>'error' = 'gone', 'a reply to no comment is refused');
+  r := group_feed.read(A, 'feed', NULL, NULL, 20)->'posts'->0;
+  PERFORM pg_temp.ok((r->'comments'->1->>'reply_to')::bigint = c1, 'the page is told which comment a reply answers');
+  DELETE FROM group_feed.comments WHERE reply_to = c1;
 
   -- announcements
   n1 := (group_feed.post(G, 'news', 'homework', 'SQ01', 'Week 2: meet your Tyrant', '{}', '2026-11-22', true)->>'id')::bigint;

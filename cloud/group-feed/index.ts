@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         if (!r.error) await removePictures(r.pictures ?? []);
         return answer({ deleted: r.deleted, error: r.error });
       }
-      case 'comment': return one(sql`SELECT group_feed.comment(${h}, ${id(msg.post)}, ${text(msg.body, 2001)}) AS r`);
+      case 'comment': return one(sql`SELECT group_feed.comment(${h}, ${id(msg.post)}, ${text(msg.body, 2001)}, ${msg.reply_to == null ? null : id(msg.reply_to)}::bigint) AS r`);
       case 'edit_comment': return one(sql`SELECT group_feed.edit_comment(${h}, ${id(msg.id)}, ${text(msg.body, 2001)}) AS r`);
       case 'delete_comment': return one(sql`SELECT group_feed.delete_comment(${h}, ${id(msg.id)}) AS r`);
       case 'like': return one(sql`SELECT group_feed.like(${h}, ${id(msg.post)}, ${msg.on !== false}) AS r`);

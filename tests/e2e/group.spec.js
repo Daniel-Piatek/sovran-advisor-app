@@ -93,3 +93,29 @@ test('Share to Group Circle from a journal entry fills the Circle’s box, to ch
     expect(cloud.state.asked.some((m) => m.action === 'post')).toBe(false); // nothing posted yet
   } finally { await app.close(); }
 });
+
+test('a reply sits under the comment it answers, and a reply to a reply joins the same thread', async ({ page }, testInfo) => {
+  const { app, cloud } = await start(testInfo, { name: 'Maya' });
+  cloud.state.posts.find((p) => p.id === 2).comments.push({ id: 50, student: 'client-bbbbbbbbbbbb', body: 'Anyone else find mornings easier?', created_at: ago(20) });
+  try {
+    await page.goto(`${app.url}/group/circle`);
+    const thread = page.locator('.group-thread').filter({ hasText: 'Anyone else find mornings easier?' });
+    await thread.getByRole('button', { name: 'Reply' }).click();
+    await page.getByLabel('Reply to Jon').fill('Yes, before the day gets loud.');
+    await page.getByLabel('Reply to Jon').press('Enter');
+    const replies = thread.locator('.group-replies .group-comment');
+    await expect(replies).toHaveCount(1);
+    await expect(replies).toContainText('Yes, before the day gets loud.');
+    expect(cloud.state.posts.find((p) => p.id === 2).comments.at(-1).reply_to).toBe(50);
+    // A reply to the reply stays in the same thread, one level deep.
+    await replies.getByRole('button', { name: 'Reply' }).click();
+    await page.getByLabel('Reply to Maya').fill('Same here.');
+    await page.getByLabel('Reply to Maya').press('Enter');
+    await expect(thread.locator('.group-replies .group-comment')).toHaveCount(2);
+    expect(cloud.state.posts.find((p) => p.id === 2).comments.at(-1).reply_to).toBe(50);
+    // The comment box under the post still adds a new comment of its own.
+    await page.getByLabel('Write a comment').fill('Lovely walk.');
+    await page.getByLabel('Write a comment').press('Enter');
+    await expect(page.locator('.group-thread')).toHaveCount(2);
+  } finally { await app.close(); }
+});
