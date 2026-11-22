@@ -423,3 +423,14 @@ export function linkedFromSection(kind, id, { title = 'Linked from', none = 'Not
   });
   return section;
 }
+
+// A list that scrolls on its own (the Inbox, My Life, the Assistant, Mail): after it is drawn again, the row that is open
+// is brought into view inside the list, without moving the page.
+export function showPicked(box) {
+  requestAnimationFrame(() => {
+    const on = box.querySelector('[aria-current="page"], [aria-current="true"]');
+    if (!on || box.scrollHeight <= box.clientHeight) return;
+    const top = on.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+    if (top < box.scrollTop || top + on.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = Math.max(0, top - box.clientHeight / 3);
+  });
+}
