@@ -1,4 +1,4 @@
-// Alerts on this phone (part 3 of the Group Circle alerts plan): the box at the foot of Group Circle in Sovran Go.
+// Alerts on this phone (part 3 of the Group Circle alerts plan): the box at the foot of Group Circle in go Sovran.
 // On "Allow alerts" the phone asks the person; on their yes it gets an address that wakes it (Apple's, Google's or
 // Mozilla's push service) and Group Circle keeps it with the switches below (cloud/group-push.sql). The service worker
 // (sw.js) does the rest. The phone's Group Circle key is handed to the service worker through IndexedDB.
@@ -54,12 +54,12 @@ export function setupPush({ ask, access, ios, installed }) {
     const head = el('h2', { class: 'g-alerts-title' }, 'Alerts on this phone');
     if (!can) {
       here.replaceChildren(head, el('p', { class: 'g-note' }, ios && !installed
-        ? 'To get alerts, add Sovran Go to your Home Screen first, then open it from there. An iPhone needs iOS 16.4 or newer.'
-        : 'This phone’s browser can’t show alerts from Sovran Go.'));
+        ? 'To get alerts, add go Sovran to your Home Screen first, then open it from there. An iPhone needs iOS 16.4 or newer.'
+        : 'This phone’s browser can’t show alerts from go Sovran.'));
       return;
     }
     if (Notification.permission === 'denied') {
-      here.replaceChildren(head, el('p', { class: 'g-note' }, 'Alerts are switched off for Sovran Go in this phone’s settings. Switch them on there to get them.'));
+      here.replaceChildren(head, el('p', { class: 'g-note' }, 'Alerts are switched off for go Sovran in this phone’s settings. Switch them on there to get them.'));
       return;
     }
     const reg = Notification.permission === 'granted' ? await registration().catch(() => null) : null;
@@ -67,7 +67,7 @@ export function setupPush({ ask, access, ios, installed }) {
     if (!sub) {
       const allow = el('button', { type: 'button', class: 'g-add g-allow' }, 'Allow alerts');
       allow.addEventListener('click', () => turnOn(allow));
-      here.replaceChildren(head, el('p', { class: 'g-note' }, 'Hear about a new announcement or a reply even when Sovran Go is closed. Nothing is sent without your yes.'), allow);
+      here.replaceChildren(head, el('p', { class: 'g-note' }, 'Hear about a new announcement or a reply even when go Sovran is closed. Nothing is sent without your yes.'), allow);
       return;
     }
     await keep('group', { ...access(), endpoint: sub.endpoint }); // the key can change: the service worker always has the latest

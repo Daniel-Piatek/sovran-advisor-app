@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <title>Sovran Go</title>
-  <meta name="description" content="Sovran Go: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, read your Sovran reports, or open your Group Circle.">
-  <meta name="apple-mobile-web-app-title" content="Sovran Go">
+  <title>go Sovran</title>
+  <meta name="description" content="go Sovran: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, read your Sovran reports, or open your Group Circle.">
+  <meta name="apple-mobile-web-app-title" content="go Sovran">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#fbfbfb">
+  <meta name="theme-color" content="#fbfbfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1f1d1d" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="icons/favicon-32.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="phone.css">
@@ -18,48 +19,53 @@
 </head>
 <body>
   <header class="band">
-    <img src="icons/icon-192.png" alt="" width="30" height="30">
-    <span class="band-name">Sovran Go</span>
+    <img class="band-logo" src="brand/go-sovran.png" alt="go Sovran" width="1200" height="226">
   </header>
 
   <main class="page">
-    <!-- The first screen: what would you like to do? -->
+    <!-- The first screen: the writing box comes first (what is on your mind, which kind, Save), then Ask my Sovran
+         Advisor, My Reports and Group Circle. -->
     <section class="choose" id="choose" hidden>
-      <h1 class="lead">What would you like to do?</h1>
+      <h1 class="sr">What would you like to do?</h1>
+      <form class="card" id="form" data-kind="inner">
+        <p class="day" id="form-day" hidden></p>
+        <textarea id="text" class="text" rows="3" placeholder="What’s on your mind?" aria-label="What’s on your mind?" maxlength="20000"></textarea>
+        <div class="chips" role="radiogroup" aria-label="What kind is it?">
+          <button type="button" class="chip" role="radio" aria-checked="true" data-kind="inner"><svg class="disc disc-inner" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="12" r="4.4"/></g></svg>From Me</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-kind="outer"><svg class="disc disc-outer" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><rect x="8" y="8" width="8" height="8" rx="1"/></g></svg>From Other</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-kind="journal"><svg class="disc disc-journal" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><path d="M12 8.6c-1.4-1.1-3.2-1.5-5-1.3v8.8c1.8-.2 3.6.2 5 1.3 1.4-1.1 3.2-1.5 5-1.3V7.3c-1.8-.2-3.6.2-5 1.3z"/><path d="M12 8.6v8.8"/></g></svg>Journal</button>
+        </div>
+        <div class="cardfoot">
+          <span class="where" id="where">Goes to your Inbox</span>
+          <button type="submit" class="keep" id="keep" disabled>Save</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </form>
       <a class="choice" id="ask" href="https://claude.ai/new" target="_blank" rel="noopener">
         <svg class="disc disc-ask" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><path d="M12 5.6v2"/><rect x="7" y="7.6" width="10" height="8.6" rx="2.2"/><path d="M10 11.2v.6M14 11.2v.6M10.2 14h3.6"/></g></svg>
-        <span class="choice-words"><strong>Ask my AI</strong><span id="ask-line">Ask Claude about your reports and the teaching</span></span>
+        <span class="choice-words"><strong>Ask my Sovran Advisor</strong><span id="ask-line">Ask for insight from your reports, your charts and the Sovran Library</span></span>
+        <span class="choice-go" aria-hidden="true">›</span>
       </a>
-      <button type="button" class="choice" data-kind="journal">
-        <svg class="disc disc-journal" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><path d="M12 8.6c-1.4-1.1-3.2-1.5-5-1.3v8.8c1.8-.2 3.6.2 5 1.3 1.4-1.1 3.2-1.5 5-1.3V7.3c-1.8-.2-3.6.2-5 1.3z"/><path d="M12 8.6v8.8"/></g></svg>
-        <span class="choice-words"><strong>Journal entry</strong><span>Straight into today in your Journal</span></span>
-      </button>
-      <button type="button" class="choice" data-kind="inner">
-        <svg class="disc disc-inner" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="12" r="4.4"/></g></svg>
-        <span class="choice-words"><strong>My own thought</strong><span>Keep it in your Inbox</span></span>
-      </button>
-      <button type="button" class="choice" data-kind="outer">
-        <svg class="disc disc-outer" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><rect x="8" y="8" width="8" height="8" rx="1"/></g></svg>
-        <span class="choice-words"><strong>From someone else</strong><span>Something you heard or read</span></span>
-      </button>
-      <button type="button" class="choice choice-group" id="group-circle" hidden>
-        <svg class="disc disc-group" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="8.4" r="2.2"/><circle cx="7.6" cy="14.6" r="2.2"/><circle cx="16.4" cy="14.6" r="2.2"/></g></svg>
-        <span class="choice-words"><strong>Group Circle</strong><span id="group-line">Announcements and the Circle</span></span>
-        <span class="g-count" id="group-count" hidden></span>
-        <span class="choice-go" aria-hidden="true">›</span>
-      </button>
-      <button type="button" class="choice choice-reports" id="my-reports">
-        <img class="choice-crown" src="brand/official-crimson-crown.png" alt="" width="40" height="40">
-        <span class="choice-words"><strong>My reports</strong><span>Read your Sovran reports, highlight and comment</span></span>
-        <span class="choice-go" aria-hidden="true">›</span>
-      </button>
+      <div class="pair">
+        <button type="button" class="choice tile" id="my-reports">
+          <img class="tile-picture" src="brand/sovran-pattern-report.png" alt="" width="40" height="40">
+          <span class="choice-words"><strong>My Reports</strong><span>Read, highlight, comment</span></span>
+        </button>
+        <button type="button" class="choice tile choice-group" id="group-circle" hidden>
+          <svg class="disc disc-group" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="8.4" r="2.2"/><circle cx="7.6" cy="14.6" r="2.2"/><circle cx="16.4" cy="14.6" r="2.2"/></g></svg>
+          <span class="choice-words"><strong>Group Circle</strong><span id="group-line">Announcements and the Circle</span></span>
+          <span class="g-count" id="group-count" hidden></span>
+        </button>
+      </div>
       <p class="status" id="waiting-line" role="status" aria-live="polite"></p>
     </section>
 
     <!-- Group Circle: Announcements and the Circle (group.js). -->
     <section class="group" id="group" hidden>
-      <button type="button" class="back" id="group-back">‹ Back</button>
-      <h1 class="title" id="group-title">Group Circle</h1>
+      <div class="top">
+        <button type="button" class="back" id="group-back" aria-label="Back">‹</button>
+        <h1 class="title" id="group-title">Group Circle</h1>
+      </div>
       <div class="g-tabs" id="group-tabs" role="group" aria-label="Group Circle">
         <button type="button" data-tab="news" aria-pressed="true">Announcements</button>
         <button type="button" data-tab="feed" aria-pressed="false">Circle</button>
@@ -71,27 +77,16 @@
 
     <!-- My reports: the list, then one report to read (reports.js). -->
     <section class="reports" id="reports" hidden>
-      <button type="button" class="back" id="reports-back">‹ Back</button>
-      <h1 class="title">My reports</h1>
+      <div class="top">
+        <button type="button" class="back" id="reports-back" aria-label="Back">‹</button>
+        <h1 class="title">My Reports</h1>
+      </div>
       <div class="reports-list" id="reports-list"></div>
     </section>
     <section class="report" id="report" hidden>
-      <button type="button" class="back" id="report-back">‹ My reports</button>
+      <button type="button" class="back back-words" id="report-back">‹ My Reports</button>
       <article class="report-paper" id="report-paper"></article>
     </section>
-
-    <!-- Writing: a journal entry, my own thought, or from someone else. -->
-    <form class="form" id="form" hidden>
-      <button type="button" class="back" id="back">‹ Back</button>
-      <div class="titled">
-        <span id="form-disc"></span>
-        <h1 class="title" id="form-title"></h1>
-      </div>
-      <p class="day" id="form-day" hidden></p>
-      <textarea id="text" class="text" aria-labelledby="form-title" maxlength="20000"></textarea>
-      <button type="submit" class="keep" id="keep">Keep in Inbox</button>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-    </form>
 
     <!-- Kept, or added. -->
     <section class="done" id="done" hidden>
@@ -99,29 +94,29 @@
       <h1 class="title" id="done-title">Kept</h1>
       <p class="tag" id="done-tag"></p>
       <p class="done-words" id="done-words" role="status" aria-live="polite"></p>
-      <button type="button" class="another" id="another">Add another</button>
+      <button type="button" class="another" id="another">Continue</button>
     </section>
 
     <section class="setup" id="setup" hidden>
-      <h1 class="title">Add Sovran Go to your home screen</h1>
+      <h1 class="title">Add go Sovran to your home screen</h1>
       <p>So it opens like any other app, with the crown icon:</p>
       <ol class="steps" id="steps-ios" hidden>
         <li>Tap the <strong>Share</strong> button (the square with an arrow) at the bottom of Safari.</li>
         <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-        <li>Tap <strong>Add</strong>. Then open <strong>Sovran Go</strong> from your home screen.</li>
+        <li>Tap <strong>Add</strong>. Then open <strong>go Sovran</strong> from your home screen.</li>
       </ol>
       <ol class="steps" id="steps-android" hidden>
         <li>Tap <strong id="install-button-words">Install</strong> below, or the <strong>⋮</strong> menu at the top right of Chrome.</li>
         <li>Choose <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
-        <li>Then open <strong>Sovran Go</strong> from your home screen.</li>
+        <li>Then open <strong>go Sovran</strong> from your home screen.</li>
       </ol>
       <button type="button" class="keep" id="install" hidden>Install</button>
       <p><a href="#" id="use-here">Use it here for now</a></p>
     </section>
 
     <section class="setup" id="nolink" hidden>
-      <h1 class="title">Sovran Go</h1>
-      <p>This phone isn’t linked yet. On your computer, open Sovran Advisor, then <strong>Settings › Sovran Go</strong>, and scan the code with this phone’s camera.</p>
+      <h1 class="title">Link this phone</h1>
+      <p>This phone isn’t linked yet. On your computer, open Sovran Advisor, then <strong>Settings › go Sovran</strong>, and scan the code with this phone’s camera.</p>
     </section>
 
     <!-- On a report: the bar for the words you selected, the sheet for a comment, and a short line that goes away. -->
@@ -130,7 +125,7 @@
       <button type="button" id="pick-comment">Comment</button>
       <a id="pick-ask" href="https://claude.ai/new" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v2.4"/><rect x="5.5" y="6" width="13" height="11.4" rx="2.8"/><path d="M9.4 10.8v.8M14.6 10.8v.8M9.6 14.4h4.8"/></svg>
-        <span id="pick-ask-words">Ask my AI</span>
+        <span id="pick-ask-words">Ask my Sovran Advisor</span>
       </a>
     </div>
     <div class="sheet" id="sheet" role="dialog" aria-label="Your comment" hidden></div>

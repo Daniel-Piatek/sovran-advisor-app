@@ -1,4 +1,4 @@
-// My reports on Sovran Go (phone/reports.js): the student's reports read on the phone from the sealed copies their
+// My Reports on go Sovran (once Sovran Go) (phone/reports.js): the student's reports read on the phone from the sealed copies their
 // computer puts on the drop box's shelf (phone-shelf.js), with highlights and comments that go back sealed. The
 // folder is served as it is and the drop box is stood in for; the copies are made by the app's own code, so the
 // phone draws what a real computer would send. Each test runs at an iPhone's size and on an Android phone.
@@ -76,7 +76,7 @@ async function phone(browser, testInfo, { shelf = { list: LIST, 'report.pattern'
   return { page, context, dropped, errors, link, put, asked, online: (on) => { signal = on; } };
 }
 const openPattern = async (page) => {
-  await page.getByRole('button', { name: /My reports/ }).click();
+  await page.getByRole('button', { name: /My Reports/ }).click();
   await page.locator('.report-card[data-report="pattern"]').click();
   await expect(page.getByRole('heading', { name: 'Your Sovran Pattern Report' })).toBeVisible();
 };
@@ -96,12 +96,12 @@ const select = (page, section, words) => page.evaluate(([key, text]) => {
   return false;
 }, [section, words]);
 
-test('My reports lists the report in Ivory & Gold and opens it to read, part by part', async ({ browser }, testInfo) => {
+test('My Reports lists the report in Ivory & Gold and opens it to read, part by part', async ({ browser }, testInfo) => {
   const { page, context, errors } = await phone(browser, testInfo);
-  const card = page.getByRole('button', { name: /My reports/ });
-  await expect(card).toContainText('Read your Sovran reports');
+  const card = page.getByRole('button', { name: /My Reports/ });
+  await expect(card).toContainText('Read, highlight, comment');
   await card.click();
-  await expect(page.getByRole('heading', { name: 'My reports' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My Reports' })).toBeVisible();
   const report = page.locator('.report-card');
   await expect(report).toHaveCount(1);
   await expect(report.locator('.report-card-label')).toHaveText('Sovran report');
@@ -124,11 +124,11 @@ test('My reports lists the report in Ivory & Gold and opens it to read, part by 
   // Contents jump to a part; Back goes to the list, then to the choices (the phone's own Back too).
   await page.getByRole('button', { name: 'The Door That Opens' }).click();
   await expect(page.locator('#section-the-door')).toBeInViewport();
-  await page.getByRole('button', { name: '‹ My reports' }).click();
-  await expect(page.getByRole('heading', { name: 'My reports' })).toBeVisible();
+  await page.getByRole('button', { name: '‹ My Reports' }).click();
+  await expect(page.getByRole('heading', { name: 'My Reports' })).toBeVisible();
   await page.goBack();
-  await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeVisible();
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(48, 45, 45)');
+  await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeAttached();
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(251, 251, 251)');
   expect(errors).toEqual([]);
   await context.close();
 });
@@ -139,7 +139,8 @@ test('selected words can be highlighted: it shows at once, goes sealed to the co
   await expect(page.locator('#pick')).toBeHidden();
   expect(await select(page, 'your-gifts', 'uiet knowin')).toBe(true); // part of two words: taken whole
   await expect(page.locator('#pick')).toBeVisible();
-  await expect(page.locator('#pick button, #pick a')).toHaveText(['Highlight', 'Comment', 'Ask my AI']);
+  await expect(page.locator('#pick button, #pick a')).toHaveText(['Highlight', 'Comment', 'Ask my Sovran Advisor']);
+  expect(await page.locator('#pick').evaluate((bar) => { const r = bar.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && bar.scrollWidth <= bar.clientWidth + 1; })).toBe(true); // the longer name still fits the bar
   for (const h of await page.locator('#pick button, #pick a').evaluateAll((all) => all.map((b) => b.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44);
   // Clear of the phone's own bars: never on the bottom edge (Android's search bar sits there), at the top when the words are low.
   const place = await page.locator('#pick').evaluate((bar) => ({ top: bar.classList.contains('is-top'), gap: window.innerHeight - bar.getBoundingClientRect().bottom, y: bar.getBoundingClientRect().top }));
@@ -228,7 +229,7 @@ test('highlights, comments and questions made on the computer show on the phone,
   await context.close();
 });
 
-test('Ask my AI opens the AI’s own app with the words in its box, and copies them too', async ({ browser }, testInfo) => {
+test('Ask my Sovran Advisor opens the AI’s own app with the words in its box, and copies them too', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await openPattern(page);
   await select(page, 'your-gifts', 'You notice what others walk past.');
@@ -280,10 +281,10 @@ test('a report already on the phone reads without signal; a highlight made then 
   await context.close();
 });
 
-test('before the computer has been on, or with an older drop box, My reports says what to do', async ({ browser }, testInfo) => {
+test('before the computer has been on, or with an older drop box, My Reports says what to do', async ({ browser }, testInfo) => {
   for (const shelf of [{}, null]) {
     const { page, context, errors } = await phone(browser, testInfo, { shelf });
-    await page.getByRole('button', { name: /My reports/ }).click();
+    await page.getByRole('button', { name: /My Reports/ }).click();
     await expect(page.locator('.reports-empty')).toContainText('once your computer has been on');
     await expect(page.locator('.report-card')).toHaveCount(0);
     expect(errors).toEqual([]);

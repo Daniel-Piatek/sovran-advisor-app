@@ -1,8 +1,8 @@
-// Sovran Go, the phone page (module phone-drop), served from GitHub Pages and put on the phone's home screen with the
-// crown icon. Its link carries, after "#", this phone's own drop box, its token and the key (a browser never sends
-// that part anywhere). The first screen asks what you would like to do: Ask my AI opens your AI's own app; a journal
-// entry, your own thought or something from someone else is written here, sealed (seal.js) and left in the Sovran
-// drop box. The person's own computer collects it (a journal entry into the Journal, a thought into the Inbox) and
+// go Sovran (once Sovran Go), the phone page (module phone-drop), served from GitHub Pages and put on the phone's home
+// screen with the crown icon. Its link carries, after "#", this phone's own drop box, its token and the key (a browser
+// never sends that part anywhere). The first screen is the writing box (2026-11-22, the owner's design): what is on
+// your mind, which kind it is (From Me, From Other, Journal) and Save; under it Ask my Sovran Advisor opens your AI's
+// own app. What is written is sealed (seal.js) and left in the Sovran drop box. The person's own computer collects it (a journal entry into the Journal, a thought into the Inbox) and
 // the box forgets it. Without signal, the words wait on this phone and go later. My reports (reports.js) reads the
 // sealed copies of the person's reports that their computer puts on the box's shelf. Group Circle (group.js) uses the
 // phone's own Group Circle key, which the computer also leaves on the shelf.
@@ -24,13 +24,13 @@ const $ = (id) => document.getElementById(id);
 const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
-// The AI that Ask my AI opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
+// The AI that Ask my Sovran Advisor opens. Claude unless this phone was told otherwise (the address once carried ?ai=chatgpt).
 const AIS = {
   // fill: an address that opens the AI's app with words already in its box (tried on a real Android phone with the Claude app).
-  claude: { name: 'Claude', href: 'https://claude.ai/new', fill: 'https://claude.ai/new?q=', line: 'Ask Claude about your reports and the teaching' },
+  claude: { name: 'Claude', href: 'https://claude.ai/new', fill: 'https://claude.ai/new?q=', line: 'Ask for insight from your reports, your charts and the Sovran Library' },
   // ask: a line added to the copied words. ChatGPT answers a pasted passage by itself and never opens the Sovran Library,
   // so it never meets the offer to keep the chat (seen with a student's phone, 18 Nov 2026). The line asks for both.
-  chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask ChatGPT about your reports and the teaching',
+  chatgpt: { name: 'ChatGPT', href: 'https://chatgpt.com/', line: 'Ask for insight from your reports, your charts and the Sovran Library',
     ask: 'Please use my Sovran Library to answer. After your answer, ask me if I would like this chat kept in my Sovran Advisor.' },
 };
 const asked = new URLSearchParams(location.search).get('ai');
@@ -39,9 +39,9 @@ const ai = AIS[store.get(AI)] ?? AIS.claude;
 
 // What can be written here. A journal entry goes to the Journal; the other two to the Inbox, as before.
 const KINDS = {
-  journal: { title: 'Journal entry', keep: 'Add to my Journal', done: 'Added', place: 'Journal', world: 'inner' },
-  inner: { title: 'My own thought', keep: 'Keep in Inbox', done: 'Kept', place: 'Inbox', world: 'inner' },
-  outer: { title: 'From someone else', keep: 'Keep in Inbox', done: 'Kept', place: 'Inbox', world: 'outer' },
+  journal: { title: 'Journal entry', where: 'Goes into today’s Journal', done: 'Added', place: 'Journal', world: 'inner' },
+  inner: { title: 'From Me', where: 'Goes to your Inbox', done: 'Kept', place: 'Inbox', world: 'inner' },
+  outer: { title: 'From Other', where: 'Goes to your Inbox', done: 'Kept', place: 'Inbox', world: 'outer' },
 };
 const two = (n) => String(n).padStart(2, '0');
 const localDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
@@ -68,8 +68,9 @@ const say = (words) => { $('status').textContent = words; };
 const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signal.`;
 
 function show(name) {
-  for (const id of ['choose', 'form', 'done', 'setup', 'nolink', 'reports', 'report', 'group']) $(id).hidden = id !== name;
+  for (const id of ['choose', 'done', 'setup', 'nolink', 'reports', 'report', 'group']) $(id).hidden = id !== name;
   document.body.classList.toggle('choosing', name === 'choose');
+  document.body.classList.toggle('with-foot', name === 'setup' || name === 'nolink'); // the privacy line is read once, while linking
   document.body.classList.toggle('in-group', name === 'group');
   scrollTo(0, 0);
 }
@@ -98,30 +99,28 @@ async function flush() {
 
 function start() {
   const text = $('text');
-  const drafts = {}; // what was written and not kept yet, by kind: Back loses nothing
   let kind = 'inner';
 
   $('ask').href = ai.href;
   $('ask-line').textContent = ai.line;
 
+  // The box grows with the words, and Save wakes once there are some.
+  const fit = () => { text.style.height = 'auto'; text.style.height = `${text.scrollHeight}px`; $('keep').disabled = !text.value.trim(); };
+  // Which kind: the chip, where it goes, and for a journal entry its day. The words stay as they are.
+  const pick = (next) => {
+    kind = next;
+    const k = KINDS[kind];
+    $('form').dataset.kind = kind;
+    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-checked', String(c.dataset.kind === kind)));
+    $('where').textContent = k.where;
+    $('form-day').hidden = kind !== 'journal';
+    $('form-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  };
   const choose = () => {
     const left = waiting().length;
     $('waiting-line').textContent = left ? waits(left) : '';
     show('choose');
-  };
-  const write = (next) => {
-    kind = next;
-    const k = KINDS[kind];
-    $('form').dataset.kind = kind;
-    $('form-disc').replaceChildren(document.querySelector(`.choice[data-kind="${kind}"] svg`).cloneNode(true));
-    $('form-title').textContent = k.title;
-    $('form-day').hidden = kind !== 'journal';
-    $('form-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-    $('keep').textContent = k.keep;
-    text.value = drafts[kind] ?? '';
-    say('');
-    show('form');
-    text.focus();
+    fit();
   };
   const done = (title, words) => {
     const k = KINDS[kind];
@@ -131,6 +130,7 @@ function start() {
     $('done-words').textContent = words;
     show('done');
   };
+  const clear = () => { text.value = ''; say(''); pick('inner'); };
 
   // My reports (reports.js). A highlight or comment made there goes the same way as a thought: sealed, into the drop
   // box, or kept on this phone until there is signal.
@@ -150,18 +150,16 @@ function start() {
   group.check().then(async () => { openFromAlert(); if (await reports.refresh()) { await group.check(); openFromAlert(); } });
   $('report-back').addEventListener('click', () => history.back());
 
-  // The phone's own Back goes from writing to the choices, as ‹ Back does.
-  document.querySelectorAll('.choice[data-kind]').forEach((b) => b.addEventListener('click', () => { history.pushState({ writing: true }, ''); write(b.dataset.kind); }));
-  $('back').addEventListener('click', () => history.back());
+  document.querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => { pick(c.dataset.kind); text.focus(); }));
+  text.addEventListener('input', () => { fit(); say(''); });
   addEventListener('popstate', () => {
-    if (!$('form').hidden) drafts[kind] = text.value;
     const to = history.state;
     if (to?.view === 'group') group.open();
     else if (to?.view === 'report') reports.showReport(to.report);
     else if (to?.view === 'reports') reports.showList();
     else { reports.leaveReports(); choose(); group.check(); }
   });
-  $('another').addEventListener('click', () => write(kind));
+  $('another').addEventListener('click', choose); // Continue: back to the first screen, the box empty
 
   $('form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -175,17 +173,16 @@ function start() {
     try {
       await send(item);
       const left = await flush();
-      drafts[kind] = '';
       done(k.done, `It will be in your ${k.place} when your computer is on.${left ? ` ${left} more ${left === 1 ? 'waits' : 'wait'} on this phone.` : ''}`);
     } catch (err) {
       if (err.refused) say(err.message); // the words stay in the box
       else {
         keepWaiting([...waiting(), item]);
-        drafts[kind] = '';
         done('Saved', err.full ? err.message : 'No connection. Saved on this phone; it goes as soon as there is signal.');
       }
     }
-    $('keep').disabled = false;
+    if ($('choose').hidden) clear(); // kept or saved: the box is empty for the next one
+    fit();
   });
 
   const retry = async () => {
@@ -196,10 +193,10 @@ function start() {
       ? (left ? `${before - left} sent; ${left} still ${left === 1 ? 'waits' : 'wait'} on this phone.` : `${before} saved earlier ${before === 1 ? 'is' : 'are'} sent.`)
       : waits(left);
     $('waiting-line').textContent = line;
-    if (!$('form').hidden) say(line);
   };
   addEventListener('online', retry);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retry(); });
+  pick('inner');
   choose();
   retry();
 }

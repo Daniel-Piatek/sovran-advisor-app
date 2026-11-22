@@ -1,9 +1,9 @@
-// Sovran Go's service worker: only for alerts on the phone (part 3 of the Group Circle alerts plan). It keeps no copy
-// of the page, so Sovran Go loads exactly as before.
+// go Sovran's service worker: only for alerts on the phone (part 3 of the Group Circle alerts plan). It keeps no copy
+// of the page, so go Sovran loads exactly as before.
 //
 // The cloud wakes this phone with an empty message (cloud/group-push.sql): no words go through Apple's or Google's
 // servers. Woken, this asks Group Circle with the phone's own key what waits for it, and shows it. Tapping an alert
-// opens Sovran Go at that post. The key and the address come from the page (push.js), kept in IndexedDB.
+// opens go Sovran at that post. The key and the address come from the page (push.js), kept in IndexedDB.
 
 const DB = 'sovran-go';
 
