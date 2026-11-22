@@ -373,7 +373,13 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .gtick.on i::after { content: "✓"; color: var(--page); font-size: 9px; font-style: normal; }
 .gheart.on { color: var(--crimson-text); }
 .gcoms { display: grid; gap: 5px; padding-left: 16px; }
-.gcom { display: flex; align-items: center; gap: 6px; font-size: .8rem; }
+.gcom { display: flex; align-items: flex-start; gap: 6px; font-size: .8rem; transition: background .4s; border-radius: 12px; }
+.gcom.grep { margin-left: 28px; }
+.gcom.fresh { background: var(--select); }
+.gcm { display: grid; justify-items: start; gap: 1px; min-width: 0; }
+.greply { font-family: var(--ui); font-size: .66rem; color: var(--muted); padding: 0 10px; }
+.ggoes { border: 1px dashed var(--line); border-radius: 8px; padding: 6px 10px; display: grid; gap: 2px; font-size: .76rem; line-height: 1.36; background: var(--surface); transition: background .4s; }
+.ggoes.fresh { background: var(--select); }
 .gav { width: 22px; height: 22px; border-radius: 50%; background: var(--tasks); color: #fff; display: grid; place-items: center; font-family: var(--ui); font-size: .66rem; font-weight: 700; flex: none; }
 .gav.me { background: var(--life); }
 .gav.d { background: #302D2D; }
@@ -724,15 +730,17 @@ function gpost({ kind, due, when, text, pics, likes = 0, asks = [], ask = 'Write
   if (asks.length) acts.append(h('span', 'small', `${asks.length} ${ask.startsWith('Ask') ? (asks.length === 1 ? 'question' : 'questions') : (asks.length === 1 ? 'comment' : 'comments')}`));
   p.append(acts);
   const list = h('div', 'gcoms');
-  for (const [n, t, guide] of asks) list.append(gcom(n, t, guide));
+  for (const [n, t, guide, reply] of asks) list.append(gcom(n, t, guide, reply));
   const mine = h('div', 'gcom'); const input = h('span', 'gin'); const it = h('span', 't'); it.dataset.ph = ask; input.append(it);
   mine.append(h('span', 'gav me', 'K'), input); list.append(mine); p.append(list);
   return { p, dots, heart, tick, it, list, mine };
 }
-function gcom(n, t, guide) { const c = h('div', 'gcom'); c.append(h('span', guide ? 'gav d' : 'gav', n[0]), h('span', 'gbub', `<b>${n}</b>${guide ? ' <em>Guide</em>' : ''} ${t}`)); return c; }
+function gcom(n, t, guide, reply) { const c = h('div', reply ? 'gcom grep' : 'gcom'); const m = h('span', 'gcm');
+  m.append(h('span', 'gbub', `<b>${n}</b>${guide ? ' <em>Guide</em>' : ''} ${t}`), h('span', 'greply', 'Reply'));
+  c.append(h('span', guide ? 'gav d' : 'gav', n[0]), m); return c; }
 const HOMEWORK = { kind: 'Homework', due: 'Due Sunday, November 29', when: '1 h ago', likes: 2, ask: 'Ask a question…', done: false,
   text: 'Week 3: meet your Tyrant. Read Part Two of your report, then write one page in your Journal on a moment this week when the harsh critic spoke up.',
-  asks: [['Ruth', 'Can it be two shorter moments instead of one?'], ['Daniel', 'Yes, two is fine.', true]] };
+  asks: [['Ruth', 'Can it be two shorter moments instead of one?'], ['Daniel', 'Yes, two is fine.', true, true]] };
 const REMINDER = { kind: 'Reminder', when: '18 h ago', likes: 4, ask: 'Ask a question…', text: 'Live group call this Thursday at 7 PM Athens time. Bring one line from your report you’d like to talk about.' };
 const MAYA = { who: 'Maya', when: '50 min ago', likes: 3, pics: [PIC1, PIC2], text: 'Took my Tyrant for a walk up the ridge this morning. Funny how quiet it gets up there.',
   asks: [['Jon', 'Love this. Mine’s been loud all week.']] };
@@ -792,7 +800,7 @@ const FILMS = [
         await step('Ask a question underneath', box, async () => { await click(box, 30, 12); hidePointer(); await type(hw.it, 'Can I write it on Sunday?', 60); clearCaret(); await press('Enter');
           hw.mine.before(gcom('Kate', 'Can I write it on Sunday?')); hw.it.textContent = ''; await sleep(700); }, 'above');
       } },
-    { t: 'The Circle', c: 'In the Circle, write in the box and click Post. Click + to add a picture: it is made smaller on your computer before it goes. Like and comment on what others share.',
+    { t: 'The Circle', c: 'In the Circle, write in the box and click Post. Click + to add a picture: it is made smaller on your computer before it goes. Like and comment on what others share. Click Reply under a comment to answer it.',
       async run() {
         const n = newsPage(); let g;
         await step('Click Circle', n.tc, async () => { await click(n.tc, 20, 8); hidePointer(); g = feedPage(); await sleep(300); }, 'below');
@@ -807,6 +815,11 @@ const FILMS = [
         await step('Like and comment on what others share', maya.heart, async () => { maya.p.scrollIntoView({ block: 'nearest' }); await click(maya.heart, 6, 8); heartOn(maya.heart);
           const box = maya.mine.querySelector('.gin'); await click(box, 30, 12); hidePointer(); await type(maya.it, 'That mist! Thank you for this.', 60); clearCaret(); await press('Enter');
           maya.mine.before(gcom('Kate', 'That mist! Thank you for this.')); maya.it.textContent = ''; await sleep(700); }, 'above');
+        const jon = maya.list.querySelector('.gcom'); const rb = jon.querySelector('.greply');
+        await step('Click Reply to answer a comment. Your reply tucks in underneath.', rb, async () => { await click(rb, 8, 6); hidePointer();
+          const f = h('div', 'gcom grep'); const box = h('span', 'gin'); const bt = h('span', 't'); bt.dataset.ph = 'Reply to Jon…'; box.append(bt); f.append(h('span', 'gav me', 'K'), box); jon.after(f);
+          await type(bt, 'Mine too, until the top of the hill.', 55); clearCaret(); await press('Enter');
+          const mine = gcom('Kate', 'Mine too, until the top of the hill.', false, true); mine.classList.add('fresh'); f.replaceWith(mine); await sleep(900); }, 'above');
       } },
     { t: 'Share from Your App', c: 'On a journal entry, a note or an Assistant answer, click Share to Group Circle. Its words wait in the Circle’s box for you to check. Change anything you like, then Post. Nothing is shared until you click Post.',
       async run() {
@@ -819,7 +832,7 @@ const FILMS = [
           const p = gpost({ who: 'Kate', when: 'Just now', text: 'Sat by the lake before work. Noticed the Tyrant starts talking the moment I think about the week ahead.' });
           g.wt.textContent = ''; g.write.classList.remove('fresh'); p.p.classList.add('fresh'); g.posts.prepend(p.p); await sleep(900); }, 'left');
       } },
-    { t: 'When Something’s Not Right', c: 'If a post or comment doesn’t feel right, click ••• and Let Daniel know. For a problem or a question anywhere in the app, click Tell Daniel: on an entry, a note, an Assistant answer, or at the foot of Help.',
+    { t: 'When Something’s Not Right', c: 'If a post or comment doesn’t feel right, click ••• and Let Daniel know. For a problem or a question anywhere in the app, click Tell Daniel: on an entry, a note, an Assistant answer, or at the foot of Help. What you were looking at goes with it, so Daniel sees what you mean.',
       async run() {
         const g = feedPage(); const maya = g.maya;
         await step('Click ••• on a post', maya.dots, async () => { await click(maya.dots, 6, 6); const m = menu([['⚑', 'Let Daniel know about this post']], maya.dots); m.style.left = Math.max(8, parseFloat(m.style.left) - 200) + 'px'; await sleep(1000); m.remove(); hidePointer();
@@ -830,11 +843,14 @@ const FILMS = [
           const kinds = [['Something isn’t working', 'The app did something wrong.'], ['Something seems off here', 'The words don’t fit you or your report.'], ['I have a question about this', 'You’d like Daniel to explain something.'], ['Other', 'Anything else.']];
           for (const [k, x] of kinds) d.append(h('div', 'gradio', `<i></i><span><b>${k}</b><span class="small">${x}</span></span>`));
           const why = h('div', 'gfield'); const wt = h('span', 't'); wt.dataset.ph = 'What happened, or what you’d like to know…'; why.append(wt);
-          const send = h('span', 'redbtn', 'Send to Daniel'); d.append(h('div', 'lab', 'Why?'), why, h('div', 'gsend', ''), send); main.append(d); await sleep(500); }, 'below');
+          const goes = h('div', 'ggoes', '<b>What goes with it</b><span class="small">Title</span><span>By the lake</span><span class="small">The words</span><span>Sat by the lake before work. Noticed the Tyrant starts talking the moment I think about the week ahead.</span><span class="small">This app</span><span>0.1.0 (a1b2c3d) · Mac</span>');
+          const send = h('span', 'redbtn', 'Send to Daniel'); d.append(h('div', 'lab', 'Why?'), why, goes, send); main.append(d); await sleep(500); }, 'below');
         const d = main.querySelector('.gdlg'); const q = d.querySelectorAll('.gradio')[2];
         await step('Pick what it is', q, async () => { await click(q, 8, 10); hidePointer(); q.classList.add('on'); await sleep(400); }, 'left');
         const why = d.querySelector('.gfield'); const wt = why.querySelector('.t');
         await step('Say why in a few words', why, async () => { await click(why, 20, 10); hidePointer(); await type(wt, 'Is it normal that the Tyrant gets louder in week 3?', 45); clearCaret(); }, 'left');
+        const goes = d.querySelector('.ggoes');
+        await step('Where you clicked goes with it, so Daniel sees what you mean', goes, async () => { goes.classList.add('fresh'); await sleep(1200); goes.classList.remove('fresh'); }, 'left');
         const send = d.querySelector('.redbtn');
         await step('Click Send to Daniel', send, async () => { await click(send, 20, 10); hidePointer(); d.innerHTML = '<h3>Sent to Daniel</h3><p>Thank you. Daniel reads every one of these.</p>'; await sleep(1500); }, 'left');
       } },
