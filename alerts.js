@@ -30,7 +30,6 @@ const GUIDE_KINDS = [
   { id: 'report', label: 'A student sent you a report', on: true },
   { id: 'flag', label: 'A student flagged a post or comment', on: true },
   { id: 'reply', label: 'A student commented on your post', on: true },
-  { id: 'update', label: 'A new version is ready', on: true },
 ];
 const SWITCHES = 'alerts.switches';
 const SINCE = 'alerts.since';

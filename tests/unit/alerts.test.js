@@ -10,7 +10,7 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { prepareDatabase } from '../../db.js';
 import { setModule } from '../../modules.js';
-import { setLibraryKey } from '../../sovran-library.js';
+import { setLibraryKey, libraryKey } from '../../sovran-library.js';
 import { useGroup } from '../../group-feed.js';
 import { takeAlerts, alertSwitches, setAlertSwitch, alertWords } from '../../alerts.js';
 import { fakeGroupCloud } from '../fake-group-cloud.js';
@@ -106,4 +106,30 @@ test('homework due after tomorrow waits; long words are cut', () => {
   const long = alertWords({ kind: 'news', post: 1, tab: 'news', post_kind: 'homework', author: 'Daniel', text: 'word '.repeat(60) }, days);
   assert.equal(long.title, 'New homework from Daniel');
   assert.ok(long.body.length <= 140 && long.body.endsWith('…'));
+});
+
+test('in Daniel’s app: a new report, a flag and a comment on his post', async () => {
+  const db = prepareDatabase(new DatabaseSync(':memory:'));
+  const GUIDE = 'guide_madeupmadeupmadeupmadeup00';
+  const cloud = fakeGroupCloud({
+    students: { [KEY]: { id: ME, name: 'Maya' } },
+    guides: { [GUIDE]: 'Daniel' },
+    posts: [{ id: 1, tab: 'news', kind: 'announcement', body: 'Welcome', created_at: at(-600) }, { id: 2, tab: 'feed', kind: 'post', student: ME, body: 'My drawing', created_at: at(-300) }],
+  });
+  useGroup({ fetch: cloud.fetcher, url: 'https://cloud.test/group-feed', keyOf: () => GUIDE, guideApp: true });
+  try {
+    assert.deepEqual(alertSwitches(db).map((k) => k.id), ['report', 'flag', 'reply']);
+    await takeAlerts(db);
+    await tick();
+    cloud.state.tells.push({ id: 9, student_id: ME, student: 'Maya', kind: 'broken', why: 'The Help page is blank', place: 'app', status: 'new', created_at: justNow() });
+    cloud.state.posts.find((p) => p.id === 2).flags.push({ by: 'client-bbbbbbbbbbbb', comment: null, at: justNow() });
+    cloud.state.posts.find((p) => p.id === 1).comments.push({ id: 60, student: ME, body: 'Thank you!', created_at: justNow() });
+    await tick();
+    const { items } = await takeAlerts(db);
+    assert.deepEqual(items.map((a) => [a.title, a.path]).sort(), [
+      ['Maya commented on your post', '/group/announcements#post-1'],
+      ['Maya sent you a report', '/group/reports'],
+      ['Something Maya wrote was flagged', '/group/circle#post-2'],
+    ]);
+  } finally { useGroup({ keyOf: libraryKey, guideApp: false }); }
 });
