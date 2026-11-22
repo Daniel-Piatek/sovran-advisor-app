@@ -64,7 +64,7 @@ export function redactSave(name, args) {
 
 const newChatId = () => [...globalThis.crypto.getRandomValues(new Uint8Array(12))].map((b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
 const NOT_LINKED = 'Not saved. This Sovran Advisor is not set up for saving chats yet. Tell the student, in plain words: on their computer, '
-  + 'open Sovran Advisor, update it (Settings › Updates), switch on Phone capture (Settings › Modules), and leave it open for a minute; then ask again. '
+  + 'open Sovran Advisor, update it (Settings › Updates), switch on Sovran Go (Settings › Modules), and leave it open for a minute; then ask again. '
   + 'Do not offer to save again in this chat.';
 
 // The tool. tx: library-mcp's transaction (a postgres.js tagged template); the student is already known to it.

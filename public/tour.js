@@ -16,8 +16,10 @@ import { moduleOn, switchModule } from './modules.js';
 const EXTRAS = [
   { id: 'group', module: 'group', title: 'Group Circle', kind: 'people', open: '/group', openLabel: 'Open Group Circle', src: '/tour/group.html',
     text: 'Your Quest group’s own space: announcements from Daniel, and a Circle to share with each other.' },
-  { id: 'phone', module: 'phone-drop', title: 'Phone Capture', kind: 'people', open: '/settings', openLabel: 'Open Settings',
-    text: 'Sovran Go on your phone. Speak or type, and it lands in your Inbox or your Journal.' },
+  // Sovran Go (2026-11-22, the owner's choice): the name everywhere, and one film, the Sovran Go film of the setup guides
+  // (sovran-go.html, made by build-sovran-go-film.py); the old "Phone Capture" film is retired.
+  { id: 'phone', module: 'phone-drop', title: 'Sovran Go', kind: 'people', open: '/settings', openLabel: 'Open Settings', src: '/tour/sovran-go.html',
+    text: 'Sovran Advisor on your phone. Ask your AI, write in your Journal, keep a thought, read your reports.' },
   { id: 'tasks', module: 'tasks', title: 'Tasks', kind: 'tasks', open: '/tasks', openLabel: 'Open Tasks',
     text: 'Today, Upcoming and Someday. Press q anywhere to add one in a line.' },
   { id: 'planner', module: 'planner', title: 'Planner', kind: 'planner', open: '/planner', openLabel: 'Open Planner',
@@ -74,7 +76,7 @@ function showList() {
       ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
       el('a', { class: 'button tour-libline-go', href: '/settings#sovran-library' }, 'Paste your key →')),
     el('h2', { class: 'tour-label tour-extras-label' }, 'More in your app · one short video each'),
-    el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, style: `--tour-kind: var(--kind-${extra.kind})` },
+    el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, 'data-kind': extra.kind },
       el('h3', { class: 'tour-card-title' }, extra.title),
       el('p', {}, extra.text),
       el('div', { class: 'tour-card-foot' },

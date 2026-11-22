@@ -126,13 +126,14 @@ export const MODULES = [
     public: ['GET /quick'],
   },
   {
-    // Phone capture through the Sovran drop box (phone-drop.js, phone/, cloud/). Sovran Go, with the crown icon, on an
+    // Sovran Go (called "Phone capture" until 2026-11-22; the id stays phone-drop, so nothing changes for a student who
+    // already switched it on) through the Sovran drop box (phone-drop.js, phone/, cloud/). The crown icon on an
     // iPhone or Android phone: Ask my AI opens the AI's own app; what you say or type there is sealed on the phone, waits
     // in the drop box and comes into the Inbox here (a journal entry into the Journal). Off, the box in the cloud is closed and the Settings part is gone.
     id: 'phone-drop',
     starter: false, // off in a new install: switch it on in Settings › Modules
-    label: 'Phone capture',
-    description: 'Sovran Go, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, read your Sovran reports and highlight them, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
+    label: 'Sovran Go',
+    description: 'Sovran Advisor, with the crown icon, on your iPhone or Android phone. Ask your AI, write a journal entry that lands in your Journal, read your Sovran reports and highlight them, or speak or type a thought that lands in your Inbox here, even when this computer is off at the time. Your words are scrambled on the phone; nobody else can read them.',
   },
   {
     // The manifest (advanced/last/2 and 3): a help page per view, in docs/ (docs.js), a "?" after every page title

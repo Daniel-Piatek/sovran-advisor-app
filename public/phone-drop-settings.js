@@ -67,9 +67,9 @@ export function phoneDropSection() {
     else { draw(state); link(false, body.querySelector('button')); } // made by itself the first time
   }).catch((err) => { status.textContent = err.message; });
 
-  return el('section', { class: 'settings-part', 'aria-label': 'Phone capture' },
-    el('h2', { class: 'settings-title' }, 'Phone capture'),
-    el('p', { class: 'empty' }, 'Sovran Go on your iPhone or Android phone: ask your AI, write a journal entry for your Journal, or speak or type a thought anywhere, and it lands in your Inbox here.'),
+  return el('section', { class: 'settings-part', 'aria-label': 'Sovran Go' },
+    el('h2', { class: 'settings-title' }, 'Sovran Go'),
+    el('p', { class: 'empty' }, 'Sovran Advisor on your iPhone or Android phone, with the crown icon: ask your AI, write a journal entry for your Journal, or speak or type a thought anywhere, and it lands in your Inbox here.'),
     body, status,
     el('p', { class: 'empty phone-drop-privacy' }, 'Private: your words are scrambled on your phone before they leave it. They wait, unreadable, in the Sovran drop box only until this computer collects them, then they are deleted. The key is only on your phone and this computer; nobody else, Sovran included, can read them.'));
 }
