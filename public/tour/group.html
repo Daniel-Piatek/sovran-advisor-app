@@ -410,6 +410,52 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .gradio > span { display: grid; }
 .gradio i { width: 10px; height: 10px; border: 1.5px solid var(--muted); border-radius: 50%; margin-top: 3px; flex: none; }
 .gradio.on i { border-color: var(--notes); background: radial-gradient(var(--notes) 45%, transparent 50%); }
+/* ---- Alerts: the computer's alert, Settings › Alerts, Sovran Go on a phone (2026-11-22) ---- */
+.gred { color: var(--crimson-text); }
+.gfresh { background: var(--select); border-radius: 6px; padding: 2px 6px; }
+.gacts2 { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.galert { position: absolute; z-index: 5; right: 14px; top: 14px; width: 300px; display: flex; gap: 10px; align-items: flex-start; background: color-mix(in srgb, var(--surface) 92%, var(--page)); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; box-shadow: 0 10px 30px rgba(48,45,45,.18); font-family: var(--ui); font-size: .78rem; line-height: 1.36; transform: translateX(340px); transition: transform .5s ease; }
+.galert.in { transform: none; }
+.galert-ic { width: 30px; height: 30px; border-radius: 8px; flex: none; background: #302D2D url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3 14 L4 6 L7.5 10 L10 4 L12.5 10 L16 6 L17 14 Z' fill='%23D9C14B'/%3E%3C/svg%3E") center/20px no-repeat; }
+.galert-w { display: grid; gap: 1px; min-width: 0; }
+.galert-app, .gp-noteapp { display: flex; justify-content: space-between; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }
+.gphone { width: 230px; height: 450px; right: 40px; top: 30px; }
+.gpscreen { font-family: var(--ui); gap: 7px; padding: 16px 10px; position: relative; overflow: hidden; }
+.gp-brand { font-family: var(--display); font-size: 1.3rem; padding: 4px 2px 2px; }
+.gp-choice { display: flex; align-items: center; gap: 6px; border: 1px solid #D4D1D1; border-radius: 10px; padding: 7px 9px; line-height: 1.25; }
+.gp-choice > span { flex: 1; display: grid; } .gp-choice > span > span { font-size: .62rem; color: #6B6767; }
+.gp-choice.g { border-color: #6E7FB0; }
+.gp-choice em { font-style: normal; background: #C71F42; color: #fff; border-radius: 999px; font-size: .6rem; padding: 0 6px; }
+.gp-choice i { font-style: normal; color: #6B6767; }
+.gp-back { font-size: .7rem; color: #6B6767; }
+.gp-title { font-family: var(--display); font-size: 1.25rem; }
+.gp-tabs { display: flex; gap: 2px; border: 1px solid #D4D1D1; border-radius: 8px; overflow: hidden; font-size: .66rem; }
+.gp-tabs span { flex: 1; text-align: center; padding: 4px; } .gp-tabs span.on { background: #ECEAEA; font-weight: 700; }
+.gp-list { display: grid; gap: 7px; align-content: start; }
+.gp-post { border: 1px solid #D4D1D1; border-radius: 10px; padding: 7px 8px; display: grid; gap: 5px; font-size: .68rem; line-height: 1.36; transition: background .4s; }
+.gp-post.fresh, .gp-alerts.fresh, .gp-post.g-asked { background: #F6EFC9; }
+.gp-top { display: flex; gap: 6px; align-items: center; } .gp-top span:not(.gkind) { color: #6B6767; }
+.gp-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.gp-pic { height: 64px; border-radius: 6px; }
+.gp-post .gtick { font-size: .66rem; }
+.gp-write { border: 1.5px solid #302D2D; border-radius: 8px; min-height: 44px; padding: 6px 8px; font-size: .7rem; display: grid; gap: 5px; }
+.gp-write .t:empty::before { content: attr(data-ph); color: #8A8686; }
+.gp-row { display: flex; justify-content: space-between; }
+.gp-add { border: 1px solid #D4D1D1; border-radius: 8px; padding: 3px 9px; font-size: .68rem; font-weight: 600; justify-self: start; }
+.gp-postbtn { background: #C71F42; color: #fff; border-radius: 8px; padding: 3px 12px; font-size: .68rem; font-weight: 700; }
+.gp-alerts { border-top: 1px solid #D4D1D1; padding-top: 7px; display: grid; gap: 5px; font-size: .66rem; line-height: 1.36; transition: background .4s; border-radius: 6px; }
+.gp-alerts b { font-size: .74rem; }
+.gp-check { display: flex; gap: 6px; align-items: flex-start; }
+.gp-check i { width: 10px; height: 10px; border: 1.5px solid #6B6767; border-radius: 3px; flex: none; margin-top: 1px; }
+.gp-check.on i { background: #302D2D; border-color: #302D2D; }
+.gp-ask { position: absolute; left: 14px; right: 14px; top: 32%; background: #F2F1F1; border-radius: 12px; box-shadow: 0 10px 30px rgba(48,45,45,.3); display: grid; text-align: center; font-size: .7rem; line-height: 1.36; overflow: hidden; }
+.gp-ask b { padding: 12px 10px; } .gp-ask span { border-top: 1px solid #D4D1D1; padding: 7px; color: #2F6FD6; } .gp-ask span:nth-child(2) { font-weight: 700; }
+.gp-lock { background: linear-gradient(160deg, #3B3550, #1F1D1D 70%); color: #FBFBFB; justify-items: center; align-content: start; }
+.gp-time { font-size: 2.6rem; font-weight: 300; margin-top: 18px; line-height: 1; } .gp-date { font-size: .72rem; opacity: .85; }
+.gp-note { justify-self: stretch; margin-top: 26px; background: rgba(251,251,251,.82); color: #302D2D; border-radius: 12px; padding: 8px 10px; display: grid; gap: 1px; font-size: .68rem; line-height: 1.36; }
+.gp-noteapp { font-size: .58rem; }
+.gp-com { background: #ECEAEA; border-radius: 10px; padding: 3px 8px; font-size: .64rem; } .gp-rep { margin-left: 14px; } .gp-com.fresh { background: #F6EFC9; }
+@media (max-width: 680px) { .galert { width: auto; left: 8px; right: 8px; top: 8px; } .gphone { width: 200px; height: 400px; right: auto; left: calc(50% - 100px); top: 70px; } }
 @media (max-width: 680px) { .gpic { height: 54px; } .gmeta .small { display: none; } .gdlg { top: 6px; } }
 </style>
 
@@ -464,7 +510,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
   <p class="intro tour-note">For a tour of everything in your Sovran Advisor, click <b>Tour</b> in your app’s sidebar.</p>
 </div>
 
-<script type="application/json" id="vo">{"clips": {"scene:What Group Circle Is": "/tour/voice/group/g01-00.mp3", "Click Group Circle in the sidebar": "/tour/voice/group/g01-01.mp3", "Announcements: only Daniel posts here": "/tour/voice/group/g01-02.mp3", "The Circle: everyone in your group shares here": "/tour/voice/group/g01-03.mp3", "Only your group can see it": "/tour/voice/group/g01-04.mp3", "scene:Your Name": "/tour/voice/group/g02-00.mp3", "The first time, pick the name your group sees": "/tour/voice/group/g02-01.mp3", "Click Continue": "/tour/voice/group/g02-02.mp3", "scene:Announcements": "/tour/voice/group/g03-00.mp3", "Homework shows when it\u2019s due": "/tour/voice/group/g03-01.mp3", "Tick Mark as done when you\u2019ve done it. Only you see this.": "/tour/voice/group/g03-02.mp3", "Click the heart to like it": "/tour/voice/group/g03-03.mp3", "Ask a question underneath": "/tour/voice/group/g03-04.mp3", "scene:The Circle": "/tour/voice/group/g04-00.mp3", "Click Circle": "/tour/voice/group/g04-01.mp3", "Write in the box": "/tour/voice/group/g04-02.mp3", "Click + to add a picture": "/tour/voice/group/g04-03.mp3", "Click Post": "/tour/voice/group/g04-04.mp3", "Like and comment on what others share": "/tour/voice/group/g04-05.mp3", "Click Reply to answer a comment. Your reply tucks in underneath.": "/tour/voice/group/g04-06.mp3", "scene:Share from Your App": "/tour/voice/group/g05-00.mp3", "On a journal entry, click Share to Group Circle": "/tour/voice/group/g05-01.mp3", "Its words wait here for you to check": "/tour/voice/group/g05-02.mp3", "Nothing is shared until you click Post": "/tour/voice/group/g05-03.mp3", "scene:When Something\u2019s Not Right": "/tour/voice/group/g06-00.mp3", "Click \u2022\u2022\u2022 on a post": "/tour/voice/group/g06-01.mp3", "For a problem or a question, click Tell Daniel": "/tour/voice/group/g06-02.mp3", "Pick what it is": "/tour/voice/group/g06-03.mp3", "Say why in a few words": "/tour/voice/group/g06-04.mp3", "Where you clicked goes with it, so Daniel sees what you mean": "/tour/voice/group/g06-06.mp3", "Click Send to Daniel": "/tour/voice/group/g06-05.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"}</script>
+<script type="application/json" id="vo">{"clips": {"scene:What Group Circle Is": "/tour/voice/group/g01-00.mp3", "Click Group Circle in the sidebar": "/tour/voice/group/g01-01.mp3", "Announcements: only Daniel posts here": "/tour/voice/group/g01-02.mp3", "The Circle: everyone in your group shares here": "/tour/voice/group/g01-03.mp3", "Only your group can see it": "/tour/voice/group/g01-04.mp3", "scene:Your Name": "/tour/voice/group/g02-00.mp3", "The first time, pick the name your group sees": "/tour/voice/group/g02-01.mp3", "Click Continue": "/tour/voice/group/g02-02.mp3", "scene:Announcements": "/tour/voice/group/g03-00.mp3", "Homework shows when it\u2019s due": "/tour/voice/group/g03-01.mp3", "Tick Mark as done when you\u2019ve done it. Only you see this.": "/tour/voice/group/g03-02.mp3", "Click the heart to like it": "/tour/voice/group/g03-03.mp3", "Ask a question underneath": "/tour/voice/group/g03-04.mp3", "scene:The Circle": "/tour/voice/group/g04-00.mp3", "Click Circle": "/tour/voice/group/g04-01.mp3", "Write in the box": "/tour/voice/group/g04-02.mp3", "Click + to add a picture": "/tour/voice/group/g04-03.mp3", "Click Post": "/tour/voice/group/g04-04.mp3", "Like and comment on what others share": "/tour/voice/group/g04-05.mp3", "Click Reply to answer a comment. Your reply tucks in underneath.": "/tour/voice/group/g04-06.mp3", "scene:Share from Your App": "/tour/voice/group/g05-00.mp3", "On a journal entry, click Share to Group Circle": "/tour/voice/group/g05-01.mp3", "Its words wait here for you to check": "/tour/voice/group/g05-02.mp3", "Nothing is shared until you click Post": "/tour/voice/group/g05-03.mp3", "scene:When Something\u2019s Not Right": "/tour/voice/group/g06-00.mp3", "Click \u2022\u2022\u2022 on a post": "/tour/voice/group/g06-01.mp3", "For a problem or a question, click Tell Daniel": "/tour/voice/group/g06-02.mp3", "Pick what it is": "/tour/voice/group/g06-03.mp3", "Say why in a few words": "/tour/voice/group/g06-04.mp3", "Where you clicked goes with it, so Daniel sees what you mean": "/tour/voice/group/g06-06.mp3", "Click Send to Daniel": "/tour/voice/group/g06-05.mp3", "scene:Group Circle Comes to You": "/tour/voice/group/g07-00.mp3", "An alert tells you what\u2019s new": "/tour/voice/group/g07-01.mp3", "Click the alert and that post opens": "/tour/voice/group/g07-02.mp3", "scene:Choose What You Hear About": "/tour/voice/group/g08-00.mp3", "Open Settings, then Alerts": "/tour/voice/group/g08-01.mp3", "Click Allow alerts, once": "/tour/voice/group/g08-02.mp3", "Each kind has its own On and Off": "/tour/voice/group/g08-03.mp3", "Everything else stays quiet, unless you switch it on": "/tour/voice/group/g08-04.mp3", "scene:Group Circle on Your Phone": "/tour/voice/group/g09-00.mp3", "On your phone, open Sovran Go and tap Group Circle": "/tour/voice/group/g09-01.mp3", "Read my announcements, and tick homework done": "/tour/voice/group/g09-02.mp3", "In the Circle, write something and add a photo": "/tour/voice/group/g09-03.mp3", "Tap Post. Your group sees it on their computers and phones.": "/tour/voice/group/g09-04.mp3", "scene:Alerts on Your Phone": "/tour/voice/group/g10-00.mp3", "At the foot of Group Circle, tap Allow alerts": "/tour/voice/group/g10-01.mp3", "They reach you even when Sovran Go is closed": "/tour/voice/group/g10-02.mp3", "Tap it and the post opens": "/tour/voice/group/g10-03.mp3", "Your words never pass through anyone else\u2019s servers": "/tour/voice/group/g10-04.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"}</script>
 <script>
 (() => {
 const $ = (id) => document.getElementById(id);
@@ -595,7 +641,7 @@ function place(id, opts = {}) {
   panes.classList.toggle('withmonth', !!opts.month);
   pagein.className = 'pagein' + (opts.wide ? ' wide' : '');
   pagein.innerHTML = ''; saved = null;
-  main.querySelectorAll('.helpside,.capbox,.toast,.gdlg').forEach((e) => e.remove());
+  main.querySelectorAll('.helpside,.capbox,.toast,.gdlg,.galert,.phone').forEach((e) => e.remove());
 }
 function head(name, color, btn) {
   const hd = h('div', 'phead'); const t = h('span', 'ptitle', name); if (color) t.style.color = color;
@@ -654,7 +700,7 @@ function modulesPage(label) {
   head('Settings', 'var(--faint)');
   pagein.append(h('div', 'lab', 'Modules'), h('p', 'small', 'Parts of the app you can switch on and off. Everything you made stays.'));
   const rows = h('div', 'mods'); let target = null;
-  const all = [['Tasks', 'Your tasks in one place: Today, Upcoming and Someday.'], ['Planner', 'Plan your day and your week.'], ['Calendar', 'Your own events by day, week and month.'], ['My Life', 'The parts of your life that matter to you.'], ['Boards', 'Endless whiteboards in Notes.'], ['Phone capture', 'A Capture app on your phone.']];
+  const all = [['Tasks', 'Your tasks in one place: Today, Upcoming and Someday.'], ['Planner', 'Plan your day and your week.'], ['Calendar', 'Your own events by day, week and month.'], ['My Life', 'The parts of your life that matter to you.'], ['Boards', 'Endless whiteboards in Notes.'], ['Sovran Go', 'Sovran Advisor on your phone.']];
   for (const [n, d] of all) {
     const r = h('div', 'mod'); const sw = h('span', 'onoff', '<span>On</span><span class="on">Off</span>');
     r.append(h('div', '', `<b>${n}</b><span class="small">${d}</span>`), sw); rows.append(r);
@@ -769,6 +815,53 @@ function newsPage() {
   return { ...g, hw, rm };
 }
 
+// ---- Alerts (2026-11-22, the owner's wish): the computer's alert, Settings › Alerts, Group Circle in Sovran Go, and
+// alerts on the phone. The words are the app's own (alerts.js, public/alerts-settings.js, phone/push.js, phone/sw.js). ----
+function macAlert(title, body) {
+  const a = h('div', 'galert'); a.append(h('span', 'galert-ic'), h('span', 'galert-w', `<span class="galert-app">Sovran Advisor<span>now</span></span><b>${title}</b><span>${body}</span>`));
+  main.append(a); requestAnimationFrame(() => a.classList.add('in')); return a;
+}
+const ALERT_KINDS = [['A new announcement from Daniel', true], ['Someone replied to your post or comment', true], ['Homework is due tomorrow (if not ticked done)', true],
+  ['Daniel has dealt with something you told him', true], ['A new version of Sovran Advisor is ready', true], ['Any new post in the Circle', false]];
+function alertsPage() {
+  place('settings'); head('Settings', 'var(--faint)');
+  pagein.append(h('div', 'lab gred', 'Alerts'), h('p', 'small', 'A Mac or Windows alert when something new happens, while this app is open. Click one to open it.'));
+  const said = h('p', 'small', 'Your computer will ask once whether this app may show alerts. Until you allow them, alerts show inside the app.');
+  const allow = h('span', 'redbtn', 'Allow alerts'); const acts = h('div', 'gacts2'); acts.append(allow, h('span', 'gbtn', 'Show me one'));
+  pagein.append(said, acts);
+  const rows = h('div', 'mods');
+  for (const [n, on] of ALERT_KINDS) { const r = h('div', 'mod'); r.append(h('div', '', n), h('span', 'onoff', on ? '<span class="on">On</span><span>Off</span>' : '<span>On</span><span class="on">Off</span>')); rows.append(r); }
+  pagein.append(rows);
+  return { said, allow, acts, rows };
+}
+function bigPhone() {
+  const ph = h('div', 'phone gphone'); const scr = h('div', 'pscreen gpscreen'); ph.append(scr); main.append(ph);
+  requestAnimationFrame(() => ph.classList.add('in')); return scr;
+}
+function goChoices(scr) {
+  scr.innerHTML = ''; scr.className = 'pscreen gpscreen';
+  scr.append(h('div', 'gp-brand', 'Sovran Go'));
+  let group = null;
+  for (const [n, d, g] of [['Ask my AI', 'Ask Claude about your reports'], ['Journal entry', 'Straight into today'], ['My own thought', 'Keep it in your Inbox'],
+    ['Group Circle', 'Announcements and the Circle', true], ['My reports', 'Read your Sovran reports']]) {
+    const c = h('div', 'gp-choice' + (g ? ' g' : ''), `<span><b>${n}</b><span>${d}</span></span>${g ? '<em>2</em>' : ''}<i>›</i>`); scr.append(c); if (g) group = c;
+  }
+  return group;
+}
+function goGroup(scr, tab = 'news') {
+  scr.innerHTML = ''; scr.className = 'pscreen gpscreen';
+  scr.append(h('div', 'gp-back', '‹ Back'), h('div', 'gp-title', 'Group Circle'));
+  const tabs = h('div', 'gp-tabs'); const tn = h('span', tab === 'news' ? 'on' : '', 'Announcements'); const tc = h('span', tab === 'feed' ? 'on' : '', 'Circle'); tabs.append(tn, tc); scr.append(tabs);
+  const list = h('div', 'gp-list'); scr.append(list);
+  return { tn, tc, list };
+}
+function goPost(p, { kind, who, text, done, pic }) {
+  const c = h('div', 'gp-post'); c.append(h('div', 'gp-top', kind ? `<span class="gkind ${kind.toLowerCase()}">${kind}</span>` : `<b>${who}</b> <span>now</span>`), h('div', 'gp-text', text));
+  if (pic) { const i = h('span', 'gp-pic'); i.style.background = pic; c.append(i); }
+  let tick = null; if (done !== undefined) { tick = h('span', 'gtick', '<i></i>Mark as done'); c.append(tick); }
+  p.append(c); return { c, tick };
+}
+
 const FILMS = [
   { id: 'group', t: 'Group Circle', nav: 'nav-group', scenes: [
     { t: 'What Group Circle Is', c: 'Group Circle is your Quest group’s own space. Announcements are from Daniel: homework, reminders and news. The Circle is for everyone in your group. Only your group sees it.',
@@ -854,6 +947,63 @@ const FILMS = [
         const send = d.querySelector('.redbtn');
         await step('Click Send to Daniel', send, async () => { await click(send, 20, 10); hidePointer(); d.innerHTML = '<h3>Sent to Daniel</h3><p>Thank you. Daniel reads every one of these.</p>'; await sleep(1500); }, 'left');
       } },
+
+    { t: 'Group Circle Comes to You', c: 'When something new happens in your Group Circle, a Mac or Windows alert tells you, while your app is open. Click the alert and that post opens.',
+      async run() {
+        dayPage([ENTRY]);
+        const a = macAlert('New homework from Daniel', 'Week 3: meet your Tyrant. Read Part Two of your report, then write one page…'); await sleep(700);
+        await step('An alert tells you what’s new', a, null, 'left');
+        await step('Click the alert and that post opens', a, async () => { await click(a, 60, 24); hidePointer(); a.remove();
+          const g = newsPage(); g.hw.p.classList.add('fresh'); await sleep(1200); }, 'left');
+      } },
+    { t: 'Choose What You Hear About', c: 'In Settings › Alerts, click Allow alerts once. Then each kind has its own On and Off: announcements, replies to you, homework due tomorrow and more. Any new post in the Circle stays off unless you switch it on.',
+      async run() {
+        dayPage([ENTRY]); const ns = $('nav-settings');
+        await step('Open Settings, then Alerts', ns, async () => { await click(ns, 30, 8); hidePointer(); alertsPage(); await sleep(400); }, 'right');
+        const s = { said: pagein.querySelector('.gacts2').previousElementSibling, allow: pagein.querySelector('.gacts2 .redbtn'), rows: pagein.querySelector('.mods') };
+        await step('Click Allow alerts, once', s.allow, async () => { await click(s.allow, 20, 10); hidePointer(); s.allow.remove(); s.said.textContent = 'Alerts are allowed on this computer.'; s.said.classList.add('gfresh'); await sleep(800); }, 'right');
+        await step('Each kind has its own On and Off', s.rows, null, 'above');
+        const feed = s.rows.lastChild.querySelector('.onoff');
+        await step('Everything else stays quiet, unless you switch it on', feed, async () => { feed.parentElement.classList.add('fresh'); await sleep(1400); feed.parentElement.classList.remove('fresh'); }, 'left');
+      } },
+    { t: 'Group Circle on Your Phone', c: 'Group Circle is in Sovran Go too, with nothing new to set up. Read Daniel’s announcements, tick homework done, and share a post with a photo from your phone.',
+      async run() {
+        dayPage([ENTRY]); const scr = bigPhone(); const gc = goChoices(scr); await sleep(700);
+        await step('On your phone, open Sovran Go and tap Group Circle', gc, async () => { await click(gc, 40, 14); hidePointer(); const g = goGroup(scr); goPost(g.list, { kind: 'Homework', text: HOMEWORK.text, done: false }); await sleep(500); }, 'left');
+        const tick = scr.querySelector('.gtick');
+        await step('Read my announcements, and tick homework done', tick, async () => { await click(tick, 6, 8); hidePointer(); tick.classList.add('on'); await sleep(700); }, 'left');
+        const tc = scr.querySelector('.gp-tabs span:last-child'); let w, wt, add, post, thumbs, list;
+        await step('In the Circle, write something and add a photo', tc, async () => { await click(tc, 14, 8);
+          const g = goGroup(scr, 'feed'); list = g.list;
+          w = h('div', 'gp-write'); wt = h('span', 't'); wt.dataset.ph = 'Share something with your group'; thumbs = h('div', 'gthumbs'); w.append(wt, thumbs);
+          const row = h('div', 'gp-row'); add = h('span', 'gp-add', '+ Photo'); post = h('span', 'gp-postbtn', 'Post'); row.append(add, post);
+          list.append(w, row); goPost(list, { who: 'Maya', text: MAYA.text, pic: PIC1 });
+          await click(w, 30, 12); hidePointer(); await type(wt, 'Morning pages at the lake again.', 55); clearCaret();
+          await click(add, 14, 8); hidePointer(); const th = h('span', 'gthumb'); th.style.background = PIC3; thumbs.append(th); await sleep(600); }, 'left');
+        await step('Tap Post. Your group sees it on their computers and phones.', post, async () => { await click(post, 12, 8); hidePointer();
+          wt.textContent = ''; thumbs.innerHTML = ''; const mine = goPost(h('div'), { who: 'Kate', text: 'Morning pages at the lake again.', pic: PIC3 }); mine.c.classList.add('fresh');
+          w.nextElementSibling.after(mine.c); await sleep(1000); }, 'left');
+      } },
+    { t: 'Alerts on Your Phone', c: 'At the foot of Group Circle in Sovran Go, tap Allow alerts and say yes. Alerts then reach your phone even when Sovran Go is closed. Tap one and the post opens. Your words never pass through anyone else’s servers: the alert only wakes your phone, and Sovran Go fetches the rest itself.',
+      async run() {
+        dayPage([ENTRY]); const scr = bigPhone(); const g = goGroup(scr); goPost(g.list, { kind: 'Reminder', text: REMINDER.text });
+        const box = h('div', 'gp-alerts'); const allow = h('span', 'gp-add gp-allow', 'Allow alerts');
+        box.append(h('b', '', 'Alerts on this phone'), h('span', '', 'Hear about a new announcement or a reply even when Sovran Go is closed. Nothing is sent without your yes.'), allow);
+        g.list.append(box); await sleep(700);
+        await step('At the foot of Group Circle, tap Allow alerts', allow, async () => { await click(allow, 14, 8); hidePointer();
+          const ask = h('div', 'gp-ask', '<b>“Sovran Go” would like to send you notifications</b><span>Allow</span><span>Don’t Allow</span>'); scr.append(ask); await sleep(500);
+          await click(ask.children[1], 20, 8); hidePointer(); ask.remove();
+          box.innerHTML = '<b>Alerts on this phone</b><span>Alerts are on. Choose which:</span>' + ALERT_KINDS.filter((k) => !k[0].includes('version')).map(([n, on]) => `<label class="gp-check${on ? ' on' : ''}"><i></i>${n}</label>`).join('');
+          box.classList.add('fresh'); await sleep(900); box.classList.remove('fresh'); }, 'left');
+        scr.className = 'pscreen gpscreen gp-lock'; scr.innerHTML = '<div class="gp-time">8:30</div><div class="gp-date">Monday 23 November</div>';
+        const n = h('div', 'gp-note', '<span class="gp-noteapp">Sovran Go<span>now</span></span><b>Jon replied to you</b><span>Ha! The hill always wins.</span>'); scr.append(n); await sleep(800);
+        await step('They reach you even when Sovran Go is closed', n, null, 'left');
+        await step('Tap it and the post opens', n, async () => { await click(n, 50, 16); hidePointer();
+          const g2 = goGroup(scr, 'feed'); const p = goPost(g2.list, { who: 'Maya', text: MAYA.text, pic: PIC1 });
+          p.c.append(h('div', 'gp-com', '<b>Jon</b> Love this. Mine’s been loud all week.'), h('div', 'gp-com gp-rep', '<b>Kate</b> Mine too, until the top of the hill.'), h('div', 'gp-com gp-rep fresh', '<b>Jon</b> Ha! The hill always wins.'));
+          p.c.classList.add('g-asked'); await sleep(1200); }, 'left');
+        await step('Your words never pass through anyone else’s servers', scr.parentElement, null, 'left');
+      } },
   ] },
 ];
 
@@ -873,7 +1023,7 @@ const scenes = FILMS.flatMap((f) => f.scenes.map((s) => ({ ...s, film: f })));
 const bar = $('bar'), pp = $('pp');
 const filmBtns = FILMS.map((f) => { const b = h('button', 'scene film', f.t); b.type = 'button'; b.addEventListener('click', () => go(scenes.findIndex((s) => s.film === f))); $('films').append(b); return b; });
 const chips = scenes.map((s, i) => { const SHORT = {"The Map": "Map", "Start with Your Journal": "Journal", "Capture a Thought, Sort It Later": "Capture", "Notes, Links and People": "Notes & Links", "Your Assistant": "Assistant", "Help on Every Page": "Help", "What to Try First": "Try First", "Put Capture on Your Phone": "Set Up", "Catch a Thought Anywhere": "Capture", "Today, Upcoming and Done": "Your Lists", "A Highlight, and Closing the Day": "Highlight & Close", "Your Events": "Events", "Add Your Google Calendar": "Google Calendar", "Think on a Board": "Use a Board", "Your Key Elements": "Key Elements", "Give Things a Home": "Homes", "What Group Circle Is": "What It Is", "Share from Your App": "Share", "When Something\u2019s Not Right": "Not Right?"}; const inApp = document.documentElement.classList.contains('in-app'); const b = h('button', 'scene', inApp ? (SHORT[s.t] || (s.t.startsWith('Switch On') ? 'Switch On' : s.t)) : s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
-function reset() { hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast,.gdlg').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
+function reset() { hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast,.gdlg,.galert').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
 function show(i) {
   cur = i; intro = 'scene:' + scenes[i].t;
   const f = scenes[i].film, mine = scenes.filter((s) => s.film === f), k = mine.indexOf(scenes[i]);
