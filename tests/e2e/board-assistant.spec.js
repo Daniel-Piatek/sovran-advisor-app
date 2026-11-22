@@ -1,4 +1,4 @@
-// Your assistant on a board (advanced/writing/7). The assistant is tests/fake-claude.js.
+// Sovran Advisor on a board (advanced/writing/7). The assistant is tests/fake-claude.js.
 import { test, expect } from './fixtures.js';
 
 const post = (app, url, body) => fetch(app.url + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
@@ -45,7 +45,7 @@ test('"Add a break after the Pricing case": an approval card says what changes; 
   await card.getByRole('link', { name: 'Open the board' }).click();
   await expect(page).toHaveURL(new RegExp(`/boards/${board.id}$`));
   const breakCard = page.getByRole('group', { name: 'Card: Break' });
-  await expect(breakCard).toContainText('Your assistant');
+  await expect(breakCard).toContainText('Sovran Advisor');
   await expect(breakCard).toHaveClass(/is-assistant/);
   await expect(page.locator('.board-arrow.is-assistant')).toHaveCount(2); // Pricing case → Break → Q&A, dashed
 

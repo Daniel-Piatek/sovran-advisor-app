@@ -74,7 +74,7 @@ test('mail with a person, and with a company by its domain; the day of the newes
 
 test('last in touch is the newer of your logged lines and your mail, and mail counts only with Mail on', () => {
   const { db, lena } = demo();
-  assert.equal(lastInTouch(db, lena.id), null, 'Mail is off in a new install (Sovran Advisor): only what you logged counts');
+  assert.equal(lastInTouch(db, lena.id), null, 'Mail is off in a new install (Sovran Central): only what you logged counts');
   setModule(db, 'mail', true);
   const mailDay = lastInTouch(db, lena.id);
   assert.match(mailDay, /^\d{4}-\d{2}-\d{2}$/);

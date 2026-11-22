@@ -1,4 +1,4 @@
-// Start Sovran Advisor on demand. The Dock icon calls this without a Terminal. A first start makes an empty database.
+// Start Sovran Central on demand. The Dock icon calls this without a Terminal. A first start makes an empty database.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -48,7 +48,7 @@ export async function ensureAgentServer({ url, label, start, timeout = 30000 }) 
     await fetch(`${url}/api/quit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(3000) }).catch(() => {});
     const end = Date.now() + 10000;
     while (await health(url)) {
-      if (Date.now() > end) throw new Error('An older Sovran Advisor is still running and would not stop. Restart your computer, then open Sovran Advisor again.');
+      if (Date.now() > end) throw new Error('An older Sovran Central is still running and would not stop. Restart your computer, then open Sovran Central again.');
       await new Promise(resolve => setTimeout(resolve, 250));
     }
   }
@@ -58,7 +58,7 @@ export async function ensureAgentServer({ url, label, start, timeout = 30000 }) 
     const answer = await health(url);
     if (answer?.agent === label) return now ? 'replaced' : 'started';
     if (!answer) await new Promise(resolve => setTimeout(resolve, 250));
-    else throw new Error('Another copy of Sovran Advisor started instead. Restart your computer, then open Sovran Advisor again.');
+    else throw new Error('Another copy of Sovran Central started instead. Restart your computer, then open Sovran Central again.');
   }
   throw new Error('The app did not finish starting. Please ask for help checking its startup.');
 }
@@ -106,7 +106,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         const db = new DatabaseSync(file, { readOnly: true });
         const version = db.prepare('PRAGMA user_version').get().user_version;
         db.close();
-        if (version > SCHEMA_VERSION) throw new Error('Your data was made by a newer Sovran Advisor. Ask Claude to update Sovran Advisor, then open it again.');
+        if (version > SCHEMA_VERSION) throw new Error('Your data was made by a newer Sovran Central. Ask Claude to update Sovran Central, then open it again.');
       }
       const env = { ...process.env, PATH: launchPath(), PORT: port, DATA_DIR: path.join(root, dataDir) };
       delete env.ASSISTANT_COMMAND;

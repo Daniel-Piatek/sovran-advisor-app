@@ -1,4 +1,4 @@
-// You and your assistant at once (advanced/writing/5). The "assistant" changes the note through the API while the page is open on it.
+// You and Sovran Advisor at once (advanced/writing/5). The "assistant" changes the note through the API while the page is open on it.
 import { test, expect, tapAtEnd } from './fixtures.js';
 
 const BODY = 'Three parts\n\ntwo quiet mornings\n\nFollow up';
@@ -13,7 +13,7 @@ async function openNote(page, app) {
   return note;
 }
 
-test('your assistant adds a line at the end while you change the first: both are in the note as one merged version, and the page shows both', async ({ page, app }) => {
+test('Sovran Advisor adds a line at the end while you change the first: both are in the note as one merged version, and the page shows both', async ({ page, app }) => {
   const note = await openNote(page, app);
   await app.updateNote(note.id, { body: `${BODY}\n\nSend the contract` }); // the other side saves under your page
   await text(page).getByText('Three parts', { exact: true }).click();
@@ -33,7 +33,7 @@ test('both changed the same line: a clash box with both sides; Keep yours is a n
   await page.keyboard.press('End');
   await page.keyboard.type(', no calls');
   await expect(page.getByRole('status')).toHaveText('Saved');
-  const box = page.getByRole('region', { name: 'A line you and your assistant both changed' });
+  const box = page.getByRole('region', { name: 'A line you and Sovran Advisor both changed' });
   await expect(box.locator('[data-side="mine"]')).toContainText('two quiet mornings, no calls');
   await expect(box.locator('[data-side="theirs"]')).toContainText('meetings only after lunch');
   expect((await noteOf(app, note.id)).body).toBe('Three parts\n\ntwo quiet mornings, no calls\n\nFollow up'); // yours is in the note
@@ -55,14 +55,14 @@ test('both changed the same line: a clash box with both sides; Keep yours is a n
 });
 
 test('Take the assistant’s and Keep both change the line', async ({ page, app }) => {
-  for (const [button, expected] of [['Take the assistant’s', 'Three parts\n\nmeetings only after lunch\n\nFollow up'], ['Keep both', 'Three parts\n\ntwo quiet mornings, no calls\n\nmeetings only after lunch\n\nFollow up']]) {
+  for (const [button, expected] of [['Take Sovran Advisor’s', 'Three parts\n\nmeetings only after lunch\n\nFollow up'], ['Keep both', 'Three parts\n\ntwo quiet mornings, no calls\n\nmeetings only after lunch\n\nFollow up']]) {
     const note = await openNote(page, app);
     await app.updateNote(note.id, { body: 'Three parts\n\nmeetings only after lunch\n\nFollow up' });
     await text(page).getByText('two quiet mornings', { exact: true }).click();
     await page.keyboard.press('End');
     await page.keyboard.type(', no calls');
     await expect(page.getByRole('status')).toHaveText('Saved');
-    await page.getByRole('region', { name: 'A line you and your assistant both changed' }).getByRole('button', { name: button }).click();
+    await page.getByRole('region', { name: 'A line you and Sovran Advisor both changed' }).getByRole('button', { name: button }).click();
     await expect(page.locator('.clash-box')).toHaveCount(0);
     await expect.poll(async () => (await noteOf(app, note.id)).body).toBe(expected);
     await expect(text(page)).toContainText('meetings only after lunch');

@@ -1,4 +1,4 @@
-// From mail to action, with your assistant (advanced/mail/11). Google and Gmail are stood in for; the assistant is tests/fake-claude.js.
+// From mail to action, with Sovran Advisor (advanced/mail/11). Google and Gmail are stood in for; the assistant is tests/fake-claude.js.
 import { test, expect } from './fixtures.js';
 import { makeMailbox } from '../../scripts/demo-mail.js';
 import { FAKE_CLIENT_ID, FAKE_CLIENT_SECRET } from '../fake-google.js';
@@ -114,10 +114,10 @@ test('Cmd K lists Make a task of it with its key, and the ? panel has the row', 
   await expect(page.locator('.mail-times-table tr[data-key="task"]')).toHaveCount(1);
 });
 
-test('Settings says what your assistant may do with your mail, and that it cannot be changed', async ({ page, app }) => {
+test('Settings says what Sovran Advisor may do with your mail, and that it cannot be changed', async ({ page, app }) => {
   await setUp(app);
   await page.goto(`${app.url}/settings`);
-  const part = page.getByRole('region', { name: 'Your assistant and mail' });
+  const part = page.getByRole('region', { name: 'Sovran Advisor and mail' });
   await expect(part.locator('li[data-rule]')).toHaveText([/already in the conversation/, /never attaches a file/, /at most 10 mails a day/, /never sends by itself/]);
   await expect(part).toContainText('Drafted today: 0 of 10.');
   await expect(part.locator('button:not(.settings-toggle)')).toHaveCount(0); // only the name that folds it

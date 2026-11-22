@@ -27,7 +27,7 @@ const sections = [
   { name: 'Reports', href: '/reports', icon: 'report', more: true, module: 'reports', owns: (path) => /^\/reports(\/|$)/.test(path) },
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
   { name: 'Mail', href: '/mail', icon: 'mail', more: true, module: 'mail', owns: (path) => /^\/mail(\/|$)/.test(path) },
-  { name: 'Assistant', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
+  { name: 'Sovran Advisor', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
   // Group Circle (group-feed.js, public/group.js; module group, on in a new install): your Quest group's Announcements and Circle.
   { name: 'Group Circle', href: '/group', icon: 'group', more: true, module: 'group', owns: (path) => /^\/group(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.

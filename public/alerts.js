@@ -1,6 +1,6 @@
 // Alerts (2026-11-22, the owner's wish): something new in Group Circle (an announcement, a reply to you, homework due
 // tomorrow, Daniel dealing with what you told him; in APP Daniel a new student report or a flag) shows as a normal Mac or
-// Windows alert while Sovran Advisor is open, and the count beside Group Circle goes up. Clicking it opens that post.
+// Windows alert while Sovran Central is open, and the count beside Group Circle goes up. Clicking it opens that post.
 // The server (alerts.js) asks the Sovran cloud and says each one once; Settings › Alerts has a switch for each kind.
 //
 // The browser asks once whether this app may show alerts (Settings › Alerts › Allow alerts). Until then, or when the
@@ -74,7 +74,7 @@ export async function sayUpdateAlert() {
     if (!kinds.find((k) => k.id === 'update')?.on) return;
   } catch { return; }
   if (alertsAllowed() === 'granted' && (document.visibilityState !== 'visible' || !document.hasFocus())) {
-    sayAlert({ id: 'update', title: 'A new version of Sovran Advisor is ready', body: 'Open Sovran Advisor to update.', path: '/settings' });
+    sayAlert({ id: 'update', title: 'A new version of Sovran Central is ready', body: 'Open Sovran Central to update.', path: '/settings' });
   }
 }
 

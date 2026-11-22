@@ -2,7 +2,7 @@
 // reference): the captures that wait, oldest first, in a panel on the left (+ Capture is the
 // screen's one accent); the one being sorted in a panel on the right: a top bar (its Home,
 // an arrow that opens it, when it was captured; Add file, Edit, Delete), the words large,
-// your assistant's suggestion as one bar with Accept, and the line "Or make it" under it. On a
+// Sovran Advisor's suggestion as one bar with Accept, and the line "Or make it" under it. On a
 // phone the list comes first and a capture opens full width, with a back arrow.
 // Each decision has one key (and a button):
 //   J  make it a journal entry: a line with its words, a day (today) and Add, like T's;
@@ -11,8 +11,8 @@
 //      estimate, time…) is read and shown; Enter makes the task, Esc goes back
 //   D  done                             Backspace  delete it
 // The next capture opens at once, and "… Undo" takes the decision back.
-// Your assistant reads each capture in the background (assistant/3) and suggests where it
-// goes: one bar on the capture ("Your assistant suggests a task, “…”, at home in …", Accept at
+// Sovran Advisor reads each capture in the background (assistant/3) and suggests where it
+// goes: one bar on the capture ("Sovran Advisor suggests a task, “…”, at home in …", Accept at
 // its right; the reason is its tooltip), then the line "Or make it" with the same choices.
 // Enter accepts it; nothing moves until you do, and the keys above still decide by hand.
 
@@ -317,7 +317,7 @@ export async function showInbox() {
       ` · ${chat.questions} ${chat.questions === 1 ? 'question' : 'questions'} · last added ${clockTime(chat.at)}`)];
   }
   let capturedTags = null; // the open capture's tag row
-  let offeredTags = null;  // the tags your assistant suggests for it, and where they show
+  let offeredTags = null;  // the tags Sovran Advisor suggests for it, and where they show
   let homeControl = null; // the Home in the top bar
   let barHome = null;     // the same value, in the suggestion bar
   let arrow = null;       // the top bar's → that opens it
@@ -347,9 +347,9 @@ export async function showInbox() {
     onclick: () => decide(decision),
   }, el('kbd', { class: 'key-hint' }, decision.label), el('span', {}, decision.later ? `${decision.name} · later` : decision.name));
 
-  // ---- Your assistant's suggestion ----
+  // ---- Sovran Advisor's suggestion ----
 
-  // One bar (the reference's): what your assistant suggests, with Accept inside it at the
+  // One bar (the reference's): what Sovran Advisor suggests, with Accept inside it at the
   // right. The sentence says what Accept will do; its home is the Home box, the same value as the top bar's. The
   // reason is the bar's tooltip and its accessible description.
   function sentence(capture, s) {
@@ -368,18 +368,18 @@ export async function showInbox() {
     const s = capture.suggestion;
     if (!s || s.state === 'reading' || s.state === 'failed') {
       const reading = !s || s.state === 'reading';
-      place.replaceChildren(el('p', { class: 'suggestion suggestion-bar is-reading', role: 'status', 'aria-label': 'Assistant suggestion' }, icon('assistant'),
-        reading ? 'Your assistant is reading it…' : 'Your assistant couldn’t read it yet; it tries again later. Sort it by hand meanwhile.'));
+      place.replaceChildren(el('p', { class: 'suggestion suggestion-bar is-reading', role: 'status', 'aria-label': 'Sovran Advisor suggestion' }, icon('assistant'),
+        reading ? 'Sovran Advisor is reading it…' : 'Sovran Advisor couldn’t read it yet; it tries again later. Sort it by hand meanwhile.'));
       if (reading) watch(capture, place);
       return;
     }
     const why = el('span', { class: 'suggestion-why', id: 'suggestion-why', hidden: true }, s.why);
     place.replaceChildren(el('section', {
-      class: 'suggestion suggestion-bar', 'data-kind': s.kind, 'aria-label': 'Assistant suggestion',
+      class: 'suggestion suggestion-bar', 'data-kind': s.kind, 'aria-label': 'Sovran Advisor suggestion',
       ...(s.why ? { title: s.why, 'aria-describedby': 'suggestion-why' } : {}),
     },
     icon('assistant'),
-    el('span', { class: 'suggestion-text' }, 'Your assistant suggests ', ...sentence(capture, s)),
+    el('span', { class: 'suggestion-text' }, 'Sovran Advisor suggests ', ...sentence(capture, s)),
     ...(s.why ? [why] : []),
     el('button', { type: 'button', class: 'suggestion-accept', 'aria-keyshortcuts': 'Enter', title: 'Accept (Enter)', onclick: () => accept() },
       icon('check'), 'Accept'),
@@ -388,7 +388,7 @@ export async function showInbox() {
 
   // The tags it suggests (module tags): each one only offered, put on when you tap it. Accept never puts them on.
   function offerTags(capture, s) {
-    const line = el('p', { class: 'suggestion-tags', 'aria-label': 'Tags your assistant suggests' });
+    const line = el('p', { class: 'suggestion-tags', 'aria-label': 'Tags Sovran Advisor suggests' });
     offeredTags = tagsOn() && s.tags?.length ? { names: s.tags, line } : null;
     drawOfferedTags();
     return line;

@@ -1,10 +1,15 @@
-# Installing Sovran Advisor
+# Installing Sovran Central
 
 This page is written for **Claude** (Claude Code) or, for someone who uses ChatGPT, OpenAI's
-**Codex**, which installs Sovran Advisor for you. You only need to paste this into Claude Code
+**Codex**, which installs Sovran Central for you. You only need to paste this into Claude Code
 (or the Codex app) on your computer:
 
-> Install Sovran Advisor for me by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
+> Install Sovran Central for me by following https://github.com/Daniel-Piatek/sovran-advisor-app/blob/main/INSTALL.md
+
+**The name:** the app is **Sovran Central** (until 22 Nov 2026 it was called Sovran Advisor, and
+"Sovran Advisor" is now the name of the assistant inside it). Its folder keeps its old name,
+`Sovran Advisor`, so that updates keep working: never rename the folder. "Update Sovran Advisor" or
+"undo the last Sovran Advisor update" from someone with an older copy means the same as with the new name.
 
 **Which AI?** The app's assistant runs on the person's own plan: Claude (Claude Code) or
 ChatGPT (Codex). If you are Codex, or the person says they use ChatGPT, follow the ChatGPT
@@ -49,12 +54,12 @@ to paste into Terminal (Mac) or PowerShell (Windows) themselves.
    to `~/Sovran Advisor`; see "Installed from a zip" under updating.)
 3. **Install what it needs:** `cd "$HOME/Sovran Advisor" && npm install --omit=dev`.
 4. **The app icon**, from the app's folder:
-   `cd "$HOME/Sovran Advisor" && npm run desktop:build && mkdir -p ~/Applications && cp -R "build/Sovran Advisor.app" ~/Applications/`.
+   `cd "$HOME/Sovran Advisor" && npm run desktop:build && mkdir -p ~/Applications && cp -R "build/Sovran Central.app" ~/Applications/`.
    This needs the command line developer tools (`xcode-select --install` if `xcrun` is
-   missing). Then `open "$HOME/Applications/Sovran Advisor.app"`. The person can drag the icon
+   missing). Then `open "$HOME/Applications/Sovran Central.app"`. The person can drag the icon
    to the Dock. Opening it the first time also asks the Mac to look after the app (`scripts/login-agent.js`):
    from then on it starts when the person logs in, stops when they log out, and starts again if it ever
-   stops. macOS may show a notice "Background Items Added" for Sovran Advisor: tell the person that is
+   stops. macOS may show a notice "Background Items Added" for Sovran Central: tell the person that is
    expected and to leave it allowed in System Settings › General › Login Items. (Without it, the icon
    still opens the app, the old way.)
 5. **The assistant** runs on the person's own Claude Code, signed in with their own Claude
@@ -80,7 +85,7 @@ post a screenshot in the Sovran WhatsApp group.
 0. **Check the computer can run it.** It needs Windows 10 (version 1809 or later) or Windows 11,
    64-bit. Run `[Environment]::OSVersion.Version` and `[Environment]::Is64BitOperatingSystem`
    (build 17763 or higher, and `True`). If it is older (Windows 7 or 8) or 32-bit, stop and tell
-   the person kindly that this computer is too old for Sovran Advisor, and that nothing was changed.
+   the person kindly that this computer is too old for Sovran Central, and that nothing was changed.
    Then check `winget --version`. If it does not answer (older Windows 10 copies often lack it),
    do not try to repair it: use the installer downloads in steps 1 and 2 instead.
 1. **Node.js 22.13 or newer:** `node -v`; if missing or older, `winget install OpenJS.NodeJS.LTS`.
@@ -96,10 +101,10 @@ post a screenshot in the Sovran WhatsApp group.
 3. **Install what it needs:** `cd "$env:USERPROFILE\Sovran Advisor"; npm.cmd install --omit=dev`.
    (Use `npm.cmd`, not `npm`: on many Windows computers PowerShell refuses `npm` with "running
    scripts is disabled on this system". Do not change the person's execution policy for this.)
-4. **A desktop shortcut** to `start-windows.cmd` in that folder, named "Sovran Advisor", with
+4. **A desktop shortcut** to `start-windows.cmd` in that folder, named "Sovran Central", with
    the app's icon:
    ```powershell
-   $s = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:USERPROFILE\Desktop\Sovran Advisor.lnk")
+   $s = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:USERPROFILE\Desktop\Sovran Central.lnk")
    $s.TargetPath = "$env:USERPROFILE\Sovran Advisor\start-windows.cmd"
    $s.WorkingDirectory = "$env:USERPROFILE\Sovran Advisor"
    $s.IconLocation = "$env:USERPROFILE\Sovran Advisor\public\icons\favicon.ico"
@@ -117,7 +122,7 @@ post a screenshot in the Sovran WhatsApp group.
 Google Calendar's sign-in needs the macOS keychain, so on Windows it stays off. Everything
 else works the same.
 
-## For Claude or Codex: using it on a phone (optional: "set up Sovran Advisor on my phone")
+## For Claude or Codex: using it on a phone (optional: "set up Sovran Central on my phone")
 
 Only when the person asks. The app stays on their computer; their phone reaches it through
 **Tailscale**, a free private link between their own devices (nobody else can get in). It works
@@ -165,7 +170,7 @@ while the computer is switched on and awake.
   model and speaks with a free voice (Alba, British English, about 70 MB, fetched once the first
   time the chat opens). With an ElevenLabs key, calls listen and speak with ElevenLabs instead.
 
-## For Claude or Codex: moving it to a new computer (optional: "move Sovran Advisor to my new computer")
+## For Claude or Codex: moving it to a new computer (optional: "move Sovran Central to my new computer")
 
 Only when the person asks. Nothing goes through a cloud account.
 
@@ -173,14 +178,14 @@ Only when the person asks. Nothing goes through a cloud account.
    moving**, then Settings › Phone, backups and moving › **Make a moving file**. It downloads one
    file, `sovran-advisor-move-<date>.tar.gz`, with everything they wrote and their pictures and files.
 2. The person copies that file to the new computer (a USB stick, AirDrop, or their cloud drive).
-3. **On the new computer**: install Sovran Advisor as above. Then in the app, switch on the same
+3. **On the new computer**: install Sovran Central as above. Then in the app, switch on the same
    module and choose **Bring in a moving file**. The app checks the file and shows what it holds;
    nothing changes until the person presses **Replace everything here with it**. The app restarts,
    and what was there before is kept, whole, in `data/before-move-<time>/`.
 4. Not in the file, so set again on the new computer if they were used: the phone link (above),
    an ElevenLabs key, and capture devices (Settings › Capture from anywhere).
 
-## For Claude or Codex: updating it ("update Sovran Advisor")
+## For Claude or Codex: updating it ("update Sovran Central")
 
 The person can also update with one button: Settings › Updates › **Update now** (`app-update.js`, the same steps
 as below, done by the app). You are here because they chose you, or the button sent them (a clash with their own
@@ -215,11 +220,16 @@ said yes to losing that exact change.
 5. On a Mac, rebuild the icon (step 4 above) if the update notes say so, and also after Node.js
    was upgraded or moved (for example by `brew upgrade node`): the icon remembers where Node.js
    was when it was built, and does not start without it.
+   **The new name (22 Nov 2026):** if `~/Applications/Sovran Advisor.app` is there, build the icon
+   again (step 4 above), which makes `Sovran Central.app`, then move the old `Sovran Advisor.app` to
+   the Trash (it is only the old icon; nothing of theirs is in it). Tell the person to drag the new
+   icon into their Dock, and to remove the old one from the Dock if it still shows. On Windows, if the
+   desktop shortcut is still called "Sovran Advisor", rename it "Sovran Central".
 6. Start it again (on a Mac: open the icon, which also sets up or refreshes its start at log-in) and check that the person's own changes still work. A database from an older
    version is upgraded by the app itself, after it keeps a whole copy next to it; there is also a
    daily copy in `data/backups/`.
 
-**To undo an update** ("undo the last Sovran Advisor update"): stop the app and run
+**To undo an update** ("undo the last Sovran Central update"): stop the app and run
 `git reset --hard before-update-YYYY-MM-DD` with the latest such tag, after saying in one
 sentence that this puts the app's files back as they were before that update (their notes are
 not touched). If the update upgraded the database, tell the person before going back, because

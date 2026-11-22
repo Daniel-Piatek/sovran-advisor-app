@@ -1,4 +1,4 @@
-// Settings › Phone, backups and moving (module everywhere; myICOR advanced/everywhere 3, 8 and 11, the Sovran Advisor way:
+// Settings › Phone, backups and moving (module everywhere; myICOR advanced/everywhere 3, 8 and 11, the Sovran Central way:
 // no cloud account, nothing to pay). Three parts:
 //   On your phone      the Capture icon for the home screen (/quick), and where the phone finds it
 //   Daily backups      the copies the app keeps, each checked when it was made, and Check them now
@@ -19,7 +19,7 @@ function phonePart() {
     where.replaceChildren(...(list.length
       ? [el('p', { class: 'empty' }, 'On your phone, open this address in Safari or Chrome, then Share › Add to Home Screen:'),
         ...list.map((a) => el('p', { class: 'phone-address' }, a))]
-      : [el('p', { class: 'empty' }, 'Your phone can’t reach this computer yet. Ask Claude: “set up Sovran Advisor on my phone”. When that is done, the address for your phone shows here.')]));
+      : [el('p', { class: 'empty' }, 'Your phone can’t reach this computer yet. Ask Claude: “set up Sovran Central on my phone”. When that is done, the address for your phone shows here.')]));
   };
   request('GET', '/api/phone').then(show).catch(() => show({ addresses: [] }));
   return el('div', { class: 'settings-subpart', 'aria-label': 'On your phone' },
@@ -127,7 +127,7 @@ function movePart() {
   request('GET', '/api/move').then(show).catch(() => {});
   return el('div', { class: 'settings-subpart', 'aria-label': 'A new computer' },
     el('h3', { class: 'settings-subtitle' }, 'A new computer'),
-    el('p', { class: 'empty' }, 'Make a moving file here: one file with everything you wrote, and your pictures and files. Copy it to the new computer (a USB stick, AirDrop, or your cloud drive). There, install Sovran Advisor, switch on this module, and choose Bring in a moving file.'),
+    el('p', { class: 'empty' }, 'Make a moving file here: one file with everything you wrote, and your pictures and files. Copy it to the new computer (a USB stick, AirDrop, or your cloud drive). There, install Sovran Central, switch on this module, and choose Bring in a moving file.'),
     el('p', { class: 'empty' }, 'Not in the file: your Dictation key, the link to your phone, and capture devices. Set those again on the new computer.'),
     el('div', { class: 'move-actions' },
       el('a', { class: 'button', href: '/api/move/file', download: '' }, 'Make a moving file'),

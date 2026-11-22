@@ -99,7 +99,7 @@ test('My Life in depth is off in a new install; switching it off hides Habits an
   };
   const titles = async () => (await send('GET', '/api/life')).body.map((i) => i.title).sort();
   const health = (await send('POST', '/api/life', { kind: 'key_element', title: 'Health' })).body;
-  // Off in a new install (Sovran Advisor): no Habit until it is switched on.
+  // Off in a new install (Sovran Central): no Habit until it is switched on.
   assert.equal((await send('GET', '/api/modules')).body.find((m) => m.id === 'mylife-plus').on, false);
   assert.equal((await send('POST', '/api/life', { kind: 'habit', title: 'Too early', home_id: health.id })).status, 409);
   await send('PATCH', '/api/modules', { id: 'mylife-plus', on: true });

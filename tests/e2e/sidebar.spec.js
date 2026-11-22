@@ -8,7 +8,7 @@ test('the sidebar shows Capture and every section, and marks where you are', asy
   // On a phone, Timeline, People, My Life, Assistant, Tour, Settings and Library wait under More.
   await expect(sections(page).getByRole('link')).toHaveText(isMobile
     ? ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Inbox']
-    : ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Assistant', 'Group Circle', 'Tour', 'Settings', 'Library']);
+    : ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings', 'Library']);
   await expect(sections(page).getByRole('button', { name: 'More' })).toHaveCount(isMobile ? 1 : 0);
   await expect(sections(page).getByRole('button', { name: /Capture/ })).toBeVisible();
   await expect(sections(page).getByRole('link', { name: 'Notes' })).toHaveAttribute('aria-current', 'page');
@@ -64,7 +64,7 @@ test('on a phone, More opens People, My Life, Reports, Assistant and Settings, a
   await page.goto(app.url);
   await sections(page).getByRole('button', { name: 'More' }).click();
   const menu = page.getByRole('menu', { name: 'More' });
-  await expect(menu.getByRole('menuitem')).toHaveText(['Timeline', 'People', 'My Life', 'Reports', 'Mail', 'Assistant', 'Group Circle', 'Tour', 'Settings', 'Library']);
+  await expect(menu.getByRole('menuitem')).toHaveText(['Timeline', 'People', 'My Life', 'Reports', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings', 'Library']);
   await menu.getByRole('menuitem', { name: 'My Life' }).click();
   await expect(page).toHaveURL(`${app.url}/life`);
   await expect(menu).toBeHidden();
@@ -79,7 +79,7 @@ test('Tour, Settings and Library sit at the foot of the column, and the others c
   const library = await sections(page).getByRole('link', { name: 'Library' }).boundingBox();
   const settings = await sections(page).getByRole('link', { name: 'Settings' }).boundingBox();
   const tour = await sections(page).getByRole('link', { name: 'Tour' }).boundingBox();
-  const assistant = await sections(page).getByRole('link', { name: 'Assistant' }).boundingBox();
+  const assistant = await sections(page).getByRole('link', { name: 'Sovran Advisor' }).boundingBox();
   // Library is the very last, Settings just above it, Tour above Settings, and a gap of free space lies between them and the rest.
   expect(Math.abs(sidebarBox.y + sidebarBox.height - (library.y + library.height))).toBeLessThanOrEqual(40);
   expect(settings.y).toBeLessThan(library.y);
@@ -91,16 +91,16 @@ test('Tour, Settings and Library sit at the foot of the column, and the others c
 
   // Drag Tasks below Calendar.
   await sections(page).getByRole('link', { name: 'Tasks' }).dragTo(sections(page).getByRole('link', { name: 'Calendar' }), { targetPosition: { x: 20, y: 30 } });
-  await expect.poll(names).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Assistant', 'Group Circle', 'Tour', 'Settings', 'Library']);
+  await expect.poll(names).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings', 'Library']);
   // The order is kept.
   await page.reload();
-  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Assistant', 'Group Circle', 'Tour', 'Settings', 'Library']);
+  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings', 'Library']);
 
   // Alt+Up moves a section up with the keyboard; it can't go past Tour.
   const tasks = sections(page).getByRole('link', { name: 'Tasks' });
   await tasks.focus();
   await page.keyboard.press('Alt+ArrowUp');
-  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Tasks', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Assistant', 'Group Circle', 'Tour', 'Settings', 'Library']);
+  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Tasks', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings', 'Library']);
   const last = sections(page).getByRole('link', { name: 'Group Circle' });
   await last.focus();
   await page.keyboard.press('Alt+ArrowDown');

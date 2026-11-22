@@ -39,7 +39,7 @@ html.in-app .back-all { background: var(--crimson); border-color: var(--crimson)
 })();
 </script>
 <style>
-/* A tour of Sovran Advisor as a student installs it today: only the parts that are on without changing a setting.
+/* A tour of Sovran Central as a student installs it today: only the parts that are on without changing a setting.
    Same engine and look as the approved journal film (writing-explainer.html). */
 :root {
   --bg: #FBFBFB; --frame: #ECEAEA; --page: #FBFBFB; --ink: #302D2D; --muted: #555151; --faint: #7B7777; --line: #D4D1D1; --surface: #ECEAEA;
@@ -211,7 +211,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .selects span.s { border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
 .askbox { border: 1px solid var(--ink); border-radius: 10px; padding: 10px; display: flex; gap: 8px; align-items: flex-end; min-height: 56px; }
 .askbox .t { flex: 1; }
-.askbox .t:empty::before { content: "Ask your assistant (Claude)"; color: var(--faint); }
+.askbox .t:empty::before { content: "Ask Sovran Advisor (Claude)"; color: var(--faint); }
 .askbox .b { font-family: var(--ui); font-size: .78rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 10px; }
 .msg { border-radius: 10px; padding: 8px 12px; font-size: .9rem; display: grid; gap: 4px; }
 .msg.me { justify-self: end; background: var(--surface); max-width: 80%; }
@@ -347,9 +347,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 </style>
 
 <div class="wrap">
-  <p class="eyebrow">Sovran Advisor · More you can switch on</p>
+  <p class="eyebrow">Sovran Central · More you can switch on</p>
   <h1>More You Can Switch On</h1>
-  <p class="intro">Six parts of Sovran Advisor you can switch on whenever you are ready, in Settings › Modules. Pick one below to watch its short film. Pause any time with the round button, a click on the screen, or the space bar. Press <b>Sound on</b> to hear it narrated.</p>
+  <p class="intro">Six parts of Sovran Central you can switch on whenever you are ready, in Settings › Modules. Pick one below to watch its short film. Pause any time with the round button, a click on the screen, or the space bar. Press <b>Sound on</b> to hear it narrated.</p>
 
   <div class="cap">
     <span class="n" id="capn">Scene 1 of 10</span>
@@ -369,7 +369,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
       <div class="nav" id="nav-people"><i style="background:var(--people)"></i>People</div>
       <div class="nav" id="nav-life" hidden><i style="background:var(--life)"></i>My Life</div>
       <div class="nav" id="nav-inbox"><i style="border:1.5px solid var(--muted)"></i>Inbox<span class="count" id="inboxcount" hidden>1</span></div>
-      <div class="nav" id="nav-assistant"><i style="background:var(--gold)"></i>Assistant</div>
+      <div class="nav" id="nav-assistant"><i style="background:var(--gold)"></i>Sovran Advisor</div>
       <div class="grow"></div>
       <div class="nav" id="nav-settings"><i style="border:1.5px dashed var(--muted)"></i>Settings</div>
     </div>
@@ -545,9 +545,9 @@ const ENTRY = ['08:12', 'Morning pages', 'Slept well. Three things I want from t
 function welcomePage() {
   place('welcome');
   const w = h('div', 'welcome'); w.style.display = 'grid'; w.style.gap = '10px';
-  w.append(h('h3', '', 'Welcome to Sovran Advisor'), h('div', 'sub', 'Your trusty companion on your Sovran Quest journey.'));
+  w.append(h('h3', '', 'Welcome to Sovran Central'), h('div', 'sub', 'Your trusty companion on your Sovran Quest journey.'));
   const p1 = h('div', 'wpart'); const name = h('div', 'field ph', 'Type your name here.'); p1.append(h('span', 'h', 'What should your Advisor call you?'), name);
-  const p2 = h('div', 'wpart'); const ready = h('div', '', '✓ Ready. It runs on your own Claude, on this computer.'); p2.append(h('span', 'h', 'Your assistant'), ready);
+  const p2 = h('div', 'wpart'); const ready = h('div', '', '✓ Ready. It runs on your own Claude, on this computer.'); p2.append(h('span', 'h', 'Sovran Advisor'), ready);
   const p3 = h('div', 'wpart'); const begin = h('div', 'begin', '<i class="dot" style="background:var(--journal)"></i>Write your first journal entry'); p3.append(h('span', 'h', 'To begin'), begin);
   w.append(p1, p2, p3); pagein.append(w); const ft = foot();
   return { name, ready, begin, ft };
@@ -584,7 +584,7 @@ function modulesPage(label) {
   head('Settings', 'var(--faint)');
   pagein.append(h('div', 'lab', 'Modules'), h('p', 'small', 'Parts of the app you can switch on and off. Everything you made stays.'));
   const rows = h('div', 'mods'); let target = null;
-  const all = [['Tasks', 'Your tasks in one place: Today, Upcoming and Someday.'], ['Planner', 'Plan your day and your week.'], ['Calendar', 'Your own events by day, week and month.'], ['My Life', 'The parts of your life that matter to you.'], ['Boards', 'Endless whiteboards in Notes.'], ['Sovran Go', 'Sovran Advisor on your phone.']];
+  const all = [['Tasks', 'Your tasks in one place: Today, Upcoming and Someday.'], ['Planner', 'Plan your day and your week.'], ['Calendar', 'Your own events by day, week and month.'], ['My Life', 'The parts of your life that matter to you.'], ['Boards', 'Endless whiteboards in Notes.'], ['go Sovran', 'Sovran Central on your phone.']];
   for (const [n, d] of all) {
     const r = h('div', 'mod'); const sw = h('span', 'onoff', '<span>On</span><span class="on">Off</span>');
     r.append(h('div', '', `<b>${n}</b><span class="small">${d}</span>`), sw); rows.append(r);

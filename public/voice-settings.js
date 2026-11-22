@@ -35,7 +35,7 @@ export function voiceSection() {
   async function drawNumbers() {
     let stats;
     try { stats = await request('GET', '/api/call/stats'); } catch { return; }
-    if (!stats.calls.length) { numbers.replaceChildren(el('p', { class: 'empty' }, 'No call yet. Press Call in your assistant’s chat.')); return; }
+    if (!stats.calls.length) { numbers.replaceChildren(el('p', { class: 'empty' }, 'No call yet. Press Call in Sovran Advisor’s chat.')); return; }
     const top = Math.max(...stats.calls.map((c) => c.median_ms), 1);
     numbers.replaceChildren(
       el('p', {}, `Median of your last ${stats.calls.length} ${stats.calls.length === 1 ? 'call' : 'calls'}: `, el('span', { class: 'metric-chip' }, firstWordWords(stats.median_ms)),
@@ -51,7 +51,7 @@ export function voiceSection() {
   drawNumbers();
   return el('section', { class: 'settings-part', 'aria-label': 'Voice' },
     el('h2', { class: 'settings-title' }, 'Voice'),
-    el('p', { class: 'empty' }, 'Calls with your assistant: press Call in its chat, talk, and it answers out loud. Every turn is kept in the chat.'),
+    el('p', { class: 'empty' }, 'Calls with Sovran Advisor: press Call in its chat, talk, and it answers out loud. Every turn is kept in the chat.'),
     status,
     el('div', { class: 'permission-row' }, el('span', { class: 'permission-name' }, 'Voice'), voices),
     el('div', { class: 'permission-row' }, el('span', { class: 'permission-name' }, 'Speed'), speeds),
@@ -60,7 +60,7 @@ export function voiceSection() {
     numbers);
 }
 
-const LAYER_WORDS = { voice: 'Voice service', network: 'Network', assistant: 'Your assistant' };
+const LAYER_WORDS = { voice: 'Voice service', network: 'Network', assistant: 'Sovran Advisor' };
 
 export function voiceLogSection() {
   const list = el('ol', { class: 'activity-log', 'aria-label': 'Voice log' });
@@ -75,7 +75,7 @@ export function voiceLogSection() {
   }).catch(() => {});
   return el('section', { class: 'settings-part', 'aria-label': 'Voice log' },
     el('h2', { class: 'settings-title' }, 'Voice log'),
-    el('p', { class: 'empty' }, 'When a part of a call fails (the voice service, the network, your assistant), the call says so and goes on with what still works. Each time is here.'),
+    el('p', { class: 'empty' }, 'When a part of a call fails (the voice service, the network, Sovran Advisor), the call says so and goes on with what still works. Each time is here.'),
     el('p', {}, el('a', { class: 'button', href: '/assistant?try=voice' }, 'Try it: a call where the voice service stops')),
     folded);
 }

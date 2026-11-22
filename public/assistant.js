@@ -166,7 +166,7 @@ function keepButtons(message, body, question = '') {
   } }, 'Send to Inbox');
   // Share to Group Circle (2026-11-19, the owner's wish): the reply (or the part you selected), to check before posting.
   const share = moduleOn('group') ? el('button', { type: 'button', class: 'button button-quiet share-to-group', title: 'Share this reply (or the part you selected) with your group',
-    onclick: () => startGroupDraft(keepOf(message, body).text, 'Assistant') }, 'Share to Group Circle') : null;
+    onclick: () => startGroupDraft(keepOf(message, body).text, 'Sovran Advisor') }, 'Share to Group Circle') : null;
   // Tell Daniel (2026-11-19, the owner's wish): this answer (or the part you selected) with its question and what it used.
   const tell = tellDanielButton({ place: 'assistant', items: () => {
     const { text, part } = keepOf(message, body);
@@ -187,7 +187,7 @@ function callMarkNodes(mark) {
   if (!mark) return [];
   if (mark.said) return [el('p', { class: 'chat-call-mark' }, icon('phone'), 'Said on a call')];
   return [el('p', { class: 'chat-call-mark' }, icon('phone'), 'Voice call',
-    el('span', { class: 'metric-chip' }, mark.source === 'data' ? 'from your data, no model' : 'your assistant'),
+    el('span', { class: 'metric-chip' }, mark.source === 'data' ? 'from your data, no model' : 'Sovran Advisor'),
     ...(mark.first_word_ms != null ? [el('span', { class: 'metric-chip' }, firstWordWords(mark.first_word_ms))] : []),
     ...(mark.first_word_ms != null && !mark.warm ? [el('span', { class: 'metric-chip' }, 'cold start')] : [])),
   ...(mark.filler ? [el('p', { class: 'chat-call-mark' }, `Said while it thought: “${mark.filler}”`)] : [])];
@@ -205,7 +205,7 @@ function bubble(message, changed = () => {}, mark = null, question = '') {
   // Short table cells keep their words on one line ("4. Reconnect", 2026-11-11, the owner's wish).
   for (const cell of body.querySelectorAll('td')) if (cell.textContent.trim().length <= 24) cell.classList.add('is-short');
   const node = el('div', { class: 'chat-bubble is-assistant', 'data-role': 'assistant', 'data-state': message.state },
-    el('span', { class: 'chat-who' }, icon('assistant'), 'Assistant',
+    el('span', { class: 'chat-who' }, icon('assistant'), 'Sovran Advisor',
       ...(aiLabel(message) && !(mark && mark.source === 'data') ? [el('span', { class: 'plan-free' }, ' · '), aiChip(message.ai, aiLabel(message))] : []),
       el('span', { class: 'plan-free' }, ` · ${clockTime(message.created_at)}`)),
     body,
@@ -220,7 +220,7 @@ function bubble(message, changed = () => {}, mark = null, question = '') {
 }
 
 export async function showAssistant(id) {
-  document.title = 'Assistant';
+  document.title = 'Sovran Advisor';
   app.className = 'page page-wide assistant-page';
   let conversation = null;
   let answering = false;
@@ -230,7 +230,7 @@ export async function showAssistant(id) {
 
   const list = el('nav', { class: 'chat-list', 'aria-label': 'Your chats' });
   const thread = el('div', { class: 'chat-thread', role: 'log', 'aria-live': 'polite', 'aria-label': 'Conversation' });
-  const input = el('textarea', { class: 'chat-input', 'aria-label': 'Message', rows: 2, placeholder: 'Ask your assistant', maxlength: 20000 });
+  const input = el('textarea', { class: 'chat-input', 'aria-label': 'Message', rows: 2, placeholder: 'Ask Sovran Advisor', maxlength: 20000 });
   const sendButton = el('button', { type: 'button', class: 'button chat-send', onclick: () => send(input.value) }, 'Send');
   const stopButton = el('button', { type: 'button', class: 'button chat-stop', hidden: true, onclick: () => stop() }, 'Stop');
   const problem = el('p', { class: 'capture-problem', role: 'alert' });
@@ -267,11 +267,11 @@ export async function showAssistant(id) {
   const wideButton = el('button', { type: 'button', class: 'button button-quiet chat-wide-toggle', 'aria-pressed': 'false', onclick: () => setWide(!wide) });
   const backdrop = el('div', { class: 'chat-backdrop', hidden: true, onclick: () => setWide(false) });
   let wide = false;
-  const title = el('h1', { class: 'top-bar-title' }, 'Assistant');
+  const title = el('h1', { class: 'top-bar-title' }, 'Sovran Advisor');
   const actions = el('span', { class: 'chat-actions' });
   // New chat is the page's one red button, beside the title as on every section's page (2026-11-10, the owner's wish).
   const newChat = el('a', { class: 'button button-primary page-add', href: '/assistant' }, icon('plus'), 'New chat');
-  // A voice call with your assistant (advanced/voice/3-7, public/call.js): a thin front over this chat.
+  // A voice call with Sovran Advisor (advanced/voice/3-7, public/call.js): a thin front over this chat.
   const call = callControls({
     conversationId: () => conversation?.id ?? null,
     ensureConversation: async () => {
@@ -382,8 +382,8 @@ export async function showAssistant(id) {
     thread.replaceChildren(...nodes);
     thread.hidden = !nodes.length;
     thread.scrollTop = thread.scrollHeight;
-    title.textContent = 'Assistant'; // always the section's name; the chat open is marked in the list (2026-11-11, the owner's wish)
-    document.title = conversation?.title ? `Assistant · ${conversation.title}` : 'Assistant';
+    title.textContent = 'Sovran Advisor'; // always the section's name; the chat open is marked in the list (2026-11-11, the owner's wish)
+    document.title = conversation?.title ? `Sovran Advisor · ${conversation.title}` : 'Sovran Advisor';
     actions.replaceChildren(...(conversation?.messages.length ? [
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Rename chat', onclick: () => startRename() }, 'Rename'),
       el('button', { type: 'button', class: 'button button-quiet', 'aria-label': 'Delete chat', onclick: () => remove() }, 'Delete'),
@@ -422,7 +422,7 @@ export async function showAssistant(id) {
   // Which AI answers next, named in the box to ask in.
   request('GET', '/api/assistant/ai').then((state) => {
     chosen = state.provider;
-    input.placeholder = `Ask your assistant (${AI_NAMES[chosen] ?? 'Claude'})`;
+    input.placeholder = `Ask Sovran Advisor (${AI_NAMES[chosen] ?? 'Claude'})`;
   }).catch(() => {});
 
   async function load(conversationId) {

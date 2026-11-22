@@ -1,23 +1,23 @@
 // Comments on a passage (advanced/writing/3): a Comment button beside the words you select, and the note's threads below the text. Under
-// every open comment one decision: ask your assistant now (its answer lands in the thread, signed) or leave it for later (its list).
+// every open comment one decision: ask Sovran Advisor now (its answer lands in the thread, signed) or leave it for later (its list).
 
 import { el, request, timeAgo } from './ui.js';
 
-export const AUTHORS = { me: 'You', assistant: 'Your assistant' };
+export const AUTHORS = { me: 'You', assistant: 'Sovran Advisor' };
 
 // One comment thread: the quoted words, the comment, the replies, and what can be done with it.
 export function commentThread(thread, { onReply = () => {}, onAsk = () => {}, onLater = () => {}, onResolve = () => {}, onDelete = () => {}, asking = false, chat = '' } = {}) {
   const open = !thread.resolved;
   const decision = open && thread.ask !== 'answered' ? [
-    el('button', { type: 'button', class: 'button', disabled: asking || thread.ask === 'asked', onclick: onAsk }, asking || thread.ask === 'asked' ? 'Asking your assistant…' : 'Ask my assistant now'),
-    el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(thread.ask === 'later'), disabled: thread.ask === 'later' || asking, onclick: onLater }, thread.ask === 'later' ? 'Later: on your assistant’s list' : 'Later'),
+    el('button', { type: 'button', class: 'button', disabled: asking || thread.ask === 'asked', onclick: onAsk }, asking || thread.ask === 'asked' ? 'Asking Sovran Advisor…' : 'Ask Sovran Advisor now'),
+    el('button', { type: 'button', class: 'button button-quiet', 'aria-pressed': String(thread.ask === 'later'), disabled: thread.ask === 'later' || asking, onclick: onLater }, thread.ask === 'later' ? 'Later: on Sovran Advisor’s list' : 'Later'),
   ] : [];
   const replyInput = el('input', { class: 'search-input', 'aria-label': 'Reply', placeholder: 'Reply', autocomplete: 'off' });
   return el('article', { class: `comment-thread${open ? '' : ' is-resolved'}`, 'data-comment': thread.id, 'data-ask': thread.ask, 'aria-label': `Comment on “${thread.anchor}”` },
     el('blockquote', { class: 'comment-quote' }, thread.anchor),
     el('p', { class: 'comment-body' }, el('strong', {}, `${AUTHORS[thread.author]} `), thread.body, el('span', { class: 'comment-when' }, ` · ${timeAgo(thread.created_at)}`)),
     ...thread.replies.map((r) => el('p', { class: 'comment-reply', 'data-author': r.author }, el('strong', {}, `${AUTHORS[r.author]} `), r.body, el('span', { class: 'comment-when' }, ` · ${timeAgo(r.created_at)}`))),
-    ...(chat ? [el('a', { class: 'comment-chat', href: `/assistant/${chat}` }, 'See the turn in the Assistant')] : []),
+    ...(chat ? [el('a', { class: 'comment-chat', href: `/assistant/${chat}` }, 'See the turn in Sovran Advisor')] : []),
     ...(decision.length ? [el('div', { class: 'comment-decision', role: 'group', 'aria-label': 'What to do with this comment' }, ...decision)] : []),
     ...(open ? [el('form', { class: 'comment-reply-form', onsubmit: (event) => { event.preventDefault(); if (replyInput.value.trim()) onReply(replyInput.value.trim()); } }, replyInput,
       el('button', { type: 'submit', class: 'button button-quiet' }, 'Reply'))] : []),

@@ -34,7 +34,7 @@ export function yesOrNo(words) {
   return null;
 }
 
-// The one short, true line said when your assistant needs more than a second (advanced/voice/6).
+// The one short, true line said when Sovran Advisor needs more than a second (advanced/voice/6).
 export function fillerFor(words) {
   const w = String(words ?? '').toLowerCase();
   if (/\b(note|notes|wrote|write about|written)\b/.test(w)) return 'Let me look at your notes.';

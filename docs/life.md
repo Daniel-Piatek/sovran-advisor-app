@@ -16,4 +16,4 @@ My Life holds what you keep up for good and what you are working towards, so eve
 
 ## How it works
 
-Every item is a row in the `life_items` table (`schema.sql`) with its kind, kept by `life.js`; rules there keep the structure honest (a Goal stands on a Key Element). The page is `public/life.js`. Your assistant reads a short summary of My Life on every turn, so it knows what matters to you.
+Every item is a row in the `life_items` table (`schema.sql`) with its kind, kept by `life.js`; rules there keep the structure honest (a Goal stands on a Key Element). The page is `public/life.js`. Sovran Advisor reads a short summary of My Life on every turn, so it knows what matters to you.

@@ -14,7 +14,7 @@ Tags cut across everything: one tag can be on notes, journal entries, people, co
 - **A few words and a picture**: on a tag's page, **Add a description** says what the tag is about, and **Add a picture** puts a picture beside its name (it shows small in the Tags list too, never on the tags themselves). You can also write the words in Settings › Tags.
 - **The Sovran starter tags**: Settings › Tags › **Add the Sovran starter tags** adds the 13 characters (Medusa to Mystic, in a group Characters) and the 5 Quests (Hero Quest, Phoenix Quest, Quantum Quest, Sovran Quest, Destiny Quest, in a group Quests), each with what it represents and its picture. A tag you already have keeps your own words, picture and group.
 - **Pin to the sidebar** on a tag's page puts it under Notes in the sidebar, one click away.
-- **Your assistant suggests tags** for an Inbox item, under its suggestion: **Tap to add a tag**. Nothing goes on until you tap. A tag marked **new** is made when you tap it.
+- **Sovran Advisor suggests tags** for an Inbox item, under its suggestion: **Tap to add a tag**. Nothing goes on until you tap. A tag marked **new** is made when you tap it.
 - **Settings › Tags** is where you look after them: make **groups** (as many or as few tags in each as you like; one tag sits in one group or none), move groups up or down, rename a tag, join two tags into one, or remove a tag. Removing a tag takes it off every item and never deletes an item; **Undo** puts it back on exactly those.
 - Names ignore capitals: Retreat and retreat are one tag. Spaces are allowed.
 - An Inbox item's tags go with it into the note, journal entry or task it becomes. Imports from Obsidian and Day One keep their tags.

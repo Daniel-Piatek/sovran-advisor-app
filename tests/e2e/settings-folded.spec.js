@@ -31,7 +31,7 @@ test('while an update runs, its part is open, the step under way turns, and a li
     { id: 'restart', label: 'Starting it again', state: 'waiting' },
   ];
   await page.route('**/api/update', (route) => route.fulfill({ json: {
-    can: true, check: null, last: null, update_line: 'Update Sovran Advisor by following INSTALL.md', progress: { running: true, steps, result: null },
+    can: true, check: null, last: null, update_line: 'Update Sovran Central by following INSTALL.md', progress: { running: true, steps, result: null },
   } }));
   await page.goto(`${app.url}/settings`);
   const part = page.getByRole('region', { name: 'Updates' });

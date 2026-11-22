@@ -3,7 +3,7 @@
 // all of them in Your highlights at the top. The report itself is never changed: the marks are rows kept in this app
 // (report-marks.js on the server). A mark finds its place again by its words, with a little of the text before and after, so it
 // survives a newer version of the report; one whose words are gone is listed as no longer found, never lost.
-// Ask about this (2026-11-17, the owner's wish): select words, press the robot's Ask about this, and ask your assistant about
+// Ask about this (2026-11-17, the owner's wish): select words, press the robot's Ask about this, and ask Sovran Advisor about
 // them. The answer streams in beside the words, and the questions and answers stay there (in the margin, gold-edged), kept as
 // that highlight's own chat: also in the Assistant's list of chats, and read by the assistant with the report.
 
@@ -160,7 +160,7 @@ export async function markReport({ report, sections, list, undoPlace }) {
   function drawList(missing) {
     const shown = marks.filter((m) => !missing.includes(m));
     if (!marks.length) {
-      list.replaceChildren(el('p', { class: 'report-my-empty' }, 'Select any words in the report to highlight them, add a comment or ask your assistant about them. Only you see them, and your assistant reads them with the report.'));
+      list.replaceChildren(el('p', { class: 'report-my-empty' }, 'Select any words in the report to highlight them, add a comment or ask Sovran Advisor about them. Only you see them, and Sovran Advisor reads them with the report.'));
       return;
     }
     const row = (m, gone) => el('li', { class: gone ? 'report-my-item is-gone' : 'report-my-item' },
@@ -230,7 +230,7 @@ export async function markReport({ report, sections, list, undoPlace }) {
     pick.hidden = true;
     const thread = el('div', { class: 'report-ask-thread' });
     const box = el('textarea', { class: 'report-pop-text', rows: 2, maxlength: 20000, 'aria-label': 'Your question',
-      placeholder: m.asks?.length ? 'Ask more about these words…' : 'Ask your assistant about these words…',
+      placeholder: m.asks?.length ? 'Ask more about these words…' : 'Ask Sovran Advisor about these words…',
       onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } } });
     const askButton = el('button', { type: 'button', class: 'button', onclick: () => send() }, icon('assistant'), ' Ask');
     const drawThread = () => {
@@ -261,10 +261,10 @@ export async function markReport({ report, sections, list, undoPlace }) {
       box,
       el('div', { class: 'report-pop-actions' },
         el('button', { type: 'button', class: 'button button-quiet', onclick: () => remove(m) }, icon('trash'), ' Remove'),
-        m.conversation_id ? el('a', { class: 'button button-quiet', href: `/assistant/${m.conversation_id}` }, 'Open in Assistant') : null,
+        m.conversation_id ? el('a', { class: 'button button-quiet', href: `/assistant/${m.conversation_id}` }, 'Open in Sovran Advisor') : null,
         askButton)].filter(Boolean));
     pop.classList.add('report-pop-ask');
-    pop.setAttribute('aria-label', 'Ask your assistant');
+    pop.setAttribute('aria-label', 'Ask Sovran Advisor');
     pop.dataset.mark = m.id;
     drawThread();
     placeBeside(pop, document.querySelector(`mark[data-mark="${m.id}"]`), bySection.get(m.shown_in ?? m.section_key));
@@ -315,7 +315,7 @@ export async function markReport({ report, sections, list, undoPlace }) {
   function askNew() {
     if (!chosen) return;
     const rect = chosen.rect;
-    const box = el('textarea', { class: 'report-pop-text', rows: 2, placeholder: 'Ask your assistant about these words…', 'aria-label': 'Your question', maxlength: 20000 });
+    const box = el('textarea', { class: 'report-pop-text', rows: 2, placeholder: 'Ask Sovran Advisor about these words…', 'aria-label': 'Your question', maxlength: 20000 });
     const go = async () => {
       const words = box.value.trim();
       if (!words) { box.focus(); return; }
@@ -325,7 +325,7 @@ export async function markReport({ report, sections, list, undoPlace }) {
     box.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go(); } });
     pick.hidden = true;
     pop.classList.add('report-pop-ask');
-    pop.setAttribute('aria-label', 'Ask your assistant');
+    pop.setAttribute('aria-label', 'Ask Sovran Advisor');
     delete pop.dataset.mark;
     pop.replaceChildren(
       el('p', { class: 'report-pop-quote' }, `“${short(chosen.quote, 120)}”`),

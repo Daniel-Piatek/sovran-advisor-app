@@ -5,7 +5,7 @@
 // The server is group-feed.js (GET /api/group, /api/group/:tab, …); the Sovran cloud keeps each group apart.
 // Pictures are shrunk here, before anything leaves this computer: at most 1600 pixels on the long side, a JPEG of about
 // 200 KB. Drawing the photo again also leaves behind what the camera wrote into it, such as where it was taken.
-// Share to Group Circle (a note, a journal entry, an Assistant answer) leaves a draft in this browser (startGroupDraft)
+// Share to Group Circle (a note, a journal entry, a Sovran Advisor answer) leaves a draft in this browser (startGroupDraft)
 // and opens the Circle with it filled in; nothing is posted until Post is pressed.
 // APP Daniel runs this same page with the guide key (state.me.guide): a group picker (or All groups), the announcement
 // box (Homework with a due date, Reminder, Announcement), Hide, Delete and Pause on anyone's post, how many ticked each
@@ -494,7 +494,7 @@ function drawPeople(box, groups, redraw) {
     const rows = g.members.map((m) => {
       const name = el('input', { class: 'detail-input group-person-name', value: m.name ?? '', maxlength: 40, placeholder: 'No name picked yet', 'aria-label': `Name for ${m.student_id}` });
       return el('tr', { class: m.paused ? 'group-paused' : '' },
-        el('td', {}, name, el('div', { class: 'group-when' }, m.student_id, m.key_on ? '' : ' · library key turned off', m.phone ? ' · reads it on Sovran Go too' : '')),
+        el('td', {}, name, el('div', { class: 'group-when' }, m.student_id, m.key_on ? '' : ' · library key turned off', m.phone ? ' · reads it on go Sovran too' : '')),
         el('td', {}, `${m.done.length} homework done`),
         el('td', { class: 'group-person-actions' },
           el('button', { type: 'button', class: 'button button-quiet', onclick: act(() => manage('name', m.student_id, name.value), () => `Name saved: ${name.value || 'none'}`) }, 'Save name'),

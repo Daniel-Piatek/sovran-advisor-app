@@ -1,5 +1,5 @@
 // Settings › Phone capture (module phone-drop, phone-drop.js). The code for the phone's camera (and the same link to
-// copy), the steps to put Sovran Go on the home screen with the crown icon, when notes last came in, Check now, and
+// copy), the steps to put go Sovran on the home screen with the crown icon, when notes last came in, Check now, and
 // A new link (the old link stops working at once: for a lost phone, or a link shared by mistake).
 
 import { el, request, clockTime, shortDate } from './ui.js';
@@ -47,12 +47,12 @@ export function phoneDropSection() {
         el('ol', { class: 'phone-drop-steps' },
           el('li', {}, 'Point your phone’s camera at the code and open the link. (iPhone: in Safari. Android: in Chrome.)'),
           el('li', {}, 'iPhone: Share › Add to Home Screen › Add. Android: Install, or ⋮ › Install app.'),
-          el('li', {}, 'Open Sovran Go from your home screen: the crown icon. Choose what you would like to do. To speak, tap the microphone on the keyboard.'))),
+          el('li', {}, 'Open go Sovran from your home screen: the crown icon. Choose what you would like to do. To speak, tap the microphone on the keyboard.'))),
       el('p', { class: 'empty' }, state.problem ?? (state.last_collected_at
-        ? `Last came in ${when(state.last_collected_at)} · ${state.collected} so far. This computer checks about once a minute while Sovran Advisor is open.`
-        : 'Nothing has come in yet. This computer checks about once a minute while Sovran Advisor is open.')),
+        ? `Last came in ${when(state.last_collected_at)} · ${state.collected} so far. This computer checks about once a minute while Sovran Central is open.`
+        : 'Nothing has come in yet. This computer checks about once a minute while Sovran Central is open.')),
       ...(state.saves_chats ? [el('p', { class: 'empty phone-drop-chats' }, `Chats with your AI: ready. When ${state.ai ?? 'Claude'} offers to keep a chat saved and you say yes, it arrives in your Inbox as one item.`)] : []),
-      ...(state.shelf ? [el('p', { class: 'empty phone-drop-reports' }, `My reports: ${state.shelf === 1 ? 'your report is' : `your ${state.shelf} reports are`} on your phone, in Sovran Go, with your highlights and comments. A new link takes them off the old phone.`)] : []),
+      ...(state.shelf ? [el('p', { class: 'empty phone-drop-reports' }, `My reports: ${state.shelf === 1 ? 'your report is' : `your ${state.shelf} reports are`} on your phone, in go Sovran, with your highlights and comments. A new link takes them off the old phone.`)] : []),
       el('div', { class: 'move-actions' }, check, copy, fresh));
   };
 
@@ -67,9 +67,9 @@ export function phoneDropSection() {
     else { draw(state); link(false, body.querySelector('button')); } // made by itself the first time
   }).catch((err) => { status.textContent = err.message; });
 
-  return el('section', { class: 'settings-part', 'aria-label': 'Sovran Go' },
-    el('h2', { class: 'settings-title' }, 'Sovran Go'),
-    el('p', { class: 'empty' }, 'Sovran Advisor on your iPhone or Android phone, with the crown icon: ask your AI, write a journal entry for your Journal, or speak or type a thought anywhere, and it lands in your Inbox here.'),
+  return el('section', { class: 'settings-part', 'aria-label': 'go Sovran' },
+    el('h2', { class: 'settings-title' }, 'go Sovran'),
+    el('p', { class: 'empty' }, 'Sovran Central on your iPhone or Android phone, with the crown icon: ask your AI, write a journal entry for your Journal, or speak or type a thought anywhere, and it lands in your Inbox here.'),
     body, status,
     el('p', { class: 'empty phone-drop-privacy' }, 'Private: your words are scrambled on your phone before they leave it. They wait, unreadable, in the Sovran drop box only until this computer collects them, then they are deleted. The key is only on your phone and this computer; nobody else, Sovran included, can read them.'));
 }

@@ -1,4 +1,4 @@
-// Your assistant proposes, you confirm (Calendar in depth 10). The assistant is tests/fake-claude.js: no real model.
+// Sovran Advisor proposes, you confirm (Calendar in depth 10). The assistant is tests/fake-claude.js: no real model.
 import { test, expect } from './fixtures.js';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -72,7 +72,7 @@ test('Not now makes nothing; even with “Does it alone” a meeting waits for y
   expect((await events(app)).length).toBe(before);
 });
 
-test('switch Calendar in depth off in Settings › Modules and your assistant cannot see or propose calendar events', async ({ page, app }) => {
+test('switch Calendar in depth off in Settings › Modules and Sovran Advisor cannot see or propose calendar events', async ({ page, app }) => {
   await aBusyWeek(app);
   await send(app, 'PATCH', '/api/modules', { id: 'calendar-plus', on: false });
   await ask(page, app, 'Find an hour for the workshop dry run this week');

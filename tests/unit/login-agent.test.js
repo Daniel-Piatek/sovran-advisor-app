@@ -10,7 +10,7 @@ import { startServer } from '../../server.js';
 
 const quiet = { port: 0, readCaptures: false, writeTitles: false, readCalendarsEvery: 0, mailSyncEvery: 0, googleCalendarEvery: 0, googleCalendarSendEvery: 0 };
 const scratchHome = (t) => { const home = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-home-')); t.after(() => fs.rmSync(home, { recursive: true, force: true })); return home; };
-const root = '/Users/ana/Sovran Advisor';
+const root = '/Users/ana/Sovran Central';
 
 // A stand-in for launchctl: remembers what was asked, and what is loaded.
 function fakeLaunchctl() {
@@ -30,9 +30,9 @@ test('the login agent starts the app at log-in, starts it again only after a cra
   const text = agentPlist({ root, node: '/opt/homebrew/bin/node', home: '/Users/ana', pathList: '/opt/homebrew/bin:/usr/bin' });
   assert.match(text, /<key>RunAtLoad<\/key><true\/>/);
   assert.match(text, /<key>KeepAlive<\/key><dict><key>SuccessfulExit<\/key><false\/><\/dict>/);
-  assert.match(text, /<string>\/opt\/homebrew\/bin\/node<\/string><string>\/Users\/ana\/Sovran Advisor\/server.js<\/string>/);
+  assert.match(text, /<string>\/opt\/homebrew\/bin\/node<\/string><string>\/Users\/ana\/Sovran Central\/server.js<\/string>/);
   assert.match(text, /<key>PORT<\/key><string>3300<\/string>/);
-  assert.match(text, /<key>DATA_DIR<\/key><string>\/Users\/ana\/Sovran Advisor\/data<\/string>/);
+  assert.match(text, /<key>DATA_DIR<\/key><string>\/Users\/ana\/Sovran Central\/data<\/string>/);
   assert.match(text, new RegExp(`<key>SOVRAN_AGENT</key><string>${AGENT_LABEL}</string>`));
   assert.match(text, /<key>AssociatedBundleIdentifiers<\/key><string>com.sovran.advisor<\/string>/);
   assert.notEqual(RESTART_CODE, 0);
@@ -44,9 +44,9 @@ test('an agent someone already made for this folder is left alone, and none is a
   fs.mkdirSync(dir, { recursive: true });
   // APP Daniel's own agent and a demo folder are not this app.
   fs.writeFileSync(path.join(dir, 'com.daniel.app.plist'), '<string>/Users/ana/APP Daniel/server.js</string>');
-  fs.writeFileSync(path.join(dir, 'com.other.demo.plist'), '<string>/Users/ana/Sovran Advisor Demo/server.js</string>');
+  fs.writeFileSync(path.join(dir, 'com.other.demo.plist'), '<string>/Users/ana/Sovran Central Demo/server.js</string>');
   assert.equal(otherAgent({ root, home }), null);
-  fs.writeFileSync(path.join(dir, 'com.ana.sovran.plist'), '<string>/Users/ana/Sovran Advisor/server.js</string>');
+  fs.writeFileSync(path.join(dir, 'com.ana.sovran.plist'), '<string>/Users/ana/Sovran Central/server.js</string>');
   assert.equal(otherAgent({ root, home }), 'com.ana.sovran.plist');
   const { run, calls } = fakeLaunchctl();
   assert.deepEqual(await ensureAgent({ root, node: '/n', home, uid: 501, pathList: '/usr/bin', run }), { other: 'com.ana.sovran.plist' });
@@ -72,7 +72,7 @@ test('the agent is written and loaded once; a click with nothing changed touches
 test('if the Mac refuses to load it (switched off in Login Items), the icon is told, so it can start the app as before', async (t) => {
   const home = scratchHome(t);
   const run = async (args) => ({ code: args[0] === 'print' ? 113 : 5, out: 'Bootstrap failed: 5: Input/output error' });
-  await assert.rejects(ensureAgent({ root, node: '/n', home, uid: 501, pathList: '/usr/bin', run }), /would not start Sovran Advisor by itself/);
+  await assert.rejects(ensureAgent({ root, node: '/n', home, uid: 501, pathList: '/usr/bin', run }), /would not start Sovran Central by itself/);
 });
 
 test('the app says in its health which agent started it, and only then', async (t) => {

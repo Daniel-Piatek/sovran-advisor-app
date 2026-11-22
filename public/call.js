@@ -1,5 +1,5 @@
-// A voice call with your assistant (the Voice module, advanced/voice/3-7): a Call button in the chat. The call is a thin
-// front over the chat you already have: it listens, and when you stop talking your words go to your assistant as a normal
+// A voice call with Sovran Advisor (the Voice module, advanced/voice/3-7): a Call button in the chat. The call is a thin
+// front over the chat you already have: it listens, and when you stop talking your words go to Sovran Advisor as a normal
 // chat message (same tools, same permissions); it speaks a short version of the answer, and the full answer is in the chat.
 //   Ears   the free voice model on this computer (Whisper, voice-local.js), or ElevenLabs realtime speech to text when
 //          there is an ElevenLabs key. A pause of under a second ends your turn; speaking while it talks stops it.
@@ -26,7 +26,7 @@ const PRE_ROLL = 3; // and the 0.3 s before it starts is kept
 const MAX_TURN_FRAMES = 600; // a turn is at most a minute
 const BARGE_FRAMES = 4; // 0.4 s of a louder voice while it speaks stops it
 const FILLER_MS = 1000;
-const SLOW_MS = 45_000; // your assistant takes longer than this: it will answer in the chat
+const SLOW_MS = 45_000; // Sovran Advisor takes longer than this: it will answer in the chat
 const VOICE_WAIT_MS = 12_000; // the voice service does not answer in this time: offer to go on in writing
 const STATE_WORDS = { listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking', paused: 'Paused', starting: 'Starting' };
 
@@ -98,7 +98,7 @@ export function callControls(page) {
     dot.dataset.warm = warmth;
     dot.title = { cold: '', warming: 'Warming up', ready: 'Ready' }[warmth];
     button.replaceChildren(icon('phone'), call ? 'End call' : 'Call', ...(call ? [] : [dot]));
-    button.setAttribute('aria-label', call ? 'End call' : `Call your assistant${warmth === 'ready' ? ' (ready)' : warmth === 'warming' ? ' (warming up)' : ''}`);
+    button.setAttribute('aria-label', call ? 'End call' : `Call Sovran Advisor${warmth === 'ready' ? ' (ready)' : warmth === 'warming' ? ' (warming up)' : ''}`);
   }
   function setState(state, who = '') {
     if (!call) return;
@@ -231,7 +231,7 @@ export function callControls(page) {
   let player = null;
   async function speakNow(c, text, { measureFrom = null } = {}) {
     if (!text || c.ended) return;
-    setState('speaking', 'Your assistant');
+    setState('speaking', 'Sovran Advisor');
     showWords(text);
     const res = await within(VOICE_WAIT_MS, fetch('/api/call/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }), 'The voice service is not answering.');
     if (!res.ok) throw Object.assign(new Error((await res.json().catch(() => ({}))).error ?? 'The voice could not speak.'), { status: res.status });
@@ -259,7 +259,7 @@ export function callControls(page) {
   // ---- One turn ----
 
   async function onTurn(c, turn) {
-    setState('thinking', 'Your assistant');
+    setState('thinking', 'Sovran Advisor');
     let heard = '';
     try {
       heard = c.fakeEar ? turn.text : await within(VOICE_WAIT_MS, c.ear.hear(turn), 'The voice service is not answering.');
@@ -291,7 +291,7 @@ export function callControls(page) {
     }
     // Answers from your data first (advanced/voice/6).
     let routed = { source: 'assistant' };
-    try { routed = await request('POST', '/api/call/route', { text: heard, conversation_id: page.conversationId() }); } catch { /* your assistant answers instead */ }
+    try { routed = await request('POST', '/api/call/route', { text: heard, conversation_id: page.conversationId() }); } catch { /* Sovran Advisor answers instead */ }
     if (routed.source === 'data') {
       await page.reload(routed.conversation_id);
       const ms = await say(c, routed.spoken, { measureFrom: endedAt });
@@ -300,13 +300,13 @@ export function callControls(page) {
       return;
     }
     if (offline()) {
-      log('network', 'The network dropped during a call; your assistant could not be asked.');
+      log('network', 'The network dropped during a call; Sovran Advisor could not be asked.');
       await say(c, 'I am offline. I can still read your notes.');
       listen(c);
       return;
     }
     if (page.busy()) { // still answering the turn that went to the chat
-      await say(c, 'Your assistant is still working on the last one. The answer will be in the chat.');
+      await say(c, 'Sovran Advisor is still working on the last one. The answer will be in the chat.');
       listen(c);
       return;
     }
@@ -322,7 +322,7 @@ export function callControls(page) {
     const slowTimer = setTimeout(async () => {
       if (answered || c.ended) return;
       slow = true;
-      log('assistant', 'Your assistant took longer than 45 seconds; the answer went to the chat.');
+      log('assistant', 'Sovran Advisor took longer than 45 seconds; the answer went to the chat.');
       await fillerSaid;
       await say(c, 'That is taking long. I will answer in the chat.');
       listen(c);
@@ -336,7 +336,7 @@ export function callControls(page) {
     await fillerSaid;
     if (!answer || answer.state === 'failed') {
       if (offline()) { log('network', 'The network dropped during a call.'); await say(c, 'I am offline. I can still read your notes.'); }
-      else await say(c, 'Your assistant could not answer. It says why in the chat.');
+      else await say(c, 'Sovran Advisor could not answer. It says why in the chat.');
       listen(c);
       return;
     }

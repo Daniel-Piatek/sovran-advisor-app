@@ -9,7 +9,7 @@ test('Settings › Updates: the box shows how to get the newest version', async 
   await expect(part.getByRole('heading', { name: 'Updates' })).toBeVisible();
   // A copy that can update itself offers Check for updates; one that can't (this test copy may be on its own branch)
   // offers the one line to paste into Claude Code.
-  await expect(part.getByRole('button', { name: 'Check for updates' }).or(part.getByText('Update Sovran Advisor by following'))).toBeVisible();
+  await expect(part.getByRole('button', { name: 'Check for updates' }).or(part.getByText('Update Sovran Central by following'))).toBeVisible();
   const status = await fetch(`${app.url}/api/update`).then((r) => r.json());
   expect(status.update_line).toContain('INSTALL.md');
   expect(status.progress).toBeNull();

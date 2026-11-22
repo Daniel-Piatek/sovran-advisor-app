@@ -56,7 +56,7 @@ test('a save that starts from the latest version is plain; so is one without a v
 });
 
 test('both changed the same line: your words stay, a clash is recorded, the assistant’s whole text is kept; Keep yours, Take the assistant’s and Keep both are each a new version', () => {
-  for (const [choice, expected, label] of [['mine', 'Three parts\ntwo quiet mornings, no calls\nFollow up', 'Kept yours'], ['theirs', 'Three parts\nmeetings only after lunch\nFollow up', 'Took the assistant’s side'], ['both', 'Three parts\ntwo quiet mornings, no calls\nmeetings only after lunch\nFollow up', 'Kept both']]) {
+  for (const [choice, expected, label] of [['mine', 'Three parts\ntwo quiet mornings, no calls\nFollow up', 'Kept yours'], ['theirs', 'Three parts\nmeetings only after lunch\nFollow up', 'Took Sovran Advisor’s side'], ['both', 'Three parts\ntwo quiet mornings, no calls\nmeetings only after lunch\nFollow up', 'Kept both']]) {
     const { db, note, base } = setUp();
     updateNote(db, note.id, { body: 'Three parts\nmeetings only after lunch\nFollow up', author: 'assistant' });
     const result = saveWithMerge(db, note.id, { body: 'Three parts\ntwo quiet mornings, no calls\nFollow up', base });
