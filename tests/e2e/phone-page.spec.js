@@ -66,13 +66,15 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
   await expect(page.getByRole('radio')).toHaveText(['From Me', 'From Other', 'Journal']);
   await expect(page.getByRole('radio', { name: 'From Me' })).toBeChecked();
   expect(new Set(await page.getByRole('radio').evaluateAll((all) => all.map((c) => Math.round(c.getBoundingClientRect().top)))).size).toBe(1);
-  await expect(page.locator('#where')).toHaveText('Goes to your Inbox');
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Inner World');
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
   await expect(page.locator('.choice:visible strong')).toHaveText(['Ask my Sovran Advisor', 'My Reports']);
   const ask = page.getByRole('link', { name: /Ask my Sovran Advisor/ });
   await expect(ask).toHaveAttribute('href', 'https://claude.ai/new');
   await expect(ask).toHaveAttribute('target', '_blank'); // a real tapped link: the phone hands it to the Claude app
   await expect(ask).toContainText('Ask for insight from your reports, your charts and the Sovran Library');
+  // Its disc is flipped: charcoal, with the face drawn in the brand's Gold.
+  expect(await ask.locator('.disc').evaluate((d) => [getComputedStyle(d.querySelector('circle')).fill, getComputedStyle(d.querySelector('g')).stroke])).toEqual(['rgb(48, 45, 45)', 'rgb(217, 193, 75)']);
   // Nothing is wider than the screen, every choice is a full finger tall, and so are the kinds and Save.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   for (const box of await page.locator('.choice:visible').evaluateAll((all) => all.map((c) => c.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(56);
@@ -84,7 +86,7 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
 test('From Me and From Other are sealed and kept for the Inbox; Continue goes back to the first screen', async ({ browser }, testInfo) => {
   const { page, context, dropped, errors } = await phone(browser, testInfo);
   await page.locator('#text').fill('Ask Sam about the venue');
-  await expect(page.locator('#where')).toHaveText('Goes to your Inbox');
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Inner World');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Kept' })).toBeVisible();
   await expect(page.locator('#done-tag')).toHaveText('From Me');
@@ -95,6 +97,8 @@ test('From Me and From Other are sealed and kept for the Inbox; Continue goes ba
   await page.getByRole('radio', { name: 'From Other' }).click();
   await expect(page.getByRole('radio', { name: 'From Other' })).toBeChecked();
   await expect(page.locator('#text')).toBeFocused();
+  await expect(page.locator('#where')).toHaveText('Goes to your Inbox – Outer World');
+  expect(await page.locator('#where').evaluate((w) => w.getClientRects().length)).toBe(1); // on one line, beside Save
   await page.locator('#text').fill('Ana: “call me back”');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.locator('#done-tag')).toHaveText('From Other');
@@ -207,7 +211,7 @@ test('the first visit shows how to add go Sovran to the home screen; without a l
   expect([manifest.name, manifest.short_name]).toEqual(['go Sovran', 'go Sovran']);
 });
 
-test('in the dark the boxes stay readable and Save turns gold', async ({ browser }, testInfo) => {
+test('in the dark the boxes stay readable and Save stays red', async ({ browser }, testInfo) => {
   const { page, context } = await phone(browser, testInfo);
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.locator('#text').fill('Night thought');
@@ -216,7 +220,7 @@ test('in the dark the boxes stay readable and Save turns gold', async ({ browser
     words: getComputedStyle(document.getElementById('text')).color, save: getComputedStyle(document.getElementById('keep')).backgroundColor }));
   expect(lum(seen.page)).toBeLessThan(60);
   expect(lum(seen.words) - lum(seen.card)).toBeGreaterThan(150);
-  expect(seen.save).toBe('rgb(217, 193, 75)');
+  expect(seen.save).toBe('rgb(199, 31, 66)'); // red in the dark too, the owner's call (22 Nov 2026)
   await page.emulateMedia({ colorScheme: 'light' });
   expect(await page.evaluate(() => getComputedStyle(document.getElementById('keep')).backgroundColor)).toBe('rgb(199, 31, 66)'); // red, the owner's call
   await context.close();

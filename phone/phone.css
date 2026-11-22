@@ -23,7 +23,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1f1d1d; --text: #eceaea; --muted: #aaa6a6; --faint: #8c8888; --border: #413d3d; --turquoise-text: #2fc5c9;
-    --card: #2a2727; --card-line: #3a3636; --card-edge: #3a3636; --chip: #363232; --save: #d9c14b; --on-save: #302d2d; --soft: #363232;
+    --card: #2a2727; --card-line: #3a3636; --card-edge: #3a3636; --chip: #363232; --save: #c71f42; --on-save: #fbfbfb; --soft: #363232;
   }
 }
 * { box-sizing: border-box; }
@@ -92,10 +92,13 @@ body { min-height: 100dvh; display: flex; flex-direction: column; }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile { flex-direction: column; align-items: flex-start; gap: 14px; }
 .pair:has(#group-circle[hidden]) .tile { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; }
-.tile-picture { width: 40px; height: 40px; flex: none; border-radius: 9px; object-fit: contain; display: block; }
+/* The owner's call (22 Nov 2026): the tiles' pictures are large, so My Reports and Group Circle are tall boxes. */
+.tile-picture { width: 76px; height: 76px; flex: none; border-radius: 14px; object-fit: contain; display: block; }
 .disc { width: 36px; height: 36px; flex: none; display: block; }
 .disc g { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--charcoal); }
-.disc-ask circle:first-child { fill: var(--gold); }
+/* The Advisor's disc is flipped (the owner, 22 Nov 2026): a charcoal disc with the face drawn in Gold, so it reads gold, not yellow. */
+.disc-ask circle:first-child { fill: var(--charcoal); }
+.disc-ask g { stroke: var(--gold); }
 .disc-journal circle:first-child { fill: var(--yellow); }
 .disc-inner circle:first-child { fill: var(--violet); }
 .disc-inner g { stroke: var(--white); }
@@ -236,7 +239,9 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .choice-group .choice-words span { color: #e3d6f6; }
 .disc-group circle:first-child { fill: var(--white); }
 .disc-group g { stroke: var(--violet); }
-.g-count { position: absolute; top: 12px; right: 12px; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--white); color: var(--violet); font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; text-align: center; }
+.tile .disc-group { width: 76px; height: 76px; }
+/* What is new, in Crimson so it is seen (the owner, 22 Nov 2026). */
+.g-count { position: absolute; top: 12px; right: 12px; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; text-align: center; }
 .group { display: flex; flex-direction: column; gap: 14px; }
 .g-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px; border-radius: 999px; background: var(--soft); }
 .g-tabs button { font-family: var(--ui); font-weight: 700; font-size: 0.875rem; min-height: 40px; padding: 9px; border-radius: 999px; border: 0; background: none; color: var(--muted); cursor: pointer; }
