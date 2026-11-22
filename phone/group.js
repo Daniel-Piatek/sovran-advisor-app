@@ -1,4 +1,4 @@
-// Group Circle on Sovran Go (2026-11-22, the owner's wish): the student's Quest group on their phone, the same as on
+// Group Circle on go Sovran (2026-11-22, the owner's wish): the student's Quest group on their phone, the same as on
 // their computer. Read Announcements and the Circle, like, tick homework done, comment and reply, and post, with a
 // photo from the phone's camera.
 //
@@ -95,7 +95,8 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       const waiting = newer(latest.news_new_ids, seen.news) + newer(latest.feed_new_ids, seen.feed);
       $('group-count').textContent = waiting ? String(waiting) : '';
       $('group-count').hidden = !waiting;
-      $('group-line').textContent = latest.me?.group_title ? `${latest.me.group_title}: Announcements and the Circle` : 'Announcements and the Circle';
+      // One short line on the tile: what is new, else the group's own name.
+      $('group-line').textContent = waiting ? `${waiting} new` : (latest.me?.group_title || 'Announcements and the Circle');
     } catch { $('group-count').hidden = true; }
   }
 

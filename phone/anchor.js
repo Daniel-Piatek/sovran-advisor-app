@@ -1,4 +1,4 @@
-// Finding a highlight's words again in a report's text (My reports on Sovran Go). The same way as the computer's
+// Finding a highlight's words again in a report's text (My reports on go Sovran). The same way as the computer's
 // Reports page (public/report-marks.js: locate, textIndex, offsetOf, wrap and the choosing of whole words), so a
 // highlight made on either sits on the same words on both: a unit test keeps the two alike.
 
