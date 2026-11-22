@@ -81,6 +81,7 @@ body { font-family: var(--body); font-size: 16px; line-height: 1.44; color: #302
 
 .filmbox { margin: 0; box-shadow: none; border: 1px solid #D4D1D1; }
 html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent; }
+.gf-snd { font-size: .78rem; padding: 4px 10px; white-space: nowrap; }
 .gf-back { text-decoration: none; background: #C71F42; border-color: #C71F42; color: #FFFFFF; }
 </style>
 <script>
@@ -109,7 +110,7 @@ html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent;
   </div></div>
   <div class="gf-below">
     <div class="gf-now"><button class="gf-pp sm" type="button" id="gf-prev" aria-label="Previous chapter" title="Previous chapter">⏮</button><button class="gf-pp" type="button" id="gf-pp" aria-label="Pause">❚❚</button><button class="gf-pp sm" type="button" id="gf-next" aria-label="Next chapter" title="Next chapter">⏭</button>
-      <div class="gf-bar" aria-hidden="true"><span id="gf-bar"></span></div><span class="gf-say" id="gf-ppl">Pause</span><span class="gf-hint">Tap the phone screen or press the space bar to pause · ← → for chapters</span></div>
+      <div class="gf-bar" aria-hidden="true"><span id="gf-bar"></span></div><span class="gf-say" id="gf-ppl">Pause</span><button class="gf-btn gf-snd" type="button" id="gf-snd" aria-pressed="false" aria-label="Turn the voice on">🔊 Sound on</button><span class="gf-hint">Tap the phone screen or press the space bar to pause · ← → for chapters</span></div>
     <div class="gf-ctrl" id="gf-scenes" role="group" aria-label="Chapters"></div>
     <div class="gf-ctrl gf-ends"><button class="gf-btn" type="button" id="gf-again">Start Again</button><a class="gf-btn gf-back" id="gf-back" href="/tour" target="_top">← Back to All Videos</a></div></div>
 </div></div>
@@ -128,6 +129,27 @@ const sleep = (ms, t = token) => new Promise((resolve, reject) => {
   setTimeout(tick, 0);
 });
 const sleepRaw = (ms) => sleep(ms / SLOW); // reading time is not slowed
+const VO = {"clips": {"scene:This Is Sovran Go": "/tour/voice/sovran-go/g01-00.mp3", "Sovran Go on your phone. Choose what you would like to do.": "/tour/voice/sovran-go/g01-01.mp3", "scene:Ask My AI": "/tour/voice/sovran-go/g02-00.mp3", "Tap Ask my AI": "/tour/voice/sovran-go/g02-01.mp3", "Claude opens. Ask your question.": "/tour/voice/sovran-go/g02-02.mp3", "Claude asks if you would like the chat kept. Answer yes.": "/tour/voice/sovran-go/g02-03.mp3", "The whole chat is now in your Inbox on your computer.": "/tour/voice/sovran-go/g02-04.mp3", "scene:Journal Entry": "/tour/voice/sovran-go/g03-00.mp3", "Tap Journal entry": "/tour/voice/sovran-go/g03-01.mp3", "Write your words, or speak them": "/tour/voice/sovran-go/g03-02.mp3", "Tap Add to my Journal": "/tour/voice/sovran-go/g03-03.mp3", "It is in your Journal, on today.": "/tour/voice/sovran-go/g03-04.mp3", "scene:My Own Thought": "/tour/voice/sovran-go/g04-00.mp3", "Tap My own thought": "/tour/voice/sovran-go/g04-01.mp3", "Write the thought": "/tour/voice/sovran-go/g04-02.mp3", "Tap Keep in Inbox": "/tour/voice/sovran-go/g04-03.mp3", "It waits in your Inbox, ready to sort.": "/tour/voice/sovran-go/g04-04.mp3", "scene:My Reports": "/tour/voice/sovran-go/g05-00.mp3", "Tap My reports": "/tour/voice/sovran-go/g05-01.mp3", "Tap the report you want to read": "/tour/voice/sovran-go/g05-02.mp3", "Scroll down to read": "/tour/voice/sovran-go/g05-03.mp3", "Press and hold on some words to select them": "/tour/voice/sovran-go/g05-04.mp3", "A bar shows. Tap Highlight.": "/tour/voice/sovran-go/g05-05.mp3", "Highlighted. Comment works the same way.": "/tour/voice/sovran-go/g05-06.mp3", "scene:Ask About Words in a Report": "/tour/voice/sovran-go/g06-00.mp3", "Select the words you want to ask about": "/tour/voice/sovran-go/g06-01.mp3", "The words you highlighted are in Claude’s box. Add your question.": "/tour/voice/sovran-go/g06-02.mp3", "Tap the arrow to send": "/tour/voice/sovran-go/g06-03.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"};
+let sound = false, intro = null;
+const audio = new Audio(); audio.preload = 'auto';
+function say(key, t = token) {
+  const src = sound && VO.clips[key];
+  if (!src) return Promise.resolve();
+  audio.pause(); audio.src = src;
+  return new Promise((resolve, reject) => {
+    let done = false;
+    audio.onended = audio.onerror = () => { done = true; };
+    const tick = () => {
+      if (t !== token) { audio.pause(); return reject(new Stop()); }
+      if (!sound) { audio.pause(); return resolve(); }
+      if (paused) { if (!audio.paused) audio.pause(); }
+      else if (audio.paused && !done) audio.play().catch(() => { done = true; });
+      if (done) return resolve();
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
 const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const frame = (n) => { img.src = F[n]; claude.hidden = true; };
 const WORDS = 'From my Sovran Pattern Report: “There is a steadiness in you that others lean on.”\n\nMy question: ';
@@ -141,10 +163,11 @@ async function tap(p) {
 const hideDot = () => dot.classList.remove('show');
 // The crimson box: shown still while it is read, then it moves aside while the step happens.
 async function step(text, y, action, shift = -1) {
+  if (intro) { const k = intro; intro = null; tip.hidden = true; await say(k); await sleepRaw(250); }
   tip.textContent = text; tip.style.transition = 'none'; tip.style.transform = 'none'; tip.style.opacity = '0'; tip.style.top = y * 100 + '%'; tip.hidden = false;
   tip.getBoundingClientRect(); tip.style.transition = ''; tip.style.opacity = '1';
   const words = text.split(/\s+/).length;
-  await sleepRaw(Math.min(3000, Math.max(1500, 600 + words * 170)));
+  await Promise.all([sleepRaw(Math.min(3000, Math.max(1500, 600 + words * 170))), say(text)]);
   if (action) { tip.style.transform = `translateY(${shift * 22}px)`; await sleepRaw(500); await action(); }
   await sleep(500);
 }
@@ -233,7 +256,7 @@ function setPaused(v) { paused = v; pp.textContent = v ? '▶' : '❚❚'; $('gf
 async function loop(start) {
   const t = ++token;
   for (let i = start; ; i = (i + 1) % scenes.length) {
-    tip.hidden = true; hideDot(); show(i);
+    tip.hidden = true; hideDot(); show(i); audio.pause(); intro = 'scene:' + scenes[i].t;
     try { await scenes[i].run(); await sleep(700, t); } catch (e) { if (e instanceof Stop) return; console.error(e); return; }
     if (t !== token) return;
     bar.style.width = ((i + 1) / scenes.length * 100) + '%';
@@ -257,6 +280,11 @@ $('gf-back').addEventListener('click', (e) => {
   if (document.documentElement.classList.contains('embedded')) { e.preventDefault(); parent.postMessage({ film: 'back' }, '*'); return; }
   try { window.parent.document.dispatchEvent(new CustomEvent('app-navigate', { detail: '/tour' })); e.preventDefault(); } catch { /* the link goes there itself */ }
 });
+const snd = $('gf-snd');
+function setSound(v) { sound = v; snd.setAttribute('aria-pressed', String(v)); snd.textContent = v ? '🔇 Mute' : '🔊 Sound on'; snd.setAttribute('aria-label', v ? 'Mute the voice' : 'Turn the voice on'); if (!v) audio.pause(); }
+snd.addEventListener('click', () => setSound(!sound));
+// Sound starts on where the browser lets it (inside the app it does); otherwise Sound on is one click.
+audio.src = VO.silent; audio.play().then(() => setSound(true)).catch(() => {});
 setTimeout(() => go(0), 800);
 })();
 </script>

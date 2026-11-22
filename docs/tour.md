@@ -13,4 +13,4 @@ The Tour is short videos of Sovran Advisor, narrated. Open it any time from Tour
 
 ## How it works
 
-The films are pages in `public/tour/` (`basics.html`, `extras.html`, `group.html`, and `sovran-go.html` with its phone pictures in `sovran-go/`; that one has no voice), shown in a frame on the Tour page; the voice is mp3 files in `public/tour/voice/`. The page itself is `public/tour.js`. Switch it on calls the same `/api/modules` switch Settings uses, so nothing you made is touched either way.
+The films are pages in `public/tour/` (`basics.html`, `extras.html`, `group.html`, and `sovran-go.html` with its phone pictures in `sovran-go/`), shown in a frame on the Tour page; the voice is mp3 files in `public/tour/voice/`. The page itself is `public/tour.js`. Switch it on calls the same `/api/modules` switch Settings uses, so nothing you made is touched either way.
