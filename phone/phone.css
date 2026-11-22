@@ -23,7 +23,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1f1d1d; --text: #eceaea; --muted: #aaa6a6; --faint: #8c8888; --border: #413d3d; --turquoise-text: #2fc5c9;
-    --card: #2a2727; --card-line: #3a3636; --card-edge: #3a3636; --chip: #363232; --save: #d9c14b; --on-save: #302d2d; --soft: #363232;
+    --card: #2a2727; --card-line: #3a3636; --card-edge: #3a3636; --chip: #363232; --save: #c71f42; --on-save: #fbfbfb; --soft: #363232;
   }
 }
 * { box-sizing: border-box; }
