@@ -88,6 +88,12 @@ test('Group Circle on the phone: homework ticked, a post, a comment and a reply,
     await expect(choice).toBeVisible();
     await expect(page.locator('#group-count')).toHaveText('2');
     await expect(page.locator('#group-line')).toHaveText('2 new'); // one short line on the tile
+    await expect(page.locator('#group-count')).toHaveCSS('background-color', 'rgb(199, 31, 66)'); // red, so it is seen
+    // Both tiles carry a large picture and are the same tall box, side by side.
+    const tiles = await page.locator('.tile').evaluateAll((all) => all.map((t) => { const r = t.getBoundingClientRect(); const pic = t.querySelector('.tile-picture, .disc').getBoundingClientRect(); return [Math.round(r.top), Math.round(r.height), Math.round(pic.width)]; }));
+    expect(tiles[0]).toEqual(tiles[1]);
+    expect(tiles[0][2]).toBe(76);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await choice.click();
     await expect(page.getByRole('heading', { name: 'Group Circle' })).toBeVisible();
     await expect(page.getByText('Week 2: meet your Tyrant.')).toBeVisible();
