@@ -11,8 +11,11 @@ import { el, icon } from './ui.js';
 import { app, screen, navigate } from './shell.js';
 import { moduleOn, switchModule } from './modules.js';
 
-// The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life.
+// The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life. Group Circle (2026-11-22) comes
+// first: it is on in a new install, and has its own film page (group.html), which Daniel can also share as a web page.
 const EXTRAS = [
+  { id: 'group', module: 'group', title: 'Group Circle', kind: 'people', open: '/group', openLabel: 'Open Group Circle', src: '/tour/group.html',
+    text: 'Your Quest group’s own space: announcements from Daniel, and a Circle to share with each other.' },
   { id: 'phone', module: 'phone-drop', title: 'Phone Capture', kind: 'people', open: '/settings', openLabel: 'Open Settings',
     text: 'Sovran Go on your phone. Speak or type, and it lands in your Inbox or your Journal.' },
   { id: 'tasks', module: 'tasks', title: 'Tasks', kind: 'tasks', open: '/tasks', openLabel: 'Open Tasks',
@@ -28,7 +31,7 @@ const EXTRAS = [
 ];
 
 const filmOf = (id) => (id === 'basics' ? { id, title: 'The Basics', src: '/tour/basics.html' }
-  : EXTRAS.find((x) => x.id === id) && { ...EXTRAS.find((x) => x.id === id), src: `/tour/extras.html#${id}` });
+  : EXTRAS.find((x) => x.id === id) && { ...EXTRAS.find((x) => x.id === id), src: EXTRAS.find((x) => x.id === id).src ?? `/tour/extras.html#${id}` });
 
 // A still of the app, drawn: the play button sits on it.
 const still = (caption) => el('div', { class: 'tour-still', 'aria-hidden': 'true' },
@@ -70,7 +73,7 @@ function showList() {
       el('b', {}, 'Your Sovran Library'),
       ' · paste the key you were sent into Settings › Sovran Library, and your assistant can read the teaching notes. ',
       el('a', { class: 'button tour-libline-go', href: '/settings#sovran-library' }, 'Paste your key →')),
-    el('h2', { class: 'tour-label tour-extras-label' }, 'More you can switch on · one short video each'),
+    el('h2', { class: 'tour-label tour-extras-label' }, 'More in your app · one short video each'),
     el('div', { class: 'tour-cards' }, ...EXTRAS.map((extra) => el('article', { class: 'tour-card', 'data-film': extra.id, style: `--tour-kind: var(--kind-${extra.kind})` },
       el('h3', { class: 'tour-card-title' }, extra.title),
       el('p', {}, extra.text),

@@ -5,6 +5,8 @@ paths: ^/group(/|$)
 ---
 Group Circle is your Quest group's shared space. Daniel posts homework, reminders and news in **Announcements**, and everyone in your group shares in the **Circle**. Only your own group sees it: someone in another Quest never sees your posts, and you never see theirs.
 
+**Watch the film:** [Group Circle in the Tour](/tour?film=group) shows all of this in about three minutes.
+
 ## How you use it
 
 - Open **Group Circle** in the sidebar. A red number beside it says how many new posts wait. At the top of the page are two tabs, **Announcements** and **Circle**, each with its own count.
