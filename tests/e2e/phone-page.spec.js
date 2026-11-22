@@ -60,6 +60,16 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
   await expect(logo).toBeVisible();
   expect(await logo.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await logo.evaluate((img) => { const r = img.getBoundingClientRect(); return Math.abs((r.left + r.right) / 2 - innerWidth / 2); })).toBeLessThan(2);
+  // Under it, "Living your Sovran life" in a gold-outlined pill, narrower than the logo and close under it.
+  const line = page.locator('.band-line');
+  await expect(line).toHaveText('Living your Sovran life');
+  await expect(line).toHaveCSS('border-top-color', 'rgb(217, 193, 75)');
+  await expect(line).toHaveCSS('color', 'rgb(48, 45, 45)');
+  const [logoBox, lineBox] = [await logo.boundingBox(), await line.boundingBox()];
+  expect(lineBox.x).toBeGreaterThan(logoBox.x);
+  expect(lineBox.x + lineBox.width).toBeLessThan(logoBox.x + logoBox.width);
+  expect(lineBox.y - (logoBox.y + logoBox.height)).toBeLessThan(6);
+  expect(await line.evaluate((l) => l.scrollWidth <= l.clientWidth)).toBe(true); // the words fit inside the pill
   await expect(page.getByRole('heading', { name: 'What would you like to do?' })).toBeAttached();
   // The writing box comes first: the three kinds on one row, From Me chosen, and Save waits for words.
   await expect(page.locator('#text')).toHaveAttribute('placeholder', 'What’s on your mind?');
