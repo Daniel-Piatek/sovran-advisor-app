@@ -7,6 +7,7 @@
 
 import { el, request } from './ui.js';
 import { navigate } from './shell.js';
+import { sayUpdateAlert } from './alerts.js';
 
 const LOOK_EVERY_MS = 6 * 60 * 60 * 1000; // the server looks once a day; the page asks it a few times a day
 const SEEN_KEY = 'update-nudge:seen';
@@ -14,6 +15,7 @@ const SEEN_KEY = 'update-nudge:seen';
 const badge = el('span', { class: 'update-ready sidebar-update', hidden: true, title: 'A new version is ready: Settings › Updates' }, 'Update');
 let box = null;
 let current = '';
+let alerted = '';
 
 const seen = () => { try { return localStorage.getItem(SEEN_KEY) ?? ''; } catch { return ''; } };
 const markSeen = (key) => { try { localStorage.setItem(SEEN_KEY, key); } catch { /* the notice may show again; no harm */ } };
@@ -57,7 +59,10 @@ export async function lookForUpdate() {
   badge.hidden = !ready;
   if (!ready) { hideNotice(); current = ''; return; }
   current = `${s.check.behind}:${s.check.news?.[0] ?? ''}`;
-  if (seen() !== current) showNotice(current);
+  if (seen() !== current) {
+    showNotice(current);
+    if (box && alerted !== current) { alerted = current; sayUpdateAlert(); } // the computer's own alert too, once a version
+  }
 }
 
 // On Settings the notice is not needed: Settings › Updates says it there.

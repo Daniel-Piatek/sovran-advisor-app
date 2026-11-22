@@ -5,6 +5,7 @@
 // changed and every step it took, asked for or was refused.
 
 import { tagsSection } from './tags-settings.js';
+import { alertsSection } from './alerts-settings.js';
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
 import { app, screen, loadCourse, onLeave } from './shell.js';
 import { foldSettings } from './settings-sections.js';
@@ -413,6 +414,13 @@ export async function showSettings() {
     if (moduleOn('phone-drop') && !there) phoneDropPlace.replaceChildren(phoneDropSection());
     else if (!moduleOn('phone-drop') && there) phoneDropPlace.replaceChildren();
   };
+  // Alerts (module group): which alerts this computer shows, there while Group Circle is on.
+  const alertsPlace = el('div', {});
+  const drawAlertsPart = () => {
+    const there = alertsPlace.childElementCount > 0;
+    if (moduleOn('group') && !there) alertsPlace.replaceChildren(alertsSection());
+    else if (!moduleOn('group') && there) alertsPlace.replaceChildren();
+  };
   // Tags (module tags): your tags and groups, there while it is on.
   const tagsPlace = el('div', {});
   const drawTagsPart = () => {
@@ -430,7 +438,7 @@ export async function showSettings() {
         ...[[true, 'On'], [false, 'Off']].map(([on, label]) => el('button', {
           type: 'button', class: 'switch-button switch-button-text', 'aria-pressed': String(m.on === on),
           onclick: async () => {
-            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); drawPhoneDrop(); drawTagsPart(); } catch (err) { moduleProblem.textContent = err.message; }
+            try { await switchModule(m.id, on); moduleProblem.textContent = ''; drawModules(); drawJobs(); drawDictation(); drawGoogle(); drawCapture(); drawImport(); drawEverywhere(); drawPhoneDrop(); drawTagsPart(); drawAlertsPart(); } catch (err) { moduleProblem.textContent = err.message; }
           },
         }, label))))));
   }
@@ -452,6 +460,7 @@ export async function showSettings() {
   drawEverywhere();
   drawPhoneDrop();
   drawTagsPart();
+  drawAlertsPart();
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Settings')),
     aiSection(),
@@ -478,6 +487,7 @@ export async function showSettings() {
     capturePlace,
     phoneDropPlace,
     everywherePlace,
+    alertsPlace,
     tagsPlace,
     importPlace,
     googlePlace,

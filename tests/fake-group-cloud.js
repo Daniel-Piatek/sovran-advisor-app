@@ -97,6 +97,35 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       case 'flags_clear': { const p = post(msg.post); p?.flags.filter((f) => (f.comment ?? null) === (msg.comment ?? null)).forEach((f) => { f.resolved = true; }); return json(200, { cleared: true }); }
       case 'groups': return json(200, { groups: state.groups.map((g) => ({ ...g, members: Object.values(students).filter((m) => m.group === g.code)
         .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
+      // Alerts (cloud/group-alerts.sql): what is new since a moment, in the same shape, with the main rules
+      case 'alerts': {
+        const since = Math.max(msg.since ? Date.parse(msg.since) : Date.now(), Date.now() - 7 * 86_400_000);
+        const after = (at) => at && Date.parse(at) > since;
+        const cut = (t) => String(t ?? '').slice(0, 160);
+        const items = [];
+        if (s.guide) {
+          for (const r of state.tells) if (after(r.created_at)) items.push({ kind: 'report', report: r.id, report_kind: r.kind, place: r.place, author: r.student, text: cut(r.why), at: r.created_at });
+          for (const p of state.posts) if (!p.deleted) {
+            for (const f of p.flags) if (!f.resolved && after(f.at)) items.push({ kind: 'flag', post: p.id, comment: f.comment ?? null, tab: p.tab, author: p.student ? nameOf(p.student) : 'Daniel', text: cut(p.body), at: f.at });
+            if (!p.student) for (const c of p.comments) if (c.student && !c.deleted && after(c.created_at)) items.push({ kind: 'reply', post: p.id, comment: c.id, tab: p.tab, author: nameOf(c.student), text: cut(c.body), at: c.created_at });
+          }
+        } else {
+          const today = new Date(); const day = (n) => new Date(today.getTime() + n * 86_400_000).toISOString().slice(0, 10);
+          for (const tab of ['news', 'feed']) for (const p of live(tab, s)) {
+            if (after(p.created_at) && p.student !== s.id) items.push({ kind: tab, post: p.id, tab, post_kind: p.kind, due_on: p.due_on ?? null, author: p.student ? nameOf(p.student) : 'Daniel', text: cut(p.body), pictures: p.pictures.length, at: p.created_at });
+            for (const c of p.comments) {
+              if (c.deleted || c.hidden || c.student === s.id || !after(c.created_at)) continue;
+              const inThread = c.reply_to && p.comments.some((m) => m.student === s.id && !m.deleted && (m.id === c.reply_to || m.reply_to === c.reply_to));
+              if (p.student === s.id || inThread) items.push({ kind: 'reply', post: p.id, comment: c.id, tab, author: c.student ? nameOf(c.student) : 'Daniel', text: cut(c.body), at: c.created_at, on_mine: p.student === s.id });
+            }
+            if (tab === 'news' && p.kind === 'homework' && p.due_on >= day(-1) && p.due_on <= day(2) && !p.done.includes(s.id))
+              items.push({ kind: 'due', post: p.id, tab: 'news', post_kind: p.kind, due_on: p.due_on, author: 'Daniel', text: cut(p.body), at: p.created_at });
+          }
+          for (const r of state.tells) if (r.student_id === s.id && r.status === 'done' && after(r.status_at)) items.push({ kind: 'answer', report: r.id, report_kind: r.kind, place: r.place, text: cut(r.why), at: r.status_at });
+        }
+        items.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+        return json(200, { now: new Date().toISOString(), items: items.slice(0, 30) });
+      }
       // Tell Daniel (cloud/tell-daniel.sql)
       case 'tell': {
         if (s.guide) return err('unknown', 401);

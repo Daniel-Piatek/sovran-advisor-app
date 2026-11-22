@@ -22,6 +22,7 @@ const HINTS = {
   'Phone, backups and moving': 'Your daily backups, and moving to a new computer.',
   Import: 'Bring in notes and contacts you already have.',
   Tags: 'Rename, join, group and pin your tags.',
+  Alerts: 'What tells you when something new happens in Group Circle.',
   Google: 'Your Google sign-in, and what the app may use there.',
   'Google Calendar': 'Your Google events on your days.',
   Dictation: 'Speak instead of typing.',

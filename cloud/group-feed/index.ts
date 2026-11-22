@@ -7,6 +7,7 @@
 // POST {action, ...}            JSON in, JSON out (actions below)
 // POST {action:'tell', kind, why, place, context, version}; {action:'tells', status?, before?}; {action:'tell_status', id, status, note?}
 //      Tell Daniel (cloud/tell-daniel.sql)
+// POST {action:'alerts', since?}  what is new for this key since that moment: {now, items} (cloud/group-alerts.sql)
 // POST {action:'picture_put', jpeg: <base64>}   a picture the app already shrank; returns {path}
 // GET  .../group-feed/picture/<group>/<name>.jpg   the picture's bytes, if the key holder may see it
 // Pictures live in the private storage bucket group-feed, reached with the service role key the function is given.
@@ -44,6 +45,7 @@ async function sha256Hex(text: string) {
 }
 const id = (x: unknown) => (Number.isSafeInteger(x) && (x as number) > 0 ? (x as number) : null);
 const text = (x: unknown, max: number) => (typeof x === 'string' ? x.slice(0, max) : '');
+const moment = (x: unknown) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}T[0-9:.]+(Z|[+-]\d{2}:?\d{2})$/.test(x) && x.length <= 40 ? x : null);
 const day = (x: unknown) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : null);
 const paths = (x: unknown) => (Array.isArray(x) ? x.filter((p) => typeof p === 'string' && PATH.test(p)).slice(0, 4) : []);
 const name22 = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, 22);
@@ -82,6 +84,8 @@ Deno.serve(async (req) => {
     const one = async (q: Promise<any>) => answer((await q)[0].r);
     switch (msg.action) {
       case 'latest': return one(sql`SELECT group_feed.latest(${h}) AS r`);
+      // what is new for this key since a moment (cloud/group-alerts.sql), for the app's alerts
+      case 'alerts': return one(sql`SELECT group_feed.alerts(${h}, ${moment(msg.since)}::timestamptz) AS r`);
       case 'read': return one(sql`SELECT group_feed.read(${h}, ${text(msg.tab, 8)}, ${text(msg.group, 20) || null}, ${id(msg.before)}, ${id(msg.limit) ?? 20}) AS r`);
       case 'set_name': return one(sql`SELECT group_feed.set_name(${h}, ${text(msg.name, 80)}) AS r`);
       case 'post': return one(sql`SELECT group_feed.post(${h}, ${text(msg.tab, 8)}, ${text(msg.kind, 20) || null}, ${text(msg.group, 20) || null},

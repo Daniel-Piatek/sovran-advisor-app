@@ -237,10 +237,22 @@ function drawTab(top, state, tab, groups = []) {
       : 'Nothing here yet. Be the first to share something with your group.')]));
     oldest = page.posts.length ? page.posts[page.posts.length - 1].id : oldest;
     more.hidden = page.posts.length < 20;
-    if (!older) refreshGroupCount();
+    if (!older) { refreshGroupCount(); showAsked(list); }
   }
   more.onclick = () => load(true);
   load();
+}
+
+// An alert opens /group/<tab>#post-<id>: that post comes into view and glows for a moment.
+function showAsked(list) {
+  const asked = location.hash.match(/^#post-(\d+)$/);
+  if (!asked) return;
+  const card = list.querySelector(`[data-post="${asked[1]}"]`);
+  if (!card) return;
+  card.classList.add('group-post-asked');
+  card.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  setTimeout(() => card.classList.remove('group-post-asked'), 2400);
+  history.replaceState(history.state, '', location.pathname);
 }
 
 // ---- Writing a post (the Circle), or changing one ----

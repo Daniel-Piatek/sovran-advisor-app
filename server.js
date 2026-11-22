@@ -104,6 +104,7 @@ import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
 import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
 import * as group from './group-feed.js';
+import { takeAlerts, alertSwitches, setAlertSwitch } from './alerts.js';
 import { tellDaniel, listTells, markTell, tellOn, appVersion } from './tell-daniel.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
@@ -1661,6 +1662,17 @@ export function startServer({
         if (err.status) return sendJson(res, err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
         throw err;
       }
+    }
+    // Alerts (alerts.js): what is new since the page last asked, ready to show as a Mac or Windows alert, and their switches.
+    //   GET    /api/alerts                       { items: [{ id, kind, title, body, path }] }, each said once
+    //   GET    /api/alerts/settings              { kinds: [{ id, label, on }] }; PUT { id, on }
+    if (url.pathname === '/api/alerts' && req.method === 'GET') return sendJson(res, 200, await takeAlerts(db));
+    if (url.pathname === '/api/alerts/settings') {
+      try {
+        if (req.method === 'GET') return sendJson(res, 200, { kinds: alertSwitches(db) });
+        if (req.method === 'PUT') return sendJson(res, 200, { kinds: setAlertSwitch(db, await readJson(req)) });
+        return sendJson(res, 405, { error: 'Method not allowed' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message }); throw err; }
     }
     // Group Circle (module group, group-feed.js): your Quest group's Announcements and Circle, from the Sovran cloud
     // with your library key (the key never reaches the page).
