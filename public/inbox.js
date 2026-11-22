@@ -16,6 +16,7 @@
 // its right; the reason is its tooltip), then the line "Or make it" with the same choices.
 // Enter accepts it; nothing moves until you do, and the keys above still decide by hand.
 
+import { tagRow, tagFilter, tagsOn, loadTags, tagMark } from './tags.js';
 import { createEditor, plainText, addFiles, catchPageDrops, focusAtEnd } from './editor.js';
 import { api, el, icon, makeSaver, undoBar, clockTime, weekdayName, dayOf, titleOf } from './ui.js';
 import { app, screen, onLeave, setFooterLink, recentlyDeletedLink, refreshInboxCount, onCaptured } from './shell.js';
@@ -93,8 +94,11 @@ export async function showInbox() {
       onclick: () => { shownView = key; draw(); },
     }, symbol ? icon(symbol) : name, counts[count] ? el('span', { class: 'tab-count' }, String(counts[count])) : null)));
   };
+  // The Tags button (module tags): only the captures that carry every tag picked.
+  let tagged = null;
+  const byTag = tagFilter('capture', async () => { tagged = await byTag.ids().catch(() => null); draw(); });
   const listPanel = el('aside', { class: 'inbox-list-panel' },
-    viewTabs, filters, list);
+    viewTabs, filters, byTag.element, list);
   const current = el('section', { class: 'inbox-current', 'aria-label': 'Sorting' });
   const status = el('span', { class: 'save-status', role: 'status' });
   const undoPlace = el('div', { class: 'inbox-undo' });
@@ -131,6 +135,7 @@ export async function showInbox() {
     }
     captures = inTwoPiles(captures);
     if (!captures.some((c) => c.id === currentId)) currentId = captures[0]?.id ?? null;
+    if (byTag.picked().length && !tagged) tagged = await byTag.ids().catch(() => null);
     await draw();
   }
 
@@ -207,7 +212,7 @@ export async function showInbox() {
     heading.textContent = captures.length ? `Inbox · ${captures.length}` : 'Inbox';
     history.replaceState(null, '', currentId ? `/inbox?c=${currentId}` : '/inbox');
     filterButtons.forEach((button, i) => button.setAttribute('aria-pressed', String(worldFilter === ['inner', 'outer'][i])));
-    list.replaceChildren(...listRows(captures.filter((c) => !worldFilter || c.world === worldFilter)));
+    list.replaceChildren(...listRows(captures.filter((c) => (!worldFilter || c.world === worldFilter) && (!tagged || tagged.has(c.id)))));
 
     await closeEditor();
     const capture = captures.find((c) => c.id === currentId);
@@ -222,7 +227,10 @@ export async function showInbox() {
 
     // The words: shown large, and corrected with Edit; they save as you type.
     const place = el('div', { class: 'inbox-words-place' });
-    saver = makeSaver((changes, options) => api.updateCapture(capture.id, changes, options), { status });
+    // Its tags (module tags): they go with it into the note, entry or task it becomes.
+    const tagsRow = tagRow('capture', capture.id, { onChange: () => drawOfferedTags() });
+    capturedTags = tagsRow;
+    saver = makeSaver((changes, options) => api.updateCapture(capture.id, changes, options), { status, onSaved: () => { void tagsRow.refresh(); } });
     editor = createEditor(place, capture.body, {
       onChange: (markdown) => { capture.body = markdown; saver.change('body', markdown); },
       onFileProblem: (message) => { status.textContent = message; },
@@ -282,6 +290,7 @@ export async function showInbox() {
         })),
         // A chat your AI saved (Keep this chat saved, chat-saves.js): one item per chat, new parts join it.
         ...chatLine(capture),
+        tagsRow.element,
         place,
         ...(capture.shared_from ? [el('p', { class: 'capture-hint inbox-shared' }, icon('link'), ` Shared from ${capture.shared_from}`)] : []),
 
@@ -307,6 +316,8 @@ export async function showInbox() {
       el('strong', {}, `From your chat with ${chat.assistant || 'your AI'}`),
       ` · ${chat.questions} ${chat.questions === 1 ? 'question' : 'questions'} · last added ${clockTime(chat.at)}`)];
   }
+  let capturedTags = null; // the open capture's tag row
+  let offeredTags = null;  // the tags your assistant suggests for it, and where they show
   let homeControl = null; // the Home in the top bar
   let barHome = null;     // the same value, in the suggestion bar
   let arrow = null;       // the top bar's → that opens it
@@ -371,7 +382,36 @@ export async function showInbox() {
     el('span', { class: 'suggestion-text' }, 'Your assistant suggests ', ...sentence(capture, s)),
     ...(s.why ? [why] : []),
     el('button', { type: 'button', class: 'suggestion-accept', 'aria-keyshortcuts': 'Enter', title: 'Accept (Enter)', onclick: () => accept() },
-      icon('check'), 'Accept')));
+      icon('check'), 'Accept'),
+    offerTags(capture, s)));
+  }
+
+  // The tags it suggests (module tags): each one only offered, put on when you tap it. Accept never puts them on.
+  function offerTags(capture, s) {
+    const line = el('p', { class: 'suggestion-tags', 'aria-label': 'Tags your assistant suggests' });
+    offeredTags = tagsOn() && s.tags?.length ? { names: s.tags, line } : null;
+    drawOfferedTags();
+    return line;
+  }
+  async function drawOfferedTags() {
+    if (!offeredTags) return;
+    const { names, line } = offeredTags;
+    const carried = new Set((capturedTags?.tags() ?? []).map((t) => t.name.toLowerCase()));
+    const left = names.filter((name) => !carried.has(name.toLowerCase()));
+    line.hidden = !left.length;
+    if (!left.length) { line.replaceChildren(); return; }
+    let known = [];
+    try { known = (await loadTags()).tags; } catch { /* each one shows as it is */ }
+    line.replaceChildren(el('span', { class: 'suggestion-tags-label' }, 'Tap to add a tag:'), ...left.map((name) => {
+      const own = known.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      return el('button', { type: 'button', class: 'tag-offer', title: own ? `Put on ${name}` : `Make the tag ${name} and put it on`,
+        onclick: async (event) => {
+          event.currentTarget.disabled = true;
+          try { await capturedTags.put(own ? { id: own.id } : { name }); } catch (err) { status.textContent = err.message || "That tag couldn't be put on."; drawOfferedTags(); }
+        } },
+      icon('plus'), ...(own ? [tagMark()] : []), name,
+      ...(own ? [] : [el('span', { class: 'tag-offer-new' }, 'new')]));
+    }));
   }
 
   // While it is being read: look again every two seconds, redrawing only the suggestion.

@@ -8,13 +8,14 @@
 
 import { createEditor, plainText, catchPageDrops, showTaskAt, addFiles } from './editor.js';
 import {
-  api, el, icon, titleOf, wordsLabel, timeAgo, clockTime, makeSaver, undoBar, titleField, linkedFromSection,
+  api, request, el, icon, titleOf, wordsLabel, timeAgo, clockTime, makeSaver, undoBar, titleField, linkedFromSection,
   today, isDay, weekdayName, longDate, addDays, weekStart, dayNumber, monthName, dateOf, dayOf,
 } from './ui.js';
 import { startGroupDraft } from './group.js';
 import { tellDanielButton } from './tell-daniel.js';
 import { moduleOn } from './modules.js';
 import { app, screen, navigate, onLeave, setFlash, takeFlash, setFooterLink, recentlyDeletedLink } from './shell.js';
+import { tagRow, tagFilter, taggedRow } from './tags.js';
 
 // A just-added entry comes back whole (body); listed ones bring only their start (preview).
 const firstLine = (entry) => plainText(entry.preview ?? entry.body).split('\n').map((line) => line.trim()).find(Boolean) ?? '';
@@ -101,7 +102,19 @@ export async function showJournalDay(dayInAddress) {
   let entries = [];
 
   const nothing = () => (isToday ? 'Nothing written today yet.' : 'Nothing written on this day.');
+  // The Tags button (module tags): with tags picked, the entries of every day that carry them all, newest first.
+  let tagged = null;
+  const byTag = tagFilter('entry', async () => { await loadTagged(); draw(); });
+  async function loadTagged() {
+    if (!byTag.picked().length) { tagged = null; return; }
+    try { tagged = await request('GET', `/api/tags/items?kind=entry&tags=${byTag.picked().join(',')}`); } catch { tagged = []; }
+  }
   function draw() {
+    if (tagged) {
+      list.replaceChildren(...(tagged.length ? [el('p', { class: 'tagged-note' }, `${tagged.length} ${tagged.length === 1 ? 'entry' : 'entries'} with ${byTag.picked().length === 1 ? 'this tag' : 'these tags'}, from every day.`),
+        el('div', { class: 'tagged-list' }, ...tagged.map(taggedRow))] : [el('p', { class: 'empty' }, 'No entries with these tags.')]));
+      return;
+    }
     list.replaceChildren(...(entries.length
       ? entries.map((entry) => entryRow(entry, { showJournal: !filter }))
       : [el('p', { class: 'empty' }, filter ? `Nothing in ${journalName(filter)} on this day.` : nothing())]));
@@ -253,6 +266,7 @@ export async function showJournalDay(dayInAddress) {
           // No heading over the journal tabs (2026-11-10, the owner's wish): the tabs are the section's top.
           filters,
           journalTools,
+          byTag.element,
           ...(deleted?.kind === 'entry'
             ? [undoBar(`Entry from ${clockTime(deleted.written_at)} deleted.`, async () => {
               await api.restoreEntry(deleted.id);
@@ -273,6 +287,7 @@ export async function showJournalDay(dayInAddress) {
   }
   if (filter && !journals.some((j) => j.id === filter)) filter = null; // a journal since deleted
   drawFilters();
+  await loadTagged();
   await load();
 }
 
@@ -344,9 +359,18 @@ async function entryPage({ status, actions, back }, entry, { files = null } = {}
     linked.replaceChildren(linkedFromSection('entry', made.id));
     return made;
   };
+  // Its tags (module tags): under its time and journal. A new entry gets the row once it is made.
+  const tagPlace = el('div', { class: 'entry-tags' });
+  let tagsRow = null;
+  const showTags = (id) => { tagsRow = tagRow('entry', id); tagPlace.replaceChildren(tagsRow.element); };
+  if (entry.id) showTags(entry.id);
   const saver = makeSaver(save, {
     status,
-    onSaved: (saved) => { entry = saved; edited.textContent = timeAgo(entry.updated_at); },
+    onSaved: (saved) => {
+      entry = saved;
+      edited.textContent = timeAgo(entry.updated_at);
+      if (tagsRow) void tagsRow.refresh(); else if (entry.id) showTags(entry.id); // a #word typed or taken out
+    },
   });
   const clock = setInterval(() => { edited.textContent = timeAgo(entry.updated_at); }, 30_000);
 
@@ -406,12 +430,13 @@ async function entryPage({ status, actions, back }, entry, { files = null } = {}
     onFileProblem: (message) => { status.textContent = message; },
   });
   const stopDrops = catchPageDrops(editor);
-  onLeave(async () => { await saver.close(); clearInterval(clock); stopDrops(); editor.destroy(); });
+  onLeave(async () => { tagsRow?.close(); await saver.close(); clearInterval(clock); stopDrops(); editor.destroy(); });
 
   document.title = entry.id ? titleOf(entry) : 'New entry';
   screen.append(
     title.field,
     meta,
+    tagPlace,
     bodyPlace,
     el('section', { class: 'note-info', 'aria-label': 'Info' },
       el('dl', {},

@@ -18,6 +18,7 @@ const shortDay = (day) => dateOf(day).toLocaleDateString(undefined, { month: 'sh
 import { app, screen, setFooterLink, navigate, onLeave, setFlash, takeFlash, recentlyDeletedLink } from './shell.js';
 import { entryRow } from './journal.js';
 import { homeChip } from './home.js';
+import { tagRow, tagFilter, tagNamed, tagsOn } from './tags.js';
 
 // The grid/rows choice is remembered in this browser only. If the browser won't
 // keep it (a private window), the list simply starts as a grid.
@@ -31,10 +32,13 @@ function rememberView(view) {
 
 // ---- The tabs over the notes list: All notes and Boards (2026-11-15, the owner's wish; while Boards and Writing and thinking are on) ----
 
+// Tags (2026-11-22, the owner's wish; while Tags is on): a third tab, every tag and each tag's page (public/tags-screen.js).
 export function notesTabs(current) {
-  if (!moduleOn('writing') || !moduleOn('boards')) return el('div', { hidden: true });
+  const boards = moduleOn('writing') && moduleOn('boards');
+  if (!boards && !tagsOn()) return el('div', { hidden: true });
   const tab = (id, name, href) => el('a', { class: 'tab', role: 'tab', href, 'aria-selected': String(current === id), 'data-tab': id }, name);
-  return el('nav', { class: 'tabs notes-tabs', role: 'tablist', 'aria-label': 'Notes views' }, tab('notes', 'All notes', '/'), tab('boards', 'Boards', '/boards'));
+  return el('nav', { class: 'tabs notes-tabs', role: 'tablist', 'aria-label': 'Notes views' }, tab('notes', 'All notes', '/'),
+    ...(boards ? [tab('boards', 'Boards', '/boards')] : []), ...(tagsOn() ? [tab('tags', 'Tags', '/tags')] : []));
 }
 
 // ---- The notes list ----
@@ -69,9 +73,16 @@ export async function showList() {
   });
   search.value = query;
 
+  // The Tags button (module tags): only the notes that carry every tag picked.
+  let tagged = null;
+  const filter = tagFilter('note', async () => { tagged = await filter.ids().catch(() => null); draw(); });
   async function runSearch(text) {
+    // "#retreat" typed in the search box picks that tag.
+    const named = await tagNamed(text);
+    if (named) { search.value = ''; text = ''; if (!filter.picked().includes(named.id)) filter.set([...filter.picked(), named.id]); }
     query = text;
-    history.replaceState(null, '', query.trim() ? `/?q=${encodeURIComponent(query)}` : '/');
+    const keep = [...(query.trim() ? [`q=${encodeURIComponent(query)}`] : []), ...(filter.picked().length ? [`tags=${filter.picked().join(',')}`] : [])];
+    history.replaceState(null, '', keep.length ? `/?${keep.join('&')}` : '/');
     const run = ++searchRun;
     try {
       const [found, entries] = await Promise.all(query.trim()
@@ -121,6 +132,7 @@ export async function showList() {
       el('label', { class: 'search' }, icon('search'), search),
       viewSwitch),
     notesTabs('notes'),
+    filter.element,
     content,
     journalResults,
     ...(deleted?.kind === 'note'
@@ -138,16 +150,19 @@ export async function showList() {
         when: shortDay(entry.day), href: `/journal/${entry.day}`,
       }))),
     ] : []));
-    if (notes.length === 0) {
+    const shown = tagged ? notes.filter((n) => tagged.has(n.id)) : notes;
+    if (shown.length === 0) {
       content.className = 'notes';
-      content.replaceChildren(el('p', { class: 'empty' }, query.trim() ? `No notes with “${query.trim()}”.` : 'No notes yet.'));
+      content.replaceChildren(el('p', { class: 'empty' }, tagged ? (query.trim() ? `No notes with “${query.trim()}” and these tags.` : 'No notes with these tags.')
+        : query.trim() ? `No notes with “${query.trim()}”.` : 'No notes yet.'));
       return;
     }
     content.className = view === 'rows' ? 'notes note-rows' : 'notes note-grid';
-    content.replaceChildren(...notes.map(view === 'rows' ? noteRow : noteCard));
+    content.replaceChildren(...shown.map(view === 'rows' ? noteRow : noteCard));
   }
 
   draw();
+  if (filter.picked().length) tagged = await filter.ids().catch(() => null);
   await runSearch(query);
 }
 
@@ -206,6 +221,7 @@ export async function showNote(id) {
       edited.textContent = timeAgo(note.updated_at);
       refreshClock();
       if (saved.clashes) clashes?.refresh();
+      if ('body' in saved) void tagsRow.refresh(); // a #word typed or taken out puts a tag on or takes it off
     },
   });
   let refreshClock = () => {};
@@ -316,12 +332,15 @@ export async function showNote(id) {
   const stopDrops = catchPageDrops(editor);
   // Its one home in My Life (public/home.js).
   const home = homeChip(note.home, (chosen) => saver.change('home_id', chosen?.id ?? null));
-  onLeave(async () => { pane?.destroy(); home.close(); await saver.close(); clearInterval(clock); stopDrops(); editor.destroy(); });
+  // Its tags (module tags): under the home, with + Tag.
+  const tagsRow = tagRow('note', note.id);
+  onLeave(async () => { pane?.destroy(); home.close(); tagsRow.close(); await saver.close(); clearInterval(clock); stopDrops(); editor.destroy(); });
 
   document.title = titleOf(note);
   screen.append(
     title.field,
     home.element,
+    tagsRow.element,
     zoomPath,
     bodyPlace,
     ...(clashes ? [clashes.element] : []),

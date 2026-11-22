@@ -21,6 +21,7 @@ const HINTS = {
   'Phone capture': 'A Capture app on your phone that lands in your Inbox.',
   'Phone, backups and moving': 'Your daily backups, and moving to a new computer.',
   Import: 'Bring in notes and contacts you already have.',
+  Tags: 'Rename, join, group and pin your tags.',
   Google: 'Your Google sign-in, and what the app may use there.',
   'Google Calendar': 'Your Google events on your days.',
   Dictation: 'Speak instead of typing.',

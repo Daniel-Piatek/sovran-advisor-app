@@ -16,7 +16,7 @@ export const screen = el('div');
 // phone, the sections marked `more` (People, My Life, Assistant, Tour, Settings, Library) sit under a More button instead.
 
 const sections = [
-  { name: 'Notes', href: '/', icon: 'notes', owns: (path) => path === '/' || path.startsWith('/notes/') || path.startsWith('/boards') },
+  { name: 'Notes', href: '/', icon: 'notes', owns: (path) => path === '/' || path.startsWith('/notes/') || path.startsWith('/boards') || /^\/tags(\/|$)/.test(path) },
   { name: 'Journal', href: '/journal', icon: 'journal', owns: (path) => path === '/journal' || path.startsWith('/journal/') },
   { name: 'Tasks', module: 'tasks', href: '/tasks', icon: 'task', owns: (path) => path === '/tasks' },
   { name: 'Planner', module: 'planner', href: '/planner', icon: 'planner', owns: (path) => /^\/planner(\/|$)/.test(path) },
@@ -108,7 +108,7 @@ applyOrder();
 
 // Moving a section: drag it (a computer), or Alt+Up / Alt+Down on it (the keyboard).
 function moveLink(link, before) {
-  sidebar.insertBefore(link, before || moreButton);
+  sidebar.insertBefore(link, before || pinnedTags);
   saveOrder();
 }
 const dragging = { link: null };
@@ -139,7 +139,7 @@ for (const link of movable) {
     const after = event.clientY > box.top + box.height / 2;
     let target = after ? link.nextElementSibling : link;
     while (target && target.hidden) target = target.nextElementSibling; // a hidden module's link is skipped
-    if (target && (target.classList.contains('sidebar-more') || target.classList.contains('sidebar-pinned'))) target = null;
+    if (target && (target.classList.contains('sidebar-tags') || target.classList.contains('sidebar-more') || target.classList.contains('sidebar-pinned'))) target = null;
     moveLink(dragging.link, target);
     dragging.link = null;
     clearMarks();
@@ -159,6 +159,21 @@ sidebar.addEventListener('dragover', (event) => { if (dragging.link && event.tar
 sidebar.addEventListener('drop', (event) => {
   if (dragging.link && event.target === sidebar) { event.preventDefault(); moveLink(dragging.link, null); dragging.link = null; clearMarks(); }
 });
+
+// Pinned tags (module tags, 2026-11-22): the tags pinned on their page, under the sections (a computer only), each opening
+// its page. Asked when the app opens, when a module switches, and by a tag's page when its pin changes.
+const pinnedTags = el('nav', { class: 'sidebar-tags', 'aria-label': 'Pinned tags', hidden: true });
+sidebar.insertBefore(pinnedTags, moreButton);
+export async function refreshSidebar() {
+  if (!moduleOn('tags')) { pinnedTags.hidden = true; return; }
+  let tags = [];
+  try { tags = (await request('GET', '/api/tags')).tags.filter((t) => t.pinned).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })); } catch { /* none shown */ }
+  pinnedTags.replaceChildren(...tags.map((tag) => el('a', { class: 'sidebar-tag', href: `/tags/${tag.id}`, 'data-tag-id': tag.id, title: `Everything tagged ${tag.name}` },
+    el('span', { class: 'tag-mark', 'aria-hidden': 'true' }, icon('tag')), el('span', { class: 'sidebar-tag-name' }, tag.name))));
+  pinnedTags.hidden = tags.length === 0;
+}
+void refreshSidebar();
+onModulesChanged(refreshSidebar);
 
 // Group Circle: how many new posts wait in Announcements and the Circle together. Asked when the app opens, every two
 // minutes while the window is in front, and by the Group Circle page when it has shown something.

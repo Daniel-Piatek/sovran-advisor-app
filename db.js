@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 77;
+export const SCHEMA_VERSION = 78;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -395,6 +395,12 @@ const steps = {
   76() {},
   // 77: Keep this chat saved (chat-saves.js): chat_saves is new (made from schema.sql). Nothing else changes.
   77() {},
+  // 78: Tags (tags.js): tags, tag_groups and item_tags are new (made from schema.sql); your assistant's Inbox
+  // suggestion can name tags to offer (capture_suggestions.tags).
+  78(db) {
+    const columns = db.prepare("SELECT name FROM pragma_table_info('capture_suggestions')").all().map((c) => c.name);
+    if (columns.length && !columns.includes('tags')) db.exec("ALTER TABLE capture_suggestions ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'");
+  },
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.

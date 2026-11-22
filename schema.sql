@@ -661,6 +661,7 @@ CREATE TABLE IF NOT EXISTS capture_suggestions (
   day TEXT NOT NULL DEFAULT '',
   home_id TEXT REFERENCES life_items (id),
   connects TEXT NOT NULL DEFAULT '[]',
+  tags TEXT NOT NULL DEFAULT '[]',
   why TEXT NOT NULL DEFAULT '',
   tries INTEGER NOT NULL DEFAULT 0,
   read_at TEXT
@@ -1389,3 +1390,50 @@ CREATE TABLE IF NOT EXISTS report_marks (
   conversation_id TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS report_marks_by_report ON report_marks (report, deleted_at);
+
+-- Tags (2026-11-22, the owner's wish; tags.js, module tags): one list of tags shared by notes, journal entries, people,
+-- companies, tasks and Inbox items. Two names that differ only in capitals or spaces are one tag (name_key). A tag has a
+-- colour (one of the kinds' colours, never the accent), may sit in one group the owner made (tag_groups: any number,
+-- any size, one level), and may be pinned to the sidebar. A tag joined into another keeps merged_into, for Undo.
+CREATE TABLE IF NOT EXISTS tag_groups (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  name TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tags (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  name TEXT NOT NULL,
+  name_key TEXT NOT NULL,
+  color TEXT NOT NULL DEFAULT 'plain' CHECK (color IN ('plain', 'notes', 'journal', 'tasks', 'time', 'people', 'life', 'goal')),
+  group_id TEXT REFERENCES tag_groups (id),
+  pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),
+  merged_into TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS tags_by_name ON tags (name_key) WHERE deleted_at IS NULL;
+
+-- Which item carries which tag. from_text: put on by a #word in the item's words, so taking the #word out takes it off.
+-- moved_from: the tag it carried before a join (Undo of the join gives it back).
+CREATE TABLE IF NOT EXISTS item_tags (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  tag_id TEXT NOT NULL REFERENCES tags (id),
+  item_kind TEXT NOT NULL CHECK (item_kind IN ('note', 'entry', 'person', 'company', 'task', 'capture')),
+  item_id TEXT NOT NULL,
+  from_text INTEGER NOT NULL DEFAULT 0 CHECK (from_text IN (0, 1)),
+  moved_from TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS item_tags_once ON item_tags (tag_id, item_kind, item_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS item_tags_by_item ON item_tags (item_kind, item_id);
+CREATE INDEX IF NOT EXISTS item_tags_by_tag ON item_tags (tag_id, deleted_at);

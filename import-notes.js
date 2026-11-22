@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { createNote, updateNote } from './notes.js';
 import { createEntry } from './entries.js';
 import { syncLinks } from './links.js';
+import { frontMatterTags, addImportedTags } from './tags.js';
 
 export const MAX_CHARS = 3_500_000;
 export const MAX_FILES = 5000;
@@ -20,6 +21,29 @@ const isDay = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d);
 // ---- Obsidian ----
 
 const stripFrontMatter = (text) => String(text).replace(/^﻿/, '').replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/, '');
+// Obsidian front matter, read for its tags (the same reader as APP Daniel's vault import, import-vault.js there).
+const unquote = (v) => v.trim().replace(/^["'](.*)["']$/, '$1');
+function frontMatter(text) {
+  const raw = String(text).replace(/^﻿/, '');
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
+  if (!m) return { fm: {}, body: raw };
+  const fm = {};
+  let list = null;
+  for (const line of m[1].split(/\r?\n/)) {
+    const item = line.match(/^\s+-\s*(.*)$/);
+    if (item && list) { if (!Array.isArray(fm[list])) fm[list] = []; fm[list].push(unquote(item[1])); continue; }
+    const kv = line.match(/^([\w-]+):\s*(.*)$/);
+    if (!kv) continue;
+    const [, k, v] = kv;
+    list = null;
+    if (v.trim() === '') { fm[k] = ''; list = k; continue; }
+    if (/^\[.*\]$/.test(v.trim())) {
+      const inner = v.trim().slice(1, -1).trim();
+      fm[k] = inner ? inner.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(unquote).filter(Boolean) : [];
+    } else fm[k] = unquote(v);
+  }
+  return { fm, body: raw.slice(m[0].length) };
+}
 const titleOfPath = (p) => p.split('/').pop().replace(/\.md$/i, '');
 
 // [[Target]], [[Target|words]] and [[Target#Heading]] where Target is a note that was imported from this vault: a link to it. Other [[ ]] stay as they are.
@@ -63,6 +87,7 @@ export function importObsidian(db, files, { dryRun = false, source = '' } = {}) 
       const note = createNote(db, { title: titleOfPath(f.path), body: stripFrontMatter(f.text).trim(), origin: 'imported' });
       db.prepare('UPDATE notes SET source_key = ?, imported_at = updated_at WHERE id = ?').run(key, note.id);
       made.push(note.id);
+      addImportedTags(db, 'note', note.id, frontMatterTags(frontMatter(f.text).fm)); // the tags in its front matter
     }
     if (!dryRun && made.length) {
       // Second pass: [[links]] between the notes of this vault become links of the app (rows in links, made from the text).
@@ -119,6 +144,7 @@ export function importDayOne(db, json, { dryRun = false, source = '' } = {}) {
       if (dryRun) continue;
       const entry = createEntry(db, { day, body: unescapeDayOne(e.text), origin: 'imported' });
       db.prepare('UPDATE journal_entries SET source_key = ?, written_at = ? WHERE id = ?').run(key, new Date(e.creationDate).toISOString(), entry.id);
+      if (Array.isArray(e.tags)) addImportedTags(db, 'entry', entry.id, e.tags.map(String)); // Day One's own tags
     }
     db.exec('RELEASE import_dayone');
   } catch (err) { db.exec('ROLLBACK TO import_dayone'); db.exec('RELEASE import_dayone'); throw err; }

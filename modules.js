@@ -175,6 +175,16 @@ export const MODULES = [
     tools: ['reports_read'],
   },
   {
+    // Tags (2026-11-22, the owner's wish; tags.js, public/tags.js): one list of tags for notes, journal entries, people,
+    // companies, tasks and Inbox items, in groups you make. Off, every tag row, Tags button and the Tags tab are gone, #words
+    // put on no tag, and the rows wait in tags, tag_groups and item_tags.
+    id: 'tags',
+    starter: false, // off until switched on in Settings › Modules
+    label: 'Tags',
+    description: 'Put tags on notes, journal entries, people, companies, tasks and Inbox items, or type #word in your writing. Find everything with a tag from the Tags button on each screen, or the Tags tab in Notes. Group your tags and pin the ones you use most.',
+    tables: ['tags', 'tag_groups', 'item_tags'],
+  },
+  {
     // Group Circle (2026-11-19, the owner's wish; group-feed.js, public/group.js, cloud/group-feed.sql): a shared space
     // for your Quest group. Announcements from Daniel (homework, reminders, news) and the Circle, where everyone in the
     // group posts words and pictures. Only your own group sees it; the Sovran cloud keeps it apart by your library key.

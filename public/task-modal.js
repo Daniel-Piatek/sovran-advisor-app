@@ -9,6 +9,7 @@ import { homeChip } from './home.js';
 import { mentionField } from './mentions.js';
 import { moduleOn } from './modules.js';
 import { taskFilesSection } from './task-files.js';
+import { tagRow } from './tags.js';
 
 const isDay = (due) => /^\d{4}-\d{2}-\d{2}$/.test(due ?? '');
 
@@ -63,13 +64,15 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
     el('option', { value: '' }, 'No flag'), el('option', { value: 'like' }, 'Like'), el('option', { value: 'must' }, 'Must'));
   flagBox.value = making ? (defaults.flag ?? '') : (task.flag ?? '');
   const homePick = homeChip(home, (picked) => { home = picked ?? null; }, { compact: true });
+  // Its tags (module tags), for a task that already exists: each is kept at once.
+  const tagsRow = making ? null : tagRow('task', task.id);
 
   let pressedOutside = false;
   const outside = (event) => {
     const box = dialog.getBoundingClientRect();
     return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
   };
-  const finish = () => { homePick.close(); mention?.close(); dialog.close(); dialog.remove(); };
+  const finish = () => { homePick.close(); tagsRow?.close(); mention?.close(); dialog.close(); dialog.remove(); };
 
   // What changed since it was opened.
   const changes = () => {
@@ -144,7 +147,7 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
     class: 'task-edit task-modal', 'aria-label': making ? 'New task' : 'Task',
     // Escape closes it (keeping what changed, or making nothing for a new one); Enter in the title closes or adds; Enter in the details is a new line.
     onkeydown: (event) => {
-      if (event.target.closest('.home-picker')) return;
+      if (event.target.closest('.home-picker, .tag-menu')) return;
       if (event.key === 'Escape') { event.preventDefault(); close({ save: !making }); return; }
       if (event.key === 'Enter' && event.target === words && words.value.trim()) { event.preventDefault(); close(); }
     },
@@ -163,6 +166,7 @@ export function openTaskModal({ task = null, defaults = {}, onChanged = () => {}
   el('div', { class: 'task-modal-row' },
     el('label', { class: 'task-modal-label' }, 'Date', el('span', { class: 'task-modal-date' }, dateBox, todayButton, somedayButton)),
     el('label', { class: 'task-modal-label' }, 'Flag', flagBox)),
+  tagsRow ? el('div', { class: 'task-modal-label' }, 'Tags', tagsRow.element) : null,
   el('div', { class: 'task-modal-foot' }, homePick.element, remove,
     making ? el('button', { type: 'button', class: 'button', onclick: () => close({ save: false }) }, 'Cancel') : null,
     el('button', { type: 'button', class: 'button', onclick: () => close() }, making ? 'Add task' : 'Close')),
