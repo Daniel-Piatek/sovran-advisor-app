@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS tell_daniel.reports (
   status_at   timestamptz,
   CHECK (kind <> 'other' OR length(btrim(why)) > 0)          -- "Other" needs words
 );
+-- Claude's diagnosis (2026-11-22, the owner's wish: each report goes straight to Claude, which works out what is going on
+-- and writes it here, so Daniel reads it beside the student's words). Written only by tell_daniel.diagnose.
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS diagnosis text CHECK (diagnosis IS NULL OR length(diagnosis) <= 20000);
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS diagnosis_kind text
+  CHECK (diagnosis_kind IS NULL OR diagnosis_kind IN ('bug', 'data', 'question', 'misunderstanding', 'fixed', 'other'));
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS diagnosis_pr text CHECK (diagnosis_pr IS NULL OR (diagnosis_pr ~ '^https://github\.com/[^ ]+$' AND length(diagnosis_pr) <= 300));
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS diagnosed_at timestamptz;
 CREATE INDEX IF NOT EXISTS reports_status ON tell_daniel.reports (status, id DESC);
 ALTER TABLE tell_daniel.reports ENABLE ROW LEVEL SECURITY;   -- no policies: only the function's owner role gets in
 
@@ -56,7 +63,8 @@ BEGIN
     SELECT jsonb_build_object('id', r.id, 'student_id', r.student_id,
       'student', coalesce(m.name, st.label, r.student_id), 'group', m.group_code,
       'kind', r.kind, 'why', r.why, 'place', r.place, 'context', r.context, 'app_version', r.app_version,
-      'status', r.status, 'note', r.note, 'created_at', r.created_at, 'status_at', r.status_at) x
+      'status', r.status, 'note', r.note, 'created_at', r.created_at, 'status_at', r.status_at,
+      'diagnosis', r.diagnosis, 'diagnosis_kind', r.diagnosis_kind, 'diagnosis_pr', r.diagnosis_pr, 'diagnosed_at', r.diagnosed_at) x
     FROM tell_daniel.reports r
     LEFT JOIN group_feed.members m ON m.student_id = r.student_id
     LEFT JOIN library.students st ON st.id = r.student_id
@@ -77,9 +85,65 @@ BEGIN
 EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
 END $$;
 
+-- Claude writes its diagnosis (run by Daniel's own Claude through the Supabase connector, never by an app). A New report
+-- becomes Needs digging; one Daniel already marked keeps his status.
+CREATE OR REPLACE FUNCTION tell_daniel.diagnose(p_id bigint, p_kind text, p_text text, p_pr text DEFAULT NULL) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE tell_daniel.reports SET diagnosis = btrim(p_text), diagnosis_kind = p_kind, diagnosis_pr = nullif(btrim(coalesce(p_pr, '')), ''),
+    diagnosed_at = now(), status = CASE WHEN status = 'new' THEN 'digging' ELSE status END,
+    status_at = CASE WHEN status = 'new' THEN now() ELSE status_at END
+  WHERE id = p_id;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+  RETURN jsonb_build_object('id', p_id, 'diagnosed', true);
+EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
+END $$;
+
+-- Waking Claude the moment a report lands (2026-11-22). Daniel made a Claude scheduled task with an API trigger; its Fire
+-- URL is kept here and its token in Supabase Vault as 'tell_daniel_wake_token' (put there by Daniel, never seen by an
+-- agent). A new report sends one POST through pg_net with only the report's number; the task reads the rest itself.
+-- Anything missing or failing leaves the report as it is (the next run picks up every report not yet diagnosed).
+CREATE TABLE IF NOT EXISTS tell_daniel.wake (
+  only_one  boolean PRIMARY KEY DEFAULT true CHECK (only_one),
+  fire_url  text CHECK (fire_url ~ '^https://api\.anthropic\.com/v1/claude_code/routines/trig_[A-Za-z0-9]{10,60}/fire$'),
+  on_off    boolean NOT NULL DEFAULT true
+);
+ALTER TABLE tell_daniel.wake ENABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS tell_daniel.wakes (
+  id         bigserial PRIMARY KEY,
+  report_id  bigint NOT NULL,
+  request_id bigint,                                         -- net._http_response.id, to see how Anthropic answered
+  problem    text,
+  at         timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE tell_daniel.wakes ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION tell_daniel.wake_claude() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
+DECLARE url text; token text; req bigint;
+BEGIN
+  SELECT fire_url INTO url FROM tell_daniel.wake WHERE on_off;
+  IF url IS NULL THEN RETURN NEW; END IF;
+  IF to_regclass('vault.decrypted_secrets') IS NULL OR to_regnamespace('net') IS NULL THEN
+    INSERT INTO tell_daniel.wakes (report_id, problem) VALUES (NEW.id, 'no vault or pg_net'); RETURN NEW; END IF;
+  EXECUTE 'SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = $1' INTO token USING 'tell_daniel_wake_token';
+  IF coalesce(token, '') = '' THEN INSERT INTO tell_daniel.wakes (report_id, problem) VALUES (NEW.id, 'no token in Vault'); RETURN NEW; END IF;
+  EXECUTE 'SELECT net.http_post(url := $1, body := $2, headers := $3, timeout_milliseconds := 10000)' INTO req
+    USING url, jsonb_build_object('text', 'Tell Daniel report ' || NEW.id),
+          jsonb_build_object('Authorization', 'Bearer ' || btrim(token), 'anthropic-beta', 'experimental-cc-routine-2026-04-01',
+                             'anthropic-version', '2023-06-01', 'Content-Type', 'application/json');
+  INSERT INTO tell_daniel.wakes (report_id, request_id) VALUES (NEW.id, req);
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  INSERT INTO tell_daniel.wakes (report_id, problem) VALUES (NEW.id, left(SQLERRM, 300));
+  RETURN NEW;                                                -- a report is never lost because waking failed
+END $$;
+DROP TRIGGER IF EXISTS wake_claude ON tell_daniel.reports;
+CREATE TRIGGER wake_claude AFTER INSERT ON tell_daniel.reports FOR EACH ROW EXECUTE FUNCTION tell_daniel.wake_claude();
+
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA tell_daniel FROM PUBLIC;
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
     EXECUTE 'REVOKE ALL ON ALL FUNCTIONS IN SCHEMA tell_daniel FROM anon, authenticated';
+    EXECUTE 'REVOKE ALL ON ALL TABLES IN SCHEMA tell_daniel FROM anon, authenticated';
   END IF;
 END $$;
