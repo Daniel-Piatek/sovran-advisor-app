@@ -99,3 +99,26 @@ test('the guide: key, announcements, hide and pause, flags, people', async ({ pa
     useGroup({ keyOf: libraryKey, guideApp: false });
   }
 });
+
+test('the guide sees who reads Group Circle on Sovran Go, and can switch one phone off alone', async ({ page }, testInfo) => {
+  const { app, cloud, guides, seen } = await start(testInfo);
+  cloud.state.phones.set('a'.repeat(64), 'client-bbbbbbbbbbbb'); // Jon's computer made his phone a key
+  try {
+    await page.goto(`${app.url}/group`);
+    await page.getByRole('button', { name: 'Make my guide key' }).click();
+    await expect(page.locator('.group-fingerprint')).toBeVisible();
+    guides[seen.key] = 'Daniel';
+    await page.getByRole('button', { name: 'Check again' }).click();
+    await page.getByRole('navigation', { name: 'Group Circle' }).getByRole('link', { name: 'People' }).click();
+    const jonRow = page.locator('tr', { has: page.getByLabel('Name for client-bbbbbbbbbbbb') });
+    await expect(jonRow.locator('.group-when')).toContainText('reads it on Sovran Go too');
+    await jonRow.getByRole('button', { name: 'More' }).click();
+    await page.getByRole('menuitem', { name: 'Switch their phone off' }).click();
+    await expect(page.locator('.group-people-note')).toHaveText('Jon\'s phone reads Group Circle no more. Their computer is not touched.');
+    expect(cloud.state.phones.size).toBe(0);
+    await expect(page.locator('tr', { has: page.getByLabel('Name for client-bbbbbbbbbbbb') }).locator('.group-when')).not.toContainText('Sovran Go');
+  } finally {
+    await app.close();
+    useGroup({ keyOf: libraryKey, guideApp: false });
+  }
+});

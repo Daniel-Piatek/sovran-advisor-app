@@ -106,7 +106,7 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       }
       case 'flags_clear': { const p = post(msg.post); p?.flags.filter((f) => (f.comment ?? null) === (msg.comment ?? null)).forEach((f) => { f.resolved = true; }); return json(200, { cleared: true }); }
       case 'groups': return json(200, { groups: state.groups.map((g) => ({ ...g, members: Object.values(students).filter((m) => m.group === g.code)
-        .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
+        .map((m) => ({ student_id: m.id, name: m.name ?? null, paused: Boolean(m.paused), key_on: true, phone: [...state.phones.values()].includes(m.id), done: state.posts.filter((p) => p.done.includes(m.id)).map((p) => p.id) })) })) });
       // Alerts (cloud/group-alerts.sql): what is new since a moment, in the same shape, with the main rules
       case 'alerts': {
         const since = Math.max(msg.since ? Date.parse(msg.since) : Date.now(), Date.now() - 7 * 86_400_000);
@@ -165,6 +165,7 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
           case 'name': if (m) m.name = msg.value || null; break;
           case 'move': if (!m) return err('nostudent', 404); m.group = msg.value; break;
           case 'leave': if (m) m.group = null; break;
+          case 'phone_off': for (const [h, id] of state.phones) if (id === msg.student) state.phones.delete(h); break;
           case 'close': case 'open': if (g) g.closed = msg.what === 'close'; break;
           case 'new_group': state.groups.push({ code: String(msg.student).toUpperCase(), title: msg.value, closed: false }); break;
           default: return err('bad');

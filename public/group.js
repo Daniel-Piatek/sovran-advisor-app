@@ -494,13 +494,14 @@ function drawPeople(box, groups, redraw) {
     const rows = g.members.map((m) => {
       const name = el('input', { class: 'detail-input group-person-name', value: m.name ?? '', maxlength: 40, placeholder: 'No name picked yet', 'aria-label': `Name for ${m.student_id}` });
       return el('tr', { class: m.paused ? 'group-paused' : '' },
-        el('td', {}, name, el('div', { class: 'group-when' }, m.student_id, m.key_on ? '' : ' · library key turned off')),
+        el('td', {}, name, el('div', { class: 'group-when' }, m.student_id, m.key_on ? '' : ' · library key turned off', m.phone ? ' · reads it on Sovran Go too' : '')),
         el('td', {}, `${m.done.length} homework done`),
         el('td', { class: 'group-person-actions' },
           el('button', { type: 'button', class: 'button button-quiet', onclick: act(() => manage('name', m.student_id, name.value), () => `Name saved: ${name.value || 'none'}`) }, 'Save name'),
           el('button', { type: 'button', class: 'button button-quiet', onclick: act(() => manage(m.paused ? 'unpause' : 'pause', m.student_id), m.paused ? `${m.name ?? m.student_id} can post again.` : `${m.name ?? m.student_id} is paused: they can read, not post.`) }, m.paused ? 'Let them post again' : 'Pause'),
           moreMenu('More', [
             ...groups.filter((o) => o.code !== g.code).map((o) => ({ label: `Move to ${o.code}`, run: act(() => manage('move', m.student_id, o.code), `${m.name ?? m.student_id} moved to ${o.code}.`) })),
+            ...(m.phone ? [{ label: 'Switch their phone off', run: act(() => manage('phone_off', m.student_id), `${m.name ?? m.student_id}'s phone reads Group Circle no more. Their computer is not touched.`) }] : []),
             { label: 'Take out of the group', danger: true, run: act(() => manage('leave', m.student_id), `${m.name ?? m.student_id} taken out of ${g.code}.`) }])));
     });
     const add = el('input', { class: 'detail-input', placeholder: 'client-…', maxlength: 40, 'aria-label': `Add a student to ${g.code} by their id` });

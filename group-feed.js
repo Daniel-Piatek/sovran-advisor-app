@@ -209,7 +209,7 @@ export const hideItem = (db, what, id, input) => cloud(db, { action: 'hide', wha
 export const openFlags = (db) => cloud(db, { action: 'flags' });
 export const clearFlags = (db, input) => cloud(db, { action: 'flags_clear', post: postId(input?.post), comment: input?.comment ? postId(input.comment) : null });
 export const listGroups = (db) => cloud(db, { action: 'groups' });
-const MANAGE = ['pause', 'unpause', 'name', 'move', 'leave', 'close', 'open', 'new_group'];
+const MANAGE = ['pause', 'unpause', 'name', 'move', 'leave', 'close', 'open', 'new_group', 'phone_off'];
 export async function manage(db, input) {
   if (!MANAGE.includes(input?.what)) throw fail(400, 'There is no such change.');
   return cloud(db, { action: 'manage', what: input.what, student: typeof input.student === 'string' ? input.student.slice(0, 40) : null, value: typeof input.value === 'string' ? input.value.slice(0, 80) : null });
