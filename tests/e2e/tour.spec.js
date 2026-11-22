@@ -89,7 +89,7 @@ test('Group Circle has its own film: on already, it opens the group, and the Gro
   const film = page.frameLocator('.tour-frame');
   await expect(film.locator('#caph')).toHaveText('What Group Circle Is');
   await expect(film.locator('.tour-note')).toBeHidden(); // "click Tour in your sidebar" is for the shared web page only
-  await expect(film.locator('#scenes .scene')).toHaveCount(6);
+  await expect(film.locator('#scenes .scene')).toHaveCount(10); // six, then four on alerts (2026-11-22)
   expect(fs.readFileSync(new URL('../../docs/group.md', import.meta.url), 'utf8')).toContain('(/tour?film=group)');
 });
 
