@@ -73,6 +73,8 @@ test('go Sovran opens on the writing box, then Ask my Sovran Advisor and My Repo
   await expect(ask).toHaveAttribute('href', 'https://claude.ai/new');
   await expect(ask).toHaveAttribute('target', '_blank'); // a real tapped link: the phone hands it to the Claude app
   await expect(ask).toContainText('Ask for insight from your reports, your charts and the Sovran Library');
+  // Its disc is flipped: charcoal, with the face drawn in the brand's Gold.
+  expect(await ask.locator('.disc').evaluate((d) => [getComputedStyle(d.querySelector('circle')).fill, getComputedStyle(d.querySelector('g')).stroke])).toEqual(['rgb(48, 45, 45)', 'rgb(217, 193, 75)']);
   // Nothing is wider than the screen, every choice is a full finger tall, and so are the kinds and Save.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   for (const box of await page.locator('.choice:visible').evaluateAll((all) => all.map((c) => c.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(56);
