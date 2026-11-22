@@ -419,43 +419,65 @@ h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 5vw
 .galert-ic { width: 30px; height: 30px; border-radius: 8px; flex: none; background: #302D2D url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3 14 L4 6 L7.5 10 L10 4 L12.5 10 L16 6 L17 14 Z' fill='%23D9C14B'/%3E%3C/svg%3E") center/20px no-repeat; }
 .galert-w { display: grid; gap: 1px; min-width: 0; }
 .galert-app, .gp-noteapp { display: flex; justify-content: space-between; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }
-.gphone { width: 230px; height: 450px; right: 40px; top: 30px; }
-.gpscreen { font-family: var(--ui); gap: 7px; padding: 16px 10px; position: relative; overflow: hidden; }
-.gp-brand { font-family: var(--display); font-size: 1.3rem; padding: 4px 2px 2px; }
-.gp-choice { display: flex; align-items: center; gap: 6px; border: 1px solid #D4D1D1; border-radius: 10px; padding: 7px 9px; line-height: 1.25; }
-.gp-choice > span { flex: 1; display: grid; } .gp-choice > span > span { font-size: .62rem; color: #6B6767; }
-.gp-choice.g { border-color: #6E7FB0; }
-.gp-choice em { font-style: normal; background: #C71F42; color: #fff; border-radius: 999px; font-size: .6rem; padding: 0 6px; }
-.gp-choice i { font-style: normal; color: #6B6767; }
-.gp-back { font-size: .7rem; color: #6B6767; }
-.gp-title { font-family: var(--display); font-size: 1.25rem; }
-.gp-tabs { display: flex; gap: 2px; border: 1px solid #D4D1D1; border-radius: 8px; overflow: hidden; font-size: .66rem; }
-.gp-tabs span { flex: 1; text-align: center; padding: 4px; } .gp-tabs span.on { background: #ECEAEA; font-weight: 700; }
-.gp-list { display: grid; gap: 7px; align-content: start; }
-.gp-post { border: 1px solid #D4D1D1; border-radius: 10px; padding: 7px 8px; display: grid; gap: 5px; font-size: .68rem; line-height: 1.36; transition: background .4s; }
-.gp-post.fresh, .gp-alerts.fresh, .gp-post.g-asked { background: #F6EFC9; }
-.gp-top { display: flex; gap: 6px; align-items: center; } .gp-top span:not(.gkind) { color: #6B6767; }
-.gp-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.gp-pic { height: 64px; border-radius: 6px; }
-.gp-post .gtick { font-size: .66rem; }
-.gp-write { border: 1.5px solid #302D2D; border-radius: 8px; min-height: 44px; padding: 6px 8px; font-size: .7rem; display: grid; gap: 5px; }
-.gp-write .t:empty::before { content: attr(data-ph); color: #8A8686; }
-.gp-row { display: flex; justify-content: space-between; }
-.gp-add { border: 1px solid #D4D1D1; border-radius: 8px; padding: 3px 9px; font-size: .68rem; font-weight: 600; justify-self: start; }
-.gp-postbtn { background: #C71F42; color: #fff; border-radius: 8px; padding: 3px 12px; font-size: .68rem; font-weight: 700; }
-.gp-alerts { border-top: 1px solid #D4D1D1; padding-top: 7px; display: grid; gap: 5px; font-size: .66rem; line-height: 1.36; transition: background .4s; border-radius: 6px; }
-.gp-alerts b { font-size: .74rem; }
-.gp-check { display: flex; gap: 6px; align-items: flex-start; }
-.gp-check i { width: 10px; height: 10px; border: 1.5px solid #6B6767; border-radius: 3px; flex: none; margin-top: 1px; }
-.gp-check.on i { background: #302D2D; border-color: #302D2D; }
-.gp-ask { position: absolute; left: 14px; right: 14px; top: 32%; background: #F2F1F1; border-radius: 12px; box-shadow: 0 10px 30px rgba(48,45,45,.3); display: grid; text-align: center; font-size: .7rem; line-height: 1.36; overflow: hidden; }
+.gstage { position: absolute; inset: 0; z-index: 5; background: var(--page); display: grid; place-items: center; opacity: 0; transition: opacity .4s; }
+.gstage.in { opacity: 1; }
+.gphone { width: 262px; background: #302D2D; border-radius: 34px; padding: 8px; box-shadow: 0 10px 28px rgba(48,45,45,.28); }
+.gpscreen { position: relative; height: 482px; border-radius: 27px; overflow: hidden; background: #FBFBFB; color: #302D2D; font-family: "Inter", sans-serif; display: flex; flex-direction: column; }
+.gp-choosing { background: #302D2D; }
+.gp-band { flex: none; display: flex; align-items: center; gap: 7px; background: #FBFBFB; border-bottom: 2px solid #D9C14B; padding: 8px 11px; }
+.gp-band img { width: 20px; height: 20px; border-radius: 50%; }
+.gp-band span { font-family: var(--display); font-size: .92rem; line-height: 1; color: #C71F42; }
+.gp-page { display: flex; flex-direction: column; gap: 9px; padding: 12px 11px; overflow: hidden; flex: 1; }
+.gp-lead { font-family: var(--ui); font-weight: 500; font-size: .74rem; line-height: 1.36; color: #FBFBFB; }
+.gp-choice { display: flex; align-items: center; gap: 9px; background: #FBFBFB; border-radius: 10px; padding: 8px 10px; }
+.gp-disc { width: 24px; height: 24px; flex: none; } .gp-disc g { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.gp-words { flex: 1; display: grid; min-width: 0; }
+.gp-words b { font-family: var(--ui); font-weight: 700; font-size: .74rem; line-height: 1.36; }
+.gp-words span { font-family: var(--ui); font-weight: 500; font-size: .58rem; line-height: 1.36; color: #555151; }
+.gp-choice em { font-style: normal; background: #C71F42; color: #FBFBFB; border-radius: 999px; font-family: var(--ui); font-weight: 700; font-size: .58rem; padding: 1px 7px; }
+.gp-choice i { font-style: normal; color: #302D2D; font-size: .9rem; }
+.gp-reports { margin-top: 6px; background: #FBF8EF; border: 1.5px solid #D9C14B; }
+.gp-reports img { width: 26px; height: 26px; object-fit: contain; flex: none; }
+.gp-back { font-family: var(--ui); font-weight: 500; font-size: .66rem; color: #555151; }
+.gp-title { font-family: var(--display); font-size: 1.3rem; line-height: 1.15; margin-top: -4px; }
+.gp-tabs { display: flex; gap: 6px; }
+.gp-tabs span { flex: 1; text-align: center; font-family: var(--ui); font-weight: 700; font-size: .64rem; padding: 6px; border-radius: 999px; border: 1.5px solid #D4D1D1; }
+.gp-tabs span.on { background: #302D2D; border-color: #302D2D; color: #FBFBFB; }
+.gp-list { display: flex; flex-direction: column; gap: 9px; }
+.gp-post { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #D4D1D1; padding-top: 8px; transition: background .4s; }
+.gp-ann { border: 1.5px solid #D9C14B; border-radius: 10px; padding: 9px; }
+.gp-kind { font-family: var(--ui); font-weight: 700; font-size: .54rem; letter-spacing: .04em; text-transform: uppercase; color: #555151; } .gp-kind.hw { color: #C71F42; }
+.gp-by { display: flex; gap: 6px; align-items: baseline; font-family: var(--ui); font-size: .66rem; } .gp-by span { color: #7B7777; font-size: .54rem; }
+.gp-text { font-size: .68rem; line-height: 1.44; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.gp-pic { height: 70px; border-radius: 7px; }
+.gp-acts { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: .62rem; }
+.gp-like { color: #C71F42; font-size: .72rem; }
+.gp-done { display: flex; align-items: center; gap: 5px; }
+.gp-done i { width: 12px; height: 12px; border: 1.5px solid #7B7777; border-radius: 3px; display: grid; place-items: center; }
+.gp-done.on i { background: #C71F42; border-color: #C71F42; } .gp-done.on i::after { content: "✓"; color: #FBFBFB; font-size: 9px; font-style: normal; }
+.gp-write { border: 1.5px solid #D4D1D1; border-radius: 8px; min-height: 40px; padding: 7px 8px; font-size: .66rem; line-height: 1.44; }
+.gp-write .t:empty::before { content: attr(data-ph); color: #7B7777; }
+.gp-thumbs { display: flex; gap: 5px; } .gp-thumbs:empty { display: none; } .gp-thumb { width: 40px; height: 40px; border-radius: 6px; }
+.gp-row { display: flex; gap: 7px; }
+.gp-add { align-self: flex-start; font-family: var(--ui); font-weight: 700; font-size: .62rem; padding: 6px 9px; border-radius: 8px; border: 1.5px solid #D4D1D1; }
+.gp-postbtn { flex: 1; text-align: center; background: #C71F42; color: #FBFBFB; border-radius: 7px; padding: 7px; font-family: var(--ui); font-weight: 700; font-size: .7rem; }
+.gp-alerts { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #D4D1D1; padding-top: 9px; font-size: .62rem; line-height: 1.44; color: #555151; transition: background .4s; border-radius: 6px; }
+.gp-alerts b { font-family: var(--ui); font-size: .7rem; color: #302D2D; }
+.gp-check { display: flex; gap: 7px; align-items: center; font-family: var(--ui); color: #302D2D; line-height: 1.36; }
+.gp-check i { width: 12px; height: 12px; border: 1.5px solid #7B7777; border-radius: 3px; flex: none; }
+.gp-check.on i { background: #C71F42; border-color: #C71F42; }
+.gp-post.fresh, .gp-alerts.fresh { background: #F6EFC9; }
+.gp-post.g-asked { outline: 2px solid #D9C14B; outline-offset: 3px; border-radius: 10px; }
+.gp-ask { position: absolute; left: 16px; right: 16px; top: 34%; background: #F2F1F1; border-radius: 12px; box-shadow: 0 10px 30px rgba(48,45,45,.3); display: grid; text-align: center; font-family: var(--ui); font-size: .64rem; line-height: 1.36; overflow: hidden; }
 .gp-ask b { padding: 12px 10px; } .gp-ask span { border-top: 1px solid #D4D1D1; padding: 7px; color: #2F6FD6; } .gp-ask span:nth-child(2) { font-weight: 700; }
-.gp-lock { background: linear-gradient(160deg, #3B3550, #1F1D1D 70%); color: #FBFBFB; justify-items: center; align-content: start; }
-.gp-time { font-size: 2.6rem; font-weight: 300; margin-top: 18px; line-height: 1; } .gp-date { font-size: .72rem; opacity: .85; }
-.gp-note { justify-self: stretch; margin-top: 26px; background: rgba(251,251,251,.82); color: #302D2D; border-radius: 12px; padding: 8px 10px; display: grid; gap: 1px; font-size: .68rem; line-height: 1.36; }
-.gp-noteapp { font-size: .58rem; }
-.gp-com { background: #ECEAEA; border-radius: 10px; padding: 3px 8px; font-size: .64rem; } .gp-rep { margin-left: 14px; } .gp-com.fresh { background: #F6EFC9; }
-@media (max-width: 680px) { .galert { width: auto; left: 8px; right: 8px; top: 8px; } .gphone { width: 200px; height: 400px; right: auto; left: calc(50% - 100px); top: 70px; } }
+.gp-lock { background: linear-gradient(170deg, #4A4458, #302D2D 72%); color: #FBFBFB; align-items: center; padding: 0 10px; }
+.gp-time { font-family: var(--ui); font-size: 2.6rem; font-weight: 300; margin-top: 34px; line-height: 1; } .gp-date { font-family: var(--ui); font-size: .68rem; opacity: .85; margin-top: 4px; }
+.gp-note { align-self: stretch; margin-top: 28px; background: rgba(251,251,251,.85); color: #302D2D; border-radius: 12px; padding: 8px 10px; display: grid; gap: 1px; font-family: var(--ui); font-size: .64rem; line-height: 1.36; }
+.gp-noteapp { display: flex; align-items: center; gap: 5px; color: #555151; font-size: .56rem; text-transform: uppercase; letter-spacing: .04em; } .gp-noteapp img { width: 14px; height: 14px; border-radius: 4px; } .gp-noteapp span { margin-left: auto; }
+.gp-com { background: rgba(127,127,127,.1); border-radius: 10px; padding: 4px 8px; font-size: .62rem; line-height: 1.36; } .gp-rep { margin-left: 14px; } .gp-com.fresh { background: #F6EFC9; }
+.cursor.finger { width: 30px; height: 30px; } .cursor.finger svg { display: none; }
+.cursor.finger::after { content: ""; position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; background: rgba(48,45,45,.32); border: 2px solid rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+@media (max-width: 680px) { .galert { width: auto; left: 8px; right: 8px; top: 8px; } }
 @media (max-width: 680px) { .gpic { height: 54px; } .gmeta .small { display: none; } .gdlg { top: 6px; } }
 /* the player (Layout of every film) */
 .cap .n { display: block; margin-bottom: 4px; font-family: var(--ui); font-size: .76rem; font-weight: 600; color: var(--crimson-text, var(--crimson)); letter-spacing: .02em; }
@@ -842,32 +864,53 @@ function alertsPage() {
   pagein.append(rows);
   return { said, allow, acts, rows };
 }
+// The phone: Sovran Go as it really looks (phone/index.html, phone.css), in a charcoal phone on its own, with a finger dot.
+const GO_ICON = 'data:image/png;base64,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', GO_CROWN = 'data:image/png;base64,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';
+const DISC = {
+  ask: '<svg class="gp-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#D9C14B"/><g stroke="#302D2D"><path d="M12 5.6v2"/><rect x="7" y="7.6" width="10" height="8.6" rx="2.2"/><path d="M10 11.2v.6M14 11.2v.6M10.2 14h3.6"/></g></svg>',
+  journal: '<svg class="gp-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#FFE500"/><g stroke="#302D2D"><path d="M12 8.6c-1.4-1.1-3.2-1.5-5-1.3v8.8c1.8-.2 3.6.2 5 1.3 1.4-1.1 3.2-1.5 5-1.3V7.3c-1.8-.2-3.6.2-5 1.3z"/><path d="M12 8.6v8.8"/></g></svg>',
+  inner: '<svg class="gp-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#733BC4"/><g stroke="#FBFBFB"><circle cx="12" cy="12" r="4.4"/></g></svg>',
+  outer: '<svg class="gp-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#2FC5C9"/><g stroke="#302D2D"><rect x="8" y="8" width="8" height="8" rx="1"/></g></svg>',
+  group: '<svg class="gp-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#733BC4"/><g stroke="#FBFBFB"><circle cx="12" cy="8.4" r="2.2"/><circle cx="7.6" cy="14.6" r="2.2"/><circle cx="16.4" cy="14.6" r="2.2"/></g></svg>',
+};
 function bigPhone() {
-  const ph = h('div', 'phone gphone'); const scr = h('div', 'pscreen gpscreen'); ph.append(scr); main.append(ph);
-  requestAnimationFrame(() => ph.classList.add('in')); return scr;
+  const back = h('div', 'gstage'); const ph = h('div', 'gphone'); const scr = h('div', 'gpscreen'); ph.append(scr); back.append(ph); stage.append(back);
+  cursor.classList.add('finger');
+  requestAnimationFrame(() => back.classList.add('in')); return scr;
 }
+// The instruction box sits beside the phone, never over it: a mark at the phone's left edge, level with the thing.
+function edge(el) {
+  const ph = stage.querySelector('.gphone'), m = stage.getBoundingClientRect(), p = ph.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const d = h('div', 'gedge'); d.style.cssText = `position:absolute;left:${p.left - m.left}px;top:${r.top - m.top}px;width:1px;height:${r.height}px;pointer-events:none`;
+  stage.append(d); return d;
+}
+function goBand(scr) { scr.append(h('div', 'gp-band', `<img src="${GO_ICON}" alt=""><span>Sovran Go</span>`)); }
 function goChoices(scr) {
-  scr.innerHTML = ''; scr.className = 'pscreen gpscreen';
-  scr.append(h('div', 'gp-brand', 'Sovran Go'));
+  scr.innerHTML = ''; scr.className = 'gpscreen gp-choosing'; goBand(scr);
+  const page = h('div', 'gp-page'); scr.append(page); page.append(h('div', 'gp-lead', 'What would you like to do?'));
   let group = null;
-  for (const [n, d, g] of [['Ask my AI', 'Ask Claude about your reports'], ['Journal entry', 'Straight into today'], ['My own thought', 'Keep it in your Inbox'],
-    ['Group Circle', 'Announcements and the Circle', true], ['My reports', 'Read your Sovran reports']]) {
-    const c = h('div', 'gp-choice' + (g ? ' g' : ''), `<span><b>${n}</b><span>${d}</span></span>${g ? '<em>2</em>' : ''}<i>›</i>`); scr.append(c); if (g) group = c;
+  for (const [d, n, w, g] of [['ask', 'Ask my AI', 'Ask Claude about your reports and the teaching'], ['journal', 'Journal entry', 'Straight into today in your Journal'],
+    ['inner', 'My own thought', 'Keep it in your Inbox'], ['outer', 'From someone else', 'Something you heard or read'], ['group', 'Group Circle', 'Announcements and the Circle', true]]) {
+    const c = h('div', 'gp-choice', `${DISC[d]}<span class="gp-words"><b>${n}</b><span>${w}</span></span>${g ? '<em>2</em><i>›</i>' : ''}`); page.append(c); if (g) group = c;
   }
+  page.append(h('div', 'gp-choice gp-reports', `<img src="${GO_CROWN}" alt=""><span class="gp-words"><b>My reports</b><span>Read your Sovran reports, highlight and comment</span></span><i>›</i>`));
   return group;
 }
 function goGroup(scr, tab = 'news') {
-  scr.innerHTML = ''; scr.className = 'pscreen gpscreen';
-  scr.append(h('div', 'gp-back', '‹ Back'), h('div', 'gp-title', 'Group Circle'));
-  const tabs = h('div', 'gp-tabs'); const tn = h('span', tab === 'news' ? 'on' : '', 'Announcements'); const tc = h('span', tab === 'feed' ? 'on' : '', 'Circle'); tabs.append(tn, tc); scr.append(tabs);
-  const list = h('div', 'gp-list'); scr.append(list);
+  scr.innerHTML = ''; scr.className = 'gpscreen'; goBand(scr);
+  const page = h('div', 'gp-page'); scr.append(page);
+  page.append(h('div', 'gp-back', '‹ Back'), h('div', 'gp-title', 'Group Circle'));
+  const tabs = h('div', 'gp-tabs'); const tn = h('span', tab === 'news' ? 'on' : '', 'Announcements'); const tc = h('span', tab === 'feed' ? 'on' : '', 'Circle'); tabs.append(tn, tc); page.append(tabs);
+  const list = h('div', 'gp-list'); page.append(list);
   return { tn, tc, list };
 }
-function goPost(p, { kind, who, text, done, pic }) {
-  const c = h('div', 'gp-post'); c.append(h('div', 'gp-top', kind ? `<span class="gkind ${kind.toLowerCase()}">${kind}</span>` : `<b>${who}</b> <span>now</span>`), h('div', 'gp-text', text));
+function goPost(p, { kind, who, text, done, pic, likes = 0 }) {
+  const c = h('div', kind ? 'gp-post gp-ann' : 'gp-post');
+  c.append(kind ? h('div', 'gp-kind' + (kind === 'Homework' ? ' hw' : ''), kind) : h('div', 'gp-by', `<b>${who}</b><span>now</span>`), h('div', 'gp-text', text));
   if (pic) { const i = h('span', 'gp-pic'); i.style.background = pic; c.append(i); }
-  let tick = null; if (done !== undefined) { tick = h('span', 'gtick', '<i></i>Mark as done'); c.append(tick); }
-  p.append(c); return { c, tick };
+  const acts = h('div', 'gp-acts'); acts.append(h('span', 'gp-like', '♡ ' + likes));
+  let tick = null; if (done !== undefined) { tick = h('span', 'gp-done', '<i></i>Mark as done'); acts.append(tick); }
+  c.append(acts); p.append(c); return { c, tick };
 }
 
 const FILMS = [
@@ -977,40 +1020,40 @@ const FILMS = [
     { t: 'Group Circle on Your Phone', c: 'Group Circle is in Sovran Go too, with nothing new to set up. Read Daniel’s announcements, tick homework done, and share a post with a photo from your phone.',
       async run() {
         dayPage([ENTRY]); const scr = bigPhone(); const gc = goChoices(scr); await sleep(700);
-        await step('On your phone, open Sovran Go and tap Group Circle', gc, async () => { await click(gc, 40, 14); hidePointer(); const g = goGroup(scr); goPost(g.list, { kind: 'Homework', text: HOMEWORK.text, done: false }); await sleep(500); }, 'left');
-        const tick = scr.querySelector('.gtick');
-        await step('Read my announcements, and tick homework done', tick, async () => { await click(tick, 6, 8); hidePointer(); tick.classList.add('on'); await sleep(700); }, 'left');
-        const tc = scr.querySelector('.gp-tabs span:last-child'); let w, wt, add, post, thumbs, list;
-        await step('In the Circle, write something and add a photo', tc, async () => { await click(tc, 14, 8);
+        await step('On your phone, open Sovran Go and tap Group Circle', edge(gc), async () => { await click(gc, 40, 14); hidePointer(); const g = goGroup(scr); goPost(g.list, { kind: 'Homework', text: HOMEWORK.text, done: false }); await sleep(500); }, 'left');
+        const tick = scr.querySelector('.gp-done');
+        await step('Read my announcements, and tick homework done', edge(tick), async () => { await click(tick, 6, 8); hidePointer(); tick.classList.add('on'); await sleep(700); }, 'left');
+        const tc = scr.querySelector('.gp-tabs span:last-child'); let w, wt, add, post, thumbs, list, row;
+        await step('In the Circle, write something and add a photo', edge(tc), async () => { await click(tc, 14, 8);
           const g = goGroup(scr, 'feed'); list = g.list;
-          w = h('div', 'gp-write'); wt = h('span', 't'); wt.dataset.ph = 'Share something with your group'; thumbs = h('div', 'gthumbs'); w.append(wt, thumbs);
-          const row = h('div', 'gp-row'); add = h('span', 'gp-add', '+ Photo'); post = h('span', 'gp-postbtn', 'Post'); row.append(add, post);
-          list.append(w, row); goPost(list, { who: 'Maya', text: MAYA.text, pic: PIC1 });
+          w = h('div', 'gp-write'); wt = h('span', 't'); wt.dataset.ph = 'Share something with your group'; w.append(wt); thumbs = h('div', 'gp-thumbs');
+          row = h('div', 'gp-row'); add = h('span', 'gp-add', '+ Photo'); post = h('span', 'gp-postbtn', 'Post'); row.append(add, post);
+          list.append(w, thumbs, row); goPost(list, { who: 'Maya', text: MAYA.text, pic: PIC1, likes: 3 });
           await click(w, 30, 12); hidePointer(); await type(wt, 'Morning pages at the lake again.', 55); clearCaret();
-          await click(add, 14, 8); hidePointer(); const th = h('span', 'gthumb'); th.style.background = PIC3; thumbs.append(th); await sleep(600); }, 'left');
-        await step('Tap Post. Your group sees it on their computers and phones.', post, async () => { await click(post, 12, 8); hidePointer();
+          await click(add, 14, 8); hidePointer(); const th = h('span', 'gp-thumb'); th.style.background = PIC3; thumbs.append(th); await sleep(600); }, 'left');
+        await step('Tap Post. Your group sees it on their computers and phones.', edge(post), async () => { await click(post, 12, 8); hidePointer();
           wt.textContent = ''; thumbs.innerHTML = ''; const mine = goPost(h('div'), { who: 'Kate', text: 'Morning pages at the lake again.', pic: PIC3 }); mine.c.classList.add('fresh');
-          w.nextElementSibling.after(mine.c); await sleep(1000); }, 'left');
+          row.after(mine.c); await sleep(1000); }, 'left');
       } },
     { t: 'Alerts on Your Phone', c: 'At the foot of Group Circle in Sovran Go, tap Allow alerts and say yes. Alerts then reach your phone even when Sovran Go is closed. Tap one and the post opens. Your words never pass through anyone else’s servers: the alert only wakes your phone, and Sovran Go fetches the rest itself.',
       async run() {
         dayPage([ENTRY]); const scr = bigPhone(); const g = goGroup(scr); goPost(g.list, { kind: 'Reminder', text: REMINDER.text });
-        const box = h('div', 'gp-alerts'); const allow = h('span', 'gp-add gp-allow', 'Allow alerts');
+        const box = h('div', 'gp-alerts'); const allow = h('span', 'gp-add', 'Allow alerts');
         box.append(h('b', '', 'Alerts on this phone'), h('span', '', 'Hear about a new announcement or a reply even when Sovran Go is closed. Nothing is sent without your yes.'), allow);
         g.list.append(box); await sleep(700);
-        await step('At the foot of Group Circle, tap Allow alerts', allow, async () => { await click(allow, 14, 8); hidePointer();
+        await step('At the foot of Group Circle, tap Allow alerts', edge(allow), async () => { await click(allow, 14, 8); hidePointer();
           const ask = h('div', 'gp-ask', '<b>“Sovran Go” would like to send you notifications</b><span>Allow</span><span>Don’t Allow</span>'); scr.append(ask); await sleep(500);
           await click(ask.children[1], 20, 8); hidePointer(); ask.remove();
           box.innerHTML = '<b>Alerts on this phone</b><span>Alerts are on. Choose which:</span>' + ALERT_KINDS.filter((k) => !k[0].includes('version')).map(([n, on]) => `<label class="gp-check${on ? ' on' : ''}"><i></i>${n}</label>`).join('');
           box.classList.add('fresh'); await sleep(900); box.classList.remove('fresh'); }, 'left');
-        scr.className = 'pscreen gpscreen gp-lock'; scr.innerHTML = '<div class="gp-time">8:30</div><div class="gp-date">Monday 23 November</div>';
-        const n = h('div', 'gp-note', '<span class="gp-noteapp">Sovran Go<span>now</span></span><b>Jon replied to you</b><span>Ha! The hill always wins.</span>'); scr.append(n); await sleep(800);
-        await step('They reach you even when Sovran Go is closed', n, null, 'left');
-        await step('Tap it and the post opens', n, async () => { await click(n, 50, 16); hidePointer();
+        scr.className = 'gpscreen gp-lock'; scr.innerHTML = '<div class="gp-time">8:30</div><div class="gp-date">Monday 23 November</div>';
+        const n = h('div', 'gp-note', `<span class="gp-noteapp"><img src="${GO_ICON}" alt="">Sovran Go<span>now</span></span><b>Jon replied to you</b><span>Ha! The hill always wins.</span>`); scr.append(n); await sleep(800);
+        await step('They reach you even when Sovran Go is closed', edge(n), null, 'left');
+        await step('Tap it and the post opens', edge(n), async () => { await click(n, 50, 16); hidePointer();
           const g2 = goGroup(scr, 'feed'); const p = goPost(g2.list, { who: 'Maya', text: MAYA.text, pic: PIC1 });
           p.c.append(h('div', 'gp-com', '<b>Jon</b> Love this. Mine’s been loud all week.'), h('div', 'gp-com gp-rep', '<b>Kate</b> Mine too, until the top of the hill.'), h('div', 'gp-com gp-rep fresh', '<b>Jon</b> Ha! The hill always wins.'));
           p.c.classList.add('g-asked'); await sleep(1200); }, 'left');
-        await step('Your words never pass through anyone else’s servers', scr.parentElement, null, 'left');
+        await step('Your words never pass through anyone else’s servers', edge(scr.parentElement), null, 'left');
       } },
   ] },
 ];
@@ -1032,7 +1075,7 @@ const bar = $('bar'), pp = $('pp');
 const filmBtns = FILMS.map((f) => { const b = h('button', 'scene film', f.t); b.type = 'button'; b.addEventListener('click', () => go(scenes.findIndex((s) => s.film === f))); $('films').append(b); return b; });
 const SHORT = {"What Group Circle Is": "What It Is", "Your Name": "Your Name", "Announcements": "Announcements", "The Circle": "The Circle", "Share from Your App": "Share", "When Something’s Not Right": "Not Right?", "Group Circle Comes to You": "Computer Alerts", "Choose What You Hear About": "Your Switches", "Group Circle on Your Phone": "On Your Phone", "Alerts on Your Phone": "Phone Alerts"};
 const chips = scenes.map((s, i) => { const b = h('button', 'scene', SHORT[s.t] || s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('scenes').append(b); return b; });
-function reset() { hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast,.gdlg,.galert').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
+function reset() { stage.querySelectorAll('.gstage,.gedge').forEach((e) => e.remove()); cursor.classList.remove('finger'); hideTip(); hidePointer(); hideExtras(); main.querySelectorAll('.phone,.capbox,.toast,.gdlg,.galert').forEach((e) => e.remove()); stage.querySelectorAll('.ghost').forEach((e) => e.remove()); stage.querySelectorAll('.menu').forEach((e) => e.remove()); document.querySelectorAll('.glow').forEach((e) => e.classList.remove('glow')); $('inboxcount').hidden = true; }
 function show(i) {
   cur = i; intro = 'scene:' + scenes[i].t;
   const f = scenes[i].film, mine = scenes.filter((s) => s.film === f), k = mine.indexOf(scenes[i]);
