@@ -471,3 +471,20 @@ test('the world of a capture can be changed in the Inbox', async ({ page, app })
   await expect(worlds.getByRole('button', { name: 'Outer' })).toHaveAttribute('aria-pressed', 'true');
   expect((await send(app, 'GET', '/api/captures'))[0].world).toBe('outer');
 });
+
+test('a long Inbox: the list and the capture scroll on their own, so one picked far down still shows beside it', async ({ page, app }) => {
+  test.skip(onPhone(page), 'On a phone a capture opens full width instead.');
+  for (let i = 1; i <= 30; i += 1) await capture(app, `Thought ${i}`);
+  await openInbox(page, app);
+  const list = page.locator('.inbox-list-panel');
+  const shown = page.locator('.inbox-current');
+  await waiting(page).nth(29).click();
+  await expect(current(page)).toHaveText('Thought 30');
+  // The page itself has not moved down the list; the list scrolled inside its own panel.
+  expect(await page.evaluate(() => window.scrollY)).toBeLessThan(200);
+  expect(await list.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  await expect(current(page)).toBeInViewport();
+  // Both panels fit the screen.
+  const height = page.viewportSize().height;
+  for (const panel of [list, shown]) expect((await panel.boundingBox()).height).toBeLessThan(height);
+});

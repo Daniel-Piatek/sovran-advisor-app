@@ -4035,6 +4035,12 @@ html[data-section]:not([data-section=""]) { --page-title-color: var(--section); 
 .page.page-journal, .page.inbox-page, .page.life-page, .page.assistant-page, .page.planner-page { padding-top: 0; }
 .journal-layout, .life-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12)); }
 .inbox-layout { min-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); }
+/* The Inbox's two panels scroll on their own (2026-11-22, the owner's wish): pick a capture far down the list and
+   its words still show beside it. On a computer each panel is the height the Inbox already had (the bar below stays in
+   view), keeps its place as the page moves, and scrolls inside itself. */
+@media (min-width: 601px) {
+  .inbox-list-panel, .inbox-current { position: sticky; top: var(--space-3); max-height: calc(100vh - var(--space-3) * 2 - var(--space-12) - var(--space-12) - var(--space-3)); overflow-y: auto; }
+}
 /* The Assistant's title and New chat sit in a wide, low white bar across the top, with its section line. */
 .assistant-page .top-bar, .inbox-page .top-bar, .planner-page .top-bar {
   margin: 0 0 var(--space-3);

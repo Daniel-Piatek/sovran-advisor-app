@@ -161,7 +161,7 @@ export async function showInbox() {
       }
       rows.push(el('button', {
         type: 'button', class: 'inbox-item', 'aria-current': capture.id === currentId ? 'true' : false,
-        onclick: async () => { currentId = capture.id; opened = true; await draw(); },
+        onclick: async () => { currentId = capture.id; opened = true; await draw(); current.scrollTop = 0; },
       }, el('span', { class: 'inbox-item-line' }, worldTag(capture.world, { word: false }), firstLine(capture) || 'Empty capture'),
       el('span', { class: 'inbox-item-when' }, dayName(capture.captured_at))));
     }
