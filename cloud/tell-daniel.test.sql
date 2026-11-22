@@ -31,5 +31,53 @@ BEGIN
   PERFORM pg_temp.ok((l->'counts'->>'new')::int = 0 AND (l->'counts'->>'digging')::int = 1 AND (l->'counts'->>'done')::int = 1, 'the counts follow the marks');
   PERFORM pg_temp.ok((SELECT note FROM tell_daniel.reports WHERE id = r1) = 'Check part 2 of the decode', 'Daniel''s note is kept');
   PERFORM pg_temp.ok(tell_daniel.set_status(G, r1, 'maybe', NULL)->>'error' = 'bad', 'only the three statuses');
+  -- Claude's diagnosis
+  PERFORM pg_temp.ok(tell_daniel.diagnose(r2, 'bug', 'The Help page failed to load on 0.9.1.', 'https://github.com/Daniel-Piatek/sovran-advisor-app/pull/99')->>'diagnosed' = 'true', 'Claude writes a diagnosis');
+  PERFORM pg_temp.ok((SELECT status FROM tell_daniel.reports WHERE id = r2) = 'done', 'a report Daniel already marked keeps his mark');
+  PERFORM pg_temp.ok(tell_daniel.diagnose(r2, 'guess', 'x', NULL)->>'error' = 'bad', 'only the known diagnosis kinds');
+  PERFORM pg_temp.ok(tell_daniel.diagnose(r2, 'bug', 'x', 'javascript:alert(1)')->>'error' = 'bad', 'a PR link must be a GitHub address');
+  l := tell_daniel.list(G, 'done', NULL);
+  PERFORM pg_temp.ok(l->'reports'->0->>'diagnosis_kind' = 'bug' AND l->'reports'->0->>'diagnosis_pr' LIKE 'https://github.com/%', 'the list carries the diagnosis');
+  -- Waking Claude: nothing set up, nothing sent
+  r1 := (tell_daniel.tell(A, 'question', 'Why gold?', 'report', '{}'::jsonb, NULL)->>'id')::bigint;
+  PERFORM pg_temp.ok(NOT EXISTS (SELECT 1 FROM tell_daniel.wakes WHERE report_id = r1), 'with no Fire URL nothing is sent');
+  PERFORM tell_daniel.diagnose(r1, 'question', 'A question for Daniel.', NULL);
+  PERFORM pg_temp.ok((SELECT status FROM tell_daniel.reports WHERE id = r1) = 'digging', 'a New report becomes Needs digging');
   RAISE NOTICE 'ALL TELL DANIEL CHECKS PASSED';
+END $$;
+
+-- Waking Claude, with stand-ins for Supabase Vault and pg_net (only made where they are missing, as in a local test)
+DO $$ BEGIN
+  IF to_regnamespace('net') IS NULL THEN
+    CREATE SCHEMA net; CREATE TABLE net.sent (id bigserial, url text, body jsonb, headers jsonb);
+    CREATE FUNCTION net.http_post(url text, body jsonb, headers jsonb, timeout_milliseconds integer) RETURNS bigint LANGUAGE sql AS
+      $f$ INSERT INTO net.sent (url, body, headers) VALUES (url, body, headers) RETURNING id $f$;
+  END IF;
+END $$;
+DO $$
+DECLARE A text := repeat('a', 64); r bigint; w record; s record;
+BEGIN
+  IF to_regclass('net.sent') IS NULL THEN RAISE NOTICE 'skip: a real pg_net here'; RETURN; END IF;
+  INSERT INTO tell_daniel.wake (fire_url) VALUES ('https://api.anthropic.com/v1/claude_code/routines/trig_01ABCDEFGHJKLMNOPQRSTUVW/fire')
+    ON CONFLICT (only_one) DO UPDATE SET fire_url = EXCLUDED.fire_url, on_off = true;
+  IF to_regclass('vault.decrypted_secrets') IS NULL THEN
+    r := (tell_daniel.tell(A, 'broken', 'No vault yet', 'app', '{}'::jsonb, NULL)->>'id')::bigint;
+    PERFORM pg_temp.ok((SELECT problem FROM tell_daniel.wakes WHERE report_id = r) = 'no vault or pg_net', 'no Vault: the report is kept and the gap is noted');
+    CREATE SCHEMA vault; CREATE TABLE vault.decrypted_secrets (name text, decrypted_secret text);
+  END IF;
+  r := (tell_daniel.tell(A, 'broken', 'No token yet', 'app', '{}'::jsonb, NULL)->>'id')::bigint;
+  PERFORM pg_temp.ok((SELECT problem FROM tell_daniel.wakes WHERE report_id = r) = 'no token in Vault', 'no token: the report is kept and the gap is noted');
+  INSERT INTO vault.decrypted_secrets VALUES ('tell_daniel_wake_token', ' sk-ant-oat01-made-up ');
+  r := (tell_daniel.tell(A, 'broken', 'The Planner froze', 'app', '{"secret":"never sent"}'::jsonb, NULL)->>'id')::bigint;
+  SELECT * INTO w FROM tell_daniel.wakes WHERE report_id = r;
+  SELECT * INTO s FROM net.sent WHERE id = w.request_id;
+  PERFORM pg_temp.ok(w.problem IS NULL AND s.url LIKE 'https://api.anthropic.com/%/fire', 'a new report wakes Claude at the Fire URL');
+  PERFORM pg_temp.ok(s.body = jsonb_build_object('text', 'Tell Daniel report ' || r), 'only the report''s number is sent, none of its words');
+  PERFORM pg_temp.ok(s.headers->>'Authorization' = 'Bearer sk-ant-oat01-made-up' AND s.headers->>'anthropic-beta' = 'experimental-cc-routine-2026-04-01', 'with the token and the beta header');
+  UPDATE tell_daniel.wake SET on_off = false;
+  r := (tell_daniel.tell(A, 'broken', 'Off now', 'app', '{}'::jsonb, NULL)->>'id')::bigint;
+  PERFORM pg_temp.ok(NOT EXISTS (SELECT 1 FROM tell_daniel.wakes WHERE report_id = r), 'switched off: nothing is sent');
+  BEGIN INSERT INTO tell_daniel.wake (only_one, fire_url) VALUES (false, 'x'); PERFORM pg_temp.ok(false, 'one row only');
+  EXCEPTION WHEN check_violation THEN PERFORM pg_temp.ok(true, 'the wake settings are one row, with a real Fire URL'); END;
+  RAISE NOTICE 'ALL WAKE CHECKS PASSED';
 END $$;
