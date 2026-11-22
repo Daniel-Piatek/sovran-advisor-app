@@ -1,5 +1,5 @@
-// Supabase web function tag-pictures (2026-11-22, D's wish): the Sovran pictures of the starter tags, the 13 character
-// heads and the 5 Quest icons, for someone with a Sovran key only. They are not in this repository (it is public): they
+// Supabase web function tag-pictures (2026-11-22, D's wish): the Sovran pictures of the starter tags, the 13 characters
+// (approved standalone pictures) and the 5 Quests (expressive framed badges), style B as D chose, for someone with a Sovran key only. They are not in this repository (it is public): they
 // live in the private storage bucket tag-pictures, reached with the service role key the function is given.
 // Deploy with JWT checking off: each call carries a key instead, as "Authorization: Bearer <key>". A student's key is
 // their Sovran Library key; D's is a library key or a guide key. Only the key's SHA-256 reaches the database.
