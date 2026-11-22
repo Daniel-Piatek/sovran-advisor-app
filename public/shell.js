@@ -88,7 +88,13 @@ const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)
 const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section));
 const pinned = PINNED.map(linkOf);
 for (const link of pinned) link.classList.add('sidebar-pinned');
-sidebar.replaceChildren(captureButton, ...movable, moreButton, moreMenu, ...pinned);
+// Sovran Central's name at the top of the column (2026-11-22, the owner's pick "D"): the official
+// crimson crown, unchanged, beside "Sovran" in the heading face and CENTRAL spaced out under it.
+const brand = el('div', { class: 'sidebar-brand', role: 'img', 'aria-label': 'Sovran Central' },
+  el('img', { class: 'sidebar-brand-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
+  el('span', { class: 'sidebar-brand-words', 'aria-hidden': 'true' },
+    el('span', { class: 'sidebar-brand-name' }, 'Sovran'), el('span', { class: 'sidebar-brand-sub' }, 'Central')));
+sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, moreMenu, ...pinned);
 showModuleSections();
 
 const readOrder = () => { try { const list = JSON.parse(localStorage.getItem(ORDER_KEY)); return Array.isArray(list) ? list : []; } catch { return []; } };
