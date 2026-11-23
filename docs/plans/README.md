@@ -6,6 +6,7 @@ one folder up, in `docs/`).
 
 | File | What it is | Up to date? |
 |---|---|---|
+| `status.md` | What is built, in progress and planned across Sovran Central and APP Daniel. | 23 Nov 2026 |
 | `build-map.md` | How Sovran Central, go Sovran and the cloud fit together: repos, folders, ports, cloud, stack, install. | 23 Nov 2026 |
 | `system-map.html` | One picture of what sits on Daniel's Mac, in the cloud and on students' computers. | Drawn 9-11 Nov, with a status box on top for what changed |
 | `phone-app-plan.html` | The plan for a phone app for students, which became go Sovran. | 17 Nov plan, with a status box for what was built |
