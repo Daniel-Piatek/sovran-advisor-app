@@ -38,7 +38,7 @@
      status tokens (2026-11-15), always with a shape and a word. */
   --status-good: #059e30;  --status-good-text: #04782a;
   --status-watch: #c27a12; --status-watch-text: #8f5400;
-  --quest-title: #7a6612; /* the Sovran Quest page's title: Gold, darkened to read on the white page */
+  --quest-title: #733bc4; /* the Sovran Quest page's title: the Sovran Quest's own Violet (the owner, 2026-11-23) */
   --quest-done-surface: #e6f5ea; --quest-progress-surface: #fdefe3;
   /* Calendars (time/1): each subscribed calendar's line and dot, never anything else. */
   /* Calendars (2026-11-11, the owner's wish): a calendar's colour is one of the kinds' brand colours, lighter, so the
@@ -199,7 +199,7 @@
   --color-warning-surface: #2b2215;
   --status-good: #3cc061;  --status-good-text: #5fd17f;
   --status-watch: #e8a33d; --status-watch-text: #e8a33d;
-  --quest-title: #d9c14b; /* Gold itself on the dark page */
+  --quest-title: #a98be0; /* Violet, lightened to read on the dark page */
   --quest-done-surface: #1f3326; --quest-progress-surface: #3a2b1a;
   --kind-timeline: #d4d1d1;  --kind-timeline-ink: #1f1d1d; /* Charcoal would vanish on the dark page: a light stone instead */
 }
