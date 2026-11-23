@@ -13,7 +13,8 @@ import { waitingCaptures, updateCapture, letGo, getCapture } from '../../capture
 import { setLibraryKey } from '../../sovran-library.js';
 import { makeSaveKeys, sealTo, openSealed, PUBLIC_KEY } from '../../cloud/library-save/sealing.js';
 import { SAVE_TOOL, SAVE_INSTRUCTIONS, saveToAdvisor, redactSave, MAX_SAVE_CHARS } from '../../cloud/library-save/save.js';
-import { renderChat } from '../../chat-saves.js';
+import { renderChat, aiOf } from '../../chat-saves.js';
+import { listConversations, getConversation, deleteConversation } from '../../assistant.js';
 import { startServer } from '../../server.js';
 import { fakeBox } from '../fake-drop-box.js';
 import { useReports } from '../../reports.js';
@@ -105,6 +106,52 @@ test('a chat is saved in parts and arrives as one Inbox item, in order, each tur
   await save({ title: 'A second chat', turns: [{ number: 1, asked: 'Hello?', answer: 'Hello.' }] });
   await collects();
   assert.equal(waitingCaptures(db).length, 2);
+  db.close();
+});
+
+test('a saved chat is also a chat in Sovran Advisor, each turn once, and carried on there it is told the new turns', async (t) => {
+  const { db, save, collects } = await student(t);
+  await collects();
+  const id = chatId((await save({ title: 'My Pattern and work', assistant: 'Claude', turns: [
+    { number: 1, asked: 'What does my Pattern say about work?', answer: 'Steady building.' },
+    { number: 2, asked: 'And rest?', answer: 'Rest is part of the work.' }] })).text);
+  await collects();
+  let [chat] = listConversations(db);
+  assert.equal(chat.title, 'My Pattern and work');
+  assert.equal(chat.origin, 'imported');
+  assert.equal(chat.last_ai, 'claude');
+  let { messages } = getConversation(db, chat.id);
+  assert.deepEqual(messages.map((m) => [m.role, m.text, m.ai]), [
+    ['user', 'What does my Pattern say about work?', ''], ['assistant', 'Steady building.', 'claude'],
+    ['user', 'And rest?', ''], ['assistant', 'Rest is part of the work.', 'claude']]);
+
+  // Sent again with a new turn: only the new one is added. Already carried on in the app, it starts afresh next time.
+  db.prepare('UPDATE conversations SET started = 1 WHERE id = ?').run(chat.id);
+  const session = getConversation(db, chat.id).session_id;
+  await save({ chat_id: id, turns: [{ number: 2, asked: 'And rest?', answer: 'Rest is part of the work.' }, { number: 3, asked: 'One more?', answer: 'Yes.' }] });
+  await collects();
+  assert.equal(listConversations(db).length, 1);
+  chat = getConversation(db, chat.id);
+  assert.equal(chat.messages.length, 6);
+  assert.equal(chat.messages.at(-1).text, 'Yes.');
+  assert.equal(chat.started, false);
+  assert.notEqual(chat.session_id, session);
+
+  // Deleted in Sovran Advisor: what comes after starts a new chat, with only the new turn. The Inbox item goes on.
+  deleteConversation(db, chat.id);
+  await save({ chat_id: id, turns: [{ number: 4, asked: 'Fourth?', answer: 'Four.' }] });
+  await collects();
+  [chat] = listConversations(db);
+  assert.equal(listConversations(db).length, 1);
+  assert.deepEqual(getConversation(db, chat.id).messages.map((m) => m.text), ['Fourth?', 'Four.']);
+  assert.equal(waitingCaptures(db).length, 1);
+  assert.match(waitingCaptures(db)[0].body, /Fourth\?/);
+
+  // ChatGPT's chats are ChatGPT's; an AI it does not know is named by none.
+  await save({ title: 'From ChatGPT', assistant: 'ChatGPT', turns: [{ number: 1, asked: 'Hi?', answer: 'Hi.' }] });
+  await collects();
+  assert.equal(listConversations(db).find((c) => c.title === 'From ChatGPT').last_ai, 'codex');
+  assert.deepEqual(['Claude', 'claude.ai', 'ChatGPT', 'GPT-6', 'Gemini', ''].map(aiOf), ['claude', 'claude', 'codex', 'codex', '', '']);
   db.close();
 });
 

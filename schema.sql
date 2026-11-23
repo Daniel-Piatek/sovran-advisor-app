@@ -647,6 +647,16 @@ CREATE TABLE IF NOT EXISTS chat_saves (
 
 CREATE INDEX IF NOT EXISTS chat_saves_by_chat ON chat_saves (chat_id, created_at);
 
+-- The same saved chat as a chat in Sovran Advisor (chat-saves.js, 2026-11-23): which conversation it is, and the
+-- numbers of the turns already put there, so each turn is added once.
+CREATE TABLE IF NOT EXISTS chat_save_chats (
+  chat_id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  conversation_id TEXT NOT NULL REFERENCES conversations (id),
+  turns TEXT NOT NULL DEFAULT '[]'
+);
+
 CREATE TABLE IF NOT EXISTS capture_suggestions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

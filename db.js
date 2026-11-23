@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 79;
+export const SCHEMA_VERSION = 80;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -407,6 +407,9 @@ const steps = {
     if (columns.length && !columns.includes('description')) db.exec("ALTER TABLE tags ADD COLUMN description TEXT NOT NULL DEFAULT ''");
     if (columns.length && !columns.includes('picture')) db.exec("ALTER TABLE tags ADD COLUMN picture TEXT NOT NULL DEFAULT ''");
   },
+  // 80: a saved chat also shows as a chat in Sovran Advisor (chat-saves.js, 2026-11-23): chat_save_chats is new
+  // (made from schema.sql). Nothing else changes.
+  80() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.
