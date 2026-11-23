@@ -1449,3 +1449,30 @@ CREATE TABLE IF NOT EXISTS item_tags (
 CREATE UNIQUE INDEX IF NOT EXISTS item_tags_once ON item_tags (tag_id, item_kind, item_id) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS item_tags_by_item ON item_tags (item_kind, item_id);
 CREATE INDEX IF NOT EXISTS item_tags_by_tag ON item_tags (tag_id, deleted_at);
+
+-- The Sovran Quest (quest.js, 2026-11-23). quest_work and quest_marks are a student's own and stay on this computer:
+-- the journal entries and Sovran Advisor chats started from a piece of homework (links only: the entry lives in the
+-- Journal, the chat in Sovran Advisor), and the private Done on each piece. A week is named by its group and number
+-- (week_key, like SQ01-2); a piece of homework by its place in the week (piece, from 1).
+CREATE TABLE IF NOT EXISTS quest_work (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  week_key TEXT NOT NULL,
+  piece INTEGER NOT NULL CHECK (piece >= 1),
+  kind TEXT NOT NULL CHECK (kind IN ('entry', 'chat')),
+  item_id TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS quest_work_by_piece ON quest_work (week_key, piece);
+CREATE TABLE IF NOT EXISTS quest_marks (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  origin TEXT NOT NULL DEFAULT 'typed' CHECK (origin IN ('typed', 'captured', 'imported', 'assistant')),
+  week_key TEXT NOT NULL,
+  piece INTEGER NOT NULL CHECK (piece >= 1)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS quest_marks_once ON quest_marks (week_key, piece) WHERE deleted_at IS NULL;

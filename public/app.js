@@ -50,6 +50,7 @@ import { showMailApp } from './mail-app.js';
 import { showTour } from './tour.js';
 import { showReports } from './reports.js';
 import { showGroup } from './group.js';
+import { showQuest } from './quest.js';
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
@@ -76,6 +77,7 @@ startRouter([
   { path: /^\/tour$/, show: showTour },
   { path: /^\/reports(?:\/([a-z0-9-]+))?$/, show: showReports },
   { path: /^\/group(?:\/(announcements|circle|flags|people))?$/, show: showGroup }, // flags, people: the guide's (APP Daniel)
+  { path: /^\/quest(?:\/(week-\d+(?:\/transcript)?))?$/, show: showQuest },
   { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },

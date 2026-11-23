@@ -231,8 +231,13 @@ const discs = {
   assistant: disc('<path d="M12 5.6v2"/><rect x="7" y="7.6" width="10" height="8.6" rx="2.2"/><path d="M10 11.2v.6M14 11.2v.6M10.2 14h3.6"/>'),
 };
 
+// The Sovran Quest's own icons, the small-display versions the owner had made for the sidebar (2026-11-23), only resized:
+// the expressive one (violet ring) on Quest, the simple disc on Group Circle. Never redrawn.
+const pictures = { 'quest-expressive': '/brand/sovran-quest-expressive-small.png', 'quest-simple': '/brand/sovran-quest-simple-small.png', 'group-circle': '/brand/sovran-group-circle-small.png' };
+
 export function icon(name) {
   const span = el('span', { class: 'icon', 'data-icon': name }); // style.css colours a kind's icon (Kinds, tokens.css)
+  if (pictures[name]) { span.append(el('img', { class: 'icon-picture', src: pictures[name], alt: '' })); return span; }
   span.innerHTML = discs[name] ?? icons[name];
   return span;
 }

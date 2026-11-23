@@ -196,6 +196,16 @@ export const MODULES = [
     nav: ['Group Circle'],
   },
   {
+    // The Sovran Quest (2026-11-23, the owner's wish; quest.js, public/quest.js, cloud/quest.sql): your Quest group's weeks,
+    // as Daniel publishes them. On in a new install, like Group Circle; the sidebar shows Quest only while you are in a
+    // Quest group, so it is there for SQ01 by itself. Your entries, chats and Done stay on this computer.
+    id: 'quest',
+    label: 'Quest',
+    description: 'The Sovran Quest, week by week: the daily practice, the homework with a place to start it in your journal or with Sovran Advisor, and the weekly group call with its transcript and replay. Needs your Sovran Library key and a Quest group.',
+    nav: ['Quest'],
+    tables: ['quest_work', 'quest_marks'],
+  },
+  {
     // Tell Daniel (2026-11-19, the owner's wish; tell-daniel.js, public/tell-daniel.js, cloud/tell-daniel.sql): a button on
     // Assistant answers, notes, journal entries, report passages and Help that lets Daniel know about a problem or a
     // question, with what it was about. On in a new install, like Group Circle: Daniel asked to hear these things.

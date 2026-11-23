@@ -14,7 +14,7 @@
 import markdownit from '/vendor/markdown-it/index.mjs';
 import { el, icon, request, undoBar, clockTime, showPicked } from './ui.js';
 import { AI_NAMES, aiLabel } from './ai-names.js';
-import { app, screen, onLeave, takeQuestion } from './shell.js';
+import { app, screen, onLeave, takeQuestion, takeDraft } from './shell.js';
 import { startGroupDraft } from './group.js';
 import { tellDanielButton } from './tell-daniel.js';
 import { moduleOn } from './modules.js';
@@ -538,6 +538,9 @@ export async function showAssistant(id) {
 
   try {
     await load(id);
+    // Words written in for you (the Quest page's starts): there to finish and send, not sent.
+    const drafted = takeDraft();
+    if (drafted) { input.value = drafted; input.focus(); input.setSelectionRange(drafted.length, drafted.length); return; }
     // A question from the Ask your notes box on another page.
     const asked = id ? null : takeQuestion();
     if (asked) { await send(asked.text, asked.context); return; }

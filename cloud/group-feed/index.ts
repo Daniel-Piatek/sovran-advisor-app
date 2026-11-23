@@ -11,6 +11,8 @@
 // POST {action:'push_key'} | {action:'push_sub', endpoint, kinds, old?} | {action:'push_state'|'push_take', endpoint}
 //      alerts on the phone (cloud/group-push.sql, push.js): a phone keeps its push address, then fetches what waits
 // POST {action:'picture_put', jpeg: <base64>}   a picture the app already shrank; returns {path}
+// POST {action:'quest_weeks', group?} | {action:'quest_transcript', number, group?} | {action:'quest_publish', group, number, week}
+//      the Sovran Quest shelf (cloud/quest.sql)
 // GET  .../group-feed/picture/<group>/<name>.jpg   the picture's bytes, if the key holder may see it
 // Pictures live in the private storage bucket group-feed, reached with the service role key the function is given.
 import postgres from 'npm:postgres@3.4.5';
@@ -160,6 +162,14 @@ async function act(h: string, msg: any): Promise<Response> {
       case 'flags': return one(sql`SELECT group_feed.flags_open(${h}) AS r`);
       case 'flags_clear': return one(sql`SELECT group_feed.flags_clear(${h}, ${id(msg.post)}, ${id(msg.comment)}) AS r`);
       case 'groups': return one(sql`SELECT group_feed.groups_list(${h}) AS r`);
+      case 'quest_weeks': return one(sql`SELECT group_feed.quest_weeks(${h}, ${text(msg.group, 20) || null}) AS r`);
+      case 'quest_transcript': return one(sql`SELECT group_feed.quest_transcript(${h}, ${Number.isInteger(msg.number) ? msg.number : -1}, ${text(msg.group, 20) || null}) AS r`);
+      case 'quest_publish': {
+        const week = msg.week && typeof msg.week === 'object' && !Array.isArray(msg.week) ? msg.week : null;
+        const n = Number(msg.number);
+        if (!week || !Number.isInteger(n) || JSON.stringify(week).length > 600000) return json(400, { error: 'That week isn’t right.' });
+        return one(sql`SELECT group_feed.quest_publish(${h}, ${text(msg.group, 20)}, ${n}, ${sql.json(week)}) AS r`);
+      }
       // Tell Daniel (cloud/tell-daniel.sql): a student sends one; the guide reads the list and marks each one
       case 'tell': {
         const context = msg.context && typeof msg.context === 'object' && !Array.isArray(msg.context) ? msg.context : {};
