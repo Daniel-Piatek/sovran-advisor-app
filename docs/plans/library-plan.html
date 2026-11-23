@@ -1,0 +1,357 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cloud Library Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+
+<script>
+/* ================================================================
+   PLAN DATA. To update this page, change only this block.
+   status: "done" | "now" | "next" | "later" | "waiting"
+   ================================================================ */
+const PLAN = {
+  updated: "8 November 2026, evening",
+  now: {
+    headline: "The library is online, with your teaching, your meaning library and 11 clients.",
+    detail: "Everything sits in your Supabase project sovran-library, in Europe. Your 56 teaching notes and all 3,929 approved meaning pieces are in the shared part. Eleven clients each have their own decodes online and their own private key, and each one can only see their own. The meaning library refreshes itself every night at 3:15 AM from your Mac.",
+    yourTurn: "Pick one client to try the connect sheet with. It's written but hasn't been tested by a real client yet. Nothing else is waiting on you."
+  },
+  layers: [
+    { title: "Shared part", who: "Anyone with a valid key can read this", tone: "shared",
+      items: [
+        { title: "Your Sovran teaching", when: "now", detail: "Online: the 54 Live Sovran concept notes (STOP, the Throne, the Sovran Self and the rest) and the two meditations, read straight from your Obsidian notes. The Hero Quest and Freedom From Fear course scripts stay out, as you decided. Your journal, business, marketing and notes on other people's books stay out." },
+        { title: "Your meaning library", when: "now", detail: "Online: all 3,929 approved meaning pieces from your estate library (astrology, Human Design, Human Design roles and Gene Keys). Each one was checked against your Mac copy and matches exactly. A student's AI can search them or look one up for a planet, gate or key in their own decode." },
+        { title: "Nightly refresh", when: "now", detail: "Every night at 3:15 AM your Mac compares the meaning library with the online copy. New pieces go up, changed ones are replaced, and retired ones come down. It reads from the library folder inside APP Daniel, so please leave that folder where it is." },
+        { title: "Your practices", when: "later", detail: "For each practice: its name, what it is for, how to do it, and which gene keys, gates or planets it connects to. You can just talk or write these out and I'll format and load them." },
+        { title: "How to use a decode", when: "later", detail: "Your guidance on reading a decode and talking about it with care: what to say, what to avoid, and how to keep it grounded." },
+        { title: "Glossary", when: "later", detail: "The words you use, each with a plain meaning." },
+        { title: "Sovran Compass: 63 zones and 40 practices", when: "later", detail: "This will go in, but not now. We add it once the Compass becomes a module." },
+        { title: "More teaching material", when: "later", detail: "Recordings, worksheets and anything else you teach from. You haven't decided on these yet, and the library has room for them whenever you're ready." }
+      ] },
+    { title: "Personal part", who: "Only that one client can read this", tone: "personal",
+      items: [
+        { title: "Their three decodes", when: "now", detail: "Online for 11 clients: gene keys, human design and astrology, cut into sections so their AI can pull out just the part it needs, such as \"my Sun in Leo\" or \"Gene Key 12\". Each client's section count matched the check we ran first on your Mac." },
+        { title: "Opening note and reading note", when: "now", detail: "Every decode starts with a note on where it came from and a reading note on how to speak about it. Both are sent with every answer." },
+        { title: "Fingerprint record", when: "now", detail: "Proof that each file is the exact version you signed off. A file whose fingerprint does not match is never loaded." }
+      ] },
+    { title: "Behind the scenes", who: "No client's AI can see this. Only you.", tone: "private",
+      items: [
+        { title: "List of clients and keys", when: "now", detail: "Each client has a code, the date they were added, and a key you can switch off at any time. The library keeps only a scrambled copy of each key. The real keys are kept only on your Mac, never on this page." },
+        { title: "Access log", when: "now", detail: "Which key asked for what, and when. You said yes to this. It helps you spot anything odd and see how clients use the library." }
+      ] }
+  ],
+  keptOut: ["birth details", "client names", "your session notes and conversations", "payments", "anything in a student's own app, such as their notes and tasks"],
+  phases: [
+    { title: "Agree what goes in", status: "done", summary: "Settle the contents before building anything.",
+      steps: [
+        { title: "List everything the library holds", status: "done", detail: "The three parts above: shared, personal and behind the scenes, plus what stays out." },
+        { title: "Decide on Sovran Compass", status: "done", detail: "It goes into the shared part later, not now." },
+        { title: "Decide on an access log", status: "done", detail: "Yes. The library records which key asked for what, and when." },
+        { title: "Test with one real client on your Mac", status: "done", detail: "About 1,900 pieces from one client's three decodes. Every fingerprint matched and the privacy check passed. It stayed on your Mac." }
+      ] },
+    { title: "Build it on your Mac", status: "done", summary: "A working library on your own computer, tested with pretend clients first.",
+      steps: [
+        { title: "Make pretend clients for testing", status: "done", detail: "Two invented clients with short made-up decodes in the same layout as the real ones, so every test could run without real client material." },
+        { title: "Build the read-only library service", status: "done", detail: "A small MCP connection, the same kind as your myICOR one. It can look things up but can never change or delete anything." },
+        { title: "Key check and privacy test", status: "done", detail: "A wrong key or a switched-off key gets nothing, and one client can never reach another client's decodes." },
+        { title: "Reading note with every answer", status: "done", detail: "Whatever a client's AI asks, the decode's reading note comes back with the answer." },
+        { title: "Access log", status: "done", detail: "Each request is written down with the key, the time and what was asked." }
+      ] },
+    { title: "Your teaching material", status: "done", summary: "Set up the shared part with your own words.",
+      steps: [
+        { title: "Use your Obsidian notes as they are", status: "done", detail: "The library reads your teaching notes straight from your Obsidian vault. You keep writing there as you always do." },
+        { title: "Check copyright", status: "done", detail: "Checked 8 Nov: every quote in the 56 notes is your own words or your approved definitions. The rule going forward: the shared part holds only your own words. Books such as Gene Keys and the Human Design texts are mentioned by title and page, with short quotes only." },
+        { title: "Find your meaning library", status: "done", detail: "Your approved meaning pieces in PKA-Live-Sovran (3,929 of them) turned out to be exactly the \"notes on each building block\" the plan needed. We read them only and never change anything there." }
+      ] },
+    { title: "Move it to the cloud", status: "done", summary: "Put the library online, one yes at a time.",
+      steps: [
+        { title: "Set up the account", status: "done", detail: "A free Supabase project called sovran-library (Europe), separate from your other projects." },
+        { title: "Privacy test online with pretend clients", status: "done", detail: "Repeated online before anything real went up. It passed." },
+        { title: "Put your teaching notes online", status: "done", detail: "The 54 concept notes and 2 meditations, 428 sections, each checked against your Mac copy." },
+        { title: "Put your meaning library online", status: "done", detail: "All 3,929 pieces, every fingerprint matching your Mac copy." },
+        { title: "Turn on the nightly refresh", status: "done", detail: "Runs at 3:15 AM on your Mac. The test run went through cleanly with nothing to change." },
+        { title: "First real client", status: "done", detail: "The first client went up first, after you confirmed they agreed. You ran the upload line in Terminal, since your Mac only lets you send real client data yourself." },
+        { title: "Ten more clients", status: "done", detail: "Ten more clients (codes kept off this public copy). That makes 11 online, each with their own key, and each checked so they see only their own decodes." }
+      ] },
+    { title: "Clients connect", status: "now", summary: "Hand out keys and let one friendly client try it.",
+      steps: [
+        { title: "Make a key for each client", status: "done", detail: "Done for all 11. The keys are kept only on your Mac. You can switch any key off at any time." },
+        { title: "Write the connect sheet", status: "done", detail: "One page telling a client how to add the library to their Claude. You put their key into it before sending. It's saved and ready." },
+        { title: "Test with one real client", status: "now", detail: "Not tested yet with a real client's Claude account. One friendly client connects, asks about their own decodes, and tells us what was confusing. We fix the sheet before sending it to the others." },
+        { title: "Send the sheet to the other clients", status: "later", detail: "Once the first test works." },
+        { title: "Remaining clients", status: "waiting", detail: "One client has only 2 of its 3 decodes so far, and about 8 older clients use an earlier file layout the uploader doesn't read yet. Each still needs your yes, and confirmation the client agreed to online storage." },
+        { title: "A Library module in the app", status: "later", detail: "This is where the cloud library meets the module system. It waits until the module system starts again." }
+      ] }
+  ],
+  questions: [
+    { q: "Which client would you like to try the connect sheet first?", why: "Ideally someone friendly who won't mind telling us what was confusing." },
+    { q: "Should we handle the ~8 older-layout clients next, or wait?", why: "Their files are in an earlier format, so the uploader needs a small addition first. No rush." }
+  ]
+};
+</script>
+
+
+<style>
+/* Layout: one calm reading column. Banner, then phases as quiet rows that open into steps. */
+:root {
+  /* Live Sovran Visual Identity Guide v3: white canvas, charcoal text, crimson for action; status in the guide's
+     Green (done), Orange (now), Violet (waiting), deepened only where they are text so they stay readable. */
+  --bg: #FBFBFB;
+  --surface: #FFFFFF;
+  --ink: #302D2D;
+  --muted: #555151;
+  --line: #D4D1D1;
+  --accent: #C71F42;
+  --accent-soft: color-mix(in srgb, #C71F42 8%, #FFFFFF);
+  --done: color-mix(in srgb, #059E30 75%, #302D2D);
+  --done-soft: color-mix(in srgb, #059E30 12%, #FFFFFF);
+  --now: color-mix(in srgb, #F07A21 62%, #302D2D);
+  --now-soft: color-mix(in srgb, #F07A21 7%, #FFFFFF);
+  --later: #7B7777;
+  --later-soft: #ECEAEA;
+  --wait: #733BC4;
+  --wait-soft: color-mix(in srgb, #733BC4 10%, #FFFFFF);
+  --f-display: "Gloock", Georgia, "Times New Roman", serif;
+  --f-ui: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #302D2D; --surface: #3A3636; --ink: #FBFBFB; --muted: #AAA6A6; --line: #555151;
+    --accent: color-mix(in srgb, #C71F42 62%, #FBFBFB); --accent-soft: color-mix(in srgb, #C71F42 22%, #302D2D);
+    --done: color-mix(in srgb, #059E30 55%, #FBFBFB); --done-soft: color-mix(in srgb, #059E30 22%, #302D2D); --now: color-mix(in srgb, #F07A21 70%, #FBFBFB); --now-soft: color-mix(in srgb, #F07A21 12%, #302D2D);
+    --later: #AAA6A6; --later-soft: #3A3636; --wait: color-mix(in srgb, #733BC4 55%, #FBFBFB); --wait-soft: color-mix(in srgb, #733BC4 25%, #302D2D);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #302D2D; --surface: #3A3636; --ink: #FBFBFB; --muted: #AAA6A6; --line: #555151;
+    --accent: color-mix(in srgb, #C71F42 62%, #FBFBFB); --accent-soft: color-mix(in srgb, #C71F42 22%, #302D2D);
+    --done: color-mix(in srgb, #059E30 55%, #FBFBFB); --done-soft: color-mix(in srgb, #059E30 22%, #302D2D); --now: color-mix(in srgb, #F07A21 70%, #FBFBFB); --now-soft: color-mix(in srgb, #F07A21 12%, #302D2D);
+    --later: #AAA6A6; --later-soft: #3A3636; --wait: color-mix(in srgb, #733BC4 55%, #FBFBFB); --wait-soft: color-mix(in srgb, #733BC4 25%, #302D2D);
+    color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.44; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+
+header { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: 34px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 400; font-size: 22px; margin: 0; text-wrap: balance; }
+
+/* Where we are now */
+section.now { background: var(--now-soft); border: 1px solid color-mix(in srgb, var(--now) 35%, transparent);
+  border-radius: 14px; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+section.now .label { font-family: var(--f-ui); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--now); font-weight: 700; }
+section.now h2 { font-size: 24px; }
+section.now p { margin: 0; max-width: 62ch; }
+section.now .turn { color: var(--muted); font-size: 15px; }
+
+/* Journey strip */
+.journey { display: flex; flex-direction: column; gap: 10px; }
+.track { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 6px; }
+.track span { height: 8px; border-radius: 4px; background: var(--later-soft); border: 1px solid var(--line); }
+.track span.done { background: var(--done); border-color: var(--done); }
+.track span.now, .track span.next { background: var(--now); border-color: var(--now); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+
+.tools { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.tools .btns { display: flex; gap: 8px; }
+button { font: inherit; font-family: var(--f-ui); font-weight: 600; font-size: 14px; color: var(--accent); background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+button:hover { background: var(--accent-soft); }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Phases */
+.phases { display: flex; flex-direction: column; gap: 12px; }
+details.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+details.phase.is-next { border-color: color-mix(in srgb, var(--now) 55%, var(--line)); }
+details.phase > summary { list-style: none; cursor: pointer; padding: 18px 20px; display: grid;
+  grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: start; }
+summary::-webkit-details-marker { display: none; }
+.chev { width: 22px; height: 22px; margin-top: 4px; color: var(--muted); transition: transform .2s ease; }
+details[open] > summary .chev { transform: rotate(90deg); }
+.ph-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ph-num { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ph-sum { color: var(--muted); font-size: 15px; }
+.ph-count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.pill { font-family: var(--f-ui); font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 999px; white-space: nowrap; margin-top: 3px; }
+.pill.done { color: var(--done); background: var(--done-soft); }
+.pill.now, .pill.next { color: var(--now); background: var(--now-soft); }
+.pill.later { color: var(--later); background: var(--later-soft); }
+.pill.waiting { color: var(--wait); background: var(--wait-soft); }
+
+.steps { list-style: none; margin: 0; padding: 0 20px 18px 56px; display: flex; flex-direction: column; gap: 6px; }
+details.step > summary { cursor: pointer; display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start;
+  padding: 8px 10px; border-radius: 10px; }
+details.step > summary:hover { background: var(--accent-soft); }
+.dot { width: 14px; height: 14px; border-radius: 50%; margin-top: 6px; border: 2px solid var(--later); background: transparent; }
+.dot.done { background: var(--done); border-color: var(--done); }
+.dot.now, .dot.next { border-color: var(--now); background: var(--now-soft); }
+.dot.waiting { border-color: var(--wait); background: var(--wait-soft); }
+.st-title { min-width: 0; }
+.step.done .st-title { color: var(--muted); }
+.step .pill { font-size: 12px; margin-top: 2px; }
+.st-detail { margin: 2px 10px 10px 38px; padding: 12px 14px; background: var(--bg); border-radius: 10px; font-size: 16px; max-width: 62ch; }
+
+/* Questions */
+.questions { display: flex; flex-direction: column; gap: 12px; }
+.questions ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; counter-reset: q; }
+.questions li { background: var(--wait-soft); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; }
+.questions li strong { font-weight: 700; }
+.questions li span { color: var(--muted); font-size: 15px; }
+.questions .intro { margin: 0; color: var(--muted); }
+
+footer { color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 520px) {
+  h1 { font-size: 28px; }
+  details.phase > summary { grid-template-columns: auto 1fr; }
+  details.phase > summary .pill { grid-column: 2; justify-self: start; }
+  .steps { padding-left: 16px; padding-right: 12px; }
+  .st-detail { margin-left: 10px; }
+  details.step > summary { grid-template-columns: 18px 1fr; }
+  details.step > summary .pill { grid-column: 2; justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+
+/* Library contents: three layer cards */
+.layers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.layer { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px; border-top: 5px solid var(--tone); }
+.layer.shared { --tone: var(--accent); } .layer.personal { --tone: var(--now); } .layer.private { --tone: var(--wait); }
+.layer h3 { font-family: var(--f-display); font-weight: 400; font-size: 19px; margin: 0; }
+.layer .who { font-size: 14px; color: var(--muted); margin: 0 0 4px; }
+.layer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.layer details > summary { cursor: pointer; list-style: none; padding: 6px 8px; border-radius: 8px; display: flex; gap: 8px; align-items: baseline; font-size: 15px; }
+.layer details > summary:hover { background: var(--accent-soft); }
+.layer .mk { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--tone); transform: translateY(-1px); }
+.layer .later-tag { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--later); background: var(--later-soft); padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.layer li.is-later summary { color: var(--muted); }
+.layer li.is-later .mk { background: transparent; border: 2px solid var(--later); }
+.layer .it-detail { margin: 2px 4px 8px 24px; font-size: 14px; color: var(--ink); }
+.kept { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px; font-size: 15px; color: var(--muted); }
+.kept strong { color: var(--ink); }
+.section-intro { margin: -14px 0 0; color: var(--muted); font-size: 15px; }
+@media (max-width: 700px) { .layers { grid-template-columns: 1fr; } }
+/* Line spacing (D, 16 Nov 2026): body 1.44, short text in cards and boxes 1.36 */
+.layer, .st-detail, .questions li, .kept, .ph-text, details.step > summary { line-height: 1.36; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Sovran Advisor · cloud library plan · Snapshot</div>
+    <div class="eyebrow">Created 8 Nov 2026 · Last updated 23 Nov 2026 (status note, line spacing, client codes removed)</div>
+    <h1>The cloud library for decodes</h1>
+  </header>
+
+  <section class="kept" style="line-height:1.36"><strong>Status on 23 Nov 2026:</strong> the "Where we are now" box below is from 8 November and is kept as it was. Since then: decodes for 16 students are in the library (16 Nov); the app has a Reports page, and go Sovran reads reports with the student's key; keys are to be made automatically from a GoHighLevel purchase, with one Approve tap from Daniel (decided 16 Nov, phase E). <b>Sovran Compass is still "later"</b>: its 63 zones and 40 practices go into the shared part of the library once the Compass becomes a module.</section>
+  <section class="now" aria-labelledby="now-h">
+    <div class="label">Where we are now</div>
+    <h2 id="now-h"></h2>
+    <p id="now-detail"></p>
+    <p class="turn" id="now-turn"></p>
+  </section>
+
+  <section class="journey" aria-label="Progress through the phases">
+    <div class="track" id="track"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <h2>What goes into the library</h2>
+  <p class="section-intro">Three parts, each with its own lock. Tap any item to read more.</p>
+  <div class="layers" id="layers"></div>
+  <div class="kept" id="kept"></div>
+
+  <div class="tools">
+    <h2>The phases</h2>
+    <div class="btns">
+      <button type="button" id="open-all">Open all</button>
+      <button type="button" id="close-all">Close all</button>
+    </div>
+  </div>
+  <p style="margin:-14px 0 0;color:var(--muted);font-size:15px">Tap a phase to see its steps. Tap a step to read what it means.</p>
+
+  <div class="phases" id="phases"></div>
+
+  <section class="questions" aria-labelledby="q-h">
+    <h2 id="q-h">Questions waiting for you</h2>
+    <p class="intro">Answer these in the thread whenever you like.</p>
+    <ol id="questions"></ol>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(function () {
+  const LABEL = { done: "Done", now: "In progress", next: "Up next", later: "Not started", waiting: "Needs your answer" };
+  const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  document.getElementById("now-h").textContent = PLAN.now.headline;
+  document.getElementById("now-detail").textContent = PLAN.now.detail;
+  document.getElementById("now-turn").textContent = PLAN.now.yourTurn;
+
+  const track = document.getElementById("track");
+  track.style.setProperty("--n", PLAN.phases.length);
+  track.innerHTML = PLAN.phases.map(p => `<span class="${p.status}" title="${esc(p.title)}: ${LABEL[p.status]}"></span>`).join("");
+  const doneCount = PLAN.phases.filter(p => p.status === "done").length;
+  document.getElementById("legend").innerHTML =
+    `<span>${doneCount} of ${PLAN.phases.length} phases done</span>` +
+    PLAN.phases.map((p, i) => `<span>${i + 1}. ${esc(p.title)}: ${LABEL[p.status]}</span>`).join("");
+
+  document.getElementById("layers").innerHTML = PLAN.layers.map(l => `
+    <section class="layer ${l.tone}"><h3>${esc(l.title)}</h3><p class="who">${esc(l.who)}</p><ul>${
+      l.items.map(it => `<li class="${it.when === "later" ? "is-later" : ""}"><details><summary><span class="mk" aria-hidden="true"></span><span>${esc(it.title)}</span>${it.when === "later" ? '<span class="later-tag">Later</span>' : ""}</summary><div class="it-detail">${esc(it.detail)}</div></details></li>`).join("")
+    }</ul></section>`).join("");
+  document.getElementById("kept").innerHTML = "<strong>Kept out of the library:</strong> " + PLAN.keptOut.map(esc).join(", ") + ".";
+
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("library-open") || "{}"); } catch (e) {}
+
+  document.getElementById("phases").innerHTML = PLAN.phases.map((p, i) => {
+    const doneSteps = p.steps.filter(s => s.status === "done").length;
+    const key = "p" + i;
+    const isOpen = key in saved ? saved[key] : (p.status === "now" || p.status === "next");
+    const steps = p.steps.map((s, j) => `
+      <li><details class="step ${s.status}" data-key="${key}s${j}" ${saved[key + "s" + j] ? "open" : ""}>
+        <summary><span class="dot ${s.status}" aria-hidden="true"></span><span class="st-title">${esc(s.title)}</span><span class="pill ${s.status}">${LABEL[s.status]}</span></summary>
+        <div class="st-detail">${esc(s.detail)}</div>
+      </details></li>`).join("");
+    return `
+      <details class="phase ${p.status === "now" || p.status === "next" ? "is-next" : ""}" data-key="${key}" ${isOpen ? "open" : ""}>
+        <summary>
+          ${chev}
+          <span class="ph-text">
+            <span class="ph-num">Phase ${i + 1}</span>
+            <h2>${esc(p.title)}</h2>
+            <span class="ph-sum">${esc(p.summary)}</span>
+            <span class="ph-count">${doneSteps} of ${p.steps.length} steps done</span>
+          </span>
+          <span class="pill ${p.status}">${LABEL[p.status]}</span>
+        </summary>
+        <ol class="steps">${steps}</ol>
+      </details>`;
+  }).join("");
+
+  document.getElementById("questions").innerHTML = PLAN.questions
+    .map(q => `<li><strong>${esc(q.q)}</strong><span>${esc(q.why)}</span></li>`).join("");
+  document.getElementById("footer").textContent = "Last updated " + PLAN.updated + ".";
+
+  const all = () => Array.from(document.querySelectorAll("details[data-key]"));
+  const save = () => {
+    const state = {};
+    all().forEach(d => { state[d.dataset.key] = d.open; });
+    try { localStorage.setItem("library-open", JSON.stringify(state)); } catch (e) {}
+  };
+  all().forEach(d => d.addEventListener("toggle", save));
+  document.getElementById("open-all").addEventListener("click", () => { all().forEach(d => d.open = true); save(); });
+  document.getElementById("close-all").addEventListener("click", () => { all().forEach(d => d.open = false); save(); });
+})();
+</script>
+
+</body></html>

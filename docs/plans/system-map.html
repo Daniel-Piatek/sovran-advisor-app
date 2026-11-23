@@ -1,0 +1,467 @@
+<title>The Whole Sovran System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a numbered "line" band on top (the real order a person moves through), then six zones = where things live.
+   Click a box: its links light up and a side panel opens with short bullets and toggles. */
+:root{
+  --bg:#FBFBFB; --surface:#FFFFFF; --zone:#F2F0EE; --ink:#302D2D; --muted:#6E6868; --line:#DCD7D3;
+  --crimson:#C71F42; --gold:#B89E22; --goldsoft:#F6EFC9; --built:#2F7D5B; --builtsoft:#E3F1EA;
+  --pending:#7A7F8C; --crimsonsoft:#FBE6EA;
+  --display:"Gloock", Georgia, "Times New Roman", serif;
+  --body:"Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1A1A; --surface:#262323; --zone:#221F1F; --ink:#EDEAE6; --muted:#A59E9A; --line:#3B3636;
+  --crimson:#E8566F; --gold:#D9C14B; --goldsoft:#3A3420; --built:#5CC394; --builtsoft:#1F3329;
+  --pending:#9AA0AD; --crimsonsoft:#3D2228; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1A1A; --surface:#262323; --zone:#221F1F; --ink:#EDEAE6; --muted:#A59E9A; --line:#3B3636;
+  --crimson:#E8566F; --gold:#D9C14B; --goldsoft:#3A3420; --built:#5CC394; --builtsoft:#1F3329;
+  --pending:#9AA0AD; --crimsonsoft:#3D2228; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.44}
+.wrap{max-width:1400px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:grid;gap:6px;margin-bottom:18px}
+.dates{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.badge{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--crimson);color:#fff}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:4px 0 0;text-wrap:balance}
+.lede{max-width:70ch;color:var(--muted);margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px;color:var(--muted);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:14px;border-radius:3px;border:2px solid var(--line);background:var(--surface)}
+.sw.built{border-color:var(--built)} .sw.planned{border-color:var(--gold)} .sw.q45{border-color:var(--crimson);border-style:dotted}
+.sw.pending{border-color:var(--pending);border-style:dashed} .sw.retiring{border-color:var(--line);background:var(--zone)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+button.tool{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.tool[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+.map{position:relative;display:grid;gap:18px}
+svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2}
+.band{position:relative;z-index:1;background:var(--zone);border-radius:10px;padding:14px}
+.band h2,.zone h2{font-family:var(--display);font-weight:400;font-size:19px;margin:0}
+.zhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.zhead small{color:var(--muted);font-size:12px}
+.line{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative;z-index:1}
+.zone{background:var(--zone);border-radius:10px;padding:14px;display:flex;flex-direction:column;min-width:0}
+.boxes{display:grid;gap:10px}
+.node{all:unset;box-sizing:border-box;display:block;cursor:pointer;background:var(--surface);border:2px solid var(--line);border-radius:8px;padding:9px 11px;position:relative;z-index:3;min-width:0}
+.node:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.node .t{font-weight:700;font-size:14px;line-height:1.25;display:block}
+.node .s{font-size:12.5px;color:var(--muted);display:block;margin-top:2px}
+.node .n{font-family:var(--display);font-size:13px;color:var(--crimson);margin-right:4px}
+.node.built{border-color:var(--built)} .node.planned{border-color:var(--gold)}
+.node.q45{border-color:var(--crimson);border-style:dotted} .node.pending{border-color:var(--pending);border-style:dashed}
+.node.retiring{background:var(--zone)} .node.retiring .t{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--muted)}
+.node:hover{transform:translateY(-1px)}
+.node.sel{box-shadow:0 0 0 3px var(--crimson);}
+.map.focus .node:not(.sel):not(.lit){opacity:.42}
+.node.lit{box-shadow:0 0 0 2px var(--gold)}
+.wire{fill:none;stroke:var(--muted);stroke-width:1.2;opacity:.18}
+.wire.on{stroke:var(--crimson);stroke-width:2;opacity:.9}
+.wire.dash{stroke-dasharray:5 4}
+.wlabel{font-size:11px;fill:var(--crimson);font-family:var(--body);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round}
+aside.panel{position:sticky;top:max(12px,env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;max-height:calc(100vh - 24px);overflow:auto}
+.panel .where{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel h3{font-family:var(--display);font-weight:400;font-size:24px;line-height:1.15;margin:4px 0 6px}
+.status{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px}
+.status.built{background:var(--builtsoft);color:var(--built)} .status.planned{background:var(--goldsoft);color:var(--ink)}
+.status.q45{background:var(--crimsonsoft);color:var(--crimson)} .status.pending{background:var(--zone);color:var(--pending)}
+.status.retiring{background:var(--zone);color:var(--muted)}
+.panel ul{margin:6px 0 10px;padding-left:18px} .panel li{margin:3px 0}
+.panel h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+details{border-top:1px solid var(--line);padding:6px 0}
+details details{margin-left:12px;border-top:1px dashed var(--line)}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+summary:focus-visible{outline:2px solid var(--gold)}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.links a,.links button{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
+.links a:hover,.links button:hover{border-color:var(--crimson)}
+.links a::after{content:" ↗";color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--zone);color:var(--ink);cursor:pointer;text-align:left}
+.chip b{font-weight:600}
+.chip:hover{border-color:var(--crimson)}
+.close{display:none}
+.open{margin-top:24px;background:var(--zone);border-radius:10px;padding:14px 18px;max-width:900px}.open h2{font-family:var(--display);font-weight:400;font-size:19px;margin:0 0 4px}.open li{margin:4px 0}.open i{color:var(--muted);font-style:normal}
+.foot{margin-top:28px;font-size:12.5px;color:var(--muted);max-width:80ch}
+@media (max-width:1100px){.zones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  aside.panel{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:62vh;border-radius:14px 14px 0 0;z-index:20;
+    padding-bottom:max(16px,env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+  .close{display:block;position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:10px;font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+  .line{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){.zones{grid-template-columns:minmax(0,1fr)}.line{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.node:hover{transform:none}}
+
+/* Line spacing (D, 16 Nov 2026): body 1.44, short text in cards, boxes and captions 1.36, never 1.5+ */
+.node,.chip,.legend,.wlabel,.zhead small,.dates,aside.panel,.foot{line-height:1.36}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="dates"><span class="badge">Living</span><span>Created 15 Nov 2026</span><span>Last updated 23 Nov 2026 (student app now called Sovran Central; go Sovran phone page and Sovran Compass added)</span><span>Public copy: private Drive links and client codes removed</span><span>Shows the <b>finished, planned</b> state, not what is built today</span></div>
+  <h1>The whole Sovran system, when it's done</h1>
+  <p class="lede">Every part, where it lives, and how it connects. Click any box: its connections light up and the panel tells you what it is, what it does and where it lives. Open the toggles to go deeper.</p>
+  <div class="legend">
+    <span><i class="sw built"></i>Built and working</span>
+    <span><i class="sw planned"></i>Planned</span>
+    <span><i class="sw q45"></i>Waits on Q45 (which reports)</span>
+    <span><i class="sw pending"></i>Not decided yet</span>
+    <span><i class="sw retiring"></i>Being retired</span>
+  </div>
+  <div class="tools"><button class="tool" id="allBtn" aria-pressed="false">Show every connection</button></div>
+</header>
+
+<div class="layout">
+  <div class="map" id="map">
+    <svg class="wires" id="wires" aria-hidden="true"></svg>
+    <section class="band">
+      <div class="zhead"><h2>The line: one person, start to finish</h2><small>in this order</small></div>
+      <div class="line" id="z-line"></div>
+    </section>
+    <div class="zones">
+      <section class="zone"><div class="zhead"><h2>Reports</h2><small>made from the decodes</small></div><div class="boxes" id="z-reports"></div></section>
+      <section class="zone"><div class="zhead"><h2>On your Mac mini</h2><small>where the work runs</small></div><div class="boxes" id="z-mac"></div></section>
+      <section class="zone"><div class="zhead"><h2>Claude</h2><small>the writing and the helpers</small></div><div class="boxes" id="z-claude"></div></section>
+      <section class="zone"><div class="zhead"><h2>Online data (Supabase)</h2><small>project sovran-library</small></div><div class="boxes" id="z-cloud"></div></section>
+      <section class="zone"><div class="zhead"><h2>Students and clients</h2><small>what people use</small></div><div class="boxes" id="z-people"></div></section>
+      <section class="zone"><div class="zhead"><h2>Storage and safety</h2><small>files, code, backups</small></div><div class="boxes" id="z-store"></div></section>
+    </div>
+  </div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</div>
+
+<section class="open" aria-labelledby="openh"><h2 id="openh">Still to decide</h2><ul>
+<li><b>Q45</b> Which reports: simplify to four things? <i>Yours to answer.</i></li>
+<li>✓ <b>Q52</b> Report PDFs and AI files: <b>both</b>. Students get them in Supabase behind their key; your copies go to Drive. <i>Decided 16 Nov.</i></li>
+<li>✓ <b>Q53</b> A GoHighLevel purchase runs everything automatically (key made and sent), with at most one Approve tap from you. <i>Decided 16 Nov; built in phase E.</i></li>
+<li>Sovran Compass: how it becomes a module, and how students and facilitators share its data. <i>3-D Model project, with you.</i></li>
+<li>How the course opens from the student app. <i>Sovran Advisor project, with you.</i></li>
+<li>Backups off students' computers, Windows testing, better assistant answers from decodes, email for students. <i>Sovran Advisor project, on its Later list.</i></li>
+</ul></section>
+<p class="foot">Sources: the Sovran Advisor project's answer (15 Nov), the reports rebuild handoff (15 Nov), the reports map (14 Nov), the decode machine build plan, APP Daniel's own README, and the Supabase project as it stands. Client codes only, no names. Dashed boxes are not decided yet.</p>
+</div>
+
+<script>
+const A = {
+  progress:"https://claude.ai/artifact/1TLQmD5PJthfWY9hdAhnQt",
+  rules:"https://claude.ai/artifact/VrK7M8TEfEvzK56kkydNQ3",
+  handoff:"https://claude.ai/artifact/YUc87xAjvZugLeZiG4fSnu",
+  plan:"https://claude.ai/artifact/DesxZxGuPxAteSxUrSvTgz",
+  capture:"https://claude.ai/artifact/V51ahemfsvCYeM3wJ76HZ4",
+  map:"https://claude.ai/artifact/2AEUC9GgVjpimFvYbmoHYc",
+  styles:"https://claude.ai/artifact/J8QdT7MSaqPgxjXc5GAZ65",
+  oldnew:"https://claude.ai/artifact/NfoBd7ciC79bc2Cswi4yQ7",
+  repo:"https://github.com/daniel-piatek/sovran-machine",
+  drive:"",
+  vault:"",
+  courses:"",
+  supa:"https://supabase.com/dashboard/project/lpqzqnmwsxnojvpcqwiy",
+  supaT:"https://supabase.com/dashboard/project/lpqzqnmwsxnojvpcqwiy/editor",
+  supaF:"https://supabase.com/dashboard/project/lpqzqnmwsxnojvpcqwiy/functions",
+  platform:"https://supabase.com/dashboard/project/anysswrvvfsddnqkbioi",
+  app:"http://127.0.0.1:3000",
+  thread:id=>"https://claude.ai/code/project/chan_013WqhQhgciZHCUaLcYG6Yfe?thread="+id,
+};
+const L=(label,href)=>({label,href}), P=(label,copy)=>({label,copy});
+
+const nodes = [
+ // ---- the line
+ {id:"intake",z:"line",n:1,t:"Sign-up and birth details",s:"GoHighLevel form",st:"planned",where:"GoHighLevel, then your Mac",
+  what:["A person buys or signs up, and gives their birth date, time and place, plus permission."],
+  role:["The start of everything. Nothing else runs until these details are in."],
+  lives:["The form and payment live in GoHighLevel (your client system).","The details are copied to the Mac as a new client folder with a code (client- plus 12 letters and digits), never a name."],
+  links:[P("Copy folder path, for Finder","/Users/danielpiatek/Sovran Machine/clients")],
+  more:[{t:"What changes",b:["Today the old estate watches for new sign-ups (its job psd-intake-watch). That job is retired with the old estate.","Building the new intake is phase E, after the reports."]},
+        {t:"Automatic from purchase (your Q53)",b:["A purchase in GoHighLevel starts everything by itself: client folder, decode, keep, library upload, and the student's Library key.","The key is made in the cloud. Your one Approve tap is your consent (it replaces \"Mark library OK\") and shows you the key once, to copy into LastPass. After that only its fingerprint is kept.","The welcome email sends the key with the Start Here link. If decodes aren't ready yet, it says so: the key opens your teaching now; decodes and reports appear later.","Keys made this way work exactly like today's keys. Built in phase E; today keys are made by hand on your Mac."]}]},
+ {id:"decode",z:"line",n:2,t:"Decode",s:"3 decodes, about 45 min",st:"built",where:"Sovran Machine, on your Mac",
+  what:["Birth details in, three decodes out: Astrology, Human Design, Gene Keys."],
+  role:["The base every report is made from. Decodes are material for machines and for a person's own AI; nobody reads them cover to cover."],
+  lives:["Runs on your Mac by default (your Q51), started from a Claude thread through Remote Control.","Uses your Claude plan, not a bill per use."],
+  links:[L("Build plan",A.plan)],
+  more:[{t:"The steps",b:["Chart: the planets and gates worked out, free, 15 seconds.","Library passages placed: about 1,300 per person from the 3,929 approved passages.","Fresh sections written by Claude: writer plus reviewer, 6 at a time.","Checks: no names, chart facts right, nothing missing."],
+         more:[{t:"If a piece gets stuck",b:["It gets one fresh try with a new writer and reviewer.","Only if that fails too does it come to you, as accept or leave out. That page gets built the first time it's needed."]}]},
+        {t:"Proof so far",b:["A test client: the new decode matches the old one.","Your own chart: 44 minutes, all checks pass."]}]},
+ {id:"keep",z:"line",n:3,t:"Keep",s:"not done until KEPT",st:"built",where:"Mac, project folder, Supabase",
+  what:["The step that stores a finished decode, or report, in lasting places and reads every copy back."],
+  role:["Your rule: nothing counts as done until it is kept. This is where that rule lives."],
+  lives:["Copy 1: your Mac, in the client's folder (backed up by Time Machine and Backblaze).","Copy 2: the project's shared folder.","A record row in Supabase (kept_decodes) with a fingerprint of each file."],
+  links:[P("Copy folder path, for Finder","/Users/danielpiatek/Sovran Machine/clients"),L("Supabase tables",A.supaT)],
+  more:[{t:"For reports too",b:["Reports go to clients/<code>/reports/<report>/<date>/ the same way: interactive page, PDF and the for-your-AI file."]}]},
+ {id:"reportsline",z:"line",n:4,t:"Reports",s:"Pattern first",st:"q45",where:"Sovran Machine, on your Mac",
+  what:["The readable pieces made from the decodes. The set is in the Reports zone below."],
+  role:["Turns huge decodes into something a person can read and recognise themselves in."],
+  lives:["Instructions and code in the repo under machine/reports/<report>/.","Built in the new Reports project (your Q50)."],
+  links:[L("Reports handoff page",A.handoff),L("Reports map",A.map)],
+  more:[{t:"Which reports",b:["Sovran Pattern is certain and comes first.","The rest depends on Q45: simplify to four things (decodes, Pattern, Architecture in tiers, Layered Portrait), or keep the separate products."]}]},
+ {id:"deliver",z:"line",n:5,t:"Deliver",s:"read in an app, or download",st:"planned",where:"Supabase + Google Drive",
+  what:["Every report comes two ways (your Q9): interactive in an app, and as a download."],
+  role:["Gets the report to the person in a form they can read, and a form their own AI can use."],
+  lives:["Interactive: one row per section in Supabase (this machine's own tables), behind the student's own Library key.","Download: a PDF plus a plain text file for their own AI, kept in both places (your Q52): next to the rows in Supabase behind the student's key, and your own copies in Google Drive › APP Daniel › Clients."],
+  
+  more:[{t:"Where people read it",b:["You read reports in APP Daniel.","Students read them on a new Reports page in Sovran Advisor, which fetches them through the library door with their key (planned). Their assistant can read them the same way."]},
+        {t:"Why both (Q52)",b:["Students have no Google sign-in, so they get their files from Supabase with their key.","You keep your own copies in Drive, filed flat by client code."]}]},
+
+ // ---- reports
+ {id:"pattern",z:"reports",t:"Sovran Pattern",s:"the flagship, Evocative style",st:"planned",where:"Report",
+  what:["The whole person and their central journey, in five sections. $37."],
+  role:["The one \"who you are\" report. Everything else builds on it."],
+  lives:["Rebuilt first, in the new Reports project, from the new decodes.","Reads the Astrology and Human Design decodes only."],
+  links:[L("Reports map",A.map),L("Writing styles",A.styles)],
+  more:[{t:"How it's made",b:["Central Journey Brief (four ways to read the core theme), then the report, then a clarity read-through."],more:[{t:"Plan",b:["A small program pulls only what Pattern needs from the decodes.","Instructions trimmed from 370 KB to the rules that matter.","Three clients you know well first; you read old and new side by side."]}]},
+        {t:"Still to write",b:["The introduction and conclusion."]}]},
+ {id:"arch",z:"reports",t:"Your Sovran Architecture",s:"in four tiers",st:"q45",where:"Report",
+  what:["\"The structure of your whole life\": the twelve areas of life, read with both house systems."],
+  role:["The \"how your life is built\" report, grown tier by tier."],
+  lives:["Not built yet. Designed in October, planned in four tiers on 9 Nov."],
+  more:[{t:"The four tiers",b:["1. The floor plan (the core of Architecture).","2. Who lives in the rooms.","3. How the forces work together.","4. Timing."]}]},
+ {id:"portrait",z:"reports",t:"The Layered Portrait",s:"one living page",st:"q45",where:"Report",
+  what:["One page that grows as more is known, every layer foldable."],
+  role:["Today only for you (your \"one-pager\", 4 versions). In the plan, the one living page a student fills in over the Sovran Quest."],
+  lives:["Today in the old estate. Rebuilt later in the Reports project.","For students: shows on the Reports page in Sovran Advisor, growing as each part is added over the Quest (agreed with the Sovran Advisor project, 16 Nov). Read from the machine's own report rows."],
+  more:[{t:"Its layers",b:["The throughline (from Pattern).","The container and the working machinery (from 8 Forces).","The centre: one sentence, \"to ___ so that ___\".","Six facets and the threads across them (from the vocation engines)."]}]},
+ {id:"others",z:"reports",t:"8 Forces, Profile, Future Self",s:"undecided",st:"q45",where:"Report",
+  what:["8 Forces: vocational add-on (5 clients). Profile: on hold. Future Self: parked."],
+  role:["If Q45 is yes, 8 Forces and the vocation engines become layers of the Portrait instead of separate products."],
+  lives:["Old versions stay in the old estate's copy until decided."],
+  links:[L("Reports map",A.map)]},
+
+ // ---- mac
+ {id:"machine",z:"mac",t:"Sovran Machine",s:"~/Sovran Machine",st:"built",where:"Your Mac mini",
+  what:["The new, lean decode and report machine. Plain code, no agents."],
+  role:["Does steps 2 to 4 of the line: decode, keep, reports."],
+  lives:["Folder on your Mac. Its code is also on GitHub. Client data stays only on the Mac."],
+  links:[P("Copy folder path, for Finder","/Users/danielpiatek/Sovran Machine"),L("GitHub",A.repo)],
+  more:[{t:"Inside the folder",b:["machine/: the program.","reference/: a frozen copy of what it needs from the old estate (13 Nov).","clients/: each client's kept decodes and reports. Never on GitHub."]},
+        {t:"Rules",b:["Never writes to the old estate.","Writes only to its own Supabase tables.","Cost cap for tests: $50."]}]},
+ {id:"appdaniel",z:"mac",t:"APP Daniel",s:"your own app",st:"built",where:"Your Mac mini",
+  what:["Your single home: notes, journal, people, tasks, planner, inbox, My Life, Documents and Money, and an Assistant."],
+  role:["Where you live day to day. Also where you read reports about yourself and others."],
+  lives:["On your Mac. Opens at 127.0.0.1:3000.","Stores no files: they go to Google Drive, with a link and a short description.","Built in the Sovran Advisor Claude project."],
+  links:[L("Open the app",A.app),P("Copy folder path, for Finder","/Users/danielpiatek/APP Daniel")],
+  more:[{t:"What's in it today",b:["469 journal entries, 286 notes, 35 tasks, 20 My Life items, 10 people.","The Obsidian vault is fully inside it (14 Nov)."]},
+        {t:"How it connects",b:["Hourly copy to Supabase, so Claude on the web can read it (Daniel App connector).","Its Assistant can take a Sovran Library key and look up decodes.","Other tools on the Mac reach it through one door with their own key."],
+         more:[{t:"Shared with the student app",b:["Several features came from Sovran Advisor (wide Assistant view, help pages, voice calls).","The Course link is there but switched off, as in the student app."]}]}]},
+ {id:"claudecode",z:"mac",t:"Claude Code and skills",s:"6 skills",st:"built",where:"Your Mac mini",
+  what:["Claude on the command line, signed in to your plan, with your own skills."],
+  role:["Your daily helpers, and the engine the machine calls to write."],
+  lives:["On your Mac. Threads reach it through Remote Control."],
+  more:[{t:"The skills",b:["Plate, Inbox, Transcribe, Digest a call, Wrap up.","Write in my voice."]}]},
+ {id:"estate",z:"mac",t:"Old estate",s:"PKA-Live-Sovran",st:"retiring",where:"Your Mac mini, read only",
+  what:["The old machine with about 20 AI agents. Still runs today."],
+  role:["Keeps working until the new build is proven. Then archived (phase F, only on your yes). Frees about 28 GB."],
+  lives:["/Users/danielpiatek/PKA-Live-Sovran. Never changed by any new work."],
+  links:[L("What it does",A.capture)],
+  more:[{t:"Before it's archived",b:["Save its Conversation-Archive (your old Claude chats, about 8.9 GB) to Google Drive.","Stop its nightly jobs.","Point the library's nightly copy at Sovran Machine instead."]}]},
+
+ // ---- claude
+ {id:"plan",z:"claude",t:"Your Claude plan",s:"the writer and reviewer",st:"built",where:"Claude (your account)",
+  what:["The AI that writes the fresh parts of decodes and reports, and answers in the apps."],
+  role:["Writer: Claude Opus. Reviewer: Claude Sonnet. Same settings as the old machine."],
+  lives:["Runs through your Claude subscription. No API keys, no bill per use. Big runs use part of your usage limit."]},
+ {id:"styles",z:"claude",t:"Two writing styles",s:"Evocative and Descriptive",st:"built",where:"Repo, machine/styles/",
+  what:["Evocative: mirrors the person back so they see themselves. Descriptive: direct and practical."],
+  role:["Every writer that speaks to a person names one. Pattern is Evocative. Assistant answers are Descriptive unless asked to go deeper."],
+  lives:["Two short files in the repo, and your page."],
+  links:[L("The two styles",A.styles),L("GitHub folder",A.repo+"/tree/main/machine/styles")]},
+ {id:"projects",z:"claude",t:"Claude projects and pages",s:"where the work is talked through",st:"built",where:"claude.ai",
+  what:["Three projects: this one (setup and the decode machine), the new Reports project, and Sovran Advisor (builds both apps)."],
+  role:["Where you ask for work and read results. Each keeps a progress page."],
+  lives:["claude.ai, with pages (like this one) as artifacts."],
+  links:[L("Progress page",A.progress),L("Rules page",A.rules)]},
+
+ // ---- cloud
+ {id:"library",z:"cloud",t:"The Sovran Library",s:"passages, teaching, decodes",st:"built",where:"Supabase › library",
+  what:["3,929 approved passages, 56 teaching documents, and students' decodes (16 students)."],
+  role:["The shared knowledge everything draws on, and what a student's AI looks things up in."],
+  lives:["Supabase project sovran-library, the library tables. Read only for the new machine."],
+  links:[L("Open in Supabase",A.supaT)],
+  more:[{t:"How it's filled",b:["Today: a nightly copy from the old estate (03:15).","When done: the same copy reads from Sovran Machine.","A client's decodes go online only after you mark them \"library OK\"."]}]},
+ {id:"tables",z:"cloud",t:"The machine's own tables",s:"kept decodes, report sections",st:"planned",where:"Supabase › sovran_machine",
+  what:["kept_decodes: a record of every kept decode (12 rows now).","Report tables (planned): which student (by key, never name), which report, section, order, text, version, and where its PDF and for-your-AI file sit. Also the Layered Portrait, updated as parts arrive."],
+  role:["The record that things are kept, and the source the apps show reports from. The report shape is shared with the Sovran Advisor project before it's built, so both sides match."],
+  lives:["Supabase project sovran-library, its own sovran_machine section."],
+  links:[L("Open in Supabase",A.supaT)]},
+ {id:"door",z:"cloud",t:"Library door",s:"for a person's own AI",st:"built",where:"Supabase function",
+  what:["A small online service a student's AI (Claude or ChatGPT) connects to with a personal key."],
+  role:["Lets a person ask their own AI about their own decodes, reports and your teaching. Read only. Each key sees only its owner's."],
+  lives:["Supabase function library-mcp. Keys are stored only as fingerprints; new keys are made in the cloud from a purchase (phase E)."],
+  more:[{t:"Three new reads for reports (planned, phase E)",b:["List my reports.","Read one report.","Give me a report's file (PDF or for-your-AI)."]}],
+  links:[L("Supabase functions",A.supaF)]},
+ {id:"cloudcopy",z:"cloud",t:"Your app's cloud copy",s:"Daniel App connector",st:"built",where:"Supabase, your private area",
+  what:["An hourly copy of APP Daniel (mail stays on the Mac)."],
+  role:["Lets Claude on the web read your notes and tasks, and drop things in your Inbox."],
+  lives:["Supabase, private to you. Connector \"Daniel App\" in claude.ai."]},
+ {id:"platform",z:"cloud",t:"live-sovran-platform",s:"likely the course site",st:"pending",where:"Separate Supabase project",
+  what:["A second Supabase project. It holds nothing for the student app today, and already has video playback (Mux)."],
+  role:["Likely home of your own course site for the Sovran Quest (parked)."],
+  lives:["Supabase project live-sovran-platform. The machine never writes here.","Planned address: app.livesovran.com/sq01."],
+  links:[L("Open in Supabase",A.platform)]},
+
+ // ---- people
+ {id:"sa",z:"people",t:"Sovran Central",s:"the student app, on their computer",st:"built",where:"Each student's own computer",
+  what:["Sovran Central (its assistant is called Sovran Advisor). A private app on each student's computer: Journal, Notes, People, Inbox, Assistant, the Sovran Library, help pages, dictation and voice calls."],
+  role:["Where a student does their coursework, talks to their own AI, and looks up their decodes and your teaching. Reports come next."],
+  lives:["On the student's Mac, opened from a Dock icon. No server, no website, no sign-in.","Everything they write stays on their computer, with a daily copy kept 14 days.","Installed by pasting one sentence into Claude Code."],
+  links:[L("Start Here page (send to students)","https://claude.ai/artifact/2f264pbVe7JE9XWbeU6yYE"),L("Code on GitHub","https://github.com/Daniel-Piatek/sovran-advisor-app"),L("Phone capture page","https://daniel-piatek.github.io/sovran-advisor-app/")],
+  more:[{t:"Built, switched off for now",b:["Tasks, Planner, Calendar, My Life, Google Calendar view.","Phone capture: dictate on the phone, it lands in the Inbox (via a sealed drop box in Supabase).","Course button: hidden."]},
+        {t:"Its AI",b:["The student's own Claude (Pro or higher) or their own ChatGPT, chosen in Settings.","They pay for their own plan. You pay nothing per student."]},
+        {t:"The Library key",b:["The only \"account\". You make it on your Mac after marking them OK, and send it.","Pasted in Settings, it lets their assistant read your teaching and only their own decodes."]},
+        {t:"How it stays in step with APP Daniel",b:["Separate copy, not shared code.","Screen and design changes are copied across in one pull request; you say \"merge it\"; students press Update."],
+         more:[{t:"Stays in APP Daniel only",b:["Connect (keys, API), Mail, ElevenLabs voice, Documents and Money, Drive files, hourly cloud copy."]}]},
+        {t:"Not decided yet (Sovran Advisor project)",b:["How the course opens from the app.","Backups off the student's computer.","Windows (a start shortcut exists, needs a tester).","Better assistant answers from decodes.","Whether students ever get email (a hidden copy exists, off)."]}]},
+ {id:"reportspage",z:"people",t:"Reports page",s:"inside Sovran Advisor",st:"planned",where:"Student app + Supabase",
+  what:["A new page in the student app. The Layered Portrait sits at the top and grows as parts arrive; below it, Sovran Pattern and later reports, section by section."],
+  role:["Where Sovran Pattern and later reports reach a student, interactive."],
+  lives:["Reads the report rows from Supabase through the library door, with the student's own key. Planned; ships with the assistant reading reports and a key box on first open, as one update you approve."],
+  more:[{t:"Downloads",b:["The PDF and for-your-AI file sit next to the report rows, behind the same key (Q52)."]}]},
+ {id:"quest",z:"people",t:"Sovran Quest",s:"the course, parked",st:"pending",where:"Your own course site (likely)",
+  what:["Your course: the Pre-Quest and the Quests, with five categories and a seven-question map."],
+  role:["The journey a student takes. The Layered Portrait fills in along the way."],
+  lives:["Planned: your own course site, likely in live-sovran-platform, at app.livesovran.com/sq01. Parked.","How it opens from the student app is not decided (you said a browser tab isn't how you want it).","The Layered Portrait fills in on the Reports page as the Quest goes on, not on the course page.","Course videos are in Google Drive today."],
+  links:[]},
+ {id:"gosovran",z:"people",t:"go Sovran",s:"Sovran Central on the phone",st:"built",where:"A web page on the phone",
+  what:["A phone web page added to the home screen: ask your AI about your reports, write in your Journal, keep a thought, Group Circle."],
+  role:["The light phone companion. The computer app stays the home of the student's data."],
+  lives:["Published from the student app's repo (phone/ folder) by GitHub Pages.","It never reaches the computer directly: it seals each item and leaves it in a drop box in Supabase; the computer collects it about once a minute.","Reports are read from the library with the student's key."],
+  links:[L("Phone page","https://daniel-piatek.github.io/sovran-advisor-app/"),L("Phone app plan","https://claude.ai/artifact/2uKjr4cEEZvYY1sEMv7SKd")]},
+ {id:"compass",z:"people",t:"Sovran Compass",s:"3D meta-framework, being planned",st:"pending",where:"Planned as a module",
+  what:["The Sovran Compass / Meta Framework (63 zones, 40 practices), with a 3D model on your Mac."],
+  role:["Planned in the 3-D Model project as a module in Sovran Central and APP Daniel. Not built in either app yet."],
+  lives:["The 3D model: a single HTML file on your Mac.","The library plan puts its zones and practices in the shared part of the Sovran Library once it becomes a module.","How students and facilitators share Compass data is not decided."],
+  links:[L("Compass prototype (5 Nov)","https://claude.ai/artifact/4LhKsY8cJbbfo25mh8sbmg"),L("Compass in APP Daniel mock-up","https://claude.ai/artifact/EJgFfBaVBYFTPis3cCbAHo")]},
+ {id:"ownai",z:"people",t:"A person's own AI",s:"Claude, ChatGPT",st:"built",where:"The person's own account",
+  what:["The AI a client or student already uses."],
+  role:["Powers the student app's Assistant. Looks up their decodes, your teaching and (planned) their reports through the library door."],
+  lives:["Their own Claude Code or ChatGPT (Codex) plan, paid by them."]},
+
+ // ---- store
+ {id:"drive",z:"store",t:"Google Drive",s:"My Drive › APP Daniel",st:"built",where:"Google",
+  what:["Where every stored file lives: app attachments, report downloads, archives."],
+  role:["Keeps the apps light. Flat folders, no deep trees."],
+  lives:["My Drive › APP Daniel, with folders such as Clients, Inbox, Live Sovran, Courses."],
+  links:[],
+  more:[{t:"Coming in",b:["Report PDFs and for-your-AI files, named <client code> · <report> · <date>.","The old estate's Conversation-Archive, before it is archived."]}]},
+ {id:"github",z:"store",t:"GitHub",s:"3 code homes",st:"built",where:"github.com",
+  what:["The code for the machine and both apps, with full history. Never any client or student data."],
+  role:["The master copy of the code. Macs pull updates from it; students press Update."],
+  lives:["sovran-machine (private): the decode and report machine.","sovran-advisor (private, branch app-daniel-mac): APP Daniel, pushed after each Release.","sovran-advisor-app (public, personal-use licence): the student app."],
+  links:[L("sovran-machine",A.repo),L("sovran-advisor-app","https://github.com/Daniel-Piatek/sovran-advisor-app")]},
+ {id:"backups",z:"store",t:"Backups",s:"Time Machine and Backblaze",st:"built",where:"Your Mac",
+  what:["Two backups of the whole Mac."],
+  role:["Protect the client folders, APP Daniel's data and everything else on the Mac."],
+  lives:["Time Machine (complete 14 Nov) and Backblaze online backup."]},
+];
+
+const edges = [
+ ["intake","decode","birth details"],["decode","keep","three decodes"],["keep","reportsline","feeds"],["reportsline","deliver","finished reports"],
+ ["decode","machine","runs in"],["keep","machine","copy 1"],["keep","tables","record row"],["reportsline","machine","built in"],
+ ["machine","plan","writing"],["claudecode","machine","Remote Control runs it"],["machine","github","code only"],["machine","backups","backed up"],
+ ["library","machine","passages"],["machine","library","nightly copy (when done)",1],["estate","library","nightly copy (today)",1],
+ ["keep","pattern","decodes"],["keep","arch","decodes"],["pattern","portrait","top layer"],["others","portrait","become layers if Q45 yes",1],
+ ["styles","pattern","Evocative"],["styles","appdaniel","Descriptive answers"],["styles","sa","Descriptive answers"],
+ ["pattern","deliver",""],["arch","deliver",""],["portrait","deliver",""],
+ ["deliver","tables","sections"],["deliver","drive","your copies (Q52)"],["portrait","reportspage","grows here over the Quest"],["deliver","appdaniel","you read here"],["deliver","reportspage","students read here"],["reportspage","sa","a page in"],["tables","door","reports behind the same key",1],
+ ["library","door","looked up through"],["door","ownai","answers"],["deliver","ownai","download"],["sa","door","library key"],["sa","ownai","the student's own AI"],["appdaniel","sa","design changes, by pull request"],["sa","github","code + Update"],["appdaniel","door","library key"],
+ ["appdaniel","cloudcopy","hourly copy"],["cloudcopy","projects","Daniel App connector"],["appdaniel","drive","files live here"],["appdaniel","plan","Assistant"],
+ ["projects","appdaniel","builds"],["projects","sa","builds"],["estate","drive","old chats move here",1],["appdaniel","backups","backed up"],
+ ["platform","quest","course site (likely)",1],["quest","sa","how it opens: not decided",1],["portrait","quest","fills in over the Quest"],["intake","door","makes the Library key, automatically"],["intake","sa","sends key + Start Here link"],
+ ["gosovran","sa","sealed drop box"],["gosovran","door","reports with the key"],["compass","sa","module (planned)",1],["compass","appdaniel","module (planned)",1],["compass","library","zones and practices go in later",1],
+ ["claudecode","appdaniel","daily skills"],["claudecode","plan","your plan"],
+];
+
+const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+const ST = {built:"Built and working",planned:"Planned",q45:"Waits on Q45",pending:"Not decided yet",retiring:"Being retired"};
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+for(const n of nodes){
+  const b=document.createElement("button");
+  b.className="node "+n.st; b.id="n-"+n.id; b.type="button";
+  b.innerHTML=`<span class="t">${n.n?`<span class="n">${n.n}</span>`:""}${esc(n.t)}</span><span class="s">${esc(n.s)}</span>`;
+  b.addEventListener("click",()=>select(n.id,true));
+  document.getElementById("z-"+n.z).appendChild(b);
+}
+
+const map=document.getElementById("map"), svg=document.getElementById("wires"), panel=document.getElementById("panel");
+let current=null, showAll=false;
+
+function anchor(r,o,side){
+  const cx=r.left-o.left+r.width/2, cy=r.top-o.top+r.height/2;
+  if(side==="t") return [cx,r.top-o.top]; if(side==="b") return [cx,r.bottom-o.top];
+  if(side==="l") return [r.left-o.left,cy]; return [r.right-o.left,cy];
+}
+function draw(){
+  const o=map.getBoundingClientRect();
+  let out="";
+  edges.forEach(([a,b,label,dash],i)=>{
+    const on = current && (a===current||b===current);
+    if(!on && !showAll) return;
+    const ra=document.getElementById("n-"+a).getBoundingClientRect(), rb=document.getElementById("n-"+b).getBoundingClientRect();
+    const dx=(rb.left+rb.width/2)-(ra.left+ra.width/2), dy=(rb.top+rb.height/2)-(ra.top+ra.height/2);
+    let p1,p2,c1,c2;
+    if(Math.abs(dx)<10 && Math.abs(dy)>90){
+      p1=anchor(ra,o,"r"); p2=anchor(rb,o,"r"); const k=34+Math.min(40,Math.abs(dy)*0.12);
+      c1=[p1[0]+k,p1[1]]; c2=[p2[0]+k,p2[1]];
+    } else if(Math.abs(dy)>Math.abs(dx)*0.6 && Math.abs(dy)>40){
+      p1=anchor(ra,o,dy>0?"b":"t"); p2=anchor(rb,o,dy>0?"t":"b");
+      const k=Math.max(30,Math.abs(p2[1]-p1[1])*0.45)*(dy>0?1:-1);
+      c1=[p1[0],p1[1]+k]; c2=[p2[0],p2[1]-k];
+    } else {
+      p1=anchor(ra,o,dx>0?"r":"l"); p2=anchor(rb,o,dx>0?"l":"r");
+      if(Math.abs(dx)<10){p1=anchor(ra,o,"r");p2=anchor(rb,o,"r");const k=40;c1=[p1[0]+k,p1[1]];c2=[p2[0]+k,p2[1]];}
+      else {const k=Math.max(30,Math.abs(p2[0]-p1[0])*0.45)*(dx>0?1:-1);c1=[p1[0]+k,p1[1]];c2=[p2[0]-k,p2[1]];}
+    }
+    const d=`M${p1} C${c1} ${c2} ${p2}`;
+    out+=`<path class="wire${on?" on":""}${dash?" dash":""}" d="${d}" marker-end="url(#ar${on?"on":""})"/>`;
+    if(on && label && Math.hypot(p2[0]-p1[0],p2[1]-p1[1])>90){
+      const mx=(p1[0]+3*c1[0]+3*c2[0]+p2[0])/8, my=(p1[1]+3*c1[1]+3*c2[1]+p2[1])/8;
+      out+=`<text class="wlabel" x="${mx}" y="${my}" text-anchor="middle" dy="4">${esc(label)}</text>`;
+    }
+  });
+  svg.innerHTML=`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)" opacity=".4"/></marker><marker id="aron" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--crimson)"/></marker></defs>`+out;
+}
+
+function list(arr){return arr&&arr.length?`<ul>${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+function mores(arr){return (arr||[]).map(m=>`<details><summary>${esc(m.t)}</summary>${list(m.b)}${mores(m.more)}</details>`).join("")}
+function linksHtml(ls){
+  if(!ls||!ls.length) return "";
+  return `<div class="links">${ls.map(l=>l.href?`<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`:`<button type="button" data-copy="${esc(l.copy)}" title="${esc(l.copy)}">${esc(l.label)}</button>`).join("")}</div>`;
+}
+function select(id,user){
+  current=id; const n=byId[id];
+  document.querySelectorAll(".node").forEach(e=>e.classList.remove("sel","lit"));
+  document.getElementById("n-"+id).classList.add("sel");
+  const conn=[];
+  edges.forEach(([a,b,label])=>{ if(a===id) conn.push([b,label,"to"]); if(b===id) conn.push([a,label,"from"]); });
+  conn.forEach(([o])=>document.getElementById("n-"+o).classList.add("lit"));
+  map.classList.add("focus");
+  panel.innerHTML=`<button class="close" type="button" id="closeP">Close</button>
+   <div class="where">${esc(n.where)}</div><h3>${esc(n.t)}</h3><span class="status ${n.st}">${ST[n.st]}</span>
+   <h4>What it is</h4>${list(n.what)}<h4>Its part in the whole</h4>${list(n.role)}<h4>Where it lives</h4>${list(n.lives)}
+   ${linksHtml(n.links)}
+   ${n.more?`<h4>Go deeper</h4>${mores(n.more)}`:""}
+   <h4>Connects to</h4><div class="chips">${conn.map(([o,label,dir])=>`<button class="chip" type="button" data-go="${o}">${dir==="to"?"→":"←"} <b>${esc(byId[o].t)}</b>${label?` · ${esc(label)}`:""}</button>`).join("")}</div>`;
+  panel.hidden=false;
+  panel.querySelectorAll("[data-go]").forEach(c=>c.addEventListener("click",()=>select(c.dataset.go,true)));
+  panel.querySelectorAll("[data-copy]").forEach(c=>c.addEventListener("click",()=>{
+    const t=c.dataset.copy, old=c.textContent;
+    const done=()=>{c.textContent="Copied. In Finder press ⌘⇧G and paste";setTimeout(()=>c.textContent=old,3500)};
+    try{navigator.clipboard.writeText(t).then(done,()=>{c.textContent=t})}catch(e){c.textContent=t}
+  }));
+  const cp=document.getElementById("closeP"); if(cp) cp.addEventListener("click",()=>{panel.hidden=true});
+  if(user){ try{history.replaceState(null,"","#"+id)}catch(e){} }
+  draw();
+}
+document.getElementById("allBtn").addEventListener("click",e=>{showAll=!showAll;e.currentTarget.setAttribute("aria-pressed",showAll);draw();});
+window.addEventListener("resize",draw);
+new ResizeObserver(draw).observe(map);
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1); if(byId[h]&&h!==current) select(h,false)});
+const start=(location.hash.slice(1) in byId)?location.hash.slice(1):"decode";
+select(start,false);
+if(window.matchMedia("(max-width:900px)").matches && !location.hash) panel.hidden=true;
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
+</script>
