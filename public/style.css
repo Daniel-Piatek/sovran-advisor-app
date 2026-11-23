@@ -5092,3 +5092,6 @@ html[data-section="quest-expressive"]:not([data-section=""]) { --page-title-colo
   .quest-seg { font-size: var(--text-xs); padding: var(--space-2); white-space: nowrap; }
 }
 .quest-link { color: inherit; text-decoration-color: var(--color-accent); }
+/* The summary of the call on the Quest page, above the transcript (2026-11-23, the owner's choice). */
+.quest-summary { margin-bottom: var(--space-3); }
+.quest-summary p { margin: 0 0 var(--space-2); line-height: var(--line-height-base); white-space: pre-line; }

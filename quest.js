@@ -115,7 +115,7 @@ export async function questPage(db) {
       const key = weekKey(w.group, w.number);
       return {
         group: w.group, number: w.number, title: w.title || '', call_on: w.call_on || '',
-        practice_url: w.practice_url || '', replay_url: w.replay_url || '', has_transcript: Boolean(w.transcript || w.has_transcript),
+        practice_url: w.practice_url || '', replay_url: w.replay_url || '', has_transcript: Boolean(w.transcript || w.has_transcript), summary: w.summary || '',
         homework: (w.homework ?? []).map((h, i) => {
           const work = workOf(db, key, i + 1);
           const done = isDone(db, key, i + 1);
@@ -220,7 +220,7 @@ export async function questText(db, { week = null, words = '' } = {}) {
     const w = weeks.find((x) => x.number === Number(week));
     if (!w) return `There is no Week ${week}.`;
     const transcript = transcriptLines(await textOf(db, w)).map((l) => `${l.at} ${l.who}: ${l.text}`).join('\n');
-    return `${head(w)}\nHomework:\n${homeworkText(w)}\n\nTranscript of the group call (/quest/week-${w.number}/transcript):\n${transcript || '(none yet)'}`;
+    return `${head(w)}\nHomework:\n${homeworkText(w)}\n\n${w.summary ? `Summary of the group call:\n${w.summary}\n\n` : ''}Transcript of the group call (/quest/week-${w.number}/transcript):\n${transcript || '(none yet)'}`;
   }
-  return `Sovran Quest weeks, newest first:\n${weeks.map((w) => `${head(w)}\n${homeworkText(w)}`).join('\n\n')}`;
+  return `Sovran Quest weeks, newest first:\n${weeks.map((w) => `${head(w)}\n${homeworkText(w)}${w.summary ? `\n  The call, in short: ${w.summary.replace(/\s+/g, ' ').slice(0, 600)}` : ''}`).join('\n\n')}`;
 }
