@@ -45,15 +45,18 @@ test('before the shelf is in the cloud: no weeks yet, and nothing breaks', async
   assert.equal(await questText(db), 'No Quest weeks are here yet.');
 });
 
-test('the weeks come from the shelf, are asked for once a minute, and are kept for offline', async () => {
+test('the weeks come from the shelf, are asked for at most once a minute, and nothing is kept on this computer', async () => {
   const { db, asked, cloud } = setup();
   const page = await questPage(db);
   assert.deepEqual(page.weeks.map((w) => [w.number, w.has_transcript]), [[1, true], [0, false]]);
   await questPage(db);
   assert.equal(asked.filter((a) => a.action === 'quest_weeks').length, 1);
-  cloud.down = true;
-  db.prepare("UPDATE settings SET updated_at = '2000-01-01T00:00:00Z' WHERE key = 'quest.weeks'").run();
-  assert.equal((await questPage(db)).weeks.length, 2);
+  assert.equal(kept(db), '');
+  // Offline with nothing read yet: the page says the Quest lives in the cloud.
+  const { db: db2, cloud: cloud2 } = setup();
+  cloud2.down = true;
+  await assert.rejects(questPage(db2), (err) => err.status === 502 && /Sovran cloud/.test(err.message));
+  void cloud;
 });
 
 test('a transcript is never kept here, even if the cloud sends one; it is asked for when read or searched', async () => {

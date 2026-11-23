@@ -40,26 +40,24 @@ export function shortDay(text) {
   return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
 
-// Sovran Central: the weeks from the group's Quest shelf in the Sovran cloud (group-feed.js questWeeks), asked at most
-// once a minute and kept here, so the page and Sovran Advisor still have them when this computer is offline. A key in
-// no group, or no key: no weeks. → [week]
-const CACHE = 'quest.weeks';
+// Sovran Central: the weeks from the group's Quest shelf in the Sovran cloud (group-feed.js questWeeks). Nothing of the
+// Quest is kept on this computer (2026-11-23, the owner's wish): the weeks are read live, held in memory for a minute
+// at most so the page doesn't ask on every click, and gone when the app stops. Offline, the page says so. A key in no
+// group, or no key: no weeks. → [week]
+const held = new WeakMap(); // db → { at, weeks }
 export async function cloudWeeks(db, ask, { everyMs = 60_000 } = {}) {
-  const row = db.prepare('SELECT value, updated_at FROM settings WHERE key = ? AND deleted_at IS NULL').get(CACHE);
-  let kept = null;
-  try { kept = row ? JSON.parse(row.value) : null; } catch { kept = null; }
-  if (Array.isArray(kept) && Date.now() - Date.parse(row.updated_at) < everyMs) return kept;
+  db.prepare("DELETE FROM settings WHERE key = 'quest.weeks'").run(); // an early version kept a copy here
+  const kept = held.get(db);
+  if (kept && Date.now() - kept.at < everyMs) return kept.weeks;
   let weeks;
   try { weeks = (await ask(db)).weeks; } catch (err) {
     if (err.status === 401 || err.code === 'nolibrary') weeks = [];
-    else return Array.isArray(kept) ? kept : [];
+    else if (kept) return kept.weeks;
+    else throw fail(502, 'The Sovran Quest is read from the Sovran cloud, and it can’t be reached just now. Check this computer’s internet connection.', 'offline');
   }
   // Never a transcript here: it stays in the cloud and is asked for when read or searched.
   weeks = Array.isArray(weeks) ? weeks.filter((w) => w && typeof w === 'object').map(({ transcript, ...w }) => ({ ...w, has_transcript: Boolean(w.has_transcript || transcript) })) : [];
-  const time = now();
-  db.prepare(`INSERT INTO settings (id, created_at, updated_at, key, value) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at, deleted_at = NULL`)
-    .run(randomUUID(), time, time, CACHE, JSON.stringify(weeks));
+  held.set(db, { at: Date.now(), weeks });
   return weeks;
 }
 
