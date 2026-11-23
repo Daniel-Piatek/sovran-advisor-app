@@ -170,6 +170,53 @@ test('Daniel’s go Sovran is the guide: homework with a due day, a Circle post,
   } finally { await context.close(); }
 });
 
+// The guide's own tabs on Daniel's phone (guide.js, 2026-11-23): Flags, People and Reports, and hide on a post.
+test('Daniel’s go Sovran has Flags, People and Reports, and can hide a post', async ({ browser }, testInfo) => {
+  const { page, context, cloud, errors } = await phone(browser, testInfo, { guide: true });
+  try {
+    cloud.state.posts.find((p) => p.id === 2).flags.push({ by: 'client-aaaaaaaaaaaa', comment: null, at: ago(5) });
+    cloud.state.tells.push({ id: 70, student_id: 'client-aaaaaaaaaaaa', student: 'Maya', group: 'SQ01', kind: 'question', why: 'What does my Tyrant want?', place: 'assistant',
+      context: { question: 'Tyrant?' }, status: 'new', note: null, created_at: ago(20), diagnosis: 'A question about the Tyrant chapter.', diagnosis_kind: 'question' });
+    await page.reload();
+    await page.locator('#group-circle').click();
+    await expect(page.getByText('Week 2: meet your Tyrant.')).toBeVisible();
+    const tabs = page.locator('#group-tabs button');
+    await expect(tabs).toHaveText(['Announcements', 'Circle', 'Flags', 'People', 'Reports']);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await page.getByRole('button', { name: 'Flags', exact: true }).click();
+    await expect(page.getByText('1 student let you know')).toBeVisible();
+    await page.getByRole('button', { name: 'It’s fine' }).click();
+    await expect(page.getByText('Nothing flagged.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'People', exact: true }).click();
+    const name = page.getByLabel('Name for client-bbbbbbbbbbbb');
+    await expect(name).toHaveValue('Jon');
+    await name.fill('Jonathan');
+    await page.locator('.g-person').filter({ has: name }).getByRole('button', { name: 'Save name' }).click();
+    await expect.poll(() => Object.values(cloud.state.asked).some((m) => m.action === 'manage' && m.what === 'name' && m.value === 'Jonathan')).toBe(true);
+    await page.locator('.g-person').filter({ has: page.getByLabel('Name for client-bbbbbbbbbbbb') }).getByRole('button', { name: 'Pause', exact: true }).click();
+    await expect(page.locator('.g-person').filter({ has: page.getByLabel('Name for client-bbbbbbbbbbbb') }).getByRole('button', { name: 'Let them post again' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Reports', exact: true }).click();
+    await expect(page.getByText('What does my Tyrant want?')).toBeVisible();
+    await expect(page.getByText('A question about the Tyrant chapter.')).toBeVisible();
+    await page.getByLabel('Your note on report 70').fill('Answer in the call.');
+    await page.getByRole('button', { name: 'Dealt with', exact: true }).last().click();
+    await expect(page.getByText('Nothing new.')).toBeVisible();
+    expect(cloud.state.tells[0]).toMatchObject({ status: 'done', note: 'Answer in the call.' });
+
+    await page.getByRole('button', { name: 'Circle', exact: true }).click();
+    const jons = page.locator('.g-post[data-post="2"]');
+    await jons.getByRole('button', { name: 'Hide', exact: true }).click();
+    await expect(jons).toContainText('Hidden from the group');
+    expect(cloud.state.posts.find((p) => p.id === 2).hidden).toBe(true);
+    await jons.getByRole('button', { name: 'Delete for everyone' }).click();
+    await expect(jons.getByRole('button', { name: 'Tap again to delete' })).toBeVisible(); // a second tap, never one
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
 // Alerts on the phone (push.js, sw.js). The phone's push service is stood in for: subscribing gives a made-up address,
 // and the wake is delivered by the browser's own developer tools, as Apple or Google would.
 const ENDPOINT = 'https://fcm.googleapis.com/fcm/send/made-up-for-the-test';

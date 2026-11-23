@@ -9,9 +9,11 @@
 //
 // Daniel's own go Sovran (2026-11-22, the owner's wish) gets its key from APP Daniel, made with the guide key, so the
 // cloud knows this phone as the guide (me.guide): it sees every group, posts announcements (homework with a due date,
-// reminders) and Circle posts, and answers questions. Hiding, pausing and the flags list stay on the computer.
+// reminders) and Circle posts, and answers questions. Since 2026-11-23 also Flags, People and Reports, and hiding,
+// deleting and pausing (guide.js), as on the computer.
 
 import { setupPush } from './push.js';
+import { GUIDE_TABS, guideTools } from './guide.js';
 
 const $ = (id) => document.getElementById(id);
 const SEEN = 'sovran.phone.group-seen'; // the newest post seen in each tab here, for the counts
@@ -119,6 +121,7 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
   }
 
   const say = (words) => { $('group-status').textContent = words; };
+  const guide = guideTools({ el, ask, say, ago, redraw: () => draw() });
 
   function commentBox(post, replyTo, placeholder) {
     const text = el('textarea', { class: 'g-write g-write-small', rows: 1, maxlength: 2000, placeholder, 'aria-label': placeholder });
@@ -136,6 +139,7 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
     const row = el('div', { class: c.reply_to ? 'g-comment g-reply' : 'g-comment' },
       el('p', { class: 'g-bubble' }, el('strong', {}, c.author), c.by_guide ? el('span', { class: 'g-badge' }, 'Guide') : null, ' ', c.body),
       el('span', { class: 'g-when' }, ago(c.created_at)));
+    if (me?.guide) row.append(guide.commentButtons(c));
     if (canWrite && post.comments_on !== false) {
       const reply = el('button', { type: 'button', class: 'g-link' }, 'Reply');
       reply.addEventListener('click', () => { reply.replaceWith(commentBox(post, c.reply_to ?? c.id, `Reply to ${c.author}`)); row.querySelector('textarea')?.focus(); });
@@ -145,27 +149,28 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
   }
 
   function card(p, canWrite) {
-    const guide = Boolean(me?.guide);
+    const isGuide = Boolean(me?.guide);
     const like = el('button', { type: 'button', class: 'g-like', 'aria-pressed': String(Boolean(p.liked)) }, p.liked ? '♥' : '♡', ` ${p.likes || ''}`);
     like.addEventListener('click', async () => { like.disabled = true; try { await ask({ action: 'like', post: p.id, on: !p.liked }); await draw(); } catch (err) { say(err.message); like.disabled = false; } });
     const parts = [
       el('header', { class: 'g-by' }, el('strong', {}, p.author), p.by_guide ? el('span', { class: 'g-badge' }, 'Guide') : null, el('span', { class: 'g-when' }, ago(p.created_at))),
-      guide && p.hidden ? el('p', { class: 'g-note' }, 'Hidden from the group') : null,
-      guide && (groups?.length ?? 0) > 1 ? el('p', { class: 'g-note' }, p.group ? groupTitle(p.group) : 'Every group') : null,
-      guide && p.flagged ? el('p', { class: 'g-note' }, `${p.flagged} asked you to look at this`) : null,
+      isGuide && p.hidden ? el('p', { class: 'g-note' }, 'Hidden from the group') : null,
+      isGuide && (groups?.length ?? 0) > 1 ? el('p', { class: 'g-note' }, p.group ? groupTitle(p.group) : 'Every group') : null,
+      isGuide && p.flagged ? el('p', { class: 'g-note' }, `${p.flagged} asked you to look at this`) : null,
       p.tab === 'news' && KINDS[p.kind] ? el('span', { class: `g-kind g-kind-${p.kind}` }, KINDS[p.kind]) : null,
       p.body ? el('p', { class: 'g-body' }, p.body) : null,
       p.pictures?.length ? el('div', { class: 'g-pictures' }, ...p.pictures.map(picture)) : null,
       p.kind === 'homework' && p.due_on ? el('p', { class: 'g-due' }, `Due ${dueWords(p.due_on)}`) : null,
     ];
     const actions = el('div', { class: 'g-actions' }, like);
-    if (p.kind === 'homework' && guide) actions.append(el('span', { class: 'g-done' }, `${Number(p.done) || 0} done`));
+    if (p.kind === 'homework' && isGuide) actions.append(el('span', { class: 'g-done' }, `${Number(p.done) || 0} done`));
     else if (p.kind === 'homework') {
       const done = el('input', { type: 'checkbox', id: `g-done-${p.id}`, checked: p.done ? true : null });
       done.addEventListener('change', async () => { try { await ask({ action: 'done', post: p.id, on: done.checked }); } catch (err) { say(err.message); done.checked = !done.checked; } });
       actions.append(el('label', { class: 'g-done', for: `g-done-${p.id}` }, done, ' Mark as done'));
     }
     parts.push(actions);
+    if (isGuide) parts.push(guide.postButtons(p));
     const top = (p.comments ?? []).filter((c) => !c.reply_to);
     const thread = el('div', { class: 'g-comments' });
     for (const c of top) {
@@ -239,15 +244,35 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
       el('label', { for: 'g-name', class: 'g-label' }, 'Your name in the group'), input, go);
   }
 
+  // The guide's own tabs (guide.js), added once the cloud says this phone is the guide.
+  function addGuideTabs() {
+    const bar = $('group-tabs');
+    if (bar.querySelector('[data-tab="flags"]')) return;
+    bar.classList.add('g-tabs-guide');
+    for (const [id, name] of GUIDE_TABS) {
+      const b = el('button', { type: 'button', 'data-tab': id, 'aria-pressed': 'false' }, name);
+      b.addEventListener('click', () => { tab = id; draw(); });
+      bar.append(b);
+    }
+  }
+
   async function draw() {
     say('');
     document.querySelectorAll('#group-tabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+    if (GUIDE_TABS.some(([id]) => id === tab)) {
+      if (me?.guide) {
+        try { await guide.draw(tab, $('group-list')); } catch (err) { $('group-list').replaceChildren(el('p', { class: 'g-note' }, err.message)); }
+        return;
+      }
+      tab = 'news';
+    }
     let page;
     try { page = await ask({ action: 'read', tab, limit: 20 }); } catch (err) {
       $('group-list').replaceChildren(el('p', { class: 'g-note' }, err.code === 'nokey' ? 'You’re not in a group yet. Daniel adds you when your Quest begins.' : err.message));
       return;
     }
     me = page.me;
+    if (me?.guide) addGuideTabs();
     if (!me?.name) { namePicker(); return; }
     if (me.guide && !groups) { try { groups = (await ask({ action: 'groups' })).groups ?? []; } catch { groups = []; } }
     const canWrite = !me.paused && !me.closed;

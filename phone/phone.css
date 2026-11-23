@@ -299,6 +299,16 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .g-name { font: inherit; font-size: 1.0625rem; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
 .g-label { font-family: var(--ui); font-weight: 700; }
 .g-tabs button:focus-visible, .g-like:focus-visible, .g-link:focus-visible, .g-send:focus-visible, .g-add:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* The guide's own tabs and buttons on Daniel's phone (guide.js): five tabs in two rows; quiet buttons that wrap. */
+.g-tabs-guide { grid-template-columns: repeat(3, 1fr); border-radius: 22px; }
+.g-guide { flex-wrap: wrap; gap: 6px 16px; }
+.g-danger { color: var(--crimson); }
+.g-post .g-danger { color: var(--on-card); text-decoration: underline; }
+.g-statuses .g-link[aria-pressed="true"] { color: var(--text); text-decoration: underline; }
+.g-people, .g-new-group { display: flex; flex-direction: column; gap: 10px; }
+.g-person { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid var(--card-line); }
+.g-person .g-when { margin: 0; }
+.g-details summary { list-style: none; }
 /* Alerts on this phone (push.js), at the foot of Group Circle; a post opened from an alert is outlined in gold. */
 .g-alerts { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; }
 .g-alerts:empty { display: none; }
