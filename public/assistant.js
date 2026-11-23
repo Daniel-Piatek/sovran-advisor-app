@@ -364,7 +364,7 @@ export async function showAssistant(id) {
     const kept = conversation?.origin === 'imported';
     if (kept) {
       const from = messages.find((m) => m.role === 'assistant' && AI_NAMES[m.ai]);
-      nodes.push(el('p', { class: 'chat-switch chat-kept' }, ...(from ? ['Kept from your chat in ', aiChip(from.ai, AI_NAMES[from.ai])] : ['Kept from a chat in your own AI app'])));
+      nodes.push(el('p', { class: 'chat-switch chat-kept' }, 'Kept from go Sovran', ...(from ? [' · your chat in ', aiChip(from.ai, AI_NAMES[from.ai])] : [' · a chat in your own AI app'])));
       if (from) last = from.ai;
     }
     for (const m of messages) {
