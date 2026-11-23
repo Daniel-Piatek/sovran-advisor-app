@@ -29,7 +29,7 @@ body {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
   height: 100vh;
   padding: 22px var(--space-3) calc(var(--space-8) + var(--space-2)); /* Sovran Central's name on top, then Capture (2026-11-22) */
   /* Taller than the window: the sections scroll on their own, the name stays at the top (2026-11-23). */
@@ -55,7 +55,7 @@ html[data-theme="dark"] .sidebar-brand-sub { color: #D9C14B; }
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: 5px var(--space-3); /* closer together (2026-11-23, the owner's wish: "less space between each") */
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
@@ -3967,7 +3967,7 @@ textarea.board-edit { resize: none; font-family: var(--font-body); }
 .icon .icon-picture { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); object-fit: contain; display: block; }
 /* Lines in the sidebar (2026-11-23, the owner's wish): thin lines between sections, added, moved and taken away by you.
    At first one sits above Quest and Group Circle. */
-.sidebar-line { position: relative; flex: none; height: var(--border-width); margin: var(--space-2) var(--space-3); background: var(--color-border); }
+.sidebar-line { position: relative; flex: none; height: var(--border-width); margin: var(--space-1) var(--space-3); background: var(--color-border); }
 .sidebar .sidebar-line[hidden] { display: none; }
 .sidebar-line-remove { display: none; }
 .sidebar-line.drop-before, .sidebar-line.drop-after { outline: var(--border-width) solid var(--color-text); outline-offset: var(--space-1); }
