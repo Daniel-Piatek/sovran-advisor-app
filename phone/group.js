@@ -98,6 +98,13 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
     if (!access) return;
     try {
       const latest = await ask({ action: 'latest' });
+      // The guide, on a cloud that doesn't send the guide's new ids yet: worked out here from the newest posts.
+      if (latest.me?.guide && !Array.isArray(latest.comment_new_ids)) {
+        const [feed, news] = await Promise.all(['feed', 'news'].map((t) => ask({ action: 'read', tab: t, limit: 20 }).then((r) => r.posts ?? [], () => [])));
+        latest.feed_new_ids = feed.filter((p) => !p.by_guide).map((p) => p.id);
+        latest.news_new_ids = [];
+        latest.comment_new_ids = [...feed, ...news].flatMap((p) => (p.comments ?? []).filter((c) => !c.by_guide).map((c) => c.id));
+      }
       const seen = readSeen();
       const newer = (ids, after) => (Array.isArray(ids) ? ids.filter((id) => Number(id) > after).length : 0);
       // The guide: new Circle posts and new questions and comments from students, in every group.
