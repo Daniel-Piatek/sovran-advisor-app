@@ -102,14 +102,14 @@ test('the go Sovran card plays the go Sovran film, and its Back to All Videos co
   await expect(film.locator('#gf-img')).toHaveJSProperty('complete', true);
   expect(await film.locator('#gf-img').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
   await film.getByRole('button', { name: 'Next chapter' }).click();
-  await expect(film.locator('#gf-h')).toHaveText('Ask My AI');
+  await expect(film.locator('#gf-h')).toHaveText('Ask My Sovran Advisor');
   // its voice: one click on Sound on (it comes on by itself where the browser lets it), and Mute again
   const snd = film.locator('#gf-snd');
   if ((await snd.getAttribute('aria-pressed')) !== 'true') await snd.click();
   await expect(snd).toHaveText('🔇 Mute');
   await snd.click();
   await expect(snd).toHaveText('🔊 Sound on');
-  const voice = await page.request.get(`${app.url}/tour/voice/sovran-go/g01-00.mp3`);
+  const voice = await page.request.get(`${app.url}/tour/voice/sovran-go/g01-00s.mp3`);
   expect(voice.status()).toBe(200);
   expect(voice.headers()['content-type']).toBe('audio/mpeg');
   await film.getByRole('link', { name: '← Back to All Videos' }).click();
