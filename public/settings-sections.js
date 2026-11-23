@@ -15,6 +15,7 @@ const HINTS = {
   Course: 'The link to your course page.',
   'Sovran Advisor': 'What Sovran Advisor does by itself, and what it asks you first.',
   Modules: 'Switch parts of the app on or off.',
+  Sidebar: 'Your own order of sections, with lines where you want them.',
   'Background jobs': 'What the app does by itself, and when it last did.',
   'Calendar timings': 'How quickly the Calendar and the Planner answer.',
   'Capture from anywhere': 'Send a thought to your Inbox from your browser or another app.',

@@ -29,7 +29,7 @@ body {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
   height: 100vh;
   padding: 22px var(--space-3) calc(var(--space-8) + var(--space-2)); /* Sovran Central's name on top, then Capture (2026-11-22) */
   /* Taller than the window: the sections scroll on their own, the name stays at the top (2026-11-23). */
@@ -55,7 +55,7 @@ html[data-theme="dark"] .sidebar-brand-sub { color: #D9C14B; }
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: 5px var(--space-3); /* closer together (2026-11-23, the owner's wish: "less space between each") */
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
@@ -1057,7 +1057,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   .sidebar-capture { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 0; margin: 0; padding: var(--space-1) 0; border: 0; background: transparent; font-size: calc(var(--text-xs) * 0.875); font-weight: var(--weight-regular); color: var(--color-text-muted); }
   .sidebar-key { display: none; }
   .sidebar-link.in-more { display: none; }
-  .sidebar .sidebar-quest { display: none; }
+  .sidebar .sidebar-line, .sidebar .sidebar-arrange-bar, .sidebar .sidebar-add-line { display: none; }
   .sidebar .sidebar-more { display: flex; border: 0; background: none; font: inherit; font-size: calc(var(--text-xs) * 0.875); color: var(--color-text-muted); cursor: pointer; }
   .more-menu:not([hidden]) {
     position: fixed;
@@ -3965,9 +3965,37 @@ textarea.board-edit { resize: none; font-family: var(--font-body); }
 .sidebar-link .icon svg.kind-disc { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); }
 /* A brand picture as an icon (the Sovran Quest's, public/brand): the same square as the discs. */
 .icon .icon-picture { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); object-fit: contain; display: block; }
-/* Quest and Group Circle: their own section under the others, with a thin line above (2026-11-23, the owner's wish). */
-.sidebar-quest { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); padding-top: var(--space-2); border-top: var(--border-width) solid var(--color-border); }
-.sidebar-quest:not(:has(.sidebar-link:not([hidden]))) { display: none; }
+/* Lines in the sidebar (2026-11-23, the owner's wish): thin lines between sections, added, moved and taken away by you.
+   At first one sits above Quest and Group Circle. */
+.sidebar-line { position: relative; flex: none; height: var(--border-width); margin: var(--space-1) var(--space-3); background: var(--color-border); }
+.sidebar .sidebar-line[hidden] { display: none; }
+.sidebar-line-remove { display: none; }
+.sidebar-line.drop-before, .sidebar-line.drop-after { outline: var(--border-width) solid var(--color-text); outline-offset: var(--space-1); }
+.sidebar-line.is-dragged { opacity: 0.5; }
+/* Arranging the sidebar (a right click on it, or Settings > Sidebar): a short note with Done in place of Capture,
+   a grip on each section you can move, a small + between two sections to add a line, an × on each line. */
+.sidebar-arrange-bar { display: flex; flex-direction: column; gap: var(--space-1); margin: 0 0 var(--space-2); padding: var(--space-2) var(--space-3);
+  border: var(--border-width) dashed var(--color-accent); border-radius: var(--radius-sm); background: var(--color-bg); }
+.sidebar-arrange-bar[hidden] { display: none; }
+.sidebar-arrange-title { margin: 0; font-weight: var(--weight-bold); font-size: var(--text-sm); line-height: 1.36; color: var(--color-heading); }
+.sidebar-arrange-help { margin: 0; font-size: var(--text-xs); line-height: 1.36; color: var(--color-text-muted); }
+.sidebar-arrange-buttons { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-1) var(--space-2); margin-top: var(--space-1); }
+.sidebar-arrange-buttons .button { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); white-space: nowrap; }
+.sidebar-arrange-reset { border: 0; background: none; text-decoration: underline; text-underline-offset: 2px; }
+.sidebar-capture[hidden] { display: none; }
+.sidebar.is-arranging .is-movable { position: relative; cursor: grab; }
+.sidebar.is-arranging .is-movable::before { content: ""; position: absolute; left: 3px; top: 25%; bottom: 25%; border-left: 2px dotted var(--color-text-muted); }
+.sidebar.is-arranging .is-movable:hover { border-color: var(--color-border); }
+.sidebar.is-arranging .sidebar-pinned { opacity: 0.55; }
+.sidebar.is-arranging .sidebar-line { height: auto; min-height: var(--space-4); margin: var(--space-1) var(--space-3); background: none; cursor: grab; display: flex; align-items: center; }
+.sidebar.is-arranging .sidebar-line::before { content: ""; flex: 1; height: var(--border-width); background: var(--color-text-muted); }
+.sidebar.is-arranging .sidebar-line-remove { display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--space-4); height: var(--space-4); margin-left: var(--space-1); padding: 0;
+  border: 0; border-radius: 50%; background: var(--color-accent); color: var(--color-accent-text); cursor: pointer; }
+.sidebar-line-remove .icon svg { width: 10px; height: 10px; }
+.sidebar-add-line { display: flex; align-items: center; gap: var(--space-1); flex: none; height: 10px; margin: -3px var(--space-3); padding: 0; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; opacity: 0.35; }
+.sidebar-add-line::before, .sidebar-add-line::after { content: ""; flex: 1; border-top: var(--border-width) dashed currentColor; }
+.sidebar-add-line .icon svg { width: 10px; height: 10px; }
+.sidebar-add-line:hover, .sidebar-add-line:focus-visible { opacity: 1; color: var(--color-accent); }
 
 html[data-section="notes"] { --section: var(--kind-notes); }
 html[data-section="journal"] { --section: var(--kind-journal); }
@@ -5095,3 +5123,4 @@ html[data-section="quest-expressive"]:not([data-section=""]) { --page-title-colo
 /* The summary of the call on the Quest page, above the transcript (2026-11-23, the owner's choice). */
 .quest-summary { margin-bottom: var(--space-3); }
 .quest-summary p { margin: 0 0 var(--space-2); line-height: var(--line-height-base); white-space: pre-line; }
+.settings-row-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }

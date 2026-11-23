@@ -58,7 +58,9 @@ function showModuleSections() {
     const module = sectionOf(link.dataset.section)?.module;
     if (module) link.hidden = !moduleOn(module) || (sectionOf(link.dataset.section)?.external && !courseUrl) || (module === 'quest' && !inQuestGroup);
   }
+  if (layoutReady) tidyLines(); // a line between two hidden sections goes too
 }
+let layoutReady = false;
 // Quest shows only while you are in a Quest group (refreshGroupCount asks; 2026-11-23): so it is there for SQ01 by itself.
 let inQuestGroup = false;
 // The Course link's address comes from the app (GET /api/course); Settings tells the sidebar when it changes.
@@ -85,98 +87,248 @@ document.addEventListener('pointerdown', (event) => {
 const captureButton = el('button', {
   type: 'button', class: 'sidebar-capture', title: 'Quick capture (⌘K)', onclick: () => openCapture(),
 }, icon('plus'), el('span', {}, 'Capture'), el('kbd', { class: 'sidebar-key' }, '⌘K'));
-// Tour, Settings and Library are pinned to the foot of the column; the others can be dragged into
-// the owner's own order (2026-11-09), remembered in this browser.
+// Tour, Settings and Library are pinned to the foot of the column; the others, and the lines between them, are yours to order.
 const PINNED = ['Tour', 'Settings', 'Library'];
-const ORDER_KEY = 'sidebar.order';
+const ORDER_KEY = 'sidebar.order'; // the order before lines could be moved (2026-11-09): read once, then the layout takes over
 const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)];
 const inQuest = (link) => Boolean(sectionOf(link.dataset.section)?.quest);
-const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section) && !inQuest(link));
-const questBox = el('div', { class: 'sidebar-quest' }, ...sectionLinks.filter(inQuest));
+const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section));
 const pinned = PINNED.map(linkOf);
 for (const link of pinned) link.classList.add('sidebar-pinned');
+const tuckButton = null; // (APP Daniel's More fold; none here)
+const tuckBox = null;
 // Sovran Central's name at the top of the column (2026-11-22, the owner's pick "D"): the official
 // crimson crown, unchanged, beside "Sovran" in the heading face and CENTRAL spaced out under it.
 const brand = el('div', { class: 'sidebar-brand', role: 'img', 'aria-label': 'Sovran Central' },
   el('img', { class: 'sidebar-brand-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
   el('span', { class: 'sidebar-brand-words', 'aria-hidden': 'true' },
     el('span', { class: 'sidebar-brand-name' }, 'Sovran'), el('span', { class: 'sidebar-brand-sub' }, 'Central')));
-sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, questBox, moreMenu, ...pinned);
+sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, moreMenu, ...pinned);
 showModuleSections();
 
-const readOrder = () => { try { const list = JSON.parse(localStorage.getItem(ORDER_KEY)); return Array.isArray(list) ? list : []; } catch { return []; } };
-const saveOrder = () => {
-  try { localStorage.setItem(ORDER_KEY, JSON.stringify(currentMovable().map((link) => link.dataset.section))); } catch { /* the order just isn't kept */ }
+// ---- Your own sidebar (2026-11-23, the owner's wish: "so that they can customize their navigation bar and have it the way
+// they want it") ----
+// Every section but those pinned to the foot, and the thin lines between them, can be put in your own order, and lines added
+// or taken away anywhere. The pinned tags move as one piece. Remembered in this browser. At first there is one
+// line, above Quest and Group Circle (2026-11-23, the owner's wish). Arrange mode (a right click on the sidebar, or Settings >
+// Sidebar) shows a grip on what moves, a small + between two sections to add a line, an × on each line, Done and Start over.
+const LAYOUT_KEY = 'sidebar.layout';
+const LINE = '—';
+const TAGS = 'Pinned tags';
+const pinnedTags = el('nav', { class: 'sidebar-tags is-movable is-block', 'aria-label': 'Pinned tags', 'data-section': TAGS, draggable: 'true', hidden: true });
+for (const link of movable) { link.classList.add('is-movable'); link.draggable = true; }
+const blocks = { [TAGS]: pinnedTags };
+const elementOf = (token) => blocks[token] ?? (movable.includes(linkOf(token)) ? linkOf(token) : null);
+const tokenOf = (item) => (item.classList.contains('sidebar-line') ? LINE : item.dataset.section);
+const arrangeBar = el('div', { class: 'sidebar-arrange-bar', hidden: true },
+  el('p', { class: 'sidebar-arrange-title' }, 'Arrange your sidebar'),
+  el('p', { class: 'sidebar-arrange-help' }, 'Drag to move. + adds a line, × takes one away.'),
+  el('div', { class: 'sidebar-arrange-buttons' },
+    el('button', { type: 'button', class: 'button button-primary sidebar-arrange-done', onclick: () => stopArranging() }, icon('check'), 'Done'),
+    el('button', { type: 'button', class: 'button button-quiet sidebar-arrange-reset', onclick: () => resetSidebar() }, 'Start over')));
+sidebar.insertBefore(arrangeBar, captureButton);
+
+// A thin line between sections; while you arrange, it has an × that takes it away.
+const makeLine = () => el('div', { class: 'sidebar-line', role: 'separator', draggable: 'true' },
+  el('button', { type: 'button', class: 'sidebar-line-remove', 'aria-label': 'Take this line away', title: 'Take this line away',
+    onclick: (event) => { event.currentTarget.closest('.sidebar-line').remove(); changed(); } }, icon('close')));
+const itemsIn = (box) => (box ? [...box.querySelectorAll(':scope > .is-movable, :scope > .sidebar-line')] : []);
+const readList = (key) => { try { const list = JSON.parse(localStorage.getItem(key)); return Array.isArray(list) ? list : null; } catch { return null; } };
+const saveLayout = () => {
+  try {
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(itemsIn(sidebar).map(tokenOf)));
+
+  } catch { /* the layout just isn't kept */ }
 };
-const currentMovable = () => [...sidebar.querySelectorAll(':scope > .sidebar-link:not(.sidebar-pinned):not(.sidebar-more)')];
-function applyOrder() {
-  const saved = readOrder();
-  const rank = (link) => { const i = saved.indexOf(link.dataset.section); return i === -1 ? Infinity : i; };
-  // A section the saved order doesn't know (a new one) stays where it was among the others.
-  const known = movable.filter((l) => rank(l) !== Infinity).sort((a, b) => rank(a) - rank(b));
-  const result = movable.map((l) => (rank(l) === Infinity ? l : known.shift()));
-  for (const link of result) sidebar.insertBefore(link, moreButton);
+// Where everything goes: the saved layout; before there is one, the order kept before lines could be moved (ORDER_KEY);
+// before that, as the app comes.
+function startLayout() {
+  const old = readList(ORDER_KEY);
+  const tucked = [];
+  const quest = movable.filter(inQuest).map((l) => l.dataset.section);
+  const column = (old ?? movable.filter((l) => !inQuest(l)).map((l) => l.dataset.section)).filter((n) => !quest.includes(n) && !tucked.includes(n));
+  return { column: [...column, TAGS, LINE, ...quest] };
 }
-applyOrder();
+function applyLayout(saved = { column: readList(LAYOUT_KEY) }) {
+  const first = startLayout();
+  const column = saved.column ?? first.column;
 
-// Moving a section: drag it (a computer), or Alt+Up / Alt+Down on it (the keyboard).
-function moveLink(link, before) {
-  sidebar.insertBefore(link, before || pinnedTags);
-  saveOrder();
+  for (const line of [...itemsIn(sidebar), ...itemsIn(tuckBox)]) if (line.classList.contains('sidebar-line')) line.remove();
+  const placed = new Set();
+  const build = (tokens, inFold) => {
+    const result = [];
+    for (const token of tokens) {
+      if (token === LINE) { result.push(makeLine()); continue; }
+      const item = elementOf(token);
+      if (!item || placed.has(item) || (inFold && item.classList.contains('is-block'))) continue;
+      placed.add(item);
+      result.push(item);
+    }
+    return result;
+  };
+  const top = build(column, false);
+  const folded = build([], true);
+  // A section the saved layout doesn't know (a new one) goes just after the one before it in the app's own order, or first.
+  const order = [...first.column];
+  for (const token of order) {
+    const item = elementOf(token);
+    if (!item || placed.has(item)) continue;
+    const list = top;
+    const before = order.slice(0, order.indexOf(token)).reverse().map(elementOf).find((i) => i && list.includes(i));
+    list.splice(before ? list.indexOf(before) + 1 : 0, 0, item);
+    placed.add(item);
+  }
+  for (const item of top) { sidebar.insertBefore(item, moreButton);  }
+
+  tidyLines();
 }
-const dragging = { link: null };
-const clearMarks = () => { for (const l of movable) l.classList.remove('drop-before', 'drop-after', 'is-dragged'); };
-const phone = () => window.matchMedia('(max-width: 600px)').matches;
-for (const link of movable) {
-  link.draggable = true;
-  link.addEventListener('dragstart', (event) => {
-    if (phone()) { event.preventDefault(); return; }
-    dragging.link = link;
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', link.dataset.section);
-    link.classList.add('is-dragged');
-  });
-  link.addEventListener('dragend', () => { dragging.link = null; clearMarks(); });
-  link.addEventListener('dragover', (event) => {
-    if (!dragging.link || dragging.link === link) return;
-    event.preventDefault();
-    const box = link.getBoundingClientRect();
-    const after = event.clientY > box.top + box.height / 2;
-    for (const l of movable) l.classList.remove('drop-before', 'drop-after');
-    link.classList.add(after ? 'drop-after' : 'drop-before');
-  });
-  link.addEventListener('drop', (event) => {
-    if (!dragging.link || dragging.link === link) return;
-    event.preventDefault();
-    const box = link.getBoundingClientRect();
-    const after = event.clientY > box.top + box.height / 2;
-    let target = after ? link.nextElementSibling : link;
-    while (target && target.hidden) target = target.nextElementSibling; // a hidden module's link is skipped
-    if (target && (target.classList.contains('sidebar-tags') || target.classList.contains('sidebar-more') || target.classList.contains('sidebar-pinned'))) target = null;
-    moveLink(dragging.link, target);
-    dragging.link = null;
-    clearMarks();
-  });
-  link.addEventListener('keydown', (event) => {
-    if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
-    event.preventDefault();
-    const visible = currentMovable().filter((l) => !l.hidden);
-    const at = visible.indexOf(link);
-    if (event.key === 'ArrowUp' && at > 0) moveLink(link, visible[at - 1]);
-    if (event.key === 'ArrowDown' && at < visible.length - 1) moveLink(link, visible[at + 1].nextElementSibling);
-    link.focus();
+// A line shows only between two things you can see: never first, never last, never two together. While you arrange, all show.
+function tidyLines() {
+  for (const box of [sidebar, tuckBox]) {
+    if (!box) continue;
+    let seen = false;
+    let waiting = null;
+    for (const item of itemsIn(box)) {
+      if (item.classList.contains('sidebar-line')) {
+        item.hidden = !arranging;
+        if (!arranging && seen && !waiting) waiting = item;
+      } else if (!item.hidden) {
+        if (waiting) { waiting.hidden = false; waiting = null; }
+        seen = true;
+      }
+    }
+  }
+  for (const add of sidebar.querySelectorAll('.sidebar-add-line')) add.remove();
+  if (arranging) for (const box of [sidebar, tuckBox]) if (box) drawAddButtons(box);
+}
+// While you arrange: a small + between two things adds a line there.
+const after = (item) => (item === tuckButton ? tuckBox.nextElementSibling : item.nextElementSibling);
+function drawAddButtons(box) {
+  const visible = itemsIn(box).filter((item) => !item.hidden);
+  visible.forEach((item, i) => {
+    const next = visible[i + 1];
+    if (!next || item.classList.contains('sidebar-line') || next.classList.contains('sidebar-line')) return;
+    const name = item.querySelector(':scope > span:not(.icon)')?.textContent ?? item.dataset.section;
+    box.insertBefore(el('button', { type: 'button', class: 'sidebar-add-line', 'aria-label': `Add a line below ${name}`, title: 'Add a line here',
+      onclick: (event) => { box.insertBefore(makeLine(), event.currentTarget); changed(); } }, icon('plus')), after(item));
   });
 }
-// Dropped on the empty space under the last section: it goes last.
-sidebar.addEventListener('dragover', (event) => { if (dragging.link && event.target === sidebar) event.preventDefault(); });
-sidebar.addEventListener('drop', (event) => {
-  if (dragging.link && event.target === sidebar) { event.preventDefault(); moveLink(dragging.link, null); dragging.link = null; clearMarks(); }
+function changed() { saveLayout(); tidyLines(); }
+
+let arranging = false;
+// Arrange the sidebar: from Settings, or a right click on the sidebar (a computer only).
+export function arrangeSidebar() {
+  if (phone()) return;
+  arranging = true;
+  sidebar.classList.add('is-arranging');
+  arrangeBar.hidden = false;
+  captureButton.hidden = true;
+
+  tidyLines();
+  sidebar.scrollTop = 0;
+  arrangeBar.querySelector('.sidebar-arrange-done').focus();
+}
+function stopArranging() {
+  arranging = false;
+  sidebar.classList.remove('is-arranging');
+  arrangeBar.hidden = true;
+  captureButton.hidden = false;
+  tidyLines();
+}
+// Start over: the order and the line the app came with.
+export function resetSidebar() {
+  try { for (const key of [LAYOUT_KEY, ORDER_KEY]) localStorage.removeItem(key); } catch { /* nothing kept */ }
+  applyLayout({ column: null });
+}
+sidebar.addEventListener('contextmenu', (event) => {
+  if (phone() || arranging) return;
+  event.preventDefault();
+  arrangeSidebar();
 });
+// While you arrange, a name doesn't open its page.
+sidebar.addEventListener('click', (event) => { if (arranging && event.target.closest('a')) event.preventDefault(); }, true);
+document.addEventListener('keydown', (event) => { if (arranging && event.key === 'Escape') stopArranging(); });
 
-// Pinned tags (module tags, 2026-11-22): the tags pinned on their page, under the sections (a computer only), each opening
-// its page. Asked when the app opens, when a module switches, and by a tag's page when its pin changes.
-const pinnedTags = el('nav', { class: 'sidebar-tags', 'aria-label': 'Pinned tags', hidden: true });
-sidebar.insertBefore(pinnedTags, moreButton);
+// Moving a section or a line: drag it (a computer), or Alt+Up / Alt+Down on it (the keyboard). `into` is the column;
+// `before` something in it (or nothing: last).
+function moveItem(item, before, into = sidebar) {
+  if (into === tuckBox && tuckBox) { if (item.classList.contains('is-block')) return; tuckBox.insertBefore(item, before || null); if (tuckBox.hidden) setTuck(true); }
+  else { sidebar.insertBefore(item, before || moreButton); if (item === tuckButton) sidebar.insertBefore(tuckBox, tuckButton.nextElementSibling); }
+  changed();
+}
+const dragging = { item: null };
+const clearMarks = () => {
+  for (const i of [...itemsIn(sidebar), ...itemsIn(tuckBox)]) i.classList.remove('drop-before', 'drop-after', 'is-dragged');
+  tuckButton?.classList.remove('drop-into');
+};
+const phone = () => window.matchMedia('(max-width: 600px)').matches;
+const itemAt = (node) => {
+  const item = node?.closest?.('.is-movable, .sidebar-line');
+  return item && (item.parentElement === sidebar || (tuckBox && item.parentElement === tuckBox)) ? item : null;
+};
+const isItem = (node) => Boolean(node && (node.classList.contains('is-movable') || node.classList.contains('sidebar-line')));
+const lowerHalf = (event, item) => { const box = item.getBoundingClientRect(); return event.clientY > box.top + box.height / 2; };
+// Dropped on More, or on the open fold's empty space: it goes last under More.
+const intoFold = (event) => Boolean(tuckBox && dragging.item && !dragging.item.classList.contains('is-block') && dragging.item !== tuckButton
+  && (tuckButton.contains(event.target) || event.target === tuckBox));
+sidebar.addEventListener('dragstart', (event) => {
+  const item = itemAt(event.target);
+  if (!item) return;
+  if (phone()) { event.preventDefault(); return; }
+  dragging.item = item;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', tokenOf(item));
+  item.classList.add('is-dragged');
+});
+sidebar.addEventListener('dragend', () => { dragging.item = null; clearMarks(); });
+sidebar.addEventListener('dragover', (event) => {
+  if (!dragging.item) return;
+  for (const i of [...itemsIn(sidebar), ...itemsIn(tuckBox)]) i.classList.remove('drop-before', 'drop-after');
+  tuckButton?.classList.remove('drop-into');
+  if (intoFold(event)) { event.preventDefault(); tuckButton.classList.add('drop-into'); return; }
+  const item = itemAt(event.target);
+  if (!item) { if (event.target === sidebar || event.target.closest('.sidebar-add-line')) event.preventDefault(); return; }
+  if (item === dragging.item) return;
+  event.preventDefault();
+  item.classList.add(lowerHalf(event, item) ? 'drop-after' : 'drop-before');
+});
+sidebar.addEventListener('drop', (event) => {
+  if (!dragging.item) return;
+  if (intoFold(event)) { event.preventDefault(); moveItem(dragging.item, null, tuckBox); dragging.item = null; clearMarks(); return; }
+  const item = itemAt(event.target) ?? event.target.closest('.sidebar-add-line');
+  if (item === dragging.item) return;
+  event.preventDefault();
+  let target = null; // dropped on the empty space under the last one: it goes last
+  const into = item?.parentElement ?? sidebar;
+  if (item) {
+    target = item.classList.contains('sidebar-add-line') || !lowerHalf(event, item) ? item : after(item);
+    while (target && (target.hidden || target.classList.contains('sidebar-add-line') || target === dragging.item)) target = target.nextElementSibling; // skip hidden ones
+    if (target && !isItem(target)) target = null;
+  }
+  moveItem(dragging.item, target, into);
+  dragging.item = null;
+  clearMarks();
+});
+sidebar.addEventListener('keydown', (event) => {
+  if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+  const item = itemAt(event.target);
+  if (!item) return;
+  event.preventDefault();
+  const box = item.parentElement;
+  const visible = itemsIn(box).filter((i) => !i.hidden);
+  const at = visible.indexOf(item);
+  if (event.key === 'ArrowUp') {
+    if (at > 0) moveItem(item, visible[at - 1], box);
+    else if (box === tuckBox) moveItem(item, tuckButton, sidebar); // up out of the fold: just above More
+  } else if (at < visible.length - 1) moveItem(item, after(visible[at + 1]), box);
+  else if (box === tuckBox) moveItem(item, after(tuckButton), sidebar); // down out of the fold: just below it
+  event.target.focus();
+});
+applyLayout();
+layoutReady = true;
+
+// Pinned tags (module tags, 2026-11-22): the tags pinned on their page (a computer only), each opening its page. Asked when
+// the app opens, when a module switches, and by a tag's page when its pin changes.
 export async function refreshSidebar() {
   if (!moduleOn('tags')) { pinnedTags.hidden = true; return; }
   let tags = [];
