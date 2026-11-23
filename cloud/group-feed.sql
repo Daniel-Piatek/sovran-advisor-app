@@ -43,6 +43,11 @@ CREATE TABLE IF NOT EXISTS group_feed.guides (
   name       text NOT NULL CHECK (length(name) BETWEEN 1 AND 40),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- The guide's phone (go Sovran, 2026-11-22, the owner's wish): its own key, made by APP Daniel and registered here with
+-- the guide key (group_feed.phone_key). It is a guide too, named like the key that made it; phone_of is that key's
+-- SHA-256. One phone per guide key; a new one replaces it, and it cannot make more phones.
+ALTER TABLE group_feed.guides ADD COLUMN IF NOT EXISTS phone_of text REFERENCES group_feed.guides (key_hash) ON DELETE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS guides_one_phone ON group_feed.guides (phone_of);
 
 CREATE TABLE IF NOT EXISTS group_feed.posts (
   id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -210,8 +215,12 @@ LANGUAGE plpgsql STABLE AS $$
 DECLARE w jsonb := group_feed.who(p_key_hash);
 BEGIN
   IF w IS NULL THEN RETURN jsonb_build_object('error', 'nokey'); END IF;
-  IF (w->>'guide')::boolean THEN
-    RETURN jsonb_build_object('me', w, 'flags', (SELECT count(*) FROM group_feed.flags WHERE resolved_at IS NULL));
+  IF (w->>'guide')::boolean THEN -- every group's newest ids too, for the counts on the guide's phone
+    RETURN jsonb_build_object('me', w, 'flags', (SELECT count(*) FROM group_feed.flags WHERE resolved_at IS NULL),
+      'feed_new_ids', (SELECT coalesce(jsonb_agg(id), '[]') FROM (SELECT id FROM group_feed.posts WHERE tab = 'feed' AND deleted_at IS NULL AND guide_name IS NULL ORDER BY id DESC LIMIT 50) a),
+      'news_new_ids', '[]'::jsonb, -- the guide wrote those
+      'comment_new_ids', (SELECT coalesce(jsonb_agg(id), '[]') FROM (SELECT c.id FROM group_feed.comments c JOIN group_feed.posts p ON p.id = c.post_id
+        WHERE c.student_id IS NOT NULL AND c.deleted_at IS NULL AND p.deleted_at IS NULL ORDER BY c.id DESC LIMIT 50) a));
   END IF;
   RETURN jsonb_build_object('me', w - 'student',
     'feed', (SELECT max(id) FROM group_feed.posts WHERE tab = 'feed' AND group_code = w->>'group' AND deleted_at IS NULL AND hidden_at IS NULL),
@@ -427,11 +436,21 @@ EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
 END $$;
 
 -- The student's computer registers its phone's key (p_phone_hash), or takes it away (NULL). Only with the library key
--- itself, never with a phone key, so a phone cannot make more phones.
+-- itself, never with a phone key, so a phone cannot make more phones. APP Daniel does the same with the guide key: the
+-- phone's key is then a guide too (group_feed.guides, phone_of).
 CREATE OR REPLACE FUNCTION group_feed.phone_key(p_key_hash text, p_phone_hash text) RETURNS jsonb
 LANGUAGE plpgsql AS $$
-DECLARE s text;
+DECLARE s text; g group_feed.guides%ROWTYPE;
 BEGIN
+  SELECT * INTO g FROM group_feed.guides WHERE key_hash = p_key_hash;
+  IF FOUND THEN
+    IF g.phone_of IS NOT NULL THEN RETURN jsonb_build_object('error', 'nokey'); END IF; -- a phone cannot make more phones
+    DELETE FROM group_feed.guides WHERE phone_of = p_key_hash;
+    IF p_phone_hash IS NULL THEN RETURN jsonb_build_object('phone', false); END IF;
+    IF p_phone_hash !~ '^[0-9a-f]{64}$' OR p_phone_hash = p_key_hash THEN RETURN jsonb_build_object('error', 'bad'); END IF;
+    INSERT INTO group_feed.guides (key_hash, name, phone_of) VALUES (p_phone_hash, g.name, p_key_hash);
+    RETURN jsonb_build_object('phone', true, 'guide', true);
+  END IF;
   SELECT id INTO s FROM library.students WHERE key_hash = p_key_hash AND active;
   IF s IS NULL THEN RETURN jsonb_build_object('error', 'nokey'); END IF;
   DELETE FROM group_feed.phone_keys WHERE student_id = s;

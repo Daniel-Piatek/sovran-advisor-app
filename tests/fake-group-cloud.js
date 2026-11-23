@@ -7,12 +7,13 @@ import { createHash } from 'node:crypto';
 export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), guidePhones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
   const sha = (text) => createHash('sha256').update(text).digest('hex');
   const phoneOf = (key) => { const id = state.phones.get(sha(key)); return id ? Object.values(students).find((x) => x.id === id) : undefined; }; // a student's phone (Sovran Go)
-  const who = (auth) => students[keyOf(auth)] ?? phoneOf(keyOf(auth)) ?? (guides[keyOf(auth)] ? { id: 'guide', guide: true, name: guides[keyOf(auth)] } : undefined);
+  const guideName = (key) => guides[key] ?? state.guidePhones.get(sha(key)); // the guide key, or Daniel's phone (go Sovran)
+  const who = (auth) => students[keyOf(auth)] ?? phoneOf(keyOf(auth)) ?? (guideName(keyOf(auth)) ? { id: 'guide', guide: true, name: guideName(keyOf(auth)) } : undefined);
   const nameOf = (id) => Object.values(students).find((s) => s.id === id)?.name ?? 'A student';
   const view = (p, me) => ({
     id: p.id, group: p.group, tab: p.tab, kind: p.kind, body: p.body, due_on: p.due_on ?? null, pictures: p.pictures, comments_on: p.comments_on,
@@ -44,13 +45,20 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
     const guideOnly = ['hide', 'flags', 'flags_clear', 'groups', 'manage'];
     if (guideOnly.includes(msg.action) && !s.guide) return err('guideonly', 403);
     switch (msg.action) {
-      case 'latest': return s.guide ? json(200, { me: meOf(s), flags: openFlags().length })
+      case 'latest': return s.guide ? json(200, { me: meOf(s), flags: openFlags().length, news_new_ids: [],
+          feed_new_ids: live('feed', s).filter((p) => p.student).map((p) => p.id),
+          comment_new_ids: state.posts.filter((p) => !p.deleted).flatMap((p) => p.comments.filter((c) => c.student && !c.deleted).map((c) => c.id)) })
         : json(200, { me: meOf(s), feed_new_ids: live('feed', s).map((p) => p.id), news_new_ids: live('news', s).map((p) => p.id) });
       case 'read': {
         const list = live(msg.tab, s, msg.group).filter((p) => !msg.before || p.id < msg.before).slice(0, msg.limit ?? 20);
         return json(200, { me: meOf(s), posts: list.map((p) => view(p, s)) });
       }
-      case 'phone_key': { // only with the library key itself
+      case 'phone_key': { // only with the library key itself, or the guide key (Daniel's phone is then the guide)
+        if (guides[keyOf(auth)]) {
+          for (const [h, name] of state.guidePhones) if (name === guides[keyOf(auth)]) state.guidePhones.delete(h);
+          if (msg.phone_hash) state.guidePhones.set(msg.phone_hash, guides[keyOf(auth)]);
+          return json(200, { phone: Boolean(msg.phone_hash), guide: true });
+        }
         if (!students[keyOf(auth)]) return err('nokey', 401);
         for (const [h, id] of state.phones) if (id === s.id) state.phones.delete(h);
         if (msg.phone_hash) state.phones.set(msg.phone_hash, s.id);
