@@ -32,6 +32,7 @@ export const useGroup = (options) => Object.assign(where, options);
 export const groupOn = (db) => moduleOn(db, 'group');
 export const isGuideApp = () => Boolean(where.guideApp);
 export const hasGroupKey = (db) => Boolean(where.keyOf(db)); // the library key here, the guide key in APP Daniel
+export const groupKeyOf = (db) => where.keyOf(db);
 
 const NO_KEY = 'Group Circle needs your Sovran Library key. Add it in Settings › Sovran Library.';
 

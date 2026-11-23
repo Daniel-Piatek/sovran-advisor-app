@@ -22,7 +22,7 @@ import { libraryKey } from './sovran-library.js';
 import { takePhoneMark } from './report-marks.js';
 import { syncShelf } from './phone-shelf.js';
 import { getProvider } from './ai.js';
-import { askCloud, groupOn, hasGroupKey, GROUP_URL } from './group-feed.js';
+import { askCloud, groupOn, hasGroupKey, groupKeyOf, isGuideApp, GROUP_URL } from './group-feed.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 export const PAGE_URL = 'https://daniel-piatek.github.io/sovran-advisor-app/';
@@ -109,24 +109,34 @@ async function ensurePhoneGroup(db) {
   const box = readBox(db);
   if (!box) return null;
   const want = groupOn(db) && hasGroupKey(db);
+  const recent = (at) => at && Date.now() - new Date(at).getTime() < 3600_000;
   if (!want) {
-    if (box.group_key) {
-      try { await askCloud(db, { action: 'phone_key', phone_hash: null }); } catch { /* the library key is gone: so is the phone's */ }
-      const { group_key: _gone, group_key_box: _box, ...rest } = readBox(db) ?? box;
+    if (box.group_key || box.group_own) {
+      if (box.group_key) try { await askCloud(db, { action: 'phone_key', phone_hash: null }); } catch { /* the library key is gone: so is the phone's */ }
+      const { group_key: _gone, group_key_box: _box, group_own: _own, ...rest } = readBox(db) ?? box;
       writeBox(db, rest);
     }
     return null;
   }
   if (box.group_key && box.group_key_box === box.box) return { key: box.group_key, url: GROUP_URL };
-  if (box.group_key_tried && Date.now() - new Date(box.group_key_tried).getTime() < 3600_000) return null; // asked again in an hour
+  // APP Daniel, while the cloud knows no guide phones yet: the phone uses the guide key itself (sealed on the shelf,
+  // like everything there), and a phone key of its own is asked for again each hour.
+  const own = () => ({ key: groupKeyOf(db), url: GROUP_URL });
+  if (box.group_own && box.group_key_box === box.box && recent(box.group_key_tried)) return own();
+  if (!box.group_own && recent(box.group_key_tried)) return null; // asked again in an hour
   const key = `phone_${randomB64(32)}`;
-  try { await askCloud(db, { action: 'phone_key', phone_hash: sha(key) }); } catch {
-    writeBox(db, { ...(readBox(db) ?? box), group_key_tried: now() });
+  try { await askCloud(db, { action: 'phone_key', phone_hash: sha(key) }); } catch (err) {
+    const still = readBox(db) ?? box;
+    if (isGuideApp() && err.code === 'nokey' && still.box === box.box) {
+      writeBox(db, { ...still, group_own: true, group_key_box: box.box, group_key_tried: now() });
+      return own();
+    }
+    writeBox(db, { ...still, group_own: false, group_key_tried: now() });
     return null;
   }
   const latest = readBox(db);
   if (latest?.box !== box.box) return null; // a new link meanwhile: next time
-  writeBox(db, { ...latest, group_key: key, group_key_box: box.box, group_key_tried: null });
+  writeBox(db, { ...latest, group_key: key, group_key_box: box.box, group_key_tried: null, group_own: false });
   return { key, url: GROUP_URL };
 }
 
