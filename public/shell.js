@@ -104,6 +104,10 @@ const brand = el('div', { class: 'sidebar-brand', role: 'img', 'aria-label': 'So
   el('span', { class: 'sidebar-brand-words', 'aria-hidden': 'true' },
     el('span', { class: 'sidebar-brand-name' }, 'Sovran'), el('span', { class: 'sidebar-brand-sub' }, 'Central')));
 sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, moreMenu, ...pinned);
+// Arrange (2026-11-23, the owner's pick "A"): a quiet button at the very foot, so arranging is easy to find without a right click.
+const arrangeButton = el('button', { type: 'button', class: 'sidebar-arrange', title: 'Put the sidebar in your own order, with lines where you like', onclick: () => arrangeSidebar() },
+  icon('arrange'), el('span', {}, 'Arrange'));
+sidebar.append(arrangeButton);
 showModuleSections();
 
 // ---- Your own sidebar (2026-11-23, the owner's wish: "so that they can customize their navigation bar and have it the way
@@ -223,6 +227,7 @@ export function arrangeSidebar() {
   sidebar.classList.add('is-arranging');
   arrangeBar.hidden = false;
   captureButton.hidden = true;
+  arrangeButton.hidden = true;
 
   tidyLines();
   sidebar.scrollTop = 0;
@@ -233,6 +238,7 @@ function stopArranging() {
   sidebar.classList.remove('is-arranging');
   arrangeBar.hidden = true;
   captureButton.hidden = false;
+  arrangeButton.hidden = false;
   tidyLines();
 }
 // Start over: the order and the line the app came with.

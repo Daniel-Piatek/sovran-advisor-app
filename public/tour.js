@@ -30,6 +30,9 @@ const EXTRAS = [
     text: 'Endless whiteboards for your notes, entries and Inbox items.' },
   { id: 'life', module: 'life', title: 'My Life', kind: 'life', open: '/life', openLabel: 'Open My Life',
     text: 'Your Key Elements, Goals, Projects and Topics.' },
+  // Your sidebar (2026-11-23, the owner's wish): not a module, always there; its film page is sidebar.html (build-sidebar-film.py).
+  { id: 'sidebar', title: 'Your Sidebar', kind: 'notes', open: '/settings', openLabel: 'Settings › Sidebar', src: '/tour/sidebar.html',
+    text: 'Put your sections in your own order, with thin lines between them where you like. Click Arrange, at the foot of the sidebar.' },
 ];
 
 const filmOf = (id) => (id === 'basics' ? { id, title: 'The Basics', src: '/tour/basics.html' }
@@ -43,6 +46,7 @@ const still = (caption) => el('div', { class: 'tour-still', 'aria-hidden': 'true
 
 // On, or a button that switches it on (so it is off). Once on, the card offers to open that part.
 function stateOf(extra) {
+  if (!extra.module) return el('span', { class: 'tour-state' }, el('a', { class: 'tour-open', href: extra.open, title: extra.openLabel }, 'Settings →'));
   if (moduleOn(extra.module)) {
     return el('span', { class: 'tour-state' }, el('span', { class: 'tour-on' }, 'On'),
       el('a', { class: 'tour-open', href: extra.open, title: extra.openLabel }, 'Open →'));

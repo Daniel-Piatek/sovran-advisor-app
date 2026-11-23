@@ -1057,7 +1057,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   .sidebar-capture { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 0; margin: 0; padding: var(--space-1) 0; border: 0; background: transparent; font-size: calc(var(--text-xs) * 0.875); font-weight: var(--weight-regular); color: var(--color-text-muted); }
   .sidebar-key { display: none; }
   .sidebar-link.in-more { display: none; }
-  .sidebar .sidebar-line, .sidebar .sidebar-arrange-bar, .sidebar .sidebar-add-line { display: none; }
+  .sidebar .sidebar-line, .sidebar .sidebar-arrange-bar, .sidebar .sidebar-add-line, .sidebar .sidebar-arrange { display: none; }
   .sidebar .sidebar-more { display: flex; border: 0; background: none; font: inherit; font-size: calc(var(--text-xs) * 0.875); color: var(--color-text-muted); cursor: pointer; }
   .more-menu:not([hidden]) {
     position: fixed;
@@ -3983,6 +3983,13 @@ textarea.board-edit { resize: none; font-family: var(--font-body); }
 .sidebar-arrange-buttons .button { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); white-space: nowrap; }
 .sidebar-arrange-reset { border: 0; background: none; text-decoration: underline; text-underline-offset: 2px; }
 .sidebar-capture[hidden] { display: none; }
+/* Arrange, at the very foot (2026-11-23, the owner's pick "A"): small and grey, under Library. */
+.sidebar-arrange { display: flex; align-items: center; gap: var(--space-2); flex: none; margin-top: var(--space-1); padding: var(--space-1) var(--space-3); border: 0; background: none;
+  font: inherit; font-size: var(--text-xs); line-height: 1.36; color: var(--color-text-muted); cursor: pointer; text-align: left; }
+.sidebar-arrange .icon { width: calc(var(--space-1) * 5); justify-content: center; }
+.sidebar-arrange .icon svg { width: 13px; height: 13px; }
+.sidebar-arrange:hover { color: var(--color-text); }
+.sidebar-arrange[hidden] { display: none; }
 .sidebar.is-arranging .is-movable { position: relative; cursor: grab; }
 .sidebar.is-arranging .is-movable::before { content: ""; position: absolute; left: 3px; top: 25%; bottom: 25%; border-left: 2px dotted var(--color-text-muted); }
 .sidebar.is-arranging .is-movable:hover { border-color: var(--color-border); }

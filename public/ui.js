@@ -182,6 +182,7 @@ const icons = {
   timeline: svg('<path d="M4.5 2v12"/><circle cx="4.5" cy="4.5" r="1.6"/><circle cx="4.5" cy="11.5" r="1.6"/><path d="M8.5 4.5h5M8.5 11.5h5"/>'),
   // A mortarboard: the course (course.js).
   course: svg('<path d="M1.5 6L8 3l6.5 3L8 9z"/><path d="M4.5 7.4v3.4c1 .9 2.2 1.4 3.5 1.4s2.5-.5 3.5-1.4V7.4M14.5 6v3.5"/>'),
+  arrange: svg('<path d="M5 2v12M2.5 4.5L5 2l2.5 2.5M11 14V2M8.5 11.5L11 14l2.5-2.5"/>'),
   more: svg('<circle cx="3.5" cy="8" r="1"/><circle cx="8" cy="8" r="1"/><circle cx="12.5" cy="8" r="1"/>'),
   bell: svg('<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1.2 1.5H2.8zM6.5 14.5h3"/>'),
   repeat: svg('<path d="M2.5 7V6a2.5 2.5 0 0 1 2.5-2.5h8M11 1.5l2 2-2 2M13.5 9v1a2.5 2.5 0 0 1-2.5 2.5H3M5 14.5l-2-2 2-2"/>'),
