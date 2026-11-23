@@ -101,7 +101,9 @@ body.reading .band-line { color: var(--ink); }
 .choice-go { margin-left: auto; font-family: var(--ui); font-size: 1.375rem; line-height: 1; color: var(--on-card-muted); }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile { flex-direction: column; align-items: flex-start; gap: 14px; }
-.pair:has(#group-circle[hidden]) .tile { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; }
+.pair:has(> .tile[hidden]) .tile { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; } /* one square alone: a wide box */
+.pair:has(> .tile:not([hidden])) { display: grid; }
+.pair:not(:has(> .tile:not([hidden]))) { display: none; }
 /* The owner's call (22 Nov 2026): the tiles' pictures are large, so My Reports and Group Circle are tall boxes. */
 .tile-picture { width: 76px; height: 76px; flex: none; border-radius: 14px; object-fit: contain; display: block; }
 .disc { width: 36px; height: 36px; flex: none; display: block; }
@@ -319,3 +321,51 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .g-alerts .g-link { align-self: flex-start; }
 .g-asked { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 22px; }
 #group-status:empty { min-height: 0; }
+
+/* My Reports as a wide box, the same height as Ask my Sovran Advisor (the owner, 23 Nov 2026). */
+#ask, .choice-wide { min-height: 82px; }
+.wide-picture { width: 44px; height: 44px; flex: none; border-radius: 10px; object-fit: contain; display: block; }
+
+/* Sovran Quest (quest.js, the owner's design of 23 Nov 2026): the Quest violet for its title, labels, numbers and
+   the chosen week; Crimson for what starts something; the grey boxes as everywhere else. */
+:root { --quest-text: #733bc4; }
+@media (prefers-color-scheme: dark) { :root { --quest-text: #a98be0; } }
+.quest-picture { border-radius: 50%; background: var(--white); }
+.quest { display: flex; flex-direction: column; gap: 14px; }
+.q-title { color: var(--quest-text); }
+.q { display: flex; flex-direction: column; gap: 12px; }
+.q-weeks { display: flex; flex-wrap: wrap; gap: 6px; }
+.q-weeks button { font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: none; color: var(--muted); cursor: pointer; }
+.q-weeks button[aria-pressed="true"] { border-color: var(--violet); background: var(--violet); color: var(--white); }
+.q-head { margin-top: 2px; }
+.q-when { margin: 0; font-family: var(--ui); font-weight: 500; font-size: 0.8125rem; color: var(--muted); line-height: 1.36; }
+.q-name { margin: 2px 0 0; font-family: var(--heading); font-weight: 400; font-size: 1.375rem; line-height: 1.2; }
+.q-practice { display: flex; justify-content: center; gap: 6px; min-height: 48px; align-items: center; padding: 12px; border-radius: 999px; background: var(--crimson); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; text-decoration: none; }
+.q-label { margin: 6px 0 -2px; font-family: var(--ui); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--quest-text); line-height: 1.36; }
+.q-piece, .q-call { background: var(--card); color: var(--on-card); border: 1px solid var(--card-edge); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.q-row { display: flex; gap: 10px; }
+.q-row p { margin: 0; font-size: 0.9375rem; line-height: 1.44; white-space: pre-wrap; }
+.q-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--violet); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.75rem; display: grid; place-items: center; margin-top: 1px; }
+.q-acts { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 34px; }
+.q-start, .q-done { display: inline-flex; align-items: center; min-height: 40px; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none; }
+.q-start { border: 0; background: var(--crimson); color: var(--white); }
+.q-done { border: 1.5px solid var(--on-card-muted); background: none; color: var(--on-card); }
+.q-done[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--white); }
+.q-work { margin: 0; padding-left: 34px; font-family: var(--ui); font-size: 0.75rem; color: var(--on-card-muted); line-height: 1.36; }
+.q-sum { margin: 0; font-size: 0.9375rem; line-height: 1.44; white-space: pre-wrap; }
+.q-more { align-self: flex-start; padding: 0; border: 0; background: none; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; color: var(--gold); cursor: pointer; }
+.q-links { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--card-line); padding-top: 8px; }
+.q-link { display: block; text-align: left; min-height: 40px; padding: 8px 0; border: 0; background: none; font-family: var(--ui); font-weight: 700; font-size: 0.9375rem; line-height: 1.36; color: var(--on-card); text-decoration: none; cursor: pointer; }
+.q-stuck { align-self: center; min-height: 44px; padding: 8px; border: 0; background: none; font-family: var(--ui); font-weight: 700; font-size: 0.875rem; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.q-label-card { margin: 0; font-family: var(--ui); font-weight: 500; font-size: 0.8125rem; line-height: 1.36; color: var(--on-card-muted); }
+.q-quote { margin: 8px 0 10px; padding-left: 12px; border-left: 3px solid var(--violet); color: var(--on-card-muted); font-size: 0.9375rem; line-height: 1.44; white-space: pre-wrap; }
+.q-note { margin: 0; font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; color: var(--muted); }
+.q-search { font: inherit; font-size: 1rem; padding: 12px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; }
+.q-found { display: flex; align-items: center; gap: 6px; margin: -6px 0 0; font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; color: var(--muted); }
+.q-step { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--soft); color: var(--text); font-size: 1.125rem; line-height: 1; cursor: pointer; }
+.q-step:first-of-type { margin-left: auto; }
+.q-lines p { margin: 0 0 14px; font-size: 0.9375rem; line-height: 1.44; }
+.q-lines b { display: flex; justify-content: space-between; gap: 8px; font-family: var(--ui); font-size: 0.8125rem; line-height: 1.36; }
+.q-at { font-weight: 500; font-size: 0.75rem; color: var(--faint); }
+.q-lines mark { background: var(--gold); color: var(--charcoal); border-radius: 3px; padding: 0 2px; }
+.q-weeks button:focus-visible, .q-start:focus-visible, .q-done:focus-visible, .q-link:focus-visible, .q-more:focus-visible, .q-stuck:focus-visible, .q-step:focus-visible, .q-practice:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
