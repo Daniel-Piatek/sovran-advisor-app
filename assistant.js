@@ -77,7 +77,7 @@ export function lifeContext(db) {
     'Use it to know what matters to them; my_life gives the whole summary and read_life_item one item with its chain and open tasks.', summary].join('\n');
 }
 
-const CONVERSATION_COLUMNS = 'id, title, folder, session_id, started, created_at, updated_at, deleted_at';
+const CONVERSATION_COLUMNS = 'id, title, origin, folder, session_id, started, created_at, updated_at, deleted_at';
 const MESSAGE_COLUMNS = 'id, conversation_id, role, text, steps, sources, context, state, ai, model, created_at, updated_at';
 const message = (row) => ({ ...row, steps: JSON.parse(row.steps), sources: JSON.parse(row.sources), context: row.context ? JSON.parse(row.context) : null });
 
@@ -249,7 +249,9 @@ export function sendMessage(db, id, text, { dataDir, command = DEFAULT_COMMAND, 
   const asked = context ? `${words}\n\n(Asked on this page of the app: “${context.title || context.path}”, ${context.path}.)` : words;
   const noted = notes.length ? `${asked}\n\n${notes.map((n) => `(Note from the app: ${n})`).join('\n')}` : asked; // what it should know since last time, not shown as something the owner wrote
   const prompt = earlier.length
-    ? `(Note from the app: this conversation began with the owner’s other assistant. What was said so far:)\n${earlier.map((m) => `${m.role === 'user' ? 'Owner' : 'Assistant'}: ${m.text.slice(0, 2000)}`).join('\n')}\n\n${noted}`
+    ? `(Note from the app: ${conversation.origin === 'imported'
+      ? 'this conversation began in the owner’s own AI app (Claude or ChatGPT), which kept it here with the Sovran Library'
+      : 'this conversation began with the owner’s other assistant'}. What was said so far:)\n${earlier.map((m) => `${m.role === 'user' ? 'Owner' : 'Assistant'}: ${m.text.slice(0, 2000)}`).join('\n')}\n\n${noted}`
     : noted;
 
   const instructions = `${guide()}${lifeContext(db)}`;

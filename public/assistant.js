@@ -360,6 +360,13 @@ export async function showAssistant(id) {
     for (const w of written.filter((x) => !messages.length || x.created_at < messages[0].created_at)) nodes.push(writtenLine(w));
     let last = '';
     let lastWords = ''; // the model named last, so a change of model (ai-pick) gets its line too
+    // A chat kept from the student's own AI app (chat-saves.js) says so at the top, with that AI when it is known.
+    const kept = conversation?.origin === 'imported';
+    if (kept) {
+      const from = messages.find((m) => m.role === 'assistant' && AI_NAMES[m.ai]);
+      nodes.push(el('p', { class: 'chat-switch chat-kept' }, ...(from ? ['Kept from your chat in ', aiChip(from.ai, AI_NAMES[from.ai])] : ['Kept from a chat in your own AI app'])));
+      if (from) last = from.ai;
+    }
     for (const m of messages) {
       if (m.role === 'assistant' && AI_NAMES[m.ai]) {
         const words = aiLabel(m);
