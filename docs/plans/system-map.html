@@ -1,0 +1,271 @@
+<title>Sovran System Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap">
+<style>
+/* Layout: one wide map (cloud band above, computers band below), then three plain-language cards and the order of work. Live Sovran brand: charcoal, warm greys, crimson as the one accent. */
+:root{
+  /* Live Sovran Visual Identity Guide v3: white canvas, charcoal text, supporting neutrals, crimson as the one accent. */
+  --bg:#FBFBFB; --panel:#FFFFFF; --band:#F7F6F6; --ink:#302D2D; --muted:#555151; --line:#D4D1D1; --accent:#C71F42; --accent-soft:color-mix(in srgb, #C71F42 8%, #FFFFFF);
+  --display:"Gloock",Georgia,"Times New Roman",serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ui:"Plus Jakarta Sans","Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#302D2D; --panel:#3A3636; --band:#353131; --ink:#FBFBFB; --muted:#AAA6A6; --line:#555151; --accent:color-mix(in srgb, #C71F42 62%, #FBFBFB); --accent-soft:color-mix(in srgb, #C71F42 22%, #302D2D); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#302D2D; --panel:#3A3636; --band:#353131; --ink:#FBFBFB; --muted:#AAA6A6; --line:#555151; --accent:color-mix(in srgb, #C71F42 62%, #FBFBFB); --accent-soft:color-mix(in srgb, #C71F42 22%, #302D2D); color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 4px}
+.lede{margin:8px 0 0;color:var(--muted);max-width:62ch}
+.map{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.map svg{display:block;min-width:900px;width:100%;height:auto}
+.hint{font-size:12px;color:var(--muted);margin:6px 2px 0}
+@media (min-width:940px){.hint{display:none}}
+/* SVG styling through tokens */
+.band{fill:var(--band)}
+.eyebrow{font-family:var(--ui);font-weight:700;font-size:12px;letter-spacing:.12em;fill:var(--muted);text-transform:uppercase}
+.box{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+.box.live{stroke:var(--accent);stroke-width:2}
+.box.next{stroke:var(--ink);stroke-dasharray:7 5}
+.box.later{stroke:var(--muted);stroke-dasharray:2 5;stroke-linecap:round;stroke-width:2}
+.inner{fill:var(--band);stroke:var(--line)}
+.t{font-family:var(--display);font-size:19px;fill:var(--ink)}
+.ts{font-family:var(--display);font-size:16px;fill:var(--ink)}
+.s{font-family:var(--ui);font-weight:600;font-size:12px;fill:var(--muted)}
+.l{font-family:var(--body);font-size:12.5px;fill:var(--ink)}
+.lm{font-family:var(--body);font-size:12px;fill:var(--muted)}
+.la{font-family:var(--ui);font-weight:700;font-size:12px;fill:var(--accent)}
+.chip{stroke-width:1.2}
+.chip.live{fill:var(--accent-soft);stroke:var(--accent)}
+.chip.next{fill:var(--panel);stroke:var(--ink);stroke-dasharray:3 2}
+.chip.later{fill:var(--panel);stroke:var(--muted)}
+.ct{font-family:var(--ui);font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.ct.live{fill:var(--accent)} .ct.next{fill:var(--ink)} .ct.later{fill:var(--muted)}
+.ar{fill:none;stroke-width:2}
+.ar.live{stroke:var(--accent)}
+.ar.next{stroke:var(--ink);stroke-dasharray:7 5}
+.ar.later{stroke:var(--muted);stroke-dasharray:2 5;stroke-linecap:round}
+.mk.live{fill:var(--accent)} .mk.next{fill:var(--ink)} .mk.later{fill:var(--muted)}
+.lbg{fill:var(--bg)}
+.lt{font-family:var(--ui);font-weight:700;font-size:11.5px;fill:var(--ink)}
+.lt2{font-family:var(--body);font-size:11.5px;fill:var(--muted)}
+.lock{fill:none;stroke:var(--accent);stroke-width:1.6}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-width:0}
+.card h3{font-family:var(--ui);font-size:14px;margin:0 0 6px;letter-spacing:.02em}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.card ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+.card li{margin:2px 0}
+.order{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px}
+.order ol{margin:10px 0 0;padding-left:22px;display:grid;gap:8px;max-width:70ch}
+.order li::marker{font-family:var(--ui);font-weight:700;color:var(--accent)}
+.order b{font-weight:600}
+.tag{display:inline-block;font-family:var(--ui);font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:1px}
+.tag.live{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+</style>
+<div style="margin:16px auto;max-width:60rem;padding:12px 16px;border-left:4px solid #D9C14B;background:#f3f1ee;color:#302D2D;font:14px/1.36 Inter,system-ui,sans-serif"><strong>Status on 23 Nov 2026.</strong> This map was drawn on 9-11 Nov. What changed since: the student app is now <strong>Sovran Central</strong> (the map calls it "Their Daniel App"); students have a phone page, <strong>go Sovran</strong>, that reaches their own computer through a sealed drop box in the sovran-library cloud; <strong>Group Circle</strong> (a shared space per Quest group) and <strong>Tell Daniel</strong> (students report problems to Daniel) are live in the same cloud, so a student now shares the posts and reports they choose to send, and nothing else. The membership website is still "later" (draft in ~/Live-Sovran-Platform, not on GitHub).</div>
+
+<div class="wrap">
+  <header>
+    <h1>What lives where</h1>
+    <p class="lede">Everything in one picture: what sits on your Mac mini, what sits in the cloud, what students have on their own computers, and how they connect. A solid red line is already working. A dashed line is the next step. A dotted line is for later.</p>
+  </header>
+
+  <div>
+  <div class="map" role="img" aria-label="Diagram: three cloud pieces above (your private cloud, Sovran Library, membership website) and the computers below (you away from the office, Gmail, your Mac mini, a student's computer, members), joined by arrows.">
+  <svg viewBox="0 0 1000 812" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="m-live" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk live" d="M0,0 L10,5 L0,10 z"/></marker>
+      <marker id="m-next" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk next" d="M0,0 L10,5 L0,10 z"/></marker>
+      <marker id="m-later" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk later" d="M0,0 L10,5 L0,10 z"/></marker>
+    </defs>
+
+    <!-- Bands -->
+    <rect class="band" x="10" y="8" width="980" height="290" rx="14"/>
+    <text class="eyebrow" x="30" y="34">In the cloud · reachable from anywhere</text>
+    <rect class="band" x="10" y="420" width="980" height="384" rx="14"/>
+    <text class="eyebrow" x="30" y="446">On computers</text>
+
+    <!-- Cloud: private -->
+    <rect class="box live" x="30" y="50" width="290" height="230" rx="10"/>
+    <rect class="chip live" x="236" y="62" width="72" height="20" rx="10"/><text class="ct live" x="272" y="76" text-anchor="middle">Live now</text>
+    <text class="t" x="48" y="82">Your private cloud</text>
+    <text class="s" x="48" y="102">Locked area beside the library</text>
+    <text class="l" x="48" y="134">A copy of Daniel App's data:</text>
+    <text class="l" x="48" y="153">notes, journal, contacts, tasks,</text>
+    <text class="l" x="48" y="172">planner, My Life</text>
+    <text class="l" x="48" y="200">A backup if the Mac ever fails</text>
+    <text class="l" x="48" y="222">Claude can reach it when the Mac is off</text>
+    <text class="lm" x="48" y="256">Your mail stays on the Mac</text>
+
+    <!-- Cloud: library -->
+    <rect class="box live" x="355" y="50" width="290" height="230" rx="10"/>
+    <rect class="chip live" x="561" y="62" width="72" height="20" rx="10"/><text class="ct live" x="597" y="76" text-anchor="middle">Live now</text>
+    <text class="t" x="373" y="82">Sovran Library</text>
+    <text class="s" x="373" y="102">Supabase · shared by key</text>
+    <text class="l" x="373" y="134">56 teaching notes</text>
+    <text class="l" x="373" y="156">3,929 meaning pieces</text>
+    <text class="l" x="373" y="178">12 clients' decodes</text>
+    <text class="lm" x="373" y="196">each one seen only by its owner</text>
+    <text class="l" x="373" y="222">Opened with a personal key</text>
+    <text class="lm" x="373" y="256">Nothing from students' apps goes here</text>
+
+    <!-- Cloud: membership -->
+    <rect class="box later" x="680" y="50" width="295" height="230" rx="10"/>
+    <rect class="chip later" x="903" y="62" width="60" height="20" rx="10"/><text class="ct later" x="933" y="76" text-anchor="middle">Later</text>
+    <text class="t" x="698" y="82">Membership website</text>
+    <text class="s" x="698" y="102">Like myICOR</text>
+    <text class="l" x="698" y="134">Sign-in and paid memberships</text>
+    <text class="l" x="698" y="156">Courses and recordings</text>
+    <text class="l" x="698" y="178">Community</text>
+    <text class="l" x="698" y="200">An AI guide</text>
+    <text class="lm" x="698" y="256">Draws on the Sovran Library</text>
+
+    <!-- library feeds membership -->
+    <path class="ar later" d="M647,165 L676,165" marker-end="url(#m-later)"/>
+
+    <!-- Bottom: away -->
+    <rect class="box next" x="30" y="462" width="165" height="140" rx="10"/>
+    <text class="ts" x="46" y="490">You, away from</text>
+    <text class="ts" x="46" y="510">the office</text>
+    <text class="s" x="46" y="530">Laptop or phone</text>
+    <text class="l" x="46" y="556">Opens Daniel App</text>
+    <text class="l" x="46" y="574">on your Mac, privately</text>
+    <path class="ar next" d="M197,532 L226,532" marker-end="url(#m-next)"/>
+
+    <!-- Bottom: gmail -->
+    <rect class="box" x="30" y="622" width="165" height="150" rx="10"/>
+    <text class="ts" x="46" y="650">Gmail and</text>
+    <text class="ts" x="46" y="670">Google Calendar</text>
+    <text class="l" x="46" y="698">Your mail comes into</text>
+    <text class="l" x="46" y="716">Daniel App and stays</text>
+    <text class="l" x="46" y="734">on the Mac</text>
+    <path class="ar live" d="M197,697 L226,697" marker-end="url(#m-live)"/>
+
+    <!-- Bottom: Mac mini -->
+    <rect class="box" x="230" y="462" width="400" height="320" rx="10"/>
+    <rect class="inner" x="248" y="480" width="180" height="262" rx="8"/>
+    <text class="ts" x="262" y="506">Daniel App</text>
+    <text class="s" x="262" y="524">and its database</text>
+    <text class="l" x="262" y="552">Notes and journal</text>
+    <text class="l" x="262" y="572">Contacts</text>
+    <text class="l" x="262" y="592">Tasks and planner</text>
+    <text class="l" x="262" y="612">Calendar</text>
+    <text class="l" x="262" y="632">My Life</text>
+    <text class="l" x="262" y="652">Assistant chats</text>
+    <text class="l" x="262" y="672">Mail (being built)</text>
+    <text class="lm" x="262" y="710">Personal and business</text>
+    <text class="lm" x="262" y="726">together, as one</text>
+
+    <rect class="inner" x="440" y="480" width="172" height="262" rx="8"/>
+    <text class="ts" x="454" y="506">Your source</text>
+    <text class="ts" x="454" y="524">folders</text>
+    <text class="la" x="454" y="556">PKA-Live-Sovran</text>
+    <text class="l" x="454" y="576">Client decodes</text>
+    <text class="l" x="454" y="594">Meaning pieces</text>
+    <text class="la" x="454" y="630">Obsidian vault</text>
+    <text class="l" x="454" y="650">Your teaching notes</text>
+    <text class="lm" x="454" y="690">Only the approved parts</text>
+    <text class="lm" x="454" y="706">go up to the library</text>
+
+    <text class="eyebrow" x="248" y="766">Your Mac mini · in the office</text>
+
+    <!-- Bottom: student -->
+    <rect class="box" x="648" y="462" width="168" height="320" rx="10"/>
+    <text class="ts" x="664" y="490">A student's</text>
+    <text class="ts" x="664" y="510">computer</text>
+    <rect class="inner" x="662" y="526" width="140" height="132" rx="8"/>
+    <text class="la" x="674" y="550">Their Daniel App</text>
+    <text class="l" x="674" y="572">Their own notes,</text>
+    <text class="l" x="674" y="590">journal, tasks</text>
+    <text class="l" x="674" y="608">and contacts</text>
+    <g transform="translate(674,624)"><rect class="lock" x="0" y="7" width="13" height="10" rx="2"/><path class="lock" d="M3,7 V4 a3.5,3.5 0 0 1 7,0 V7"/></g>
+    <text class="la" x="692" y="640">Stays here</text>
+    <text class="lm" x="664" y="690">Never goes to your</text>
+    <text class="lm" x="664" y="706">cloud. They connect</text>
+    <text class="lm" x="664" y="722">to the library only,</text>
+    <text class="lm" x="664" y="738">with their own key.</text>
+
+    <!-- Bottom: members -->
+    <rect class="box later" x="832" y="462" width="143" height="140" rx="10"/>
+    <text class="ts" x="846" y="490">Members</text>
+    <text class="s" x="846" y="510">In a web browser</text>
+    <text class="l" x="846" y="538">Anyone who joins</text>
+    <text class="l" x="846" y="556">your website</text>
+
+    <!-- Legend -->
+    <text class="eyebrow" x="846" y="646">Key</text>
+    <path class="ar live" d="M846,670 L886,670"/><text class="l" x="894" y="674">Live now</text>
+    <path class="ar next" d="M846,698 L886,698"/><text class="l" x="894" y="702">Next step</text>
+    <path class="ar later" d="M846,726 L886,726"/><text class="l" x="894" y="730">Later</text>
+
+    <!-- Up arrows -->
+    <path class="ar live" d="M320,478 L200,284" marker-end="url(#m-live)"/>
+    <path class="ar next" d="M400,478 L440,284" marker-end="url(#m-next)"/>
+    <path class="ar live" d="M526,478 L540,284" marker-end="url(#m-live)"/>
+    <path class="ar live" d="M720,460 L615,284" marker-end="url(#m-live)"/>
+    <path class="ar later" d="M903,460 L903,284" marker-end="url(#m-later)"/>
+
+    <!-- Arrow labels -->
+    <rect class="lbg" x="206" y="358" width="104" height="38" rx="6"/>
+    <text class="lt" x="258" y="374" text-anchor="middle">Nightly copy</text>
+    <text class="lt2" x="258" y="390" text-anchor="middle">3:30 AM</text>
+
+    <rect class="lbg" x="366" y="358" width="92" height="38" rx="6"/>
+    <text class="lt" x="412" y="374" text-anchor="middle">Reads library</text>
+    <text class="lt2" x="412" y="390" text-anchor="middle">with your key</text>
+
+    <rect class="lbg" x="486" y="358" width="94" height="38" rx="6"/>
+    <text class="lt" x="533" y="374" text-anchor="middle">Nightly sync</text>
+    <text class="lt2" x="533" y="390" text-anchor="middle">3:15 AM</text>
+
+    <rect class="lbg" x="610" y="352" width="110" height="38" rx="6"/>
+    <text class="lt" x="665" y="368" text-anchor="middle">Their key</text>
+    <text class="lt2" x="665" y="384" text-anchor="middle">own decodes only</text>
+
+    <rect class="lbg" x="852" y="352" width="102" height="38" rx="6"/>
+    <text class="lt" x="903" y="368" text-anchor="middle">Sign in</text>
+    <text class="lt2" x="903" y="384" text-anchor="middle">pay, learn</text>
+  </svg>
+  </div>
+  <p class="hint">Swipe sideways to see the whole map.</p>
+  </div>
+
+  <section class="cards" aria-label="The three kinds of data">
+    <div class="card">
+      <h3>Private to you</h3>
+      <p>Only you can see this, ever.</p>
+      <ul>
+        <li>Daniel App's database on the Mac</li>
+        <li>Its nightly copy in your private cloud</li>
+        <li>Your mail, which never leaves the Mac</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Shared, by key <span class="tag live">Live now</span></h3>
+      <p>The Sovran Library. Every key opens your teaching. Each decode opens only for its own client.</p>
+      <ul>
+        <li>Teaching notes and meaning pieces</li>
+        <li>Client decodes, one private set each</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Stays with each student</h3>
+      <p>Their own copy of Daniel App and everything they put in it. It lives on their computer and is never sent to you.</p>
+    </div>
+  </section>
+
+  <section class="order">
+    <h2>The order I'd do it in</h2>
+    <ol>
+      <li><b>Reach your Mac from anywhere.</b> Private remote access, so you can use Daniel App from your laptop or phone. Nothing moves to the cloud yet.</li>
+      <li><b>A nightly copy to your private cloud.</b> <span class="tag live">Done</span> It sits in a locked area inside the library project that no student key or library tool can reach. It works as a backup, and later lets Claude reach your data when the Mac is off. Mail stays out.</li>
+      <li><b>Daniel App connects to the library.</b> Your copy and every student's copy can then read the teaching and decodes, each with its own key.</li>
+      <li><b>The membership website.</b> It's built later, on top of the library, when the courses and members are ready for it.</li>
+    </ol>
+  </section>
+</div>

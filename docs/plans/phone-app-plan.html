@@ -1,0 +1,469 @@
+<title>Sovran Phone App Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column; the map and the phone are the two interactive pieces. Crimson only on white. */
+:root {
+  --bg: #FBFBFB; --panel: #FFFFFF; --ink: #302D2D; --muted: #6B6563; --line: #E4E0DC;
+  --accent: #C71F42; --gold: #D9C14B; --gold-ink: #8A7516; --wash: #F3F0EC; --new: #FBF6DF;
+  --dim: #D3CECA; --on-accent: #FBFBFB;
+  --f-display: "Gloock", Georgia, serif;
+  --f-ui: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --lh: 1.44; --lh-short: 1.36;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #262323; --panel: #302D2D; --ink: #FBFBFB; --muted: #BDB6B1; --line: #4A4545;
+  --accent: #D9C14B; --gold: #D9C14B; --gold-ink: #D9C14B; --wash: #383434; --new: #3D3826;
+  --dim: #5A5454; --on-accent: #302D2D; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #262323; --panel: #302D2D; --ink: #FBFBFB; --muted: #BDB6B1; --line: #4A4545;
+  --accent: #D9C14B; --gold: #D9C14B; --gold-ink: #D9C14B; --wash: #383434; --new: #3D3826;
+  --dim: #5A5454; --on-accent: #302D2D; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: var(--lh);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 56px; }
+h1, h2 { font-family: var(--f-display); font-weight: 400; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.08; }
+h2 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; }
+h3 { font-family: var(--f-ui); font-weight: 700; font-size: 17px; margin: 0; line-height: var(--lh-short); }
+p { margin: 0; max-width: 66ch; }
+.eyebrow { font-family: var(--f-ui); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 18px; scroll-margin-top: 64px; }
+.lede { font-size: 18px; color: var(--ink); }
+.muted { color: var(--muted); }
+small, .small { font-size: 14px; line-height: var(--lh-short); }
+
+/* nav */
+nav.jump { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line);
+  display: flex; gap: 4px; overflow-x: auto; padding-block: 10px; scrollbar-width: none; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.jump a { font-family: var(--f-ui); font-weight: 600; font-size: 14px; color: var(--ink); text-decoration: none; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+nav.jump a:hover, nav.jump a:focus-visible { background: var(--wash); outline: none; }
+
+/* hero */
+.hero { display: grid; gap: 16px; }
+.verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.verdict div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; line-height: var(--lh-short); }
+.verdict b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
+@media (max-width: 640px) { .verdict { grid-template-columns: 1fr; } }
+
+/* phone mock */
+.what { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 760px) { .what { grid-template-columns: 1fr; } .phone { margin: 0 auto; } }
+.phone { width: 280px; max-width: 100%; border: 10px solid #302D2D; border-radius: 38px; background: #FBFBFB; color: #302D2D; overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; height: 540px; }
+.phone .bar { background: #302D2D; color: #FBFBFB; padding: 10px 14px 12px; display: flex; align-items: center; gap: 8px; font-family: var(--f-ui); font-weight: 600; font-size: 13px; }
+.crown { width: 22px; height: 22px; border-radius: 50%; background: #C71F42; display: grid; place-items: center; flex: none; }
+.crown svg { width: 14px; height: 14px; fill: #D9C14B; }
+.screen { padding: 14px; overflow-y: auto; display: grid; gap: 10px; align-content: start; font-size: 13.5px; line-height: var(--lh-short); }
+.screen h4 { font-family: "Gloock", Georgia, serif; font-weight: 400; font-size: 20px; margin: 0; }
+.screen .card { border: 1px solid #E4E0DC; border-radius: 10px; padding: 10px; background: #FFFFFF; }
+.screen .lbl { font-family: var(--f-ui); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6B6563; }
+.screen .btn { background: #C71F42; color: #FBFBFB; border-radius: 999px; padding: 8px 12px; font-family: var(--f-ui); font-weight: 700; font-size: 13px; text-align: center; }
+.screen .ghost { border: 1px dashed #BDB6B1; border-radius: 10px; padding: 10px; color: #6B6563; min-height: 70px; }
+.screen .from { font-size: 12px; color: #6B6563; }
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #E4E0DC; background: #FFFFFF; }
+.tabs button { all: unset; cursor: pointer; text-align: center; padding: 9px 2px 11px; font-family: var(--f-ui); font-size: 11px; font-weight: 600; color: #6B6563; }
+.tabs button[aria-selected="true"] { color: #C71F42; box-shadow: inset 0 2px 0 #C71F42; }
+.tabs button:focus-visible { outline: 2px solid #D9C14B; outline-offset: -2px; }
+.feature { display: grid; gap: 10px; }
+.feature .tag { display: inline-block; font-family: var(--f-ui); font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--wash); }
+.feature .tag.new { background: var(--new); }
+.feature ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+/* map */
+.maptools { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--f-ui); font-weight: 600; font-size: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.mapbox { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow-x: auto; }
+.mapbox svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.node rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: opacity .2s; }
+.node.cloudn rect { fill: var(--wash); }
+.node text { fill: var(--ink); font-family: var(--f-ui); }
+.node .t1 { font-weight: 700; font-size: 15px; }
+.node .t2 { font-size: 12px; fill: var(--muted); }
+.node .newtag { fill: var(--gold-ink); font-weight: 700; font-size: 11px; letter-spacing: .08em; }
+.node { cursor: pointer; }
+.node:focus { outline: none; }
+.node:focus rect, .node.sel rect { stroke: var(--accent); stroke-width: 2.5; }
+.node.on rect { stroke: var(--accent); stroke-width: 2.5; }
+.dimmed .node:not(.on) { opacity: .35; }
+.edge { fill: none; stroke: var(--dim); stroke-width: 2; transition: stroke .2s, opacity .2s; }
+.edge.dash { stroke-dasharray: 5 5; }
+.dimmed .edge:not(.on) { opacity: .25; }
+.edge.on { stroke: var(--accent); stroke-width: 3; }
+.cloudbox { fill: none; stroke: var(--gold); stroke-width: 1.5; stroke-dasharray: 2 5; }
+.cloudlabel { fill: var(--gold-ink); font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .1em; }
+.detail { border-left: 3px solid var(--gold); padding: 4px 0 4px 16px; display: grid; gap: 8px; min-height: 120px; }
+.detail ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 10px; align-items: start; line-height: var(--lh-short); }
+.steps li::before { content: counter(s); font-family: var(--f-ui); font-weight: 700; font-size: 13px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--wash); }
+.steps li.cur::before { background: var(--accent); color: var(--on-accent); }
+.note { background: var(--new); border-radius: 10px; padding: 10px 14px; font-size: 14.5px; line-height: var(--lh-short); max-width: 66ch; }
+
+/* assistant options */
+.opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .opts { grid-template-columns: 1fr; } }
+.opt { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--panel); display: grid; gap: 8px; align-content: start; line-height: var(--lh-short); }
+.opt.pick { border: 2px solid var(--accent); }
+.opt .k { font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.opt .pickline { font-family: var(--f-ui); font-weight: 700; font-size: 13px; color: var(--accent); }
+.opt ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; }
+.plus { color: var(--ink); } .minus { color: var(--muted); }
+
+/* build */
+.phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.phases li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.phases .n { font-family: var(--f-display); font-size: 28px; line-height: 1; color: var(--muted); }
+.phases .body { display: grid; gap: 6px; line-height: var(--lh-short); min-width: 0; }
+.phases .eff { font-family: var(--f-ui); font-weight: 700; font-size: 13px; white-space: nowrap; background: var(--wash); padding: 4px 10px; border-radius: 999px; }
+.phases .you { font-size: 14px; color: var(--muted); }
+.phases .opt-tag { font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--gold-ink); text-transform: uppercase; }
+@media (max-width: 560px) { .phases li { grid-template-columns: 34px minmax(0,1fr); } .phases .eff { grid-column: 2; justify-self: start; } }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; line-height: var(--lh-short); }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-ui); font-weight: 700; font-size: 13px; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+
+/* trade-offs + decisions */
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+.tile { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--panel); display: grid; gap: 6px; line-height: var(--lh-short); align-content: start; }
+.tile p { font-size: 15px; }
+.decide { display: grid; gap: 12px; }
+.dec { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--panel); display: grid; gap: 8px; line-height: var(--lh-short); }
+.dec .mine { font-size: 15px; } .dec .mine b { color: var(--accent); font-family: var(--f-ui); }
+footer { color: var(--muted); font-size: 13px; line-height: var(--lh-short); border-top: 1px solid var(--line); padding-top: 14px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<div style="margin:16px auto;max-width:60rem;padding:12px 16px;border-left:4px solid #D9C14B;background:#f3f1ee;color:#302D2D;font:14px/1.36 Inter,system-ui,sans-serif"><strong>Status on 23 Nov 2026.</strong> This plan is from 17 Nov ("nothing built yet"). Built and live since, as <strong>go Sovran</strong> (code in <code>phone/</code>, published on GitHub Pages): step 1 (shell, pairing by link, new link cuts off a lost phone), step 2 (My Reports, read from a sealed shelf the student's computer fills, not straight from the library), step 3 (writing to Inbox and Journal through the drop box), plus Group Circle with alerts on the lock screen, and an "Ask my Sovran Advisor" link that opens the student's own Claude or ChatGPT app. Not built: step 4 (the phone copy of today) and step 5 (the computer answering questions from the phone).</div>
+
+<div class="wrap">
+  <nav class="jump" aria-label="Sections">
+    <a href="#what">What it does</a><a href="#map">Where things live</a><a href="#assistant">The Assistant</a><a href="#build">How we'd build it</a><a href="#cost">Costs</a><a href="#tradeoffs">Trade-offs</a><a href="#decide">🔴 Your choices</a>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">Plan · option 1 · nothing built yet</div>
+    <h1>Sovran Advisor on your students' phones</h1>
+    <p class="lede">A phone web app. Students open one link, tap “Add to Home Screen”, and get the crown icon like any other app. It works on iPhone and Android, with no App Store. Their computer app stays the main home of their data. The phone is a light companion that reads from your Sovran Library and sends things back to the computer.</p>
+    <div class="verdict">
+      <div><b>4 to 6 weeks</b>to build and test, in six steps you can stop after</div>
+      <div><b>About $0 to $25</b>a month to run, if the phone Assistant uses their computer</div>
+      <div><b>No App Store</b>so no Apple or Google fees, reviews or waiting</div>
+    </div>
+  </header>
+
+  <!-- WHAT IT DOES -->
+  <section id="what">
+    <div class="eyebrow">1 · What it does</div>
+    <h2>Five tabs. Tap them on the phone.</h2>
+    <div class="what">
+      <div class="phone" aria-label="Example phone screens">
+        <div class="bar"><span class="crown"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.5-9-4.5 4-3-7-3 7-4.5-4z"/></svg></span>Sovran Advisor</div>
+        <div class="screen" id="screen"></div>
+        <div class="tabs" role="tablist" id="tabs"></div>
+      </div>
+      <div class="feature" id="feature" aria-live="polite"></div>
+    </div>
+    <p class="small muted">Screens are rough sketches with made-up content, to show the idea, not the final look.</p>
+  </section>
+
+  <!-- MAP -->
+  <section id="map">
+    <div class="eyebrow">2 · Where things live and what talks to what</div>
+    <h2>The map</h2>
+    <p>Tap a box to see what it holds. Or pick a moment below and watch the path light up, step by step.</p>
+    <div class="maptools" id="journeys" role="group" aria-label="Moments"></div>
+    <div class="mapbox">
+      <svg id="svg" viewBox="0 0 900 520" role="img" aria-label="Map of the phone app, the cloud and the student's computer">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill: var(--dim)"/></marker>
+          <marker id="ahOn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill: var(--accent)"/></marker>
+        </defs>
+        <rect class="cloudbox" x="248" y="22" width="392" height="476" rx="18"/>
+        <text class="cloudlabel" x="268" y="46">YOUR SOVRAN LIBRARY · CLOUD (SUPABASE)</text>
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </section>
+
+  <!-- ASSISTANT -->
+  <section id="assistant">
+    <div class="eyebrow">3 · The Assistant on the phone</div>
+    <h2>The hard part, in plain words</h2>
+    <p>On the computer, the Assistant is the student's own Claude (or ChatGPT), signed in with their own plan. It reads their journal, notes and people right there on the computer. A phone can't run that. So the phone has three ways to ask.</p>
+    <div class="opts">
+      <div class="opt pick">
+        <span class="k">A · Ask, and the computer answers</span>
+        <span class="pickline">My pick to start</span>
+        <p>The phone sends the question through the drop box. The computer's Claude answers with everything it knows, and the answer comes back to the phone.</p>
+        <ul>
+          <li class="plus">Costs you nothing. Uses the student's own Claude plan.</li>
+          <li class="plus">Best answers: it sees all their data and the Library.</li>
+          <li class="plus">Private: the question is sealed, like phone capture.</li>
+          <li class="minus">Only answers while their computer is on and the app is running. Otherwise the answer waits.</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="k">B · A cloud AI you pay for</span>
+        <p>A small helper in your cloud calls Claude directly with your API key, and answers in seconds, any time.</p>
+        <ul>
+          <li class="plus">Instant, works when the computer is off.</li>
+          <li class="minus">You pay per question: about 2 to 3 cents on Sonnet, well under 1 cent on Haiku. A busy student might cost $1 to $5 a month.</li>
+          <li class="minus">It only sees the Library and the phone copy, not their whole computer.</li>
+          <li class="minus">Needs limits per student so costs can't run away.</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="k">C · No Assistant on the phone</span>
+        <p>The phone reads, writes and captures. Questions wait for the computer.</p>
+        <ul>
+          <li class="plus">Simplest. Saves about a week of work.</li>
+          <li class="minus">Feels less alive. Students will ask for it.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">A can grow into B later. If students love it, you could switch on B as a paid extra, without rebuilding anything.</p>
+  </section>
+
+  <!-- BUILD -->
+  <section id="build">
+    <div class="eyebrow">4 · How we'd build it</div>
+    <h2>Six steps, each one usable on its own</h2>
+    <p>Each step ends with something you can try on your own phone. We can pause after any step. Effort is Claude's building time. “You” is what each step needs from you.</p>
+    <ol class="phases">
+      <li><span class="n">1</span><div class="body"><h3>The app shell and pairing</h3><p>A phone page with the crown icon, the VIG look and five tabs. In the computer app, Settings › Phone shows a QR code. The student scans it once, and the phone is paired with its own phone key. “New link” cuts off a lost phone.</p><span class="you">You: try it on your iPhone, then on an Android phone.</span></div><span class="eff">3–4 days</span></li>
+      <li><span class="n">2</span><div class="body"><h3>Reports and teaching on the phone</h3><p>A new read-only doorway in your Library cloud. The phone shows the student's own reports (like the Reports page) and the teaching notes. Reports keep their Ivory &amp; Gold look.</p><span class="you">You: approve one cloud change (the 60-second approval box). Read your own Pattern on your phone.</span></div><span class="eff">3–4 days</span></li>
+      <li><span class="n">3</span><div class="body"><h3>Write: journal lines and capture</h3><p>Today's journal, a quick note and a task go through the drop box we already have. The computer puts each one in the right place: Journal, Inbox or Tasks. Dictation is the phone keyboard's microphone, tidied by their own Claude like now.</p><span class="you">You: write a journal line on your phone and see it land on your computer.</span></div><span class="eff">2–3 days</span></li>
+      <li><span class="n">4</span><div class="body"><span class="opt-tag">Optional, recommended</span><h3>The phone copy: see today on the phone</h3><p>While the computer app runs, it sends a small sealed copy every few minutes: today's plan, open tasks, the last 30 days of journal, and people's names. Only the phone and computer hold the key to open it. Your cloud only holds locked boxes.</p><span class="you">You: approve one cloud change. Check that today's plan shows on the phone.</span></div><span class="eff">1–1½ weeks</span></li>
+      <li><span class="n">5</span><div class="body"><h3>The Assistant (option A)</h3><p>Ask on the phone; the computer answers with the student's own Claude and sends the answer back, sealed. The phone shows “Waiting for your computer” when it's off.</p><span class="you">You: ask your phone a question about your Pattern.</span></div><span class="eff">about 1 week</span></li>
+      <li><span class="n">6</span><div class="body"><h3>Test with real students, then launch</h3><p>Two or three students try it on their own phones for a week. Then a new door on the Start Here page (“Put Sovran Advisor on your phone”), a help page, a short film, and the student app update.</p><span class="you">You: pick the testers, say “merge it”, and post the door to WhatsApp.</span></div><span class="eff">about 1 week</span></li>
+    </ol>
+    <p class="note">Total: about 4 to 6 weeks from your go, depending on your testing time. Steps 1 to 3 alone (about 2 weeks) already give students reports, teaching, journal and capture on the phone.</p>
+  </section>
+
+  <!-- COST -->
+  <section id="cost">
+    <div class="eyebrow">5 · Costs</div>
+    <h2>What it would cost to run</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Item</th><th>Cost</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Phone page hosting</td><td class="num">$0</td><td>Same free GitHub hosting as the phone capture page today.</td></tr>
+          <tr><td>Your own address, like app.livesovran.com</td><td class="num">$0 to $15 a year</td><td>Optional. Free if you already own the domain; nicer than a github.io link.</td></tr>
+          <tr><td>Supabase (your Library cloud)</td><td class="num">$0 to $25 a month</td><td>The free plan may cope with a small group. With many students using the phone copy every few minutes, the Pro plan ($25 a month) is the safe choice. If you're already on Pro, no change.</td></tr>
+          <tr><td>Assistant, option A</td><td class="num">$0</td><td>Each student's own Claude or ChatGPT plan does the work.</td></tr>
+          <tr><td>Assistant, option B</td><td class="num">about $1–5 per active student a month</td><td>Claude API, paid by you. About 2 to 3 cents a question on Sonnet; much less on Haiku. Can have a monthly cap per student.</td></tr>
+          <tr><td>Apple and Google developer accounts</td><td class="num">$0</td><td>Not needed. That's the point of a phone web app.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">API prices as of November 2026: Sonnet 5.5 $2 in / $10 out, Haiku 5.5 $0.10 / $0.50 per million tokens (word pieces). A question with some Library context is roughly 10,000 tokens in and 800 out.</p>
+  </section>
+
+  <!-- TRADE-OFFS -->
+  <section id="tradeoffs">
+    <div class="eyebrow">6 · Honest trade-offs</div>
+    <h2>What it won't do, and what to watch</h2>
+    <div class="two">
+      <div class="tile"><h3>The computer is still the boss</h3><p>Everything written on the phone lands on the computer. If the computer is off for a week, the phone copy is a week old, and new phone writing waits in the drop box (up to 90 days) until the computer collects it.</p></div>
+      <div class="tile"><h3>No editing old things on the phone</h3><p>The phone adds new lines, notes and tasks. Changing an old note on the phone needs full two-way sync (the “Everywhere” bundle on your Later list). That's a much bigger job with real data-loss risks.</p></div>
+      <div class="tile"><h3>Not in the App Store</h3><p>Some students will look for it in the store. The Start Here door and a short film fix that. On iPhone it must be added from Safari.</p></div>
+      <div class="tile"><h3>Phone limits</h3><p>iPhone web apps can show notifications only after being added to the home screen, and can't run in the background. The phone may clear its saved copy if the app isn't opened for weeks; nothing is lost, it fetches again.</p></div>
+      <div class="tile"><h3>More in your cloud</h3><p>With step 4, your cloud holds sealed copies of students' journals. You can't read them, but it needs a short privacy line for students. That line is already on your Later list.</p></div>
+      <div class="tile"><h3>Windows students too</h3><p>The phone doesn't care whether the computer is a Mac or a PC. Windows computers are still less tested overall.</p></div>
+    </div>
+  </section>
+
+  <!-- DECISIONS -->
+  <section id="decide">
+    <div class="eyebrow">7 · Your choices</div>
+    <h2>🔴 Four things for you to decide</h2>
+    <div class="decide">
+      <div class="dec"><h3>🔴 1. The Assistant on the phone: A, B or C?</h3><p class="mine"><b>My pick: A.</b> No cost to you, best answers, and B can be added later.</p></div>
+      <div class="dec"><h3>🔴 2. Include step 4, the phone copy of today?</h3><p class="mine"><b>My pick: yes.</b> Without it the phone can write but can't show their plan, tasks or journal, and feels half there.</p></div>
+      <div class="dec"><h3>🔴 3. Which address?</h3><p class="mine"><b>My pick: your own</b>, like app.livesovran.com, if you own the domain. Otherwise the free github.io link works fine.</p></div>
+      <div class="dec"><h3>🔴 4. Who gets it first?</h3><p class="mine"><b>My pick: you, then 2 or 3 students</b> for a week, then everyone with the next update.</p></div>
+    </div>
+  </section>
+
+  <footer>Plan made 17 November 2026 from the current student app (phone capture drop box, Library key, Reports page). Nothing has been built or changed.</footer>
+</div>
+
+<script>
+(function () {
+  // ---------- phone mock ----------
+  const TABS = [
+    { id: 'today', name: 'Today', tag: 'Needs step 4', isNew: true,
+      title: 'Today', text: 'A glance at the day: the Highlight, the plan and open tasks, as the computer last sent them.',
+      points: ['Read only: change things on the computer.', 'Shows “Updated 4 min ago” so it’s clear how fresh it is.', 'Comes from the sealed phone copy (step 4).'],
+      screen: `<h4>Tuesday</h4><div class="from">Updated 4 min ago from your computer</div>
+        <div class="card"><div class="lbl">Highlight</div>Finish the Pattern reflection</div>
+        <div class="card"><div class="lbl">Morning</div>09:30 Call with Maria<br>Draft the course outline · 45m</div>
+        <div class="card"><div class="lbl">Open tasks · 6</div>Book flights · Reply to Leo · …</div>` },
+    { id: 'write', name: 'Write', tag: 'Step 3', isNew: false,
+      title: 'Write', text: 'Journal lines, quick notes and tasks. This grows out of the phone capture students already have.',
+      points: ['Pick Journal, Note or Task, then write or dictate.', 'Sealed on the phone, carried by the drop box, placed by the computer.', 'Works offline: it sends when the phone is back online.'],
+      screen: `<h4>Write</h4><div class="card" style="display:flex;gap:6px"><span class="lbl" style="color:#C71F42">Journal</span><span class="lbl">Note</span><span class="lbl">Task</span></div>
+        <div class="ghost">Walked by the sea this morning and the Pattern line about stillness came back to me…</div>
+        <div class="btn">Send to my journal</div><div class="from">2 lines waiting for your computer</div>` },
+    { id: 'reports', name: 'Reports', tag: 'Step 2', isNew: false,
+      title: 'Reports', text: 'The student’s own reports from your Library: Sovran Pattern now, later ones and the Layered Portrait as they come.',
+      points: ['Read straight from the cloud with the phone key, so it works with the computer off.', 'Same Ivory & Gold reading look as the computer.', 'Highlights and comments stay on the computer for now.'],
+      screen: `<h4>Your reports</h4>
+        <div class="card"><div class="lbl">Sovran Pattern</div>Ready · 14 Nov</div>
+        <div class="card"><div class="lbl">8 Forces</div><span class="from">Coming later in your Quest</span></div>
+        <div class="card"><div class="lbl">Layered Portrait</div><span class="from">Builds up as you go</span></div>` },
+    { id: 'learn', name: 'Teaching', tag: 'Step 2', isNew: false,
+      title: 'Teaching', text: 'Your teaching notes from the Library, to read on the go.',
+      points: ['Search by word or topic.', 'Read only, straight from the cloud.', 'Same notes the Assistant already uses.'],
+      screen: `<h4>Teaching</h4><div class="ghost" style="min-height:0">Search the teaching…</div>
+        <div class="card"><div class="lbl">Sovran Quest</div>The first gate</div>
+        <div class="card"><div class="lbl">Practice</div>Morning stillness</div>
+        <div class="card"><div class="lbl">Foundations</div>What a Pattern shows</div>` },
+    { id: 'ask', name: 'Ask', tag: 'Step 5', isNew: false,
+      title: 'Ask', text: 'Ask your Assistant from the phone. How it answers is your choice (see section 3).',
+      points: ['Option A: the computer’s Claude answers, using everything it knows.', 'If the computer is off, the question waits and the phone says so.', 'Answers are sealed both ways.'],
+      screen: `<h4>Ask</h4><div class="card" style="margin-left:30px;background:#F3F0EC">What does my Pattern say about rest?</div>
+        <div class="card"><div class="lbl">Your Assistant</div>Your Pattern points to rest as a practice, not a reward. In part two…</div>
+        <div class="from">Answered by your computer · 40 sec</div>` },
+  ];
+  const tabsEl = document.getElementById('tabs'), screenEl = document.getElementById('screen'), featEl = document.getElementById('feature');
+  function showTab(id) {
+    const t = TABS.find(x => x.id === id);
+    tabsEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.id === id)));
+    screenEl.innerHTML = t.screen;
+    featEl.innerHTML = `<span class="tag${t.isNew ? ' new' : ''}">${t.tag}</span><h3 style="font-family:var(--f-display);font-weight:400;font-size:26px">${t.title}</h3><p>${t.text}</p><ul>${t.points.map(p => `<li>${p}</li>`).join('')}</ul>`;
+  }
+  TABS.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.dataset.id = t.id; b.textContent = t.name; b.onclick = () => showTab(t.id); tabsEl.append(b); });
+  showTab('today');
+
+  // ---------- map ----------
+  const NODES = {
+    phone:   { x: 24,  y: 196, w: 190, h: 112, t1: 'Phone app', t2: ['On the student’s phone', 'home-screen icon'], isNew: true,
+      info: ['Phone app', 'A web page saved to the home screen. It keeps almost nothing: a small cache, the phone key and the sealing key.', ['Reads reports and teaching from the Library.', 'Sends journal lines, notes, tasks and questions to the drop box.', 'Reads the sealed phone copy of today.']] },
+    keys:    { x: 24,  y: 380, w: 190, h: 92, t1: 'Keys', t2: ['Library key + phone key'],
+      info: ['Keys', 'Two keys. The Library key (from you) stays on the computer. Pairing gives the phone its own phone key, and a sealing key that never goes to the cloud.', ['Phone key: opens the drop box and the student’s reports.', 'Sealing key: locks and unlocks their private writing. Your cloud never sees it.', '“New link” on the computer cancels a lost phone’s keys.']] },
+    drop:    { x: 270, y: 66,  w: 350, h: 96, t1: 'Phone drop box', t2: ['Exists today (phone capture)', 'sealed notes in, answers back'], cloud: true,
+      info: ['Phone drop box', 'Already built and live. Today it carries phone notes to the Inbox. The plan widens it to journal lines, tasks, Assistant questions and answers.', ['Everything inside is sealed on the phone. Your cloud only sees locked boxes.', 'Emptied when the computer collects (about every minute while the app runs).', 'Waits up to 90 days if the computer is off.']] },
+    library: { x: 270, y: 210, w: 350, h: 106, t1: 'Sovran Library', t2: ['Exists today: teaching, decodes,', 'reports (PDF + reading copy)'], cloud: true,
+      info: ['Sovran Library', 'Your cloud database. It already holds the teaching notes, each client’s decodes and the reports the reports machine makes.', ['A new read-only phone doorway shows a student only their own reports, plus the teaching.', 'Nothing about the existing tables changes.', 'The reports machine keeps writing reports here, as planned.']] },
+    mirror:  { x: 270, y: 362, w: 350, h: 104, t1: 'Phone copy of today', t2: ['Sealed: today’s plan, tasks, recent', 'journal, people’s names'], cloud: true, isNew: true,
+      info: ['Phone copy of today (step 4)', 'A small locked copy the computer refreshes every few minutes while it runs. Only the phone and computer can open it.', ['Read only on the phone.', 'Shows how old it is.', 'Not two-way sync: it is a window, not a second home.']] },
+    computer:{ x: 684, y: 150, w: 196, h: 122, t1: 'Computer app', t2: ['Sovran Advisor on Mac / PC', 'all their data lives here'],
+      info: ['The student’s computer app', 'The main home of everything: journal, notes, people, tasks, planner, files. Unchanged in spirit; it learns three small jobs.', ['Shows the pairing QR code (Settings › Phone).', 'Collects from the drop box and puts things in place.', 'Sends the sealed phone copy and answers phone questions.']] },
+    ai:      { x: 684, y: 330, w: 196, h: 96, t1: 'Their Claude', t2: ['or ChatGPT, on the computer', 'their own plan'],
+      info: ['The student’s own AI', 'Claude Code or Codex on the computer, signed in with their own plan. It already powers the Assistant and tidies phone dictation.', ['With option A it also answers phone questions.', 'No API key, no cost to you.']] },
+    machine: { x: 684, y: 28,  w: 196, h: 74, t1: 'Reports machine', t2: ['yours: makes reports'],
+      info: ['Your reports machine', 'Your other project. It makes each student’s reports and puts them in the Library.', ['Nothing changes there for the phone app.']] },
+  };
+  const EDGES = [
+    { id: 'pd', from: 'phone', to: 'drop', d: 'M214 228 C 244 228, 244 114, 270 114', both: true },
+    { id: 'dc', from: 'drop', to: 'computer', d: 'M620 114 C 660 114, 650 190, 684 190', both: true },
+    { id: 'lp', from: 'library', to: 'phone', d: 'M270 262 L214 262' },
+    { id: 'cm', from: 'computer', to: 'mirror', d: 'M720 272 C 700 380, 660 414, 620 414' },
+    { id: 'mp', from: 'mirror', to: 'phone', d: 'M270 414 C 240 414, 240 290, 214 290' },
+    { id: 'ca', from: 'computer', to: 'ai', d: 'M800 272 L800 330', both: true },
+    { id: 'ml', from: 'machine', to: 'library', d: 'M700 102 C 660 150, 650 236, 620 236' },
+    { id: 'cl', from: 'computer', to: 'library', d: 'M684 246 C 660 260, 650 290, 620 290', both: true },
+    { id: 'kp', from: 'keys', to: 'phone', d: 'M119 380 L119 308', dash: true },
+  ];
+  const JOURNEYS = [
+    { id: 'pair', name: 'Set up the phone (once)', steps: [
+      ['On the computer: Settings › Phone › Pair a phone. A QR code shows.', ['computer'], []],
+      ['The student scans it with the phone camera. The phone page opens and keeps its phone key and sealing key.', ['keys', 'phone'], ['kp']],
+      ['They tap Share › Add to Home Screen (iPhone) or Install (Android). The crown icon appears.', ['phone'], []] ] },
+    { id: 'journal', name: 'Jot a journal line', steps: [
+      ['On the phone: Write › Journal. They type or dictate a line.', ['phone'], []],
+      ['The phone seals it and drops it in the drop box.', ['phone', 'drop'], ['pd']],
+      ['Within a minute (if the computer is on), the computer collects it.', ['drop', 'computer'], ['dc']],
+      ['It lands on today’s journal page. Their Claude tidies the punctuation, keeping the original.', ['computer', 'ai'], ['ca']] ] },
+    { id: 'report', name: 'Read my Pattern', steps: [
+      ['Your reports machine has put the Pattern report in the Library.', ['machine', 'library'], ['ml']],
+      ['On the phone: Reports. The phone asks the Library with its phone key.', ['phone', 'library'], ['lp']],
+      ['The Library hands back only that student’s reports. Works with the computer off.', ['phone'], ['lp']] ] },
+    { id: 'today', name: 'See today’s plan', steps: [
+      ['While the computer app runs, every few minutes it seals a small copy of today.', ['computer'], []],
+      ['It drops that copy in the cloud, replacing the last one.', ['computer', 'mirror'], ['cm']],
+      ['The phone opens it with its sealing key and shows “Updated 4 min ago”.', ['mirror', 'phone'], ['mp']] ] },
+    { id: 'ask', name: 'Ask the Assistant', steps: [
+      ['On the phone: Ask. The question is sealed and dropped in the box.', ['phone', 'drop'], ['pd']],
+      ['The computer collects it.', ['drop', 'computer'], ['dc']],
+      ['Their own Claude answers, using their data and the Library.', ['computer', 'ai', 'library'], ['ca', 'cl']],
+      ['The answer goes back, sealed, through the box to the phone.', ['computer', 'drop', 'phone'], ['dc', 'pd']] ] },
+  ];
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('svg'), gE = document.getElementById('edges'), gN = document.getElementById('nodes');
+  const detail = document.getElementById('detail'), jEl = document.getElementById('journeys');
+  const mk = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  EDGES.forEach(e => {
+    const p = mk('path', { d: e.d, class: 'edge' + (e.dash ? ' dash' : ''), 'data-id': e.id, 'marker-end': 'url(#ah)' });
+    if (e.both) p.setAttribute('marker-start', 'url(#ah)');
+    gE.append(p); e.el = p;
+  });
+  Object.entries(NODES).forEach(([id, n]) => {
+    const g = mk('g', { class: 'node' + (n.cloud ? ' cloudn' : ''), tabindex: '0', role: 'button', 'aria-label': n.t1 });
+    g.append(mk('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 12 }));
+    let y = n.y + 28;
+    if (n.isNew) { const t = mk('text', { x: n.x + n.w - 14, y: n.y + 22, class: 'newtag', 'text-anchor': 'end' }); t.textContent = 'NEW'; g.append(t); }
+    const t1 = mk('text', { x: n.x + 16, y, class: 't1' }); t1.textContent = n.t1; g.append(t1);
+    n.t2.forEach((line, i) => { const t = mk('text', { x: n.x + 16, y: y + 22 + i * 17, class: 't2' }); t.textContent = line; g.append(t); });
+    g.addEventListener('click', () => pickNode(id));
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pickNode(id); } });
+    gN.append(g); n.el = g;
+  });
+  function light(nodes, edges) {
+    svg.classList.toggle('dimmed', nodes.length > 0);
+    Object.entries(NODES).forEach(([id, n]) => n.el.classList.toggle('on', nodes.includes(id)));
+    EDGES.forEach(e => { const on = edges.includes(e.id); e.el.classList.toggle('on', on);
+      e.el.setAttribute('marker-end', on ? 'url(#ahOn)' : 'url(#ah)'); if (e.both) e.el.setAttribute('marker-start', on ? 'url(#ahOn)' : 'url(#ah)'); });
+  }
+  function pickNode(id) {
+    setJourney(null);
+    const n = NODES[id];
+    const edges = EDGES.filter(e => e.from === id || e.to === id);
+    light([id, ...edges.map(e => e.from === id ? e.to : e.from)], edges.map(e => e.id));
+    const [title, text, list] = n.info;
+    detail.innerHTML = `<h3>${title}</h3><p>${text}</p><ul>${list.map(x => `<li>${x}</li>`).join('')}</ul>`;
+  }
+  let timer = null;
+  function setJourney(id) {
+    clearInterval(timer); timer = null;
+    jEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+    if (!id) return;
+    const j = JOURNEYS.find(x => x.id === id);
+    let i = 0;
+    const draw = () => {
+      const [, nodes, edges] = j.steps[i];
+      light(nodes, edges);
+      detail.innerHTML = `<h3>${j.name}</h3><ol class="steps">${j.steps.map((s, k) => `<li class="${k === i ? 'cur' : ''}">${s[0]}</li>`).join('')}</ol>
+        <div class="maptools"><button class="chip" type="button" id="prev">Back</button><button class="chip" type="button" id="next">${i < j.steps.length - 1 ? 'Next step' : 'Start again'}</button></div>`;
+      document.getElementById('prev').onclick = () => { stop(); i = Math.max(0, i - 1); draw(); };
+      document.getElementById('next').onclick = () => { stop(); i = (i + 1) % j.steps.length; draw(); };
+    };
+    const stop = () => { clearInterval(timer); timer = null; };
+    draw();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) timer = setInterval(() => { if (i >= j.steps.length - 1) { stop(); return; } i++; draw(); }, 2600);
+  }
+  JOURNEYS.forEach(j => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.dataset.id = j.id; b.textContent = j.name; b.setAttribute('aria-pressed', 'false'); b.onclick = () => setJourney(j.id); jEl.append(b); });
+  // resting state: the journal moment, first step shown, no auto-play until chosen
+  (function rest() {
+    const j = JOURNEYS[1];
+    jEl.querySelector('[data-id="journal"]').setAttribute('aria-pressed', 'true');
+    light(['phone', 'drop', 'computer', 'ai'], ['pd', 'dc', 'ca']);
+    detail.innerHTML = `<h3>${j.name}</h3><ol class="steps">${j.steps.map(s => `<li>${s[0]}</li>`).join('')}</ol><p class="small muted">Tap a moment above to step through it, or tap any box.</p>`;
+  })();
+})();
+</script>
