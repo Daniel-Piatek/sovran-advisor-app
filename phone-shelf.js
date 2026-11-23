@@ -11,6 +11,9 @@
 //   marks            { at, marks: [{ id, report, version, section_key, quote, prefix, suffix, comment, created_at,
 //                      updated_at, asks: [{ role, text }] }] }   the highlights and comments (report-marks.js)
 //   group            { at, group: { key, url } }   the phone's own Group Circle key (phone-drop.js), while Group Circle is on
+//   quest            { at, marks: [{ week, piece, done, entries, last }] }   the student's own Sovran Quest Done and journal
+//                    entries (quest.js questShelf), while Sovran Quest and Group Circle are on; Done and entries made on the phone come back
+//                    as sealed notes (phone-drop.js → takePhoneDone, takePhoneEntry)
 // Highlights and comments made on the phone come back as sealed notes (kind mark, phone-drop.js → takePhoneMark).
 // So a new report, or a highlight made on the computer, reaches the phone once this computer has been on.
 
@@ -21,9 +24,10 @@ import { listReports, readReport, reportsOn } from './reports.js';
 import { listMarks, asksOf } from './report-marks.js';
 import { markBreaks } from './public/report-break.js';
 import { aboutOf } from './public/report-about.js';
+import { questOn, questShelf } from './quest.js';
 
 export const SHELF_READ_EVERY = 6 * 3600_000; // the library is asked for the reports again this often, and at each start
-export const MAX_SHELF_REPORTS = 9;           // the shelf holds 12 things: the list, the marks, Group Circle and nine reports
+export const MAX_SHELF_REPORTS = 8;           // the shelf holds 12 things: the list, the marks, Group Circle, Sovran Quest and eight reports
 const PART_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']; // as public/reports.js
 const markdown = markdownit({ html: false, linkify: true }); // as the Reports page draws a report: no HTML inside it is ever drawn
 const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
@@ -74,6 +78,8 @@ export async function syncShelf(db, box, put, { force = false, group = null } = 
   }
   else { readAt = null; names = []; asked.delete(box.box); } // Reports switched off: the shelf is emptied, and read afresh when it is on again
   if (group?.key) want.set('group', JSON.stringify({ group })); else want.delete('group'); // Group Circle on the phone
+  // Sovran Quest on the phone: it reads the weeks with the Group Circle key, so only while that key is on the shelf too.
+  if (questOn(db) && group?.key) want.set('quest', JSON.stringify(questShelf(db))); else want.delete('quest');
   const shelf = {};
   let changed = false;
   for (const [name, words] of want) {

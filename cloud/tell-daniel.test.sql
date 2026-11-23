@@ -31,6 +31,11 @@ BEGIN
   PERFORM pg_temp.ok((l->'counts'->>'new')::int = 0 AND (l->'counts'->>'digging')::int = 1 AND (l->'counts'->>'done')::int = 1, 'the counts follow the marks');
   PERFORM pg_temp.ok((SELECT note FROM tell_daniel.reports WHERE id = r1) = 'Check part 2 of the decode', 'Daniel''s note is kept');
   PERFORM pg_temp.ok(tell_daniel.set_status(G, r1, 'maybe', NULL)->>'error' = 'bad', 'only the three statuses');
+  -- go Sovran: Stuck? Ask Daniel on Sovran Quest, with the phone's own key (2026-11-23)
+  PERFORM group_feed.phone_key(A, repeat('6', 64));
+  PERFORM pg_temp.ok(tell_daniel.tell(repeat('6', 64), 'question', 'Stuck on homework 2', 'app', '{"from":"go Sovran"}'::jsonb, NULL)->>'id' IS NOT NULL, 'a student''s phone asks too');
+  PERFORM pg_temp.ok((SELECT student_id FROM tell_daniel.reports ORDER BY id DESC LIMIT 1) = (SELECT id FROM library.students WHERE key_hash = A), 'as that student');
+  PERFORM pg_temp.ok(tell_daniel.tell(repeat('5', 64), 'question', 'x', 'app', '{}'::jsonb, NULL)->>'error' = 'unknown', 'a phone key nobody registered cannot');
   -- Claude's diagnosis
   PERFORM pg_temp.ok(tell_daniel.diagnose(r2, 'bug', 'The Help page failed to load on 0.9.1.', 'https://github.com/Daniel-Piatek/sovran-advisor-app/pull/99')->>'diagnosed' = 'true', 'Claude writes a diagnosis');
   PERFORM pg_temp.ok((SELECT status FROM tell_daniel.reports WHERE id = r2) = 'done', 'a report Daniel already marked keeps his mark');

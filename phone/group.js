@@ -98,6 +98,7 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
     if (!access) return;
     try {
       const latest = await ask({ action: 'latest' });
+      if (latest.me) me = latest.me;
       // The guide, on a cloud that doesn't send the guide's new ids yet: worked out here from the newest posts.
       if (latest.me?.guide && !Array.isArray(latest.comment_new_ids)) {
         const [feed, news] = await Promise.all(['feed', 'news'].map((t) => ask({ action: 'read', tab: t, limit: 20 }).then((r) => r.posts ?? [], () => [])));
@@ -317,5 +318,6 @@ export function setupGroup({ store, show, openShelf, refreshShelf, ios = false, 
   document.querySelectorAll('#group-tabs button').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; draw(); }));
   document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && $('group').hidden) { await refreshShelf(); await check(); } });
 
-  return { check, open, available: () => Boolean(access) };
+  // ask and isGuide also serve Sovran Quest (quest.js), which reads the group's weeks with this same key.
+  return { check, open, ask, available: () => Boolean(access), isGuide: () => Boolean(me?.guide) };
 }

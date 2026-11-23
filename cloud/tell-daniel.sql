@@ -4,7 +4,7 @@
 -- app sends it with what it was about (the question and answer, the library pieces used, the passage, the app version).
 -- Each report waits here with a status (new, digging = "Needs digging", done = "Dealt with") for Daniel's Student reports
 -- page in APP Daniel, and for Daniel's own Claude to read. A student is known by their library key (library.students),
--- whether or not they are in a group; Daniel by the guide key (group_feed.guides, so run cloud/group-feed.sql first).
+-- whether or not they are in a group, or by their phone's own key (group_feed.phone_keys, go Sovran); Daniel by the guide key (group_feed.guides, so run cloud/group-feed.sql first).
 -- The schema is not offered to the web API; only the group-feed web function (cloud/group-feed/index.ts) uses it.
 -- Safe to run again.
 
@@ -44,6 +44,10 @@ RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE s text; new_id bigint;
 BEGIN
   SELECT id INTO s FROM library.students WHERE key_hash = p_key_hash AND active;
+  IF s IS NULL THEN -- the student's go Sovran (Stuck? Ask Daniel on Sovran Quest, 2026-11-23): their phone's own key
+    SELECT st.id INTO s FROM group_feed.phone_keys pk JOIN library.students st ON st.id = pk.student_id AND st.active
+      WHERE pk.key_hash = p_key_hash;
+  END IF;
   IF s IS NULL THEN RETURN jsonb_build_object('error', 'unknown'); END IF;
   IF (SELECT count(*) FROM tell_daniel.reports WHERE student_id = s AND created_at > now() - interval '1 day') >= 30 THEN
     RETURN jsonb_build_object('error', 'toomany'); END IF;

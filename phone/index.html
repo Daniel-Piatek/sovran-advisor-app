@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <title>go Sovran</title>
-  <meta name="description" content="go Sovran: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, read your Sovran reports, or open your Group Circle.">
+  <meta name="description" content="go Sovran: ask your AI, write in your Journal, keep a thought for the Inbox on your computer, read your Sovran reports, follow your Sovran Quest, or open your Group Circle.">
   <meta name="apple-mobile-web-app-title" content="go Sovran">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -25,7 +25,7 @@
 
   <main class="page">
     <!-- The first screen: the writing box comes first (what is on your mind, which kind, Save), then Ask my Sovran
-         Advisor, My Reports and Group Circle. -->
+         Advisor and My Reports, then two squares: Sovran Quest and Group Circle (the owner's layout, 2026-11-23). -->
     <section class="choose" id="choose" hidden>
       <h1 class="sr">What would you like to do?</h1>
       <form class="card" id="form" data-kind="inner">
@@ -47,10 +47,15 @@
         <span class="choice-words"><strong>Ask my Sovran Advisor</strong><span id="ask-line">Ask for insight from your reports, your charts and the Sovran Library</span></span>
         <span class="choice-go" aria-hidden="true">›</span>
       </a>
+      <button type="button" class="choice choice-wide" id="my-reports">
+        <img class="wide-picture" src="brand/sovran-pattern-report.png" alt="" width="44" height="44">
+        <span class="choice-words"><strong>My Reports</strong><span>Read, highlight and comment on your reports</span></span>
+        <span class="choice-go" aria-hidden="true">›</span>
+      </button>
       <div class="pair">
-        <button type="button" class="choice tile" id="my-reports">
-          <img class="tile-picture" src="brand/sovran-pattern-report.png" alt="" width="40" height="40">
-          <span class="choice-words"><strong>My Reports</strong><span>Read, highlight, comment</span></span>
+        <button type="button" class="choice tile choice-quest" id="quest-tile" hidden>
+          <img class="tile-picture quest-picture" src="brand/sovran-quest.png" alt="" width="76" height="76">
+          <span class="choice-words"><strong>Sovran Quest</strong><span id="quest-line">This week</span></span>
         </button>
         <button type="button" class="choice tile choice-group" id="group-circle" hidden>
           <svg class="disc disc-group" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><g><circle cx="12" cy="8.4" r="2.2"/><circle cx="7.6" cy="14.6" r="2.2"/><circle cx="16.4" cy="14.6" r="2.2"/></g></svg>
@@ -59,6 +64,44 @@
         </button>
       </div>
       <p class="status" id="waiting-line" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Sovran Quest: one week at a time, its homework and the group call (quest.js). -->
+    <section class="quest" id="quest" hidden>
+      <div class="top">
+        <button type="button" class="back" id="quest-back" aria-label="Back">‹</button>
+        <h1 class="title q-title">Sovran Quest</h1>
+      </div>
+      <div class="q-weeks" id="quest-weeks" role="group" aria-label="Weeks"></div>
+      <div class="q" id="quest-body"></div>
+    </section>
+    <section class="quest" id="quest-write" hidden>
+      <div class="top">
+        <button type="button" class="back" id="quest-write-back" aria-label="Back">‹</button>
+        <h1 class="title q-title" id="quest-write-title">Homework</h1>
+      </div>
+      <form class="card" id="quest-write-form">
+        <p class="day q-label-card" id="quest-write-label"></p>
+        <p class="q-quote" id="quest-write-quote"></p>
+        <textarea id="quest-write-text" class="text" rows="4" placeholder="Write here…" aria-label="Your journal entry" maxlength="20000"></textarea>
+        <div class="cardfoot">
+          <span class="where">Goes to your Journal, with this homework</span>
+          <button type="submit" class="keep" id="quest-write-save" disabled>Save</button>
+        </div>
+        <p class="status" id="quest-write-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="q-note">Saved on your computer in Sovran Central, named for this homework, so it shows under the homework there too.</p>
+    </section>
+    <section class="quest" id="quest-transcript" hidden>
+      <div class="top">
+        <button type="button" class="back" id="quest-tr-back" aria-label="Back">‹</button>
+        <h1 class="title q-title" id="quest-tr-title">Transcript</h1>
+      </div>
+      <input type="search" class="q-search" id="quest-tr-search" placeholder="Search the call" aria-label="Search the call" autocomplete="off">
+      <p class="q-found" id="quest-tr-found" hidden><span id="quest-tr-found-words"></span>
+        <button type="button" class="q-step" id="quest-tr-prev" aria-label="Previous place">‹</button><button type="button" class="q-step" id="quest-tr-next" aria-label="Next place">›</button></p>
+      <p class="q-note">Written by a machine from the call, so a word may be misheard.</p>
+      <div class="q-lines" id="quest-tr-lines"></div>
     </section>
 
     <!-- Group Circle: Announcements and the Circle (group.js). -->

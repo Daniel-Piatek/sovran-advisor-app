@@ -10,6 +10,7 @@
 import { seal, readLinkPart } from './seal.js';
 import { setupReports } from './reports.js';
 import { setupGroup } from './group.js';
+import { setupQuest } from './quest.js';
 
 export const DROP_URL = 'https://lpqzqnmwsxnojvpcqwiy.supabase.co/functions/v1/phone-drop';
 const LINK = 'sovran.phone.link';
@@ -68,7 +69,7 @@ const say = (words) => { $('status').textContent = words; };
 const waits = (n) => `${n} ${n === 1 ? 'waits' : 'wait'} on this phone for signal.`;
 
 function show(name) {
-  for (const id of ['choose', 'done', 'setup', 'nolink', 'reports', 'report', 'group']) $(id).hidden = id !== name;
+  for (const id of ['choose', 'done', 'setup', 'nolink', 'reports', 'report', 'group', 'quest', 'quest-write', 'quest-transcript']) $(id).hidden = id !== name;
   document.body.classList.toggle('choosing', name === 'choose');
   document.body.classList.toggle('with-foot', name === 'setup' || name === 'nolink'); // the privacy line is read once, while linking
   document.body.classList.toggle('in-group', name === 'group');
@@ -134,20 +135,26 @@ function start() {
 
   // My reports (reports.js). A highlight or comment made there goes the same way as a thought: sealed, into the drop
   // box, or kept on this phone until there is signal.
-  const reports = setupReports({ link, store, show, ai, call: (body) => call(body, 20000),
-    leave: async (note) => { try { await send(note); await flush(); } catch (err) { if (!err.refused) keepWaiting([...waiting(), note]); } } });
+  const leave = async (note) => { try { await send(note); await flush(); } catch (err) { if (!err.refused) keepWaiting([...waiting(), note]); } };
+  const reports = setupReports({ link, store, show, ai, call: (body) => call(body, 20000), leave });
   $('my-reports').addEventListener('click', () => { history.pushState({ view: 'reports' }, ''); reports.showList(); });
   $('reports-back').addEventListener('click', () => history.back());
   // Group Circle (group.js): with the phone's own key, from the shelf. The choice shows once the key is there.
   const group = setupGroup({ store, show, openShelf: reports.open, refreshShelf: reports.refresh, ios, installed });
   $('group-circle').addEventListener('click', () => { history.pushState({ view: 'group' }, ''); group.open(); });
   $('group-back').addEventListener('click', () => history.back());
+  // Sovran Quest (quest.js): the group's weeks with the same key as Group Circle; Done and journal entries go to the computer.
+  let saying = 0;
+  const toast = (words) => { $('toast').textContent = words; $('toast').hidden = false; clearTimeout(saying); saying = setTimeout(() => { $('toast').hidden = true; }, 6000); };
+  const quest = setupQuest({ store, show, ask: group.ask, available: group.available, isGuide: group.isGuide, openShelf: reports.open, leave, ai, say: toast });
+  $('quest-tile').addEventListener('click', () => { history.pushState({ view: 'quest' }, ''); quest.open(); });
+  for (const id of ['quest-back', 'quest-write-back', 'quest-tr-back']) $(id).addEventListener('click', () => history.back());
   // From an alert (sw.js): ?open=group&tab=…&post=… opens Group Circle at that post once the key is known.
   const asked = new URLSearchParams(location.search);
   const fromAlert = asked.get('open') === 'group' ? { tab: asked.get('tab'), post: asked.get('post') } : null;
   if (fromAlert) history.replaceState(null, '', location.pathname);
   const openFromAlert = () => { if (fromAlert && group.available() && $('group').hidden) { history.pushState({ view: 'group' }, ''); group.open(fromAlert); } };
-  group.check().then(async () => { openFromAlert(); if (await reports.refresh()) { await group.check(); openFromAlert(); } });
+  group.check().then(async () => { openFromAlert(); await quest.check(); if (await reports.refresh()) { await group.check(); openFromAlert(); await quest.check(); } });
   $('report-back').addEventListener('click', () => history.back());
 
   document.querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => { pick(c.dataset.kind); text.focus(); }));
@@ -155,9 +162,12 @@ function start() {
   addEventListener('popstate', () => {
     const to = history.state;
     if (to?.view === 'group') group.open();
+    else if (to?.view === 'quest') quest.open();
+    else if (to?.view === 'quest-write') quest.drawWriting();
+    else if (to?.view === 'quest-transcript') quest.drawTranscript(to.week);
     else if (to?.view === 'report') reports.showReport(to.report);
     else if (to?.view === 'reports') reports.showList();
-    else { reports.leaveReports(); choose(); group.check(); }
+    else { reports.leaveReports(); choose(); group.check().then(() => quest.check()); }
   });
   $('another').addEventListener('click', choose); // Continue: back to the first screen, the box empty
 

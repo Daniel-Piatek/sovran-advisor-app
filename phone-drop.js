@@ -21,6 +21,7 @@ import { saveChatPart } from './chat-saves.js';
 import { libraryKey } from './sovran-library.js';
 import { takePhoneMark } from './report-marks.js';
 import { syncShelf } from './phone-shelf.js';
+import { takePhoneDone, takePhoneEntry } from './quest.js';
 import { getProvider } from './ai.js';
 import { askCloud, groupOn, hasGroupKey, groupKeyOf, isGuideApp, GROUP_URL } from './group-feed.js';
 
@@ -178,12 +179,16 @@ export async function collect(db, { fetcher = fetch } = {}) {
           if (note.saved && saveChatPart(db, note)) total++;
         } else if (note.kind === 'mark') { // a highlight or comment made on a report on the phone (never from the save tool)
           if (!note.saved && takePhoneMark(db, note)) marked++;
+        } else if (note.kind === 'quest_done') { // Done on a piece of Sovran Quest homework, on the phone (quest.js)
+          if (!note.saved && takePhoneDone(db, note)) marked++;
         } else if (body) { // the glossary's fixes now, the punctuation by the assistant soon after (tidy.js)
           const words = fixPhoneWords(db, body);
           if (note.kind === 'journal') {
             const time = new Date(note.at);
             const at = Number.isNaN(time.getTime()) || time > new Date() ? null : time; // a phone's clock can be wrong
-            const made = createEntry(db, { day: journalDay(note, at), body: words.fixed, origin: 'captured', ...(at ? { written_at: at.toISOString() } : {}) });
+            const when = { day: journalDay(note, at), body: words.fixed, ...(at ? { written_at: at.toISOString() } : {}) };
+            // Written for a piece of Sovran Quest homework ("Start in my Journal" on the phone): named for it and linked to it.
+            const made = (!note.saved && note.quest && takePhoneEntry(db, note.quest, when)) || createEntry(db, { ...when, origin: 'captured' });
             rememberSpokenEntry(db, made.id, words);
           } else { // a thought; a kind this app does not know yet is kept in the Inbox too, never lost
             const made = createCapture(db, { body: words.fixed, world: WORLDS.includes(note.world) ? note.world : 'inner' });

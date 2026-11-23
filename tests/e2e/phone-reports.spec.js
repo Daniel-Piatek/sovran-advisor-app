@@ -99,7 +99,7 @@ const select = (page, section, words) => page.evaluate(([key, text]) => {
 test('My Reports lists the report in Ivory & Gold and opens it to read, part by part', async ({ browser }, testInfo) => {
   const { page, context, errors } = await phone(browser, testInfo);
   const card = page.getByRole('button', { name: /My Reports/ });
-  await expect(card).toContainText('Read, highlight, comment');
+  await expect(card).toContainText('Read, highlight and comment on your reports');
   await card.click();
   await expect(page.getByRole('heading', { name: 'My Reports' })).toBeVisible();
   const report = page.locator('.report-card');

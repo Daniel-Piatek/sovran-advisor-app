@@ -4,10 +4,11 @@ import { createHash } from 'node:crypto';
 // It keeps one group in memory and follows the same main rules: only keys it knows, students post to the Circle only,
 // a name before posting, your own posts to change. The real rules are checked against Postgres in cloud/group-feed.test.sql.
 
-export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null } = {}) {
+export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null, questWeeks = [] } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
-    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), guidePhones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })) };
+    pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), guidePhones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })),
+    questWeeks: questWeeks.map((w) => ({ group, ...w })) }; // the Quest shelf (cloud/quest.sql): { group, number, ...week, transcript }
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
   const sha = (text) => createHash('sha256').update(text).digest('hex');
@@ -45,6 +46,16 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
     const guideOnly = ['hide', 'flags', 'flags_clear', 'groups', 'manage'];
     if (guideOnly.includes(msg.action) && !s.guide) return err('guideonly', 403);
     switch (msg.action) {
+      // The Quest shelf (cloud/quest.sql): a student's own group's weeks, newest first, never with the transcript
+      case 'quest_weeks': {
+        const mine = state.questWeeks.filter((w) => (s.guide ? !msg.group || w.group === msg.group : w.group === (s.group ?? group)));
+        return json(200, { weeks: mine.sort((a, b) => b.number - a.number).map(({ transcript, ...w }) => ({ ...w, has_transcript: Boolean(transcript) })) });
+      }
+      case 'quest_transcript': {
+        const g = s.guide ? msg.group : s.group ?? group;
+        const w = state.questWeeks.find((x) => x.group === g && x.number === msg.number);
+        return w ? json(200, { transcript: w.transcript ?? '' }) : err('gone', 404);
+      }
       case 'latest': return s.guide && state.oldGuideLatest ? json(200, { me: meOf(s), flags: openFlags().length }) // the cloud before the guide-phone change
         : s.guide ? json(200, { me: meOf(s), flags: openFlags().length, news_new_ids: [],
           feed_new_ids: live('feed', s).filter((p) => p.student).map((p) => p.id),

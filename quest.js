@@ -224,3 +224,52 @@ export async function questText(db, { week = null, words = '' } = {}) {
   }
   return `Sovran Quest weeks, newest first:\n${weeks.map((w) => `${head(w)}\n${homeworkText(w)}${w.summary ? `\n  The call, in short: ${w.summary.replace(/\s+/g, ' ').slice(0, 600)}` : ''}`).join('\n\n')}`;
 }
+
+// ---- go Sovran (phone/quest.js) ----
+// The phone shows the same Done and "Your work" as this page. This computer leaves them on the phone's sealed shelf
+// (phone-shelf.js, item "quest"): for each piece with something on it, whether it is Done and how many journal entries
+// were started from it. → { marks: [{ week, piece, done, entries, last }] }   week: the week key, e.g. "SQ01-2"
+export function questShelf(db) {
+  const marks = new Map();
+  const at = (week, piece) => {
+    const k = `${week}#${piece}`;
+    if (!marks.has(k)) marks.set(k, { week, piece, done: false, entries: 0, last: '' });
+    return marks.get(k);
+  };
+  for (const m of db.prepare('SELECT week_key, piece FROM quest_marks WHERE deleted_at IS NULL').all()) at(m.week_key, m.piece).done = true;
+  const work = db.prepare(`SELECT w.week_key, w.piece, e.day FROM quest_work w JOIN journal_entries e ON e.id = w.item_id AND e.deleted_at IS NULL
+    WHERE w.kind = 'entry' AND w.deleted_at IS NULL ORDER BY e.day`).all();
+  for (const w of work) { const m = at(w.week_key, w.piece); m.entries++; m.last = w.day; }
+  return { marks: [...marks.values()].sort((a, b) => a.week.localeCompare(b.week) || a.piece - b.piece) };
+}
+
+const GROUP_CODE = /^[A-Za-z0-9_-]{1,20}$/;
+const phoneWeek = (q) => (q && GROUP_CODE.test(String(q.group ?? '')) && Number.isInteger(q.number) && q.number >= 0 && q.number <= 200
+  && Number.isInteger(q.piece) && q.piece >= 1 && q.piece <= 50 ? { key: weekKey(q.group, q.number), number: q.number, piece: q.piece } : null);
+
+// Done ticked or unticked on the phone (a sealed note, phone-drop.js): the same private tick as on this page.
+export function takePhoneDone(db, note) {
+  const w = phoneWeek(note);
+  if (!w) return false;
+  const time = now();
+  if (note.on === false) {
+    db.prepare('UPDATE quest_marks SET deleted_at = ?, updated_at = ? WHERE week_key = ? AND piece = ? AND deleted_at IS NULL').run(time, time, w.key, w.piece);
+  } else if (!isDone(db, w.key, w.piece)) {
+    db.prepare('INSERT INTO quest_marks (id, created_at, updated_at, week_key, piece) VALUES (?, ?, ?, ?, ?)').run(randomUUID(), time, time, w.key, w.piece);
+  }
+  return true;
+}
+
+// A journal entry written on the phone for a piece ("Start in my Journal" there): named and begun as on this page, the
+// phone's words under the homework, and linked to the piece. quest: { group, number, piece, text }. → the entry, or null.
+export function takePhoneEntry(db, quest, { day, body, written_at } = {}) {
+  const w = phoneWeek(quest);
+  if (!w) return null;
+  const homework = String(quest.text ?? '').trim().slice(0, 4000);
+  const quoted = homework ? `${homework.split('\n').map((line) => `> ${line}`).join('\n')}\n\n` : '';
+  const entry = createEntry(db, { day, title: labelOf(w.number, w.piece), body: `${quoted}${body}`, origin: 'captured', ...(written_at ? { written_at } : {}) });
+  const time = now();
+  db.prepare('INSERT INTO quest_work (id, created_at, updated_at, week_key, piece, kind, item_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(randomUUID(), time, time, w.key, w.piece, 'entry', entry.id);
+  return entry;
+}
