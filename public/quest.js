@@ -62,6 +62,7 @@ function drawWeek(week, page) {
     homeworkCard(week, page),
     el('section', { class: 'quest-card', 'aria-label': 'Weekly group call' },
       el('h3', { class: 'quest-card-title' }, 'Weekly group call'),
+      week.summary ? el('div', { class: 'quest-summary' }, ...week.summary.split(/\n{2,}/).map((p) => el('p', {}, p.replace(/^[-*]\s+/gm, '• ')))) : null,
       el('div', { class: 'quest-row' },
         week.has_transcript ? el('a', { class: 'button quest-button', href: `/quest/week-${week.number}/transcript` }, 'Read the transcript') : el('span', { class: 'quest-faint' }, 'The transcript comes after the call.'),
         el('button', { type: 'button', class: 'button quest-button', onclick: () => openAssistantWith(`About the Week ${week.number} group call: `) }, 'Ask Sovran Advisor about it'),
