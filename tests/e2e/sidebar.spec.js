@@ -106,3 +106,53 @@ test('Tour, Settings and Library sit at the foot of the column, and the others c
   await page.keyboard.press('Alt+ArrowDown');
   expect((await names()).slice(-4)).toEqual(['Group Circle', 'Tour', 'Settings', 'Library']);
 });
+
+test('you arrange the sidebar: lines added, moved and taken away, Group Circle moved, kept, and Start over', async ({ page, app, isMobile }) => {
+  test.skip(isMobile, 'on a phone the sidebar is a bar along the bottom; arranging is for a computer');
+  await page.goto(app.url);
+  const sidebar = page.locator('#sidebar');
+  // What the column shows, top to bottom: a section's name, or — for a line you can see.
+  const column = () => sidebar.evaluate((node) => [...node.querySelectorAll(':scope > .is-movable:not(.is-block), :scope > .sidebar-line')]
+    .filter((item) => item.checkVisibility()).map((item) => (item.classList.contains('sidebar-line') ? '—' : item.dataset.section)));
+  // At first one line, above Group Circle (Quest waits for a Quest group).
+  expect((await column()).slice(-2)).toEqual(['—', 'Group Circle']);
+
+  // A right click opens Arrange: Done in place of Capture, a + between two sections, an × on the line.
+  await sidebar.getByRole('link', { name: 'Journal' }).click({ button: 'right' });
+  await expect(sidebar.getByRole('button', { name: 'Done' })).toBeVisible();
+  await expect(sidebar.getByRole('button', { name: /Capture/ })).toBeHidden();
+  await sidebar.getByRole('button', { name: 'Add a line below Journal' }).click();
+  expect((await column()).slice(0, 3)).toEqual(['Notes', 'Journal', '—']);
+  // While arranging, a name doesn't open its page.
+  await sidebar.getByRole('link', { name: 'Inbox' }).click();
+  await expect(page).toHaveURL(`${app.url}/`);
+  // Group Circle can go anywhere: drag it to the top.
+  await sidebar.getByRole('link', { name: 'Group Circle' }).dragTo(sidebar.getByRole('link', { name: 'Notes' }), { targetPosition: { x: 20, y: 4 } });
+  expect((await column()).slice(0, 4)).toEqual(['Group Circle', 'Notes', 'Journal', '—']);
+  // The old line, now last with nothing under it, is taken away.
+  await sidebar.getByRole('button', { name: 'Take this line away' }).last().click();
+  await sidebar.getByRole('button', { name: 'Done' }).click();
+  await expect(sidebar.getByRole('button', { name: /Capture/ })).toBeVisible();
+  const arranged = await column();
+  expect(arranged.filter((n) => n === '—')).toHaveLength(1);
+  expect(arranged.at(-1)).not.toBe('—');
+
+  // Kept after a reload.
+  await page.reload();
+  expect(await column()).toEqual(arranged);
+
+  // Alt+Down moves a line too.
+  await sidebar.getByRole('link', { name: 'Journal' }).click({ button: 'right' });
+  await sidebar.getByRole('button', { name: 'Take this line away' }).focus();
+  await page.keyboard.press('Alt+ArrowDown');
+  expect((await column()).slice(0, 5)).toEqual(['Group Circle', 'Notes', 'Journal', 'Tasks', '—']);
+  await page.keyboard.press('Escape');
+
+  // Settings > Sidebar > Start over: the order and the line the app came with.
+  await page.goto(`${app.url}/settings`);
+  const part = page.getByRole('region', { name: 'Sidebar' });
+  if (await part.getByRole('button', { name: 'Sidebar', exact: true }).getAttribute('aria-expanded') !== 'true') await part.getByRole('button', { name: 'Sidebar', exact: true }).click();
+  await part.getByRole('button', { name: 'Start over' }).click();
+  expect((await column()).slice(0, 2)).toEqual(['Notes', 'Journal']);
+  expect((await column()).slice(-2)).toEqual(['—', 'Group Circle']);
+});

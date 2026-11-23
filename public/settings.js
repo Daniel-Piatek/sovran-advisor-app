@@ -7,7 +7,7 @@
 import { tagsSection } from './tags-settings.js';
 import { alertsSection } from './alerts-settings.js';
 import { el, icon, request, clockTime, shortDate, undoBar } from './ui.js';
-import { app, screen, loadCourse, onLeave } from './shell.js';
+import { app, screen, loadCourse, onLeave, arrangeSidebar, resetSidebar } from './shell.js';
 import { foldSettings } from './settings-sections.js';
 import { listedModules, switchModule, moduleOn } from './modules.js';
 import { googleSection, googleCalendarSection } from './google.js';
@@ -475,6 +475,13 @@ export async function showSettings() {
         el('p', { class: 'permission-floor-line' }, icon('lock'), el('span', {}, el('b', {}, 'Always asks: '), 'deleting anything.')),
         el('p', { class: 'permission-floor-line' }, icon('lock'), el('span', {}, el('b', {}, 'Never, whatever is switched on: '),
           'sudo, wiping a disk, your passwords and the keychain, scripting other apps.')))),
+    // Sidebar (2026-11-23, the owner's wish): your own order of sections, and lines between them where you want them.
+    el('section', { class: 'settings-part', 'aria-label': 'Sidebar' },
+      el('h2', { class: 'settings-title' }, 'Sidebar'),
+      el('p', { class: 'empty' }, 'Put the sections in your own order, and add or take away the thin lines between them. A right click on the sidebar does the same.'),
+      el('div', { class: 'settings-row-buttons' },
+        el('button', { type: 'button', class: 'button button-primary', onclick: () => arrangeSidebar() }, 'Arrange the sidebar'),
+        el('button', { type: 'button', class: 'button button-quiet', onclick: () => resetSidebar() }, 'Start over'))),
     el('section', { class: 'settings-part', 'aria-label': 'Modules' },
       el('h2', { class: 'settings-title' }, 'Modules'),
       el('p', { class: 'empty' }, 'Parts of the app you can switch off. A module that is off hides its menus and chips and keeps everything it made.'),
