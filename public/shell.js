@@ -28,8 +28,11 @@ const sections = [
   { name: 'Inbox', href: '/inbox', icon: 'inbox', owns: (path) => path === '/inbox' },
   { name: 'Mail', href: '/mail', icon: 'mail', more: true, module: 'mail', owns: (path) => /^\/mail(\/|$)/.test(path) },
   { name: 'Sovran Advisor', href: '/assistant', icon: 'assistant', more: true, owns: (path) => /^\/assistant(\/|$)/.test(path) },
+  // Quest and Group Circle have their own section under the others, with a thin line above (2026-11-23, the owner's wish).
+  // The Sovran Quest page (quest.js, public/quest.js; module quest): your group's weeks, there while you are in a Quest group.
+  { name: 'Quest', quest: true, href: '/quest', icon: 'quest-expressive', more: true, module: 'quest', owns: (path) => /^\/quest(\/|$)/.test(path) },
   // Group Circle (group-feed.js, public/group.js; module group, on in a new install): your Quest group's Announcements and Circle.
-  { name: 'Group Circle', href: '/group', icon: 'group', more: true, module: 'group', owns: (path) => /^\/group(\/|$)/.test(path) },
+  { name: 'Group Circle', quest: true, href: '/group', icon: 'group-circle', more: true, module: 'group', owns: (path) => /^\/group(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
   // The Tour (tour.js): short films of the app, and of the parts you can switch on (2026-11-16, the owner's wish).
@@ -53,9 +56,11 @@ const sectionOf = (name) => sections.find((s) => s.name === name);
 function showModuleSections() {
   for (const link of [...sectionLinks, ...moreMenu.querySelectorAll('.more-link')]) {
     const module = sectionOf(link.dataset.section)?.module;
-    if (module) link.hidden = !moduleOn(module) || (sectionOf(link.dataset.section)?.external && !courseUrl);
+    if (module) link.hidden = !moduleOn(module) || (sectionOf(link.dataset.section)?.external && !courseUrl) || (module === 'quest' && !inQuestGroup);
   }
 }
+// Quest shows only while you are in a Quest group (refreshGroupCount asks; 2026-11-23): so it is there for SQ01 by itself.
+let inQuestGroup = false;
 // The Course link's address comes from the app (GET /api/course); Settings tells the sidebar when it changes.
 let courseUrl = '';
 export async function loadCourse() {
@@ -85,7 +90,9 @@ const captureButton = el('button', {
 const PINNED = ['Tour', 'Settings', 'Library'];
 const ORDER_KEY = 'sidebar.order';
 const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)];
-const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section));
+const inQuest = (link) => Boolean(sectionOf(link.dataset.section)?.quest);
+const movable = sectionLinks.filter((link) => !PINNED.includes(link.dataset.section) && !inQuest(link));
+const questBox = el('div', { class: 'sidebar-quest' }, ...sectionLinks.filter(inQuest));
 const pinned = PINNED.map(linkOf);
 for (const link of pinned) link.classList.add('sidebar-pinned');
 // Sovran Central's name at the top of the column (2026-11-22, the owner's pick "D"): the official
@@ -94,7 +101,7 @@ const brand = el('div', { class: 'sidebar-brand', role: 'img', 'aria-label': 'So
   el('img', { class: 'sidebar-brand-crown', src: '/brand/official-crimson-crown.png', alt: '' }),
   el('span', { class: 'sidebar-brand-words', 'aria-hidden': 'true' },
     el('span', { class: 'sidebar-brand-name' }, 'Sovran'), el('span', { class: 'sidebar-brand-sub' }, 'Central')));
-sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, moreMenu, ...pinned);
+sidebar.replaceChildren(brand, captureButton, ...movable, moreButton, questBox, moreMenu, ...pinned);
 showModuleSections();
 
 const readOrder = () => { try { const list = JSON.parse(localStorage.getItem(ORDER_KEY)); return Array.isArray(list) ? list : []; } catch { return []; } };
@@ -184,9 +191,12 @@ onModulesChanged(refreshSidebar);
 // Group Circle: how many new posts wait in Announcements and the Circle together. Asked when the app opens, every two
 // minutes while the window is in front, and by the Group Circle page when it has shown something.
 export async function refreshGroupCount() {
-  if (!moduleOn('group')) { groupCount.hidden = true; return; }
+  // With Group Circle off its count can't be asked: Quest then shows while its own module is on.
+  if (!moduleOn('group')) { groupCount.hidden = true; if (!inQuestGroup) { inQuestGroup = true; showModuleSections(); } return; }
   try {
-    const { counts } = await request('GET', '/api/group');
+    const { counts, me } = await request('GET', '/api/group');
+    const inGroup = Boolean(me?.group);
+    if (inGroup !== inQuestGroup) { inQuestGroup = inGroup; showModuleSections(); }
     const waiting = (counts?.news ?? 0) + (counts?.feed ?? 0) + (counts?.flags ?? 0); // flags: the guide's, in APP Daniel
     groupCount.textContent = waiting ? String(waiting) : '';
     groupCount.hidden = waiting === 0;
@@ -235,6 +245,10 @@ const footerLink = el('div', { class: 'page-footer-link' });
 // assistant, with the page you are on. The question is handed to the Assistant screen.
 let question = null;
 export const takeQuestion = () => { const asked = question; question = null; return asked; };
+// Words for the Sovran Advisor box, not yet sent (the Quest page's starts, 2026-11-23): the chat opens with them written in.
+let draft = null;
+export const takeDraft = () => { const words = draft; draft = null; return words; };
+export function openAssistantWith(words, id = null) { draft = String(words ?? ''); navigate(id ? `/assistant/${id}` : '/assistant'); }
 const askInput = el('input', { class: 'ask-input', 'aria-label': 'Ask your notes', placeholder: 'Ask your notes…', maxlength: 2000 });
 const askBox = el('form', {
   class: 'ask-notes',

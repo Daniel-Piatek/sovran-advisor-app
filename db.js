@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const schema = fs.readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
-export const SCHEMA_VERSION = 80;
+export const SCHEMA_VERSION = 81;
 
 // Each step moves the database from version N-1 to N.
 const steps = {
@@ -410,6 +410,9 @@ const steps = {
   // 80: a saved chat also shows as a chat in Sovran Advisor (chat-saves.js, 2026-11-23): chat_save_chats is new
   // (made from schema.sql). Nothing else changes.
   80() {},
+  // 81: the Sovran Quest (quest.js, 2026-11-23): quest_work and quest_marks are new (made from schema.sql). Nothing else
+  // changes. (APP Daniel's step 81 also makes its guide-only quest_weeks.)
+  81() {},
 };
 
 // board_items as schema.sql has it now, every row kept. No table points at it.

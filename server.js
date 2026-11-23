@@ -104,6 +104,7 @@ import { getCourse, setCourseUrl } from './course.js';
 import { listDocs, readDoc } from './docs.js';
 import { listReports, readReport, reportFile, useReports, reportsOn } from './reports.js';
 import * as group from './group-feed.js';
+import { useQuest, questOn, questPage, startWork, setDone, readTranscript, cloudWeeks } from './quest.js';
 import { takeAlerts, alertSwitches, setAlertSwitch } from './alerts.js';
 import { tellDaniel, listTells, markTell, tellOn, appVersion } from './tell-daniel.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
@@ -150,12 +151,16 @@ export function startServer({
   agent = null, // the Mac's login agent that started this app (scripts/login-agent.js); the Dock icon asks for it
   updateCheckEvery = 0, updateGit = undefined, updateNpm = undefined, updateAppDir = appDir,
   phoneDropEvery = 60_000, phoneDropFetch = fetch, tidyNotes = true,
+  questEvery = 60_000, // how often the Quest shelf in the Sovran cloud is asked again (0 in tests: every time)
 } = {}) {
   // A moving file you said yes to (Settings › Phone, backups and moving) takes the place of what is here, before the
   // database is opened; what was here is kept in data/before-move-<time>/ (move.js).
   try { applyPendingMove(dataDir); } catch (err) { console.error(`The moving file could not be brought in: ${err.message}`); }
   const db = openDatabase(dataDir);
   group.useGroup({ dir: path.join(dataDir, 'group-pictures') }); // Group Circle (group-feed.js): each picture kept here once fetched
+  // The Sovran Quest (quest.js): the weeks Daniel published for your group, from the Quest shelf in the Sovran cloud
+  // (group-feed.js questWeeks, with your library key), kept here for when this computer is offline.
+  useQuest({ weeks: (base) => cloudWeeks(base, (d) => group.questWeeks(d), { everyMs: questEvery }), transcript: (base, w) => group.questTranscript(base, w.number), guide: false });
   useReports({ dir: path.join(dataDir, 'reports') }); // Reports (reports.js): made-up reports here only without a library key (tests, demo)
   settleAnswers(db);
   settleImports(db);
@@ -1737,6 +1742,24 @@ export function startServer({
         if (comment && req.method === 'DELETE') return sendJson(res, 200, await group.removeComment(db, comment[1]));
         const tab = m(/^\/api\/group\/(news|feed)$/);
         if (tab && req.method === 'GET') return sendJson(res, 200, await group.readTab(db, tab[1], url.searchParams.get('before'), url.searchParams.get('group')));
+        return sendJson(res, 404, { error: 'Not found' });
+      } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
+    }
+    // The Sovran Quest (module quest, quest.js): your group's weeks, newest first, with your own Done and links to your work.
+    //   GET  /api/quest                                   { guide, weeks: [{ number, title, call_on, practice_url, replay_url, has_transcript, homework: [...] }] }
+    //   GET  /api/quest/weeks/:n/transcript?words=        { lines: [{ at, who, text }], found: [line index] }
+    //   POST /api/quest/weeks/:n/homework/:p/start        { kind: entry | chat } → { kind, id, href, draft? }
+    //   PUT  /api/quest/weeks/:n/homework/:p/done         { on }
+    if (url.pathname === '/api/quest' || url.pathname.startsWith('/api/quest/')) {
+      if (!questOn(db)) return sendJson(res, 409, { error: 'Quest is switched off in Settings › Modules.' });
+      try {
+        const m = (re) => url.pathname.match(re);
+        if (url.pathname === '/api/quest' && req.method === 'GET') return sendJson(res, 200, await questPage(db));
+        let hit = m(/^\/api\/quest\/weeks\/(\d+)\/transcript$/);
+        if (hit && req.method === 'GET') return sendJson(res, 200, await readTranscript(db, hit[1], { words: url.searchParams.get('words') ?? '' }));
+        hit = m(/^\/api\/quest\/weeks\/(\d+)\/homework\/(\d+)\/(start|done)$/);
+        if (hit && hit[3] === 'start' && req.method === 'POST') return sendJson(res, 201, await startWork(db, hit[1], hit[2], (await readJson(req)).kind, { dataDir }));
+        if (hit && hit[3] === 'done' && req.method === 'PUT') return sendJson(res, 200, await setDone(db, hit[1], hit[2], Boolean((await readJson(req)).on)));
         return sendJson(res, 404, { error: 'Not found' });
       } catch (err) { if (err.status) return sendJson(res, err.status, { error: err.message, code: err.code }); throw err; }
     }

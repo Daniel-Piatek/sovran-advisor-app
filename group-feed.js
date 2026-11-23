@@ -211,6 +211,26 @@ export const hideItem = (db, what, id, input) => cloud(db, { action: 'hide', wha
 export const openFlags = (db) => cloud(db, { action: 'flags' });
 export const clearFlags = (db, input) => cloud(db, { action: 'flags_clear', post: postId(input?.post), comment: input?.comment ? postId(input.comment) : null });
 export const listGroups = (db) => cloud(db, { action: 'groups' });
+
+// The Sovran Quest shelf (cloud/quest.sql, 2026-11-23): the weeks Daniel published, for a student's own group (the cloud
+// finds it from the key), or for the guide one group's. Until the shelf is in the cloud the door answers "Unknown action":
+// then there are simply no weeks yet ({ shelf: false }). → { shelf, weeks: [{ group, number, ...week }] }
+export async function questWeeks(db, group = null) {
+  try {
+    const answer = await cloud(db, { action: 'quest_weeks', group: checkGroup(group) });
+    return { shelf: true, weeks: Array.isArray(answer.weeks) ? answer.weeks : [] };
+  } catch (err) {
+    if (err.status === 400 && /Unknown action/.test(err.message)) return { shelf: false, weeks: [] };
+    throw err;
+  }
+}
+// One week's call transcript, only when it is read or searched. → text ('' when there is none or it is gone)
+export async function questTranscript(db, number, group = null) {
+  const answer = await cloud(db, { action: 'quest_transcript', number, group: checkGroup(group) });
+  return typeof answer.transcript === 'string' ? answer.transcript : '';
+}
+// The guide puts one week on a group's shelf (again: it replaces). → { ok, first }
+export const questPublish = (db, group, number, week) => cloud(db, { action: 'quest_publish', group: checkGroup(group), number, week });
 const MANAGE = ['pause', 'unpause', 'name', 'move', 'leave', 'close', 'open', 'new_group', 'phone_off'];
 export async function manage(db, input) {
   if (!MANAGE.includes(input?.what)) throw fail(400, 'There is no such change.');

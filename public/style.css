@@ -1057,6 +1057,7 @@ img.ProseMirror-separator { display: inline !important; border: none !important;
   .sidebar-capture { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 0; margin: 0; padding: var(--space-1) 0; border: 0; background: transparent; font-size: calc(var(--text-xs) * 0.875); font-weight: var(--weight-regular); color: var(--color-text-muted); }
   .sidebar-key { display: none; }
   .sidebar-link.in-more { display: none; }
+  .sidebar .sidebar-quest { display: none; }
   .sidebar .sidebar-more { display: flex; border: 0; background: none; font: inherit; font-size: calc(var(--text-xs) * 0.875); color: var(--color-text-muted); cursor: pointer; }
   .more-menu:not([hidden]) {
     position: fixed;
@@ -3962,6 +3963,11 @@ textarea.board-edit { resize: none; font-family: var(--font-body); }
 /* In the sidebar the discs are a little larger; every icon there sits in the same square, so the names line up. */
 .sidebar-link .icon, .sidebar-more .icon { width: calc(var(--space-1) * 5); justify-content: center; }
 .sidebar-link .icon svg.kind-disc { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); }
+/* A brand picture as an icon (the Sovran Quest's, public/brand): the same square as the discs. */
+.icon .icon-picture { width: calc(var(--space-1) * 5); height: calc(var(--space-1) * 5); object-fit: contain; display: block; }
+/* Quest and Group Circle: their own section under the others, with a thin line above (2026-11-23, the owner's wish). */
+.sidebar-quest { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); padding-top: var(--space-2); border-top: var(--border-width) solid var(--color-border); }
+.sidebar-quest:not(:has(.sidebar-link:not([hidden]))) { display: none; }
 
 html[data-section="notes"] { --section: var(--kind-notes); }
 html[data-section="journal"] { --section: var(--kind-journal); }
@@ -4984,3 +4990,105 @@ a.tag-chip-name:hover { text-decoration: underline; }
 .tag-settings-note { flex-basis: 100%; font-size: var(--text-sm); color: var(--color-text-muted); }
 .tag-settings-note:empty { display: none; }
 .tag-settings-find { margin-bottom: var(--space-2); }
+
+/* ---- The Sovran Quest (module quest, 2026-11-23, the owner's wish; public/quest.js, public/quest-weeks.js) ----
+   As the sketch the owner approved: the weeks on the left, the week in cards on the right. Each piece of homework is calm
+   in two columns, the work on the left with one small bar (Start in Crimson, Stuck? Ask Daniel quiet, Done a box), and
+   "Your work" on the right after a thin line that runs up through the heading. */
+html[data-section="quest-expressive"]:not([data-section=""]) { --page-title-color: var(--quest-title); }
+.quest-cols { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.quest-weeks { display: flex; flex-direction: column; gap: var(--space-1); }
+.quest-week-link { display: flex; flex-direction: column; padding: var(--space-2) var(--space-3); border: var(--border-width) solid transparent; border-radius: var(--radius-sm);
+  color: var(--color-text-muted); text-decoration: none; font-family: var(--font-ui); font-size: var(--text-sm); line-height: var(--line-height-short); }
+.quest-week-link small { color: var(--color-text-faint); font-size: var(--text-xs); }
+.quest-week-link[aria-current="page"] { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); font-weight: var(--weight-bold); }
+.quest-week-link[aria-current="page"] small { font-weight: var(--weight-regular); }
+.quest-week { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.quest-week-title { font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-xl); margin: 0; display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.quest-when { font-family: var(--font-ui); font-size: var(--text-sm); }
+.quest-card { border: var(--line); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.quest-card-title { margin: 0; font-family: var(--font-ui); font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-heading); }
+.quest-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.quest-line { margin: 0; line-height: var(--line-height-base); }
+.quest-faint { color: var(--color-text-muted); font-size: var(--text-sm); line-height: var(--line-height-short); }
+.quest-button { background: var(--color-bg); }
+.quest-homework { gap: 0; }
+.quest-homework-head, .quest-piece { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; column-gap: var(--space-4); }
+.quest-homework-head { padding-bottom: var(--space-3); border-bottom: var(--line); }
+.quest-work-head { color: var(--color-text-faint); border-left: var(--line); padding-left: var(--space-4); }
+.quest-piece { grid-template-columns: 1.5rem minmax(0, 1fr) 13rem; padding: var(--space-4) 0; border-bottom: var(--line); }
+.quest-homework-head { grid-template-columns: minmax(0, 1fr) 13rem; }
+.quest-piece:last-child { border-bottom: 0; padding-bottom: 0; }
+.quest-number { font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-text-muted); padding-top: 2px; }
+.quest-piece-main { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.quest-piece-text { margin: 0; line-height: var(--line-height-base); max-width: 60ch; white-space: pre-wrap; }
+.quest-bar { display: inline-flex; flex-wrap: wrap; align-self: flex-start; border: var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.quest-seg { font: inherit; font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-medium); background: var(--color-bg); color: var(--color-text-muted);
+  border: 0; border-left: var(--line); padding: var(--space-2) var(--space-3); cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); }
+.quest-seg:first-child { border-left: 0; }
+.quest-seg:hover { color: var(--color-text); }
+.quest-start { color: var(--color-accent); }
+.quest-start:hover { color: var(--color-accent); text-decoration: underline; }
+.quest-box { width: 13px; height: 13px; border: 1.5px solid var(--color-text-faint); border-radius: 3px; display: inline-grid; place-items: center; font-size: 10px; line-height: 1; box-sizing: border-box; }
+.quest-done[aria-pressed="true"] { background: var(--quest-done-surface); color: var(--status-good-text); }
+.quest-done[aria-pressed="true"] .quest-box { background: var(--status-good); border-color: var(--status-good); color: var(--color-bg); }
+.quest-done[aria-pressed="true"] .quest-box::after { content: "✓"; }
+.quest-work { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); border-left: var(--line); padding-left: var(--space-4); font-size: var(--text-sm); min-width: 0; }
+.quest-state { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: var(--weight-bold); border-radius: 999px; padding: 2px var(--space-2); background: var(--color-surface); color: var(--color-text-muted); }
+.quest-state-progress { background: var(--quest-progress-surface); color: var(--status-watch-text); }
+.quest-state-done { background: var(--quest-done-surface); color: var(--status-good-text); }
+.quest-work-link { color: var(--color-text); font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: var(--kind-assistant); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.quest-none { padding-top: var(--space-3); }
+.quest-dialog { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--color-text) 45%, transparent); display: grid; place-items: center; padding: var(--space-4); }
+.quest-dialog-box { background: var(--color-bg); border: var(--line); border-radius: var(--radius-md); padding: var(--space-4); width: min(28rem, 100%); display: flex; flex-direction: column; gap: var(--space-3); }
+.quest-dialog-title { margin: 0; font-family: var(--font-heading); font-weight: var(--weight-regular); font-size: var(--text-lg); }
+.quest-context { margin: 0; background: var(--color-surface); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); line-height: var(--line-height-short); }
+.quest-ask-words { font: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-2); background: var(--color-bg); color: var(--color-text); resize: vertical; }
+.quest-search { font: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); background: var(--color-bg); color: var(--color-text); width: 16rem; max-width: 100%; }
+.quest-transcript { display: flex; flex-direction: column; gap: var(--space-3); max-width: 68ch; margin-top: var(--space-4); }
+.quest-turn { margin: 0; line-height: var(--line-height-base); }
+.quest-at, .quest-who { font-family: var(--font-ui); font-size: var(--text-xs); color: var(--color-text-faint); margin-right: var(--space-2); }
+.quest-who { color: var(--color-text-muted); font-weight: var(--weight-bold); }
+.quest-turn mark { background: var(--color-warning-surface); color: inherit; }
+/* Quest weeks, the guide's */
+.quest-guide-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
+.quest-practice-label { display: inline-flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); color: var(--color-text-muted); }
+.quest-practice, .quest-title-input { font: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background: var(--color-bg); color: var(--color-text); width: 20rem; max-width: 100%; }
+.quest-spacer { flex: 1; }
+.quest-note { background: var(--color-warning-surface); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); line-height: var(--line-height-short); margin: 0 0 var(--space-4); }
+.quest-problem:empty { display: none; }
+.quest-problem { color: var(--color-accent); margin: 0 0 var(--space-3); }
+.quest-week-state { font-weight: var(--weight-bold); }
+.quest-week-ready, .quest-week-changed { color: var(--status-watch-text) !important; }
+.quest-week-published { color: var(--status-good-text) !important; }
+.quest-field { display: flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); color: var(--color-text-muted); }
+.quest-steps { gap: 0; padding-top: var(--space-1); padding-bottom: var(--space-1); }
+.quest-step { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-bottom: var(--line); }
+.quest-step:last-child { border-bottom: 0; }
+.quest-step-main { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; line-height: var(--line-height-short); }
+.quest-tick { width: 1.25rem; height: 1.25rem; border-radius: 50%; display: grid; place-items: center; font-size: var(--text-xs); font-weight: var(--weight-bold); background: var(--quest-done-surface); color: var(--status-good-text); }
+.quest-tick-todo { background: var(--quest-progress-surface); color: var(--status-watch-text); }
+.quest-pieces { display: flex; flex-direction: column; gap: var(--space-2); }
+.quest-piece-edit { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto auto; gap: var(--space-2); align-items: start; }
+.quest-piece-input { font: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-2); background: var(--color-bg); color: var(--color-text); resize: vertical; min-width: 0; }
+.quest-where { font: inherit; font-size: var(--text-sm); border: var(--line); border-radius: var(--radius-sm); padding: var(--space-1); background: var(--color-bg); color: var(--color-text); max-width: 12rem; }
+.quest-remove { font: inherit; background: none; border: 0; color: var(--color-accent); font-size: var(--text-lg); cursor: pointer; line-height: 1; padding: var(--space-1); }
+.quest-suggest { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.quest-chip { font: inherit; font-size: var(--text-xs); border: var(--line); border-radius: 999px; padding: 2px var(--space-2); background: var(--color-surface); color: var(--color-text); cursor: pointer; text-align: left; }
+.quest-fixes summary { cursor: pointer; font-size: var(--text-sm); }
+.quest-fixes ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); font-size: var(--text-sm); }
+@media (max-width: 760px) {
+  .quest-cols { grid-template-columns: 1fr; gap: var(--space-3); }
+  .quest-weeks { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  .quest-week-link { white-space: nowrap; }
+  .quest-homework-head { grid-template-columns: 1fr; }
+  .quest-work-head { display: none; }
+  .quest-piece { grid-template-columns: 1.5rem minmax(0, 1fr); row-gap: var(--space-2); }
+  .quest-work { grid-column: 2; border-left: 0; padding-left: 0; }
+  .quest-piece-edit { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .quest-piece-edit .quest-where { grid-column: 2; }
+  .quest-piece { grid-template-columns: 1.1rem minmax(0, 1fr); column-gap: var(--space-2); }
+  .quest-bar { flex-wrap: nowrap; }
+  .quest-seg { font-size: var(--text-xs); padding: var(--space-2); white-space: nowrap; }
+}
+.quest-link { color: inherit; text-decoration-color: var(--color-accent); }
