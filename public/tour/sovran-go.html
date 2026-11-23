@@ -100,7 +100,7 @@ html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent;
     <div class="gf-claude" id="gf-claude" hidden>
       <div class="gf-ctop"><span>☰</span><span id="gf-ainame">Claude</span><span>＋</span></div>
       <div class="gf-msgs" id="gf-msgs"></div>
-      <div class="gf-box"><div class="gf-warn" id="gf-warn" hidden>⚠ Use caution before sending. Malicious content could trick Claude into harmful actions or sharing your data.</div>
+      <div class="gf-box"><div class="gf-warn" id="gf-warn" hidden>⚠ Use caution before sending. Malicious content could trick your AI into harmful actions or sharing your data.</div>
         <div class="gf-in" id="gf-in"></div>
         <div class="gf-row"><span class="plus">+</span><span class="model" id="gf-aimodel">Claude</span><span class="send" id="gf-send">↑</span></div></div>
     </div>
@@ -116,7 +116,8 @@ html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent;
 </div></div>
 <script>
 (() => {
-const F = {"home": "sovran-go/home.jpg", "journal": "sovran-go/journal.jpg", "journal-t1": "sovran-go/journal-t1.jpg", "journal-t2": "sovran-go/journal-t2.jpg", "journal-t3": "sovran-go/journal-t3.jpg", "journal-done": "sovran-go/journal-done.jpg", "inner": "sovran-go/inner.jpg", "inner-t1": "sovran-go/inner-t1.jpg", "inner-t2": "sovran-go/inner-t2.jpg", "inner-t3": "sovran-go/inner-t3.jpg", "inner-done": "sovran-go/inner-done.jpg", "list": "sovran-go/list.jpg", "cover": "sovran-go/cover.jpg", "gifts": "sovran-go/gifts.jpg", "sel1": "sovran-go/sel1.jpg", "marked": "sovran-go/marked.jpg", "sel2": "sovran-go/sel2.jpg"}, M = {"ask":[0.5,0.20707236842105264],"journal":[0.5,0.33472450657894737],"inner":[0.5,0.4498560855263158],"outer":[0.5,0.5649876644736842],"reports":[0.5,0.7071134868421053],"text":[0.5,0.4299342105263158],"jkeep":[0.5,0.6529605263157895],"another":[0.49997996794871796,0.649157072368421],"back":[0.11141826923076924,0.11381578947368422],"itext":[0.5,0.3381578947368421],"ikeep":[0.5,0.5085526315789474],"card":[0.5,0.5001747532894737],"words1":[0.7257011217948718,0.4152960526315789],"hl":[0.20897435897435898,0.8315789473684211],"cm":[0.46041666666666664,0.8315789473684211],"pask":[0.7514423076923077,0.8315789473684211],"words2":[0.49423076923076925,0.7324629934210526],"pask2":[0.7514423076923077,0.04736842105263158]}, AI = "Claude", FILL = true;
+const F = {"home": "sovran-go/home.jpg", "journal": "sovran-go/journal.jpg", "journal-t1": "sovran-go/journal-t1.jpg", "journal-t2": "sovran-go/journal-t2.jpg", "journal-t3": "sovran-go/journal-t3.jpg", "journal-done": "sovran-go/journal-done.jpg", "inner-t1": "sovran-go/inner-t1.jpg", "inner-t2": "sovran-go/inner-t2.jpg", "inner-t3": "sovran-go/inner-t3.jpg", "inner-done": "sovran-go/inner-done.jpg", "outer": "sovran-go/outer.jpg", "list": "sovran-go/list.jpg", "cover": "sovran-go/cover.jpg", "gifts": "sovran-go/gifts.jpg", "sel1": "sovran-go/sel1.jpg", "marked": "sovran-go/marked.jpg", "sel2": "sovran-go/sel2.jpg"}, M = {"text":[0.5,0.24551809210526315],"me":[0.21552483974358974,0.3613075657894737],"other":[0.5120592948717949,0.3613075657894737],"journal":[0.7965344551282051,0.3613075657894737],"keep":[0.8183293269230769,0.45209703947368424],"ask":[0.5,0.5707134046052632],"reports":[0.26153846153846155,0.7441611842105263],"group":[0.7384615384615385,0.7441611842105263],"jkeep":[0.8183293269230769,0.48324424342105265],"another":[0.5,0.7139185855263158],"ikeep":[0.8183293269230769,0.45209703947368424],"card":[0.5,0.5290193256578948],"words1":[0.5388020833333333,0.44765625],"hl":[0.1758613782051282,0.8315789473684211],"cm":[0.4170472756410256,0.8315789473684211],"pask":[0.7411858974358975,0.8315789473684211],"words2":[0.4891025641025641,0.7326274671052632],"pask2":[0.7411858974358975,0.04736842105263158]}, AI = "your AI", FILL = true;
+const AIC = AI[0].toUpperCase() + AI.slice(1); // the Tour says "your AI" (Claude or ChatGPT; D, 2026-11-23)
 const $ = (id) => document.getElementById(id);
 const screen = $('gf-screen'), img = $('gf-img'), dot = $('gf-dot'), tip = $('gf-tip'), veil = $('gf-veil');
 const claude = $('gf-claude'), msgs = $('gf-msgs'), box = $('gf-in'), warn = $('gf-warn'), send = $('gf-send');
@@ -129,7 +130,7 @@ const sleep = (ms, t = token) => new Promise((resolve, reject) => {
   setTimeout(tick, 0);
 });
 const sleepRaw = (ms) => sleep(ms / SLOW); // reading time is not slowed
-const VO = {"clips": {"scene:This Is go Sovran": "/tour/voice/sovran-go/g01-00n.mp3", "go Sovran on your phone. Choose what you would like to do.": "/tour/voice/sovran-go/g01-01.mp3", "scene:Ask My AI": "/tour/voice/sovran-go/g02-00.mp3", "Tap Ask my AI": "/tour/voice/sovran-go/g02-01.mp3", "Claude opens. Ask your question.": "/tour/voice/sovran-go/g02-02.mp3", "Claude asks if you would like the chat kept. Answer yes.": "/tour/voice/sovran-go/g02-03.mp3", "The whole chat is now in your Inbox on your computer.": "/tour/voice/sovran-go/g02-04.mp3", "scene:Journal Entry": "/tour/voice/sovran-go/g03-00.mp3", "Tap Journal entry": "/tour/voice/sovran-go/g03-01.mp3", "Write your words, or speak them": "/tour/voice/sovran-go/g03-02.mp3", "Tap Add to my Journal": "/tour/voice/sovran-go/g03-03.mp3", "It is in your Journal, on today.": "/tour/voice/sovran-go/g03-04.mp3", "scene:My Own Thought": "/tour/voice/sovran-go/g04-00.mp3", "Tap My own thought": "/tour/voice/sovran-go/g04-01.mp3", "Write the thought": "/tour/voice/sovran-go/g04-02.mp3", "Tap Keep in Inbox": "/tour/voice/sovran-go/g04-03.mp3", "It waits in your Inbox, ready to sort.": "/tour/voice/sovran-go/g04-04.mp3", "scene:My Reports": "/tour/voice/sovran-go/g05-00.mp3", "Tap My reports": "/tour/voice/sovran-go/g05-01.mp3", "Tap the report you want to read": "/tour/voice/sovran-go/g05-02.mp3", "Scroll down to read": "/tour/voice/sovran-go/g05-03.mp3", "Press and hold on some words to select them": "/tour/voice/sovran-go/g05-04.mp3", "A bar shows. Tap Highlight.": "/tour/voice/sovran-go/g05-05.mp3", "Highlighted. Comment works the same way.": "/tour/voice/sovran-go/g05-06.mp3", "scene:Ask About Words in a Report": "/tour/voice/sovran-go/g06-00.mp3", "Select the words you want to ask about": "/tour/voice/sovran-go/g06-01.mp3", "The words you highlighted are in Claude’s box. Add your question.": "/tour/voice/sovran-go/g06-02.mp3", "Tap the arrow to send": "/tour/voice/sovran-go/g06-03.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"};
+const VO = {"clips": {"scene:This Is go Sovran": "/tour/voice/sovran-go/g01-00s.mp3", "go Sovran on your phone. What is on your mind comes first.": "/tour/voice/sovran-go/g01-01n.mp3", "scene:Three Ways to Write": "/tour/voice/sovran-go/g01b-00.mp3", "From Me: ideas, tasks and thoughts that come from you.": "/tour/voice/sovran-go/g01b-01.mp3", "From Other: ideas, quotes, links, or anything that is another person’s work or ideas.": "/tour/voice/sovran-go/g01b-02.mp3", "Journal: your personal sharing. It goes straight into today.": "/tour/voice/sovran-go/g01b-03.mp3", "From Me and From Other land in your Inbox. There you sort each one to its home: a task, a note to keep, or a person for your contacts.": "/tour/voice/sovran-go/g01b-04.mp3", "scene:Ask My Sovran Advisor": "/tour/voice/sovran-go/g02-00p.mp3", "Tap Ask my Sovran Advisor": "/tour/voice/sovran-go/g02-01n.mp3", "Your AI opens. Ask your question.": "/tour/voice/sovran-go/g02-02p.mp3", "Your AI asks if you would like the chat kept. Answer yes.": "/tour/voice/sovran-go/g02-03p.mp3", "The whole chat is now in your Inbox on your computer.": "/tour/voice/sovran-go/g02-04.mp3", "scene:Journal": "/tour/voice/sovran-go/g03-00.mp3", "Tap Journal": "/tour/voice/sovran-go/g03-01n.mp3", "Write your words, or speak them": "/tour/voice/sovran-go/g03-02.mp3", "Tap Save": "/tour/voice/sovran-go/g03-03n.mp3", "It is in your Journal, on today.": "/tour/voice/sovran-go/g03-04.mp3", "scene:From Me and From Other": "/tour/voice/sovran-go/g04-00n.mp3", "From Me is already chosen. Write the thought.": "/tour/voice/sovran-go/g04-01n.mp3", "It waits in your Inbox, ready to sort. Tap Continue.": "/tour/voice/sovran-go/g04-03n.mp3", "For something you heard or read, tap From Other": "/tour/voice/sovran-go/g04-04n.mp3", "It goes to your Inbox as Outer World.": "/tour/voice/sovran-go/g04-05n.mp3", "scene:My Reports": "/tour/voice/sovran-go/g05-00.mp3", "Tap My Reports": "/tour/voice/sovran-go/g05-01.mp3", "Tap the report you want to read": "/tour/voice/sovran-go/g05-02.mp3", "Scroll down to read": "/tour/voice/sovran-go/g05-03.mp3", "Press and hold on some words to select them": "/tour/voice/sovran-go/g05-04.mp3", "A bar shows. Tap Highlight.": "/tour/voice/sovran-go/g05-05.mp3", "Highlighted. Comment works the same way.": "/tour/voice/sovran-go/g05-06.mp3", "scene:Ask About Words in a Report": "/tour/voice/sovran-go/g06-00p.mp3", "Select the words you want to ask about": "/tour/voice/sovran-go/g06-01.mp3", "The words you highlighted are in the box. Add your question.": "/tour/voice/sovran-go/g06-02p.mp3", "Tap the arrow to send": "/tour/voice/sovran-go/g06-03.mp3"}, "silent": "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA"};
 let sound = false, intro = null;
 const audio = new Audio(); audio.preload = 'auto';
 function say(key, t = token) {
@@ -173,66 +174,76 @@ async function step(text, y, action, shift = -1) {
 }
 async function typed(prefix) { for (const n of ['t1', 't2', 't3']) { frame(`${prefix}-${n}`); await sleep(420); } }
 // Claude's screen
-$('gf-ainame').textContent = AI; $('gf-aimodel').textContent = AI; claude.classList.toggle('gpt', !FILL);
+$('gf-ainame').textContent = AIC; $('gf-aimodel').textContent = AIC; claude.classList.toggle('gpt', !FILL);
 function openClaude(words) { msgs.replaceChildren(); claude.querySelectorAll('.gf-paste').forEach((e) => e.remove()); claude.hidden = false; warn.hidden = !words; setBox(words || ''); }
-function setBox(text) { box.replaceChildren(); if (!text) { box.classList.add('ph'); box.textContent = FILL ? 'Chat with Claude' : 'Ask anything'; return; } box.classList.remove('ph'); box.append(document.createTextNode(text), h('span', 'gf-caret')); }
+function setBox(text) { box.replaceChildren(); if (!text) { box.classList.add('ph'); box.textContent = FILL ? `Chat with ${AI}` : 'Ask anything'; return; } box.classList.remove('ph'); box.append(document.createTextNode(text), h('span', 'gf-caret')); }
 async function typeBox(text) { let now = box.classList.contains('ph') ? '' : box.textContent; for (const ch of text) { now += ch; setBox(now); await sleep(38); } }
 async function sendIt() { await tap(of(send)); msgs.append(h('div', 'gf-user', box.textContent)); setBox(''); warn.hidden = true; hideDot(); await sleep(500); }
 function answer(words) { const a = h('div', 'gf-ans'); for (const w of [96, 88, 92, 60]) { const l = h('i'); l.style.width = w + '%'; a.append(l); } if (words) a.append(h('p', '', words)); msgs.append(a); }
 function says(words) { const a = h('div', 'gf-ans'); a.append(h('p', '', words)); msgs.append(a); }
 
 const scenes = [
-  { t: 'This Is go Sovran', c: 'It opens from the crown on your phone’s home screen. Five choices, each one tap.',
+  { t: 'This Is go Sovran', c: 'It opens from the crown on your phone’s home screen. Writing comes first. Below it: ask, read your reports, and your Group Circle.',
     async run() {
       frame('home');
-      await step('go Sovran on your phone. Choose what you would like to do.', .83, null);
-      for (const k of ['ask', 'journal', 'inner', 'outer', 'reports']) await moveTo(M[k]);
+      await step('go Sovran on your phone. What is on your mind comes first.', .86, null);
+      for (const k of ['text', 'me', 'other', 'journal', 'ask', 'reports', 'group']) await moveTo(M[k]);
       hideDot();
     } },
-  { t: 'Ask My AI', c: `Opens ${AI}, which can read your reports and the teaching. ${AI} can keep the whole chat saved to your Inbox.`,
+  { t: 'Three Ways to Write', c: 'From Me: ideas, tasks and thoughts that come from you. From Other: ideas, quotes, links, or anything that is another person’s work or ideas. Journal: your personal sharing.',
     async run() {
       frame('home');
-      await step('Tap Ask my AI', .83, async () => { await tap(M.ask); openClaude(''); hideDot(); }, 1);
-      await step(`${AI} opens. Ask your question.`, .5, async () => { await typeBox('What does my Pattern Report say about rest?'); await sendIt(); answer('Would you like me to keep this chat saved to your Sovran Central?'); });
+      await moveTo(M.me); await step('From Me: ideas, tasks and thoughts that come from you.', .86, null);
+      await moveTo(M.other); await step('From Other: ideas, quotes, links, or anything that is another person’s work or ideas.', .86, null);
+      await moveTo(M.journal); await step('Journal: your personal sharing. It goes straight into today.', .86, null);
+      hideDot();
+      await step('From Me and From Other land in your Inbox. There you sort each one to its home: a task, a note to keep, or a person for your contacts.', .55, null);
+    } },
+  { t: 'Ask My Sovran Advisor', c: 'Opens Claude or ChatGPT, whichever you set up in your Sovran Central to power your Sovran Advisor. It can read your reports, your charts and the Sovran Library, and keep the whole chat saved to your Sovran Central.',
+    async run() {
+      frame('home');
+      await step('Tap Ask my Sovran Advisor', .86, async () => { await tap(M.ask); openClaude(''); hideDot(); }, 1);
+      await step(`${AIC} opens. Ask your question.`, .5, async () => { await typeBox('What does my Pattern Report say about rest?'); await sendIt(); answer('Would you like me to keep this chat saved to your Sovran Central?'); });
       await sleep(900);
-      await step(`${AI} asks if you would like the chat kept. Answer yes.`, .12, async () => { await typeBox('yes'); await sendIt(); says('Saved to your Sovran Central.'); }, 0);
+      await step(`${AIC} asks if you would like the chat kept. Answer yes.`, .12, async () => { await typeBox('yes'); await sendIt(); says('Saved to your Sovran Central.'); }, 0);
       await step('The whole chat is now in your Inbox on your computer.', .12, null);
     } },
-  { t: 'Journal Entry', c: 'Goes straight into today in your Journal.',
+  { t: 'Journal', c: 'Goes straight into today in your Journal.',
     async run() {
       frame('home');
-      await step('Tap Journal entry', .83, async () => { await tap(M.journal); frame('journal'); hideDot(); }, 1);
-      await step('Write your words, or speak them', .72, async () => { await tap(M.text); hideDot(); await typed('journal'); }, 1);
-      await step('Tap Add to my Journal', .72, async () => { await tap(M.jkeep); frame('journal-done'); hideDot(); }, 1);
-      await step('It is in your Journal, on today.', .72, null);
+      await step('Tap Journal', .86, async () => { await tap(M.journal); frame('journal'); hideDot(); }, 1);
+      await step('Write your words, or speak them', .9, async () => { await tap(M.text); hideDot(); await typed('journal'); }, 1);
+      await step('Tap Save', .9, async () => { await tap(M.jkeep); frame('journal-done'); hideDot(); }, 1);
+      await step('It is in your Journal, on today.', .24, null);
     } },
-  { t: 'My Own Thought', c: 'Kept in your Inbox on your computer. From someone else works the same way, for something you heard or read.',
+  { t: 'From Me and From Other', c: 'Kept in your Inbox on your computer, ready to sort to its home in Sovran Central: a task, a note to keep, or a person for your contacts. From Me is Inner World. From Other is Outer World.',
     async run() {
       frame('home');
-      await step('Tap My own thought', .83, async () => { await tap(M.inner); frame('inner'); hideDot(); }, 1);
-      await step('Write the thought', .62, async () => { await tap(M.itext); hideDot(); await typed('inner'); }, 1);
-      await step('Tap Keep in Inbox', .62, async () => { await tap(M.ikeep); frame('inner-done'); hideDot(); }, 1);
-      await step('It waits in your Inbox, ready to sort.', .72, null);
+      await step('From Me is already chosen. Write the thought.', .86, async () => { await tap(M.text); hideDot(); await typed('inner'); }, 1);
+      await step('Tap Save', .86, async () => { await tap(M.ikeep); frame('inner-done'); hideDot(); }, 1);
+      await step('It waits in your Inbox, ready to sort. Tap Continue.', .24, async () => { await tap(M.another); frame('home'); hideDot(); }, 1);
+      await step('For something you heard or read, tap From Other', .86, async () => { await tap(M.other); frame('outer'); hideDot(); }, 1);
+      await step('It goes to your Inbox as Outer World.', .86, null);
     } },
   { t: 'My Reports', c: 'Read your Sovran reports on your phone. Highlights and comments match on your phone and your computer.',
     async run() {
       frame('home');
-      await step('Tap My reports', .83, async () => { await tap(M.reports); frame('list'); hideDot(); }, 1);
-      await step('Tap the report you want to read', .84, async () => { await tap(M.card); frame('cover'); hideDot(); }, 1);
+      await step('Tap My Reports', .86, async () => { await tap(M.reports); frame('list'); hideDot(); }, -1);
+      await step('Tap the report you want to read', .9, async () => { await tap(M.card); frame('cover'); hideDot(); }, 1);
       await step('Scroll down to read', .02, async () => { await moveTo([.5, .75]); await moveTo([.5, .3]); frame('gifts'); hideDot(); }, 0);
       await step('Press and hold on some words to select them', .02, async () => { await tap(M.words1); frame('sel1'); hideDot(); }, 0);
       await step('A bar shows. Tap Highlight.', .62, async () => { await tap(M.hl); frame('marked'); hideDot(); }, -1);
       await step('Highlighted. Comment works the same way.', .02, null);
     } },
-  { t: 'Ask About Words in a Report', c: FILL ? 'Select words, tap Ask my AI, and Claude opens with those words already in its box.' : 'Select words and tap Ask my AI. The words are copied and ChatGPT opens. Paste them in and add your question.',
+  { t: 'Ask About Words in a Report', c: FILL ? 'Select words and tap Ask my Sovran Advisor. Claude opens with those words already in its box; in ChatGPT, you paste them in.' : 'Select words and tap Ask my Sovran Advisor. The words are copied and ChatGPT opens. Paste them in and add your question.',
     async run() {
       frame('marked');
       await step('Select the words you want to ask about', .3, async () => { await tap(M.words2); frame('sel2'); hideDot(); }, -1);
       if (FILL) {
-        await step('Tap Ask my AI', .14, async () => { await tap(M.pask2); openClaude(WORDS); hideDot(); }, 1);
-        await step('The words you highlighted are in Claude’s box. Add your question.', .1, async () => { await typeBox('What does this mean for me?'); }, 0);
+        await step('Tap Ask my Sovran Advisor', .14, async () => { await tap(M.pask2); openClaude(WORDS); hideDot(); }, 1);
+        await step('The words you highlighted are in the box. Add your question.', .1, async () => { await typeBox('What does this mean for me?'); }, 0);
       } else {
-        await step('Tap Ask my AI', .14, async () => { await tap(M.pask2); frame('asked'); hideDot(); }, 1);
+        await step('Tap Ask my Sovran Advisor', .14, async () => { await tap(M.pask2); frame('asked'); hideDot(); }, 1);
         await step('Your words are copied. ChatGPT opens.', .3, async () => { openClaude(''); }, 0);
         await step('Press and hold in the box, then tap Paste', .1, async () => {
           await tap(of(box)); const chip = h('div', 'gf-paste', 'Paste'); claude.append(chip); await sleep(500);
@@ -246,7 +257,7 @@ const scenes = [
 ];
 
 const bar = $('gf-bar'), pp = $('gf-pp');
-const chips = scenes.map((s, i) => { const SHORT = {"This Is go Sovran": "go Sovran", "Ask About Words in a Report": "Ask About Words"}; const b = h('button', 'gf-scene', SHORT[s.t] || s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('gf-scenes').append(b); return b; });
+const chips = scenes.map((s, i) => { const SHORT = {"This Is go Sovran": "go Sovran", "Ask My Sovran Advisor": "Ask My Advisor", "Three Ways to Write": "Three Ways", "From Me and From Other": "From Me / Other", "Ask About Words in a Report": "Ask About Words"}; const b = h('button', 'gf-scene', SHORT[s.t] || s.t); b.title = s.t; b.type = 'button'; b.addEventListener('click', () => go(i)); $('gf-scenes').append(b); return b; });
 function show(i) {
   now = i; $('gf-n').textContent = `Chapter ${i + 1} of ${scenes.length}`; $('gf-h').textContent = scenes[i].t; $('gf-p').textContent = scenes[i].c;
   chips.forEach((c, j) => c.setAttribute('aria-current', String(i === j)));
