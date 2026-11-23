@@ -45,7 +45,8 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
     const guideOnly = ['hide', 'flags', 'flags_clear', 'groups', 'manage'];
     if (guideOnly.includes(msg.action) && !s.guide) return err('guideonly', 403);
     switch (msg.action) {
-      case 'latest': return s.guide ? json(200, { me: meOf(s), flags: openFlags().length, news_new_ids: [],
+      case 'latest': return s.guide && state.oldGuideLatest ? json(200, { me: meOf(s), flags: openFlags().length }) // the cloud before the guide-phone change
+        : s.guide ? json(200, { me: meOf(s), flags: openFlags().length, news_new_ids: [],
           feed_new_ids: live('feed', s).filter((p) => p.student).map((p) => p.id),
           comment_new_ids: state.posts.filter((p) => !p.deleted).flatMap((p) => p.comments.filter((c) => c.student && !c.deleted).map((c) => c.id)) })
         : json(200, { me: meOf(s), feed_new_ids: live('feed', s).map((p) => p.id), news_new_ids: live('news', s).map((p) => p.id) });

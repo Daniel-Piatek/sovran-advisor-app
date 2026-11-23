@@ -170,6 +170,25 @@ test('Daniel’s go Sovran is the guide: homework with a due day, a Circle post,
   } finally { await context.close(); }
 });
 
+// On the cloud as it is (no guide ids in "latest"), the guide's phone still counts what is new, from the newest posts.
+test('Daniel’s go Sovran counts new posts and questions on a cloud without the guide-phone change', async ({ browser }, testInfo) => {
+  const { page, context, cloud, errors } = await phone(browser, testInfo, { guide: true });
+  try {
+    cloud.state.oldGuideLatest = true;
+    cloud.state.posts.find((p) => p.id === 1).comments.push({ id: 50, student: 'client-bbbbbbbbbbbb', body: 'Is one page enough?', created_at: ago(10) });
+    await page.reload();
+    await expect(page.locator('#group-line')).toHaveText('2 new'); // Jon's post and Jon's question
+    await expect(page.locator('#group-count')).toHaveText('2');
+    await page.locator('#group-circle').click();
+    await expect(page.getByText('Week 2: meet your Tyrant.')).toBeVisible();
+    await page.getByRole('button', { name: 'Circle', exact: true }).click();
+    await expect(page.getByText('Took my Tyrant for a walk up the ridge.')).toBeVisible();
+    await page.goBack();
+    await expect(page.locator('#group-count')).toBeHidden();
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
 // The guide's own tabs on Daniel's phone (guide.js, 2026-11-23): Flags, People and Reports, and hide on a post.
 test('Daniel’s go Sovran has Flags, People and Reports, and can hide a post', async ({ browser }, testInfo) => {
   const { page, context, cloud, errors } = await phone(browser, testInfo, { guide: true });
