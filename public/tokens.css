@@ -74,6 +74,21 @@
   --ai-chatgpt: #0d0d0d;     --ai-chatgpt-ink: #fbfbfb;    /* ChatGPT's black */
   --kind-goal: #d9c14b;     --kind-goal-ink: #302d2d;     /* Gold: My Life's Goals, the crown you reach for */
   --kind-timeline: #302d2d;  --kind-timeline-ink: #fbfbfb; /* Charcoal: the Timeline holds every kind, so it has the neutral (2026-11-09) */
+  /* How words look (2026-11-24, the owner's choice: twelve named colours, the brand's three first, each tuned for both
+     themes; public/format-bar.js). --fc- is a word's colour, --hl- a highlight behind words, which keep the text colour.
+     The Google Doc master copy of a Quest week takes the light shades (quest-weeks.js reads them from here). */
+  --fc-crimson: #c71f42; --hl-crimson: #f8dde3;
+  --fc-gold: #8f7410;    --hl-gold: #f6edc2;
+  --fc-violet: #733bc4;  --hl-violet: #ebe0f8;
+  --fc-red: #c8281c;     --hl-red: #fbdcd9;
+  --fc-orange: #b8560c;  --hl-orange: #fde3cc;
+  --fc-yellow: #8a7400;  --hl-yellow: #fff1a0;
+  --fc-green: #1d8a3b;   --hl-green: #d8f2df;
+  --fc-teal: #0c7f81;    --hl-teal: #d2f1f1;
+  --fc-blue: #224cff;    --hl-blue: #dce3ff;
+  --fc-pink: #bc2f7c;    --hl-pink: #fbdcec;
+  --fc-brown: #7a4a22;   --hl-brown: #eedfd2;
+  --fc-grey: #6b6767;    --hl-grey: #e4e2e2;
   --color-heading: var(--color-accent); /* a screen's section headings (2026-11-09, the owner's wish): Crimson, so the eye finds the parts of a page */
   --kind: var(--color-surface); --kind-ink: var(--color-text); /* style.css sets these per icon */
   --section: var(--color-border); /* the screen's kind (style.css, by the section) */
@@ -200,6 +215,46 @@
   --status-good: #3cc061;  --status-good-text: #5fd17f;
   --status-watch: #e8a33d; --status-watch-text: #e8a33d;
   --quest-title: #a98be0; /* Violet, lightened to read on the dark page */
+  /* How words look: lighter words and deeper highlights, to read on the dark page. */
+  --fc-crimson: #ea5575; --hl-crimson: #4a1f29;
+  --fc-gold: #d9c14b;    --hl-gold: #4a4220;
+  --fc-violet: #a98be0;  --hl-violet: #352850;
+  --fc-red: #f2685e;     --hl-red: #4d1f1c;
+  --fc-orange: #f39a4d;  --hl-orange: #4d3018;
+  --fc-yellow: #f2d94e;  --hl-yellow: #4a4215;
+  --fc-green: #5fd17f;   --hl-green: #1f3d28;
+  --fc-teal: #4fd0d3;    --hl-teal: #18393a;
+  --fc-blue: #7c95ff;    --hl-blue: #1f2a55;
+  --fc-pink: #f07ab8;    --hl-pink: #4d1f38;
+  --fc-brown: #c8946a;   --hl-brown: #3d2d20;
+  --fc-grey: #aaa6a6;    --hl-grey: #3a3737;
   --quest-done-surface: #1f3326; --quest-progress-surface: #3a2b1a;
   --kind-timeline: #d4d1d1;  --kind-timeline-ink: #1f1d1d; /* Charcoal would vanish on the dark page: a light stone instead */
 }
+
+/* How words look (public/format-bar.js): the classes for the twelve colours live here with their shades, since their
+   names are colour names. A highlight keeps the words' own colour. */
+.fc-crimson { color: var(--fc-crimson); }
+.fc-gold { color: var(--fc-gold); }
+.fc-violet { color: var(--fc-violet); }
+.fc-red { color: var(--fc-red); }
+.fc-orange { color: var(--fc-orange); }
+.fc-yellow { color: var(--fc-yellow); }
+.fc-green { color: var(--fc-green); }
+.fc-teal { color: var(--fc-teal); }
+.fc-blue { color: var(--fc-blue); }
+.fc-pink { color: var(--fc-pink); }
+.fc-brown { color: var(--fc-brown); }
+.fc-grey { color: var(--fc-grey); }
+.hl-crimson { background: var(--hl-crimson); color: inherit; }
+.hl-gold { background: var(--hl-gold); color: inherit; }
+.hl-violet { background: var(--hl-violet); color: inherit; }
+.hl-red { background: var(--hl-red); color: inherit; }
+.hl-orange { background: var(--hl-orange); color: inherit; }
+.hl-yellow { background: var(--hl-yellow); color: inherit; }
+.hl-green { background: var(--hl-green); color: inherit; }
+.hl-teal { background: var(--hl-teal); color: inherit; }
+.hl-blue { background: var(--hl-blue); color: inherit; }
+.hl-pink { background: var(--hl-pink); color: inherit; }
+.hl-brown { background: var(--hl-brown); color: inherit; }
+.hl-grey { background: var(--hl-grey); color: inherit; }

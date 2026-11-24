@@ -17,7 +17,7 @@ test('/ opens the menu, with later options greyed out', async ({ page, app }) =>
   await expect(menu(page)).toBeHidden();
   await page.keyboard.type('/');
   await expect(menu(page)).toBeVisible();
-  await expect(menu(page).getByRole('option')).toHaveCount(28);
+  await expect(menu(page).getByRole('option')).toHaveCount(29);
   await expect(option(page, 'Text')).toHaveAttribute('aria-selected', 'true');
   await expect(menu(page).getByRole('option', { name: /^Card/ })).toHaveAttribute('aria-disabled', 'true');
   await expect(menu(page).getByRole('option', { name: /^Card/ })).toContainText('later');
@@ -58,7 +58,11 @@ test('the arrows skip options that come later', async ({ page, app }) => {
   await expect(option(page, 'Heading 3')).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('ArrowDown'); // Card is still to come and is skipped; Whiteboard works in a note (Writing and thinking)
   await expect(option(page, 'Whiteboard')).toHaveAttribute('aria-selected', 'true');
-  await page.keyboard.press('ArrowDown'); // Highlight comes later and is skipped
+  await page.keyboard.press('ArrowDown'); // Text colour and Highlight (2026-11-24) work
+  await expect(option(page, 'Text colour')).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowDown');
+  await expect(option(page, 'Highlight')).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowDown');
   await expect(option(page, 'Date')).toHaveAttribute('aria-selected', 'true');
 });
 

@@ -17,6 +17,7 @@ import { randomUUID } from 'node:crypto';
 import { moduleOn } from './modules.js';
 import { createEntry, localDay } from './entries.js';
 import { createConversation, renameConversation } from './assistant.js';
+import { plainWords } from './links.js';
 
 export const WHERE = ['journal', 'advisor', 'elsewhere'];
 const now = () => new Date().toISOString();
@@ -119,7 +120,7 @@ export async function questPage(db) {
         homework: (w.homework ?? []).map((h, i) => {
           const work = workOf(db, key, i + 1);
           const done = isDone(db, key, i + 1);
-          return { piece: i + 1, text: h.text, where: WHERE.includes(h.where) ? h.where : 'elsewhere', label: labelOf(w.number, i + 1), done, work, ...standing(done, work) };
+          return { piece: i + 1, text: h.text, plain: plainWords(String(h.text ?? '')), where: WHERE.includes(h.where) ? h.where : 'elsewhere', label: labelOf(w.number, i + 1), done, work, ...standing(done, work) };
         }),
       };
     }),
@@ -146,7 +147,7 @@ export async function startWork(db, number, piece, kind, { dataDir } = {}) {
     .run(randomUUID(), time, time, weekKey(week.group, week.number), n, kind, item.id);
   return kind === 'entry'
     ? { kind, id: item.id, href: `/journal/entries/${item.id}` }
-    : { kind, id: item.id, href: `/assistant/${item.id}`, draft: `I'm working on this week's homework (${label}): “${homework.text}”\n\n` };
+    : { kind, id: item.id, href: `/assistant/${item.id}`, draft: `I'm working on this week's homework (${label}): “${plainWords(String(homework.text)).replace(/\s*\n\s*/g, ' ')}”\n\n` };
 }
 
 // The private Done on one piece.
@@ -203,7 +204,7 @@ export async function readTranscript(db, number, { words = '' } = {}) {
 export async function questText(db, { week = null, words = '' } = {}) {
   const weeks = await allWeeks(db);
   if (!weeks.length) return 'No Quest weeks are here yet.';
-  const homeworkText = (w) => (w.homework ?? []).map((h, i) => `  ${labelOf(w.number, i + 1)}: ${h.text}`).join('\n') || '  (no homework)';
+  const homeworkText = (w) => (w.homework ?? []).map((h, i) => `  ${labelOf(w.number, i + 1)}: ${plainWords(String(h.text ?? ''))}`).join('\n') || '  (no homework)';
   const head = (w) => `Week ${w.number}${w.title ? ` · ${w.title}` : ''}${w.call_on ? ` (call ${w.call_on})` : ''} — /quest/week-${w.number}`;
   const look = String(words ?? '').trim().toLowerCase();
   if (look) {
@@ -220,9 +221,9 @@ export async function questText(db, { week = null, words = '' } = {}) {
     const w = weeks.find((x) => x.number === Number(week));
     if (!w) return `There is no Week ${week}.`;
     const transcript = transcriptLines(await textOf(db, w)).map((l) => `${l.at} ${l.who}: ${l.text}`).join('\n');
-    return `${head(w)}\nHomework:\n${homeworkText(w)}\n\n${w.summary ? `Summary of the group call:\n${w.summary}\n\n` : ''}Transcript of the group call (/quest/week-${w.number}/transcript):\n${transcript || '(none yet)'}`;
+    return `${head(w)}\nHomework:\n${homeworkText(w)}\n\n${w.summary ? `Summary of the group call:\n${plainWords(w.summary)}\n\n` : ''}Transcript of the group call (/quest/week-${w.number}/transcript):\n${transcript || '(none yet)'}`;
   }
-  return `Sovran Quest weeks, newest first:\n${weeks.map((w) => `${head(w)}\n${homeworkText(w)}${w.summary ? `\n  The call, in short: ${w.summary.replace(/\s+/g, ' ').slice(0, 600)}` : ''}`).join('\n\n')}`;
+  return `Sovran Quest weeks, newest first:\n${weeks.map((w) => `${head(w)}\n${homeworkText(w)}${w.summary ? `\n  The call, in short: ${plainWords(w.summary).replace(/\s+/g, ' ').slice(0, 600)}` : ''}`).join('\n\n')}`;
 }
 
 // ---- go Sovran (phone/quest.js) ----

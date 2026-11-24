@@ -26,6 +26,110 @@ function el(tag, attrs = {}, ...children) {
   node.append(...children.filter((c) => c != null && c !== false));
   return node;
 }
+
+// ---- The homework and the summary as Daniel formatted them (2026-11-24, public/format-bar.js on the computer) ----
+// The same Markdown as on the computer: paragraphs, - and 1. lists, **bold**, *italic*, ~~strikethrough~~, `code`,
+// [words](https://…), and [words]{.underline}, [words]{.c-red} (a colour), [words]{.hl-red} (a highlight). Built as
+// elements, never as HTML, so nothing in the words can run.
+const COLOURS = 'crimson gold violet red orange yellow green teal blue pink brown grey'.split(' ');
+const ESCAPED = /[\\`*_{}[\]()#+\-.!>~]/;
+function closeBracket(src, at) { // the ] that closes the [ at `at`, or -1
+  let depth = 0;
+  for (let i = at; i < src.length; i++) {
+    if (src[i] === '\\') { i++; continue; }
+    if (src[i] === '[') depth++;
+    if (src[i] === ']' && --depth === 0) return i;
+  }
+  return -1;
+}
+function closeMark(src, from, mark) {
+  for (let i = from; i < src.length; i++) {
+    if (src[i] === '\\') { i++; continue; }
+    if (src.startsWith(mark, i) && (mark.length > 1 || src[i + 1] !== mark)) return i;
+  }
+  return -1;
+}
+const spanTag = (name) => {
+  if (name === 'underline') return () => el('u');
+  const [, kind, colour] = /^(c|hl)-([a-z]+)$/.exec(name) ?? [];
+  if (!COLOURS.includes(colour)) return null;
+  return kind === 'c' ? () => el('span', { class: `fc-${colour}` }) : () => el('mark', { class: `hl-${colour}` });
+};
+const MARKS = { '**': 'strong', __: 'strong', '~~': 's', '*': 'em', _: 'em' };
+function inline(src) {
+  const out = [];
+  let words = '';
+  const flush = () => { if (words) out.push(document.createTextNode(words)); words = ''; };
+  for (let i = 0; i < src.length;) {
+    const c = src[i];
+    if (c === '\\' && ESCAPED.test(src[i + 1] ?? '')) { words += src[i + 1]; i += 2; continue; }
+    if (c === '\n') { flush(); out.push(el('br')); i++; continue; }
+    if (c === '[') {
+      const end = closeBracket(src, i);
+      const rest = end > 0 ? src.slice(end + 1) : '';
+      const span = /^\{((?:\s*\.[a-z-]+)+)\s*\}/.exec(rest);
+      const makers = span ? span[1].trim().split(/\s+/).map((name) => spanTag(name.slice(1))) : [];
+      if (span && makers.every(Boolean)) {
+        flush();
+        let node = null;
+        for (const make of [...makers].reverse()) { const outer = make(); outer.append(...(node ? [node] : inline(src.slice(i + 1, end)))); node = outer; }
+        out.push(node);
+        i = end + 1 + span[0].length;
+        continue;
+      }
+      const link = end > 0 ? /^\(([^)\s]+)(?:\s+"[^"]*")?\)/.exec(rest) : null;
+      if (link) {
+        flush();
+        const href = safeUrl(link[1]);
+        const kids = inline(src.slice(i + 1, end));
+        out.push(...(href ? [el('a', { href, target: '_blank', rel: 'noopener' }, ...kids)] : kids));
+        i = end + 1 + link[0].length;
+        continue;
+      }
+    }
+    if (c === '`') {
+      const end = src.indexOf('`', i + 1);
+      if (end > i + 1) { flush(); out.push(el('code', {}, src.slice(i + 1, end))); i = end + 1; continue; }
+    }
+    const mark = ['**', '__', '~~', '*', '_'].find((m) => src.startsWith(m, i));
+    const opens = mark && /\S/.test(src[i + mark.length] ?? '') && !(mark[0] === '_' && /\w/.test(src[i - 1] ?? ''));
+    const end = opens ? closeMark(src, i + mark.length, mark) : -1;
+    if (end > 0 && /\S/.test(src[end - 1])) {
+      flush();
+      out.push(el(MARKS[mark], {}, ...inline(src.slice(i + mark.length, end))));
+      i = end + mark.length;
+      continue;
+    }
+    words += c;
+    i++;
+  }
+  flush();
+  return out;
+}
+export function richText(markdown) {
+  const blocks = [];
+  let list = null;
+  for (const part of String(markdown ?? '').replace(/\r\n/g, '\n').split(/\n{2,}/)) {
+    const lines = part.split('\n');
+    const item = (line) => /^\s*(?:[-+*]|\d+[.)])\s+/.test(line);
+    if (lines.every((line) => !line.trim() || item(line) || /^\s{2,}\S/.test(line))) {
+      for (const line of lines.filter((l) => l.trim())) {
+        const ordered = /^\s*\d+[.)]\s+/.test(line);
+        if (!item(line) && list) { list.lastChild?.append(el('br'), ...inline(line.trim())); continue; }
+        const tag = ordered ? 'ol' : 'ul';
+        if (!list || list.tagName.toLowerCase() !== tag) { list = el(tag, { class: 'q-list' }); blocks.push(list); }
+        list.append(el('li', {}, ...inline(line.replace(/^\s*(?:[-+*]|\d+[.)])\s+/, '').replace(/^\[( |x|X)\]\s/, ''))));
+      }
+      continue;
+    }
+    list = null;
+    blocks.push(el('p', {}, ...inline(part.replace(/^#{1,6}\s+/gm, '').replace(/^>\s?/gm, ''))));
+  }
+  return blocks;
+}
+// The words alone, for the AI's box and a short summary.
+export const plainText = (markdown) => richText(markdown).map((node) => node.textContent).join('\n');
+
 const two = (n) => String(n).padStart(2, '0');
 const localDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 const callDay = (day) => (/^\d{4}-\d{2}-\d{2}$/.test(day ?? '') ? new Date(`${day}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) : '');
@@ -141,7 +245,7 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
         }
         const work = s.entries ? `${s.entries} Journal ${s.entries === 1 ? 'entry' : 'entries'}${s.last ? `, ${shortDay(s.last)}` : ''}${s.waiting ? ' (goes to your computer when it’s on)' : ''}` : '';
         parts.push(el('div', { class: 'q-piece' },
-          el('div', { class: 'q-row' }, el('span', { class: 'q-n', 'aria-hidden': 'true' }, String(piece)), el('p', {}, h.text)),
+          el('div', { class: 'q-row' }, el('span', { class: 'q-n', 'aria-hidden': 'true' }, String(piece)), el('div', { class: 'q-rich' }, ...richText(h.text))),
           acts.length ? el('div', { class: 'q-acts' }, ...acts) : null,
           work ? el('p', { class: 'q-work' }, work) : null));
       });
@@ -152,11 +256,13 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
       parts.push(el('p', { class: 'q-label' }, 'The call'));
       const call = el('div', { class: 'q-call' });
       if (w.summary) {
-        const long = w.summary.length > SHORT_SUMMARY;
-        const text = el('p', { class: 'q-sum' }, long ? `${w.summary.slice(0, SHORT_SUMMARY).replace(/\s+\S*$/, '')}…` : w.summary);
+        // A long summary shows its first words; the whole of it, as formatted, on Read the whole summary.
+        const words = plainText(w.summary);
+        const long = words.length > SHORT_SUMMARY;
+        const text = long ? el('p', { class: 'q-sum' }, `${words.slice(0, SHORT_SUMMARY).replace(/\s+\S*$/, '')}…`) : el('div', { class: 'q-sum q-rich' }, ...richText(w.summary));
         call.append(text);
         if (long) {
-          const more = el('button', { type: 'button', class: 'q-more', onclick: () => { text.textContent = w.summary; more.remove(); } }, 'Read the whole summary');
+          const more = el('button', { type: 'button', class: 'q-more', onclick: () => { text.replaceWith(el('div', { class: 'q-sum q-rich' }, ...richText(w.summary))); more.remove(); } }, 'Read the whole summary');
           call.append(more);
         }
       }
@@ -182,7 +288,7 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
 
   // Ask my Sovran Advisor on a piece: the AI's own app, with the homework in its box where it takes words (as reports.js).
   function advisorLink(w, piece, h) {
-    const words = `I'm working on this week's homework (${labelOf(w.number, piece)}): “${h.text}”\n\n${ai.ask ? `${ai.ask}\n\n` : ''}`;
+    const words = `I'm working on this week's homework (${labelOf(w.number, piece)}): “${plainText(h.text).replace(/\s*\n\s*/g, ' ')}”\n\n${ai.ask ? `${ai.ask}\n\n` : ''}`;
     const fills = Boolean(ai.fill) && words.length <= 1800;
     return el('a', { class: 'q-start', href: fills ? ai.fill + encodeURIComponent(words) : ai.href, target: '_blank', rel: 'noopener',
       onclick: () => { copy(words); say(fills ? `Opening ${ai.name} with the homework in the box.` : `Copied. Paste it into ${ai.name}.`); } }, 'Ask my Sovran Advisor');
@@ -203,7 +309,7 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
     const h = w.homework[piece - 1];
     $('quest-write-title').textContent = `Homework ${piece}`;
     $('quest-write-label').textContent = labelOf(w.number, piece);
-    $('quest-write-quote').textContent = h.text;
+    $('quest-write-quote').replaceChildren(...richText(h.text));
     $('quest-write-status').textContent = '';
     const text = $('quest-write-text');
     text.value = read(`sovran.phone.quest-draft.${weekKey(w.group, w.number)}.${piece}`, '') || '';

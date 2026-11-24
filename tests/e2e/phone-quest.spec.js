@@ -191,3 +191,28 @@ test('no Quest weeks for the group: no Sovran Quest square; Daniel’s own phone
     expect(errors).toEqual([]);
   } finally { await context.close(); }
 });
+
+test('the homework and the summary show as Daniel formatted them, and the AI gets the words alone', async ({ browser }, testInfo) => {
+  const weeks = [{ ...WEEKS[0],
+    summary: 'We met the *Tyrant*.\n\n- Notice it\n- [Name it]{.underline}',
+    homework: [{ text: 'Write about **[one moment]{.c-violet}** the Tyrant [showed up]{.hl-yellow}.', where: 'journal' },
+      { text: 'Ask about ~~it~~ [your pattern](https://example.com/p) and <b>this</b>.', where: 'advisor' }] }];
+  const { page, context, errors } = await phone(browser, testInfo, { weeks });
+  try {
+    await page.locator('#quest-tile').click();
+    const pieces = page.locator('.q-piece');
+    await expect(pieces.nth(0).locator('.q-rich')).toHaveText('Write about one moment the Tyrant showed up.');
+    await expect(pieces.nth(0).locator('strong .fc-violet')).toHaveText('one moment');
+    await expect(pieces.nth(0).locator('mark.hl-yellow')).toHaveText('showed up');
+    await expect(pieces.nth(1).locator('s')).toHaveText('it');
+    await expect(pieces.nth(1).getByRole('link', { name: 'your pattern' })).toHaveAttribute('href', 'https://example.com/p');
+    await expect(pieces.nth(1).locator('.q-rich')).toContainText('<b>this</b>'); // shown as words, never as HTML
+    await expect(pieces.nth(1).getByRole('link', { name: 'Ask my Sovran Advisor' })).toHaveAttribute('href', /Ask%20about%20it%20your%20pattern%20and%20%3Cb%3Ethis%3C%2Fb%3E\.%E2%80%9D/);
+    await expect(page.locator('.q-sum em')).toHaveText('Tyrant');
+    await expect(page.locator('.q-sum li')).toHaveText(['Notice it', 'Name it']);
+    await expect(page.locator('.q-sum li u')).toHaveText('Name it');
+    await pieces.nth(0).getByRole('button', { name: 'Start in my Journal' }).click();
+    await expect(page.locator('#quest-write-quote .fc-violet')).toHaveText('one moment');
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});

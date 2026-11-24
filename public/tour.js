@@ -14,6 +14,9 @@ import { moduleOn, switchModule } from './modules.js';
 // The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life. Group Circle (2026-11-22) comes
 // first: it is on in a new install, and has its own film page (group.html), which Daniel can also share as a web page.
 const EXTRAS = [
+  // Sovran Quest (2026-11-24, the owner's "go"): on in a new install; its film page is quest.html (build-quest-film.py), the computer and go Sovran.
+  { id: 'quest', module: 'quest', title: 'Sovran Quest', kind: 'people', open: '/quest', openLabel: 'Open Sovran Quest', src: '/tour/quest.html',
+    text: 'Your Quest group’s weeks: the daily practice, the homework, and the weekly group call, on your computer and your phone.' },
   { id: 'group', module: 'group', title: 'Group Circle', kind: 'people', open: '/group', openLabel: 'Open Group Circle', src: '/tour/group.html',
     text: 'Your Quest group’s own space: announcements from Daniel, and a Circle to share with each other.' },
   // go Sovran (2026-11-22, the owner's choice): the name everywhere, and one film, the go Sovran film of the setup guides

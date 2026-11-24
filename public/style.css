@@ -5056,7 +5056,13 @@ html[data-section="quest-expressive"]:not([data-section=""]) { --page-title-colo
 .quest-piece:last-child { border-bottom: 0; padding-bottom: 0; }
 .quest-number { font-family: var(--font-ui); font-size: var(--text-sm); color: var(--color-text-muted); padding-top: 2px; }
 .quest-piece-main { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
-.quest-piece-text { margin: 0; line-height: var(--line-height-base); max-width: 60ch; white-space: pre-wrap; }
+.quest-piece-text { margin: 0; line-height: var(--line-height-base); max-width: 60ch; }
+/* The homework and the summary as the guide formatted them (public/quest.js). */
+.quest-rich p { margin: 0 0 var(--space-2); line-height: var(--line-height-base); }
+.quest-rich > :last-child { margin-bottom: 0; }
+.quest-rich ul, .quest-rich ol { margin: 0 0 var(--space-2); padding-left: var(--space-6); }
+.quest-rich li > p { margin: 0; }
+.quest-rich a { color: inherit; text-decoration: underline; }
 .quest-bar { display: inline-flex; flex-wrap: wrap; align-self: flex-start; border: var(--line); border-radius: var(--radius-sm); overflow: hidden; }
 .quest-seg { font: inherit; font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-medium); background: var(--color-bg); color: var(--color-text-muted);
   border: 0; border-left: var(--line); padding: var(--space-2) var(--space-3); cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); }
@@ -5131,3 +5137,58 @@ html[data-section="quest-expressive"]:not([data-section=""]) { --page-title-colo
 .quest-summary { margin-bottom: var(--space-3); }
 .quest-summary p { margin: 0 0 var(--space-2); line-height: var(--line-height-base); white-space: pre-line; }
 .settings-row-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* ---- How words look (public/format-bar.js, 2026-11-24): the bar over selected words, its palettes, and the colours ---- */
+mark[data-highlight] { border-radius: 2px; padding: 0 1px; }
+.format-bar {
+  position: absolute;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: calc(100vw - var(--space-4));
+  padding: var(--space-1);
+  border: var(--line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-short);
+}
+.format-bar[hidden] { display: none; }
+.format-button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-base);
+  cursor: pointer;
+}
+.format-button:hover, .format-button[aria-expanded="true"] { background: var(--color-surface); }
+.format-button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-accent); }
+.format-colour-glyph, .format-highlight-glyph { font-weight: var(--weight-bold); text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 3px; }
+.format-highlight-glyph { text-decoration: none; padding: 0 var(--space-1); border-radius: 2px; }
+.format-row { display: flex; align-items: center; gap: 2px; }
+.format-extra:empty { display: none; }
+.format-palette { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1) 0 0; }
+.format-palette-only .format-palette { padding: 0; }
+.format-swatches { display: grid; grid-template-columns: repeat(6, 2rem); gap: var(--space-1); }
+.format-swatch { width: 2rem; height: 2rem; display: grid; place-items: center; border: var(--line); border-radius: var(--radius-sm); background: var(--color-bg); font: inherit; font-weight: var(--weight-bold); cursor: pointer; padding: 0; }
+.format-swatch > span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: var(--radius-sm); }
+.format-swatch.is-on { border-color: var(--color-text); outline: 2px solid var(--color-text); outline-offset: 1px; }
+.format-none { align-self: flex-start; border: 0; background: none; padding: var(--space-1) 0; font: inherit; font-size: var(--text-xs); color: var(--color-text-muted); cursor: pointer; text-decoration: underline; }
+.format-link { display: flex; gap: var(--space-1); padding-top: var(--space-1); }
+.format-link-input { flex: 1; min-width: 12rem; font: inherit; border: var(--line); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background: var(--color-bg); color: var(--color-text); }
+
+/* A compact editor in a form (a piece of homework, the call's summary): looks like a text box. */
+.note-body.is-compact { min-height: 0; font-size: inherit; line-height: var(--line-height-short); }
+.note-body.is-compact p { margin: 0 0 var(--space-1); }
+.note-body.is-compact > :last-child { margin-bottom: 0; }
+.note-body.is-compact.is-empty::before { top: var(--space-2); left: var(--space-2); }
