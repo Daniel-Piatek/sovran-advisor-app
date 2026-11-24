@@ -81,7 +81,7 @@ test('Tour, Settings and Library sit at the foot of the column, and the others c
   const tour = await sections(page).getByRole('link', { name: 'Tour' }).boundingBox();
   const assistant = await sections(page).getByRole('link', { name: 'Sovran Advisor' }).boundingBox();
   // Library is the very last, Settings just above it, Tour above Settings, and a gap of free space lies between them and the rest.
-  expect(Math.abs(sidebarBox.y + sidebarBox.height - (library.y + library.height))).toBeLessThanOrEqual(40);
+  expect(Math.abs(sidebarBox.y + sidebarBox.height - (library.y + library.height))).toBeLessThanOrEqual(80); // only the small Arrange under it
   expect(settings.y).toBeLessThan(library.y);
   expect(tour.y).toBeLessThan(settings.y);
   expect(tour.y - (assistant.y + assistant.height)).toBeGreaterThan(40);
@@ -141,8 +141,9 @@ test('you arrange the sidebar: lines added, moved and taken away, Group Circle m
   await page.reload();
   expect(await column()).toEqual(arranged);
 
-  // Alt+Down moves a line too.
-  await sidebar.getByRole('link', { name: 'Journal' }).click({ button: 'right' });
+  // Alt+Down moves a line too. (Arrange, at the foot under Library, opens it as a right click does; it hides while arranging.)
+  await sidebar.getByRole('button', { name: 'Arrange', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Arrange', exact: true })).toBeHidden();
   await sidebar.getByRole('button', { name: 'Take this line away' }).focus();
   await page.keyboard.press('Alt+ArrowDown');
   expect((await column()).slice(0, 5)).toEqual(['Group Circle', 'Notes', 'Journal', 'Tasks', '—']);
