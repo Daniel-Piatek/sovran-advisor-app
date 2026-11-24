@@ -35,11 +35,12 @@ const sections = [
   { name: 'Group Circle', quest: true, href: '/group', icon: 'group-circle', more: true, module: 'group', owns: (path) => /^\/group(\/|$)/.test(path) },
   // The course's own page online (course.js), in a new tab; there while the module is on and an address is known.
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
-  // Help (2026-11-24, the owner's pick): Tell Daniel and what you told him, with his replies and a red number for a new one,
-  // then the help pages (public/help.js). There while Tell Daniel or Help pages is on, so it outlasts the Quest.
-  { name: 'Help', href: '/help', icon: 'help', more: true, module: ['tell', 'help'], owns: (path) => /^\/help(\/|$)/.test(path) || path === '/told-daniel' },
   // The Tour (tour.js): short films of the app, and of the parts you can switch on (2026-11-16, the owner's wish).
   { name: 'Tour', href: '/tour', icon: 'play', more: true, owns: (path) => path === '/tour' },
+  // Help (2026-11-24, the owner's pick): Tell Daniel and what you told him, with his replies and a red number for a new one,
+  // then the help pages (public/help.js). There while Tell Daniel or Help pages is on, so it outlasts the Quest.
+  // Pinned at the foot between Tour and Settings (the owner's wish, 2026-11-25).
+  { name: 'Help', href: '/help', icon: 'help', more: true, module: ['tell', 'help'], owns: (path) => /^\/help(\/|$)/.test(path) || path === '/told-daniel' },
   { name: 'Settings', href: '/settings', icon: 'settings', more: true, owns: (path) => path === '/settings' },
   // The Library (the app's looks) left the sidebar for Settings on 2026-11-24 (the owner's wish); /library still opens it.
 ];
@@ -93,8 +94,8 @@ document.addEventListener('pointerdown', (event) => {
 const captureButton = el('button', {
   type: 'button', class: 'sidebar-capture', title: 'Quick capture (⌘K)', onclick: () => openCapture(),
 }, icon('plus'), el('span', {}, 'Capture'), el('kbd', { class: 'sidebar-key' }, '⌘K'));
-// Tour and Settings are pinned to the foot of the column; the others, and the lines between them, are yours to order.
-const PINNED = ['Tour', 'Settings'];
+// Tour, Help and Settings are pinned to the foot of the column; the others, and the lines between them, are yours to order.
+const PINNED = ['Tour', 'Help', 'Settings'];
 const ORDER_KEY = 'sidebar.order'; // the order before lines could be moved (2026-11-09): read once, then the layout takes over
 const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)];
 const inQuest = (link) => Boolean(sectionOf(link.dataset.section)?.quest);

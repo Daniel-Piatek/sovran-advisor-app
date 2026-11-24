@@ -11,7 +11,7 @@ The sidebar is the column on the left with your sections: Notes, Journal, Inbox 
 - Each line has a red **×**. Click it to take that line away. You can drag a line to a new place, too.
 - Click **Done** when it looks right. Your sidebar stays that way, even after you restart.
 - **Start over** puts back the order and the one line the app came with.
-- Tour and Settings always stay at the foot of the column, so you can always find them. The Library is in Settings.
+- Tour, Help and Settings always stay at the foot of the column, so you can always find them. The Library is in Settings.
 - On a phone the sidebar is a bar along the bottom, and stays as it is.
 - To see it done, watch [the short video](/tour?film=sidebar) in the Tour.
 
