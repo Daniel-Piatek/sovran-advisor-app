@@ -1,20 +1,20 @@
 // The video of the page you are on (2026-11-24, the owner's wish: "links to the individual videos that show up in the
 // place where the person might realize the need for them"). Just under the page's top bar, at the right, a play
 // button and "How <the page> works"; it opens that page's film in the Tour (/tour?film=<id>&back=<here>), and the film's page
-// offers "Back to <the page>" instead of All Videos. Settings › Sidebar and Settings › go Sovran carry the same link
+// offers a small "← <the page> Module" instead of All Videos. Settings › Sidebar and Settings › go Sovran carry the same link
 // (pageVideo below). The films are the Tour's own (tour.js).
 
 import { el, icon } from './ui.js';
 
-// Which page has which film, and the page's name in "How … works" and "Back to …".
+// Which page has which film; name: the page in "How … works"; module: the small button back, "← <module> Module".
 export const PAGE_FILMS = [
-  { path: /^\/quest(\/|$)/, film: 'quest', name: 'Sovran Quest' },
-  { path: /^\/group(\/|$)/, film: 'group', name: 'Group Circle' },
-  { path: /^\/tasks(\/|$)/, film: 'tasks', name: 'Tasks' },
-  { path: /^\/planner(\/|$)/, film: 'planner', name: 'the Planner' },
-  { path: /^\/calendar(\/|$)/, film: 'calendar', name: 'the Calendar' },
-  { path: /^\/boards$/, film: 'boards', name: 'Boards' },
-  { path: /^\/life(\/|$)/, film: 'life', name: 'My Life' },
+  { path: /^\/quest(\/|$)/, film: 'quest', name: 'Sovran Quest', module: 'Sovran Quest' },
+  { path: /^\/group(\/|$)/, film: 'group', name: 'Group Circle', module: 'Group Circle' },
+  { path: /^\/tasks(\/|$)/, film: 'tasks', name: 'Tasks', module: 'Tasks' },
+  { path: /^\/planner(\/|$)/, film: 'planner', name: 'the Planner', module: 'Planner' },
+  { path: /^\/calendar(\/|$)/, film: 'calendar', name: 'the Calendar', module: 'Calendar' },
+  { path: /^\/boards$/, film: 'boards', name: 'Boards', module: 'Boards' },
+  { path: /^\/life(\/|$)/, film: 'life', name: 'My Life', module: 'My Life' },
 ];
 
 // The link itself: a Crimson play circle, then "How <name> works". back: where "Back to …" goes.

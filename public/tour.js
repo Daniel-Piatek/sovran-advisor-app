@@ -3,7 +3,8 @@
 // then one short film for each part you can switch on, each card with its own "Switch it on".
 //   /tour               the films, as cards
 //   /tour?film=<id>     one video playing, with "All Videos" above it and "Back to All Videos" beside Start Again
-//   /tour?film=<id>&back=<page>  the same, opened from a page's "How … works" (page-video.js): both buttons say "Back to <the page>"
+//   /tour?film=<id>&back=<page>  the same, opened from a page's "How … works" (page-video.js): a small "← <the page> Module"
+//                                above and under it, and no On / Open → (they came from that page)
 // The films themselves are pages in public/tour/ (basics.html, extras.html) with the owner's voice as
 // mp3 files in public/tour/voice/. They are made from the published films by build-app-films.py in the
 // project files (student-guide/tour/); inside the app they hide their own title and follow Light/Dark.
@@ -99,8 +100,9 @@ function backOf(param) {
   if (!param || !param.startsWith('/') || param.startsWith('//') || param.startsWith('/tour')) return null;
   const path = param.split(/[?#]/)[0];
   const page = PAGE_FILMS.find((p) => p.path.test(path));
-  const name = page ? page.name : path.startsWith('/settings') ? 'Settings' : null;
-  return name ? { href: param, label: `Back to ${name}` } : null;
+  // The owner's words (2026-11-24): "← Sovran Quest Module", small.
+  const label = page ? `${page.module} Module` : path.startsWith('/settings') ? 'Settings' : null;
+  return label ? { href: param, label } : null;
 }
 
 function showFilm(film, back) {
@@ -125,12 +127,12 @@ function showFilm(film, back) {
   const extra = EXTRAS.find((x) => x.id === film.id);
   screen.replaceChildren(
     el('header', { class: 'top-bar' }, back
-      ? el('a', { class: 'button tour-back', href: back.href }, icon('back'), back.label)
+      ? el('a', { class: 'tour-back-to', href: back.href }, `← ${back.label}`)
       : el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All Videos'),
     back ? el('a', { class: 'tour-all', href: '/tour' }, 'All Videos') : null),
     el('div', { class: 'tour-film-head' },
       el('h1', { class: 'top-bar-title' }, film.title),
-      extra ? stateOf(extra) : null),
+      extra && !back ? stateOf(extra) : null), // opened from the page itself: it is on, and they came from it
     frame); // the video's own "Back to All Videos" sits beside its Start Again (build-app-films.py)
 }
 

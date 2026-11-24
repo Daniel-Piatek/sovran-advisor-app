@@ -152,14 +152,15 @@ test('a page with a film offers How … works, and the film goes back to that pa
   await link.click();
   await expect(page).toHaveURL(/\/tour\?film=quest&back=%2Fquest$/);
   await expect(page.getByRole('heading', { name: 'Sovran Quest', level: 1 })).toBeVisible();
-  await expect(page.locator('.top-bar .tour-back')).toHaveText('Back to Sovran Quest');
+  await expect(page.locator('.top-bar .tour-back-to')).toHaveText('← Sovran Quest Module');
+  await expect(page.locator('.tour-film-head .tour-state')).toHaveCount(0); // no On / Open →: they came from it
   await expect(page.locator('.top-bar .tour-all')).toHaveAttribute('href', '/tour');
   const inside = page.frameLocator('.tour-frame').locator('#back-all');
-  await expect(inside).toHaveText('← Back to Sovran Quest');
+  await expect(inside).toHaveText('← Sovran Quest Module');
   await inside.click();
   await expect(page).toHaveURL(/\/quest$/);
   await page.locator('.page-video-line > .page-video').click();
-  await page.locator('.top-bar .tour-back').click();
+  await page.locator('.top-bar .tour-back-to').click();
   await expect(page).toHaveURL(/\/quest$/);
 
   await page.goto(`${app.url}/group`);
@@ -169,8 +170,8 @@ test('a page with a film offers How … works, and the film goes back to that pa
   // From a part of Settings: back to that part, open.
   await page.goto(`${app.url}/settings`);
   await page.locator('#sidebar-part .page-video').click();
-  await expect(page.locator('.top-bar .tour-back')).toHaveText('Back to Settings');
-  await page.locator('.top-bar .tour-back').click();
+  await expect(page.locator('.top-bar .tour-back-to')).toHaveText('← Settings');
+  await page.locator('.top-bar .tour-back-to').click();
   await expect(page).toHaveURL(/\/settings#sidebar-part$/);
   await expect(page.locator('#sidebar-part').getByRole('button', { name: 'Arrange the sidebar' })).toBeVisible();
 });
