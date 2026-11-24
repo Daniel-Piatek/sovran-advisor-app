@@ -50,4 +50,20 @@ BEGIN
   PERFORM pg_temp.ok(group_feed.quest_transcript(C, 3)->>'error' = 'gone', 'never another group''s');
   PERFORM pg_temp.ok(group_feed.quest_transcript(G, 3, 'SQ01')->>'transcript' = 'Daniel: hello', 'the guide names the group');
   PERFORM pg_temp.ok(group_feed.quest_transcript(E, 3)->>'error' = 'nokey', 'a key in no group reads none');
+
+  -- Each student's own practice link (2026-11-24): only the guide sets it, and only that student reads it.
+  PERFORM pg_temp.ok(group_feed.quest_weeks(A) ? 'practice_url' AND group_feed.quest_weeks(A)->>'practice_url' IS NULL, 'no link yet: none');
+  PERFORM pg_temp.ok(group_feed.quest_link_set(A, 'client-aaaaaaaaaaaa', 'https://x.example/me')->>'error' = 'guideonly', 'a student cannot set one');
+  PERFORM pg_temp.ok(group_feed.quest_links(A)->>'error' = 'guideonly', 'nor read the list');
+  PERFORM pg_temp.ok(group_feed.quest_link_set(G, 'client-eeeeeeeeeeee', 'https://x.example/e')->>'error' = 'nostudent', 'only for someone in a group');
+  PERFORM pg_temp.ok(group_feed.quest_link_set(G, 'client-aaaaaaaaaaaa', 'javascript:alert(1)')->>'error' = 'bad', 'only an https address');
+  PERFORM pg_temp.ok((group_feed.quest_link_set(G, 'client-aaaaaaaaaaaa', ' https://x.example/magic/a ')->>'ok')::boolean, 'the guide sets one');
+  PERFORM pg_temp.ok(group_feed.quest_weeks(A)->>'practice_url' = 'https://x.example/magic/a', 'the student reads their own');
+  PERFORM pg_temp.ok(group_feed.quest_weeks(C)->>'practice_url' IS NULL, 'another student does not');
+  PERFORM pg_temp.ok(group_feed.quest_weeks(G)->>'practice_url' IS NULL, 'the guide''s own list carries none');
+  r := group_feed.quest_links(G, 'SQ01');
+  PERFORM pg_temp.ok(jsonb_array_length(r->'students') = 1 AND r->'students'->0->>'url' = 'https://x.example/magic/a', 'the guide''s list for one group');
+  PERFORM pg_temp.ok(jsonb_array_length(group_feed.quest_links(G)->'students') = 2, 'or every group');
+  PERFORM group_feed.quest_link_set(G, 'client-aaaaaaaaaaaa', '');
+  PERFORM pg_temp.ok(group_feed.quest_weeks(A)->>'practice_url' IS NULL, 'an empty address takes it away');
 END $$;

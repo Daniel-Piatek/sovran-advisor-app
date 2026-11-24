@@ -84,3 +84,14 @@ test('offline, a transcript reads as empty rather than failing', async () => {
   cloud.down = true;
   assert.deepEqual((await readTranscript(db, 1)).lines, []);
 });
+
+test('a student’s own practice link, when Daniel added one, opens instead of the week’s (2026-11-24)', async () => {
+  const { db } = setup();
+  const weeks = await cloudWeeks(db, async () => ({ weeks: SHELF, practice_url: 'https://live.xperiencify.io/m/abc123' }));
+  assert.deepEqual(weeks.map((w) => w.practice_url), ['https://live.xperiencify.io/m/abc123', 'https://live.xperiencify.io/m/abc123']);
+  assert.equal((await questPage(db)).weeks[0].practice_url, 'https://live.xperiencify.io/m/abc123'); // kept for offline too
+  // With none (or anything that isn't an https address), the week's own link stays.
+  const { db: db2 } = setup();
+  assert.equal((await cloudWeeks(db2, async () => ({ weeks: SHELF, practice_url: 'javascript:alert(1)' })))[0].practice_url, 'https://practice.example.com/sq01');
+  assert.equal((await cloudWeeks(db2, async () => ({ weeks: SHELF })))[0].practice_url, 'https://practice.example.com/sq01');
+});

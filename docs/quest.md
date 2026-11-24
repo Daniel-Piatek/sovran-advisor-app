@@ -10,7 +10,7 @@ The Sovran Quest page shows your Quest group's weeks, newest first: the daily pr
 ## How you use it
 
 - Open **Quest** in the sidebar, in its own part at the bottom with Group Circle. It shows while you are in a Quest group. The weeks are on the left; press one to open it.
-- **Daily practice**: **Open today's practice** opens your practice on Xperiencify in your browser, where your reminders and points are kept.
+- **Daily practice**: **Open today's practice** opens your practice on Xperiencify in your browser, where your reminders and points are kept. It uses your own link, the one Daniel added for you, on your computer and on go Sovran.
 - **This week's homework**: each piece has one bar.
   - **Start in my journal** makes a journal entry for today named *Sovran Quest · Week 2 · Homework 1*, with the homework at the top. Write under it.
   - **Start with Sovran Advisor** opens a new chat with the same name and the homework written in, ready to send.

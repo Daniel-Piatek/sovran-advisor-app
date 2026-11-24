@@ -16,6 +16,16 @@ CREATE TABLE IF NOT EXISTS group_feed.quest_weeks (
 );
 ALTER TABLE group_feed.quest_weeks ENABLE ROW LEVEL SECURITY; -- no policies: only the function's owner role gets in
 
+-- Each student's own daily practice link (2026-11-24, the owner's wish: "each client will have their own unique magic link"
+-- on Xperiencify). Daniel pastes it once in APP Daniel's Quest weeks; it goes to that student only (quest_weeks above),
+-- whose Open today's practice opens it on the computer and on the phone. With none, the week's own link is used.
+CREATE TABLE IF NOT EXISTS group_feed.quest_links (
+  student_id text PRIMARY KEY,                               -- library.students.id
+  url        text NOT NULL CHECK (url ~ '^https://[^[:space:]]+$' AND length(url) <= 2000),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE group_feed.quest_links ENABLE ROW LEVEL SECURITY; -- no policies: only the function's owner role gets in
+
 -- Daniel publishes (or publishes again) one week to one group. → { ok, first } (first: it was not there before)
 CREATE OR REPLACE FUNCTION group_feed.quest_publish(p_key_hash text, p_group text, p_number integer, p_week jsonb) RETURNS jsonb
 LANGUAGE plpgsql AS $$
@@ -41,7 +51,9 @@ BEGIN
   grp := CASE WHEN (w->>'guide')::boolean THEN nullif(p_group, '') ELSE w->>'group' END;
   RETURN jsonb_build_object('weeks', coalesce((SELECT jsonb_agg((q.week - 'transcript') || jsonb_build_object('group', q.group_code, 'number', q.number,
       'has_transcript', coalesce(q.week->>'transcript', '') <> '', 'published_at', q.published_at, 'updated_at', q.updated_at) ORDER BY q.number DESC, q.group_code)
-    FROM group_feed.quest_weeks q WHERE grp IS NULL OR q.group_code = grp), '[]'::jsonb));
+    FROM group_feed.quest_weeks q WHERE grp IS NULL OR q.group_code = grp), '[]'::jsonb),
+    -- A student's own daily practice link (quest_links), or null: their Open today's practice opens it.
+    'practice_url', CASE WHEN (w->>'guide')::boolean THEN NULL ELSE (SELECT l.url FROM group_feed.quest_links l WHERE l.student_id = w->>'student') END);
 END $$;
 
 -- One week's transcript, only when it is read or searched (the app keeps no copy of it). → { transcript }
@@ -55,6 +67,34 @@ BEGIN
   SELECT q.week->>'transcript' INTO t FROM group_feed.quest_weeks q WHERE q.group_code = grp AND q.number = p_number;
   IF NOT FOUND THEN RETURN jsonb_build_object('error', 'gone'); END IF;
   RETURN jsonb_build_object('transcript', coalesce(t, ''));
+END $$;
+
+-- The guide: each student of a group (or of every group) with their own practice link, if any.
+-- → { students: [ { student_id, name, group, url } ] }
+CREATE OR REPLACE FUNCTION group_feed.quest_links(p_key_hash text, p_group text DEFAULT NULL) RETURNS jsonb
+LANGUAGE plpgsql STABLE AS $$
+BEGIN
+  IF NOT group_feed.is_guide(p_key_hash) THEN RETURN jsonb_build_object('error', 'guideonly'); END IF;
+  RETURN jsonb_build_object('students', coalesce((SELECT jsonb_agg(jsonb_build_object('student_id', m.student_id, 'name', m.name,
+      'group', m.group_code, 'url', l.url) ORDER BY m.group_code, m.joined_at)
+    FROM group_feed.members m LEFT JOIN group_feed.quest_links l ON l.student_id = m.student_id
+    WHERE nullif(p_group, '') IS NULL OR m.group_code = p_group), '[]'::jsonb));
+END $$;
+
+-- The guide sets (or, with no address, takes away) one student's own practice link. → { ok }
+CREATE OR REPLACE FUNCTION group_feed.quest_link_set(p_key_hash text, p_student text, p_url text) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NOT group_feed.is_guide(p_key_hash) THEN RETURN jsonb_build_object('error', 'guideonly'); END IF;
+  IF NOT EXISTS (SELECT 1 FROM group_feed.members WHERE student_id = p_student) THEN RETURN jsonb_build_object('error', 'nostudent'); END IF;
+  IF nullif(btrim(p_url), '') IS NULL THEN
+    DELETE FROM group_feed.quest_links WHERE student_id = p_student;
+  ELSE
+    INSERT INTO group_feed.quest_links (student_id, url) VALUES (p_student, btrim(p_url))
+      ON CONFLICT (student_id) DO UPDATE SET url = excluded.url, updated_at = now();
+  END IF;
+  RETURN jsonb_build_object('ok', true);
+EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
 END $$;
 
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA group_feed FROM PUBLIC;

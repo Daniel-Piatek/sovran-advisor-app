@@ -51,12 +51,15 @@ export async function cloudWeeks(db, ask, { everyMs = 60_000 } = {}) {
   try { kept = row ? JSON.parse(row.value) : null; } catch { kept = null; }
   if (Array.isArray(kept) && Date.now() - Date.parse(row.updated_at) < everyMs) return kept;
   let weeks;
-  try { weeks = (await ask(db)).weeks; } catch (err) {
+  let own = ''; // the student's own daily practice link, which Daniel added for them alone (2026-11-24)
+  try { ({ weeks, practice_url: own = '' } = await ask(db)); } catch (err) {
     if (err.status === 401 || err.code === 'nolibrary') weeks = [];
     else return Array.isArray(kept) ? kept : [];
   }
   // Never a transcript here: it stays in the cloud and is asked for when read or searched.
-  weeks = Array.isArray(weeks) ? weeks.filter((w) => w && typeof w === 'object').map(({ transcript, ...w }) => ({ ...w, has_transcript: Boolean(w.has_transcript || transcript) })) : [];
+  // Their own practice link, when Daniel added one, stands in for the week's: Open today's practice opens it.
+  weeks = Array.isArray(weeks) ? weeks.filter((w) => w && typeof w === 'object').map(({ transcript, ...w }) => ({
+    ...w, has_transcript: Boolean(w.has_transcript || transcript), ...(typeof own === 'string' && /^https:\/\//.test(own) ? { practice_url: own } : {}) })) : [];
   const time = now();
   db.prepare(`INSERT INTO settings (id, created_at, updated_at, key, value) VALUES (?, ?, ?, ?, ?)
     ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at, deleted_at = NULL`)
