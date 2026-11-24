@@ -9,7 +9,7 @@ import { prepareDatabase } from '../../db.js';
 import { moduleOn } from '../../modules.js';
 import { setLibraryKey, libraryKey } from '../../sovran-library.js';
 import { useGroup } from '../../group-feed.js';
-import { tellDaniel, listTells, markTell, appVersion, noteNewTells, replyOnTell, myTells, seenTell, askClaude } from '../../tell-daniel.js';
+import { tellDaniel, listTells, markTell, appVersion, noteNewTells, replyOnTell, myTells, unreadTells, seenTell, askClaude } from '../../tell-daniel.js';
 import { fakeGroupCloud } from '../fake-group-cloud.js';
 
 const KEY = 'sovran_madeupmadeupmadeupmadeup';
@@ -106,9 +106,11 @@ test('Daniel replies, the student reads it and answers; Daniel asks Claude', asy
   } finally { useGroup({ keyOf: libraryKey, guideApp: false }); }
   let mine = (await myTells(db)).reports;
   assert.equal(mine[0].messages[0].from_daniel, true);
+  assert.deepEqual(await unreadTells(db), { unread: 1 }, 'the red number on Help');
   assert.equal(mine[0].ask_claude, undefined, 'the student never gets Daniel’s question to Claude');
   await seenTell(db, id);
   assert.ok(cloud.state.tells[0].messages[0].read_at);
+  assert.deepEqual(await unreadTells(db), { unread: 0 });
   await markTell(prepareDatabase(new DatabaseSync(':memory:')), id, { status: 'done' }).catch(() => {}); // (a student cannot)
   await replyOnTell(db, id, { body: 'It works now, thank you!' });
   mine = (await myTells(db)).reports;
@@ -119,5 +121,9 @@ test('Daniel replies, the student reads it and answers; Daniel asks Claude', asy
 test('before the cloud has replies, it says so plainly', async () => {
   const { db } = setup();
   useGroup({ fetch: async () => new Response(JSON.stringify({ error: 'Unknown action: tell_mine' }), { status: 400 }) });
-  await assert.rejects(myTells(db), (err) => err.code === 'notyet' && /aren’t switched on in the Sovran cloud yet/.test(err.message));
+  const mine = await myTells(db); // an empty list with the reason, not an error
+  assert.deepEqual(mine.reports, []);
+  assert.match(mine.note, /aren’t switched on in the Sovran cloud yet/);
+  await assert.rejects(replyOnTell(db, 1, { body: 'hi' }), (err) => err.code === 'notyet');
+  assert.deepEqual(await unreadTells(db), { unread: 0 }, 'the sidebar asks quietly');
 });

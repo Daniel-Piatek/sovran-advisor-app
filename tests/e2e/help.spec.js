@@ -11,8 +11,11 @@ test('switched off: no "?" after a title', async ({ page, app }) => {
   await page.goto(`${app.url}/`);
   await expect(page.getByRole('heading', { name: 'Notes', level: 1 })).toBeVisible();
   await expect(page.locator('.help-button')).toHaveCount(0);
+  // Help itself stays, with Tell Daniel and what you told him (2026-11-24); only the help pages go.
   await page.goto(`${app.url}/help`);
-  await expect(page.getByText('Help pages are switched off.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tell Daniel', level: 2 })).toBeVisible();
+  await expect(page.getByText('Tell Daniel needs your Sovran Library key', { exact: false }).or(page.getByText('This needs your Sovran Library key'))).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Help pages' })).toHaveCount(0);
 });
 
 test('switch it on: the "?" opens the page beside it, How it works folded, Esc closes it', async ({ page, app }) => {

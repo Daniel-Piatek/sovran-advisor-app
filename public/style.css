@@ -5223,3 +5223,8 @@ mark[data-highlight] { border-radius: 2px; padding: 0 1px; }
 .student-kind-question { color: var(--kind-time); }
 .student-kind-other { color: var(--color-text); }
 .help-told { margin-top: 0; }
+/* Help (2026-11-24): Tell Daniel and what you told him, then the help pages */
+.help-part { max-width: var(--page-width); margin-bottom: var(--space-8); }
+.help-part-title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.help-told-title { margin: var(--space-5) 0 var(--space-1); font-size: var(--text-base); font-family: var(--font-ui); }
+.help-daniel .told-daniel-intro .tell-daniel { margin-left: var(--space-2); }

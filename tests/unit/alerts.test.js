@@ -101,9 +101,9 @@ test('Daniel replied: an alert that opens the report, and a line in the Inbox', 
     messages: [{ id: 1, from_daniel: true, body: 'It is the part of you that keeps you safe.', created_at: justNow() }] });
   await tick();
   const { items } = await takeAlerts(db, { addToInbox: (t) => inbox.push(t) });
-  assert.deepEqual(items.map((a) => [a.title, a.body, a.path, a.action]), [['Daniel replied', 'It is the part of you that keeps you safe.', '/told-daniel#report-9', 'Read and answer']]);
+  assert.deepEqual(items.map((a) => [a.title, a.body, a.path, a.action]), [['Daniel replied', 'It is the part of you that keeps you safe.', '/help#report-9', 'Read and answer']]);
   assert.equal(inbox.length, 1);
-  assert.match(inbox[0], /Daniel replied to what you told him: “It is the part of you that keeps you safe\.” .*What you told Daniel/);
+  assert.match(inbox[0], /Daniel replied to what you told him: “It is the part of you that keeps you safe\.” .*on Help, in your sidebar/);
   setAlertSwitch(db, { id: 'answer', on: false });
   cloud.state.tells[0].messages.push({ id: 2, from_daniel: true, body: 'And one more thing.', created_at: justNow() });
   await tick();

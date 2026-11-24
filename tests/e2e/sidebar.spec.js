@@ -8,7 +8,7 @@ test('the sidebar shows Capture and every section, and marks where you are', asy
   // On a phone, Timeline, People, My Life, Assistant, Tour and Settings wait under More. The Library is in Settings (2026-11-24).
   await expect(sections(page).getByRole('link')).toHaveText(isMobile
     ? ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Inbox']
-    : ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings']);
+    : ['Notes', 'Journal', 'Tasks', 'Planner', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Help', 'Group Circle', 'Tour', 'Settings']);
   await expect(sections(page).getByRole('button', { name: 'More' })).toHaveCount(isMobile ? 1 : 0);
   await expect(sections(page).getByRole('button', { name: /Capture/ })).toBeVisible();
   await expect(sections(page).getByRole('link', { name: 'Notes' })).toHaveAttribute('aria-current', 'page');
@@ -64,7 +64,7 @@ test('on a phone, More opens People, My Life, Reports, Assistant and Settings, a
   await page.goto(app.url);
   await sections(page).getByRole('button', { name: 'More' }).click();
   const menu = page.getByRole('menu', { name: 'More' });
-  await expect(menu.getByRole('menuitem')).toHaveText(['Timeline', 'People', 'My Life', 'Reports', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings']);
+  await expect(menu.getByRole('menuitem')).toHaveText(['Timeline', 'People', 'My Life', 'Reports', 'Mail', 'Sovran Advisor', 'Group Circle', 'Help', 'Tour', 'Settings']);
   await menu.getByRole('menuitem', { name: 'My Life' }).click();
   await expect(page).toHaveURL(`${app.url}/life`);
   await expect(menu).toBeHidden();
@@ -90,16 +90,16 @@ test('Tour and Settings sit at the foot of the column, and the others can be dra
 
   // Drag Tasks below Calendar.
   await sections(page).getByRole('link', { name: 'Tasks' }).dragTo(sections(page).getByRole('link', { name: 'Calendar' }), { targetPosition: { x: 20, y: 30 } });
-  await expect.poll(names).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings']);
+  await expect.poll(names).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Help', 'Group Circle', 'Tour', 'Settings']);
   // The order is kept.
   await page.reload();
-  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings']);
+  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Calendar', 'Tasks', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Help', 'Group Circle', 'Tour', 'Settings']);
 
   // Alt+Up moves a section up with the keyboard; it can't go past Tour.
   const tasks = sections(page).getByRole('link', { name: 'Tasks' });
   await tasks.focus();
   await page.keyboard.press('Alt+ArrowUp');
-  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Tasks', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Group Circle', 'Tour', 'Settings']);
+  expect(await names()).toEqual(['Notes', 'Journal', 'Planner', 'Tasks', 'Calendar', 'Timeline', 'People', 'My Life', 'Reports', 'Inbox', 'Mail', 'Sovran Advisor', 'Help', 'Group Circle', 'Tour', 'Settings']);
   const last = sections(page).getByRole('link', { name: 'Group Circle' });
   await last.focus();
   await page.keyboard.press('Alt+ArrowDown');

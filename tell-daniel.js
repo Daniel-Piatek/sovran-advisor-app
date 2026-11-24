@@ -100,9 +100,22 @@ const reportId = (id) => {
 // A reply on a report: Daniel's (with the guide key) on any one, the student's on their own.
 export const replyOnTell = async (db, id, input) => ask(db, { action: 'tell_reply', id: reportId(id), body: cleanBody(input?.body) });
 // The student's own reports, newest first, each with its conversation: { reports: [...] }.
+// No key yet, or a cloud without replies yet, is not an error here: the list is empty, with a note saying why.
 export async function myTells(db) {
-  const answer = await ask(db, { action: 'tell_mine' });
+  let answer;
+  try { answer = await ask(db, { action: 'tell_mine' }); } catch (err) {
+    if (err.code === 'nolibrary' || err.code === 'notyet') return { reports: [], note: err.message };
+    throw err;
+  }
   return { reports: Array.isArray(answer.reports) ? answer.reports : [] };
+}
+// How many of Daniel's replies are still unread, for the red number on Help. Never fails: no key, a cloud without replies
+// yet, or no internet all count as none, so the sidebar asks quietly.
+export async function unreadTells(db) {
+  try {
+    const { reports } = await myTells(db);
+    return { unread: reports.reduce((n, r) => n + (Array.isArray(r.messages) ? r.messages : []).filter((m) => m.from_daniel && !m.read_at).length, 0) };
+  } catch { return { unread: 0 }; }
 }
 // The student opened Daniel's replies on one.
 export const seenTell = async (db, id) => ask(db, { action: 'tell_seen', id: reportId(id) });

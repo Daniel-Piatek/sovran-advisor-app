@@ -22,7 +22,7 @@
 //   /welcome            the first screen of a new install  (public/welcome.js)
 //   /reports, /reports/:report   your own Sovran reports, every one or one to read  (public/reports.js, module reports)
 //   /group, /group/announcements, /group/circle   Group Circle: your Quest group's space  (public/group.js, module group)
-//   /help, /help/:id    the help pages (module help), every one or one  (public/help.js)
+//   /help, /help/:id    Help: Tell Daniel and his replies, then the help pages (modules tell, help), or one page  (public/help.js)
 //   /library            the design library: every token and piece, with its live value  (public/library.js)
 // The frame around every screen (sidebar, bottom bar, moving between screens) is in
 // public/shell.js; small shared pieces are in public/ui.js.
@@ -51,7 +51,7 @@ import { showTour } from './tour.js';
 import { showReports } from './reports.js';
 import { showGroup } from './group.js';
 import { showQuest } from './quest.js';
-import { showToldDaniel } from './told-daniel.js'; // What you told Daniel, with his replies (2026-11-24)
+import { showToldDaniel } from './told-daniel.js'; // the first address of What you told Daniel, now on Help (2026-11-24)
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './page-video.js'; // "How <the page> works" at the right of a page's top bar: its film in the Tour
 import './quick-add.js'; // q adds a task from anywhere

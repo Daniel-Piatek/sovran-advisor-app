@@ -106,7 +106,7 @@ import { listReports, readReport, reportFile, useReports, reportsOn } from './re
 import * as group from './group-feed.js';
 import { useQuest, questOn, questPage, startWork, setDone, readTranscript, cloudWeeks } from './quest.js';
 import { takeAlerts, alertSwitches, setAlertSwitch } from './alerts.js';
-import { tellDaniel, listTells, markTell, tellOn, appVersion, replyOnTell, myTells, seenTell, askClaude } from './tell-daniel.js';
+import { tellDaniel, listTells, markTell, tellOn, appVersion, replyOnTell, myTells, unreadTells, seenTell, askClaude } from './tell-daniel.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
@@ -1770,6 +1770,7 @@ export function startServer({
     //   PATCH /api/tell/:id       { status, note? }: the guide marks one
     //   Replies and Ask Claude (2026-11-24):
     //   GET   /api/tell/mine           the student's own reports, each with its conversation → { reports }
+    //   GET   /api/tell/unread         how many of Daniel's replies are unread → { unread } (0 when it can't be asked)
     //   POST  /api/tell/:id/reply      { body }: Daniel's reply (APP Daniel), or the student's answer on their own report
     //   POST  /api/tell/:id/seen       the student opened Daniel's replies on it
     //   POST  /api/tell/:id/ask        { question }: Daniel asks his Claude about it (APP Daniel)
@@ -1780,6 +1781,7 @@ export function startServer({
         if (url.pathname === '/api/tell' && req.method === 'POST') return sendJson(res, 201, await tellDaniel(db, await readJson(req)));
         if (url.pathname === '/api/tell' && req.method === 'GET') return sendJson(res, 200, await listTells(db, { status: url.searchParams.get('status'), before: url.searchParams.get('before') }));
         if (url.pathname === '/api/tell/mine' && req.method === 'GET') return sendJson(res, 200, await myTells(db));
+        if (url.pathname === '/api/tell/unread' && req.method === 'GET') return sendJson(res, 200, await unreadTells(db));
         const sub = url.pathname.match(/^\/api\/tell\/(\d+)\/(reply|seen|ask)$/);
         if (sub && req.method === 'POST') {
           const input = sub[2] === 'seen' ? {} : await readJson(req);

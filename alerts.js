@@ -93,7 +93,7 @@ export function alertWords(item, { today, tomorrow }) {
       return { title: item.due_on === today ? 'Homework due today' : 'Homework due tomorrow', body: short(item.text), path: at };
     }
     case 'answer': {
-      const path = item.report ? `/told-daniel#report-${item.report}` : '/told-daniel';
+      const path = item.report ? `/help#report-${item.report}` : '/help';
       if (item.reply) return { title: 'Daniel replied', body: short(item.text), path, action: 'Read and answer' };
       return { title: 'Daniel has dealt with what you told him', body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path };
     }
@@ -126,7 +126,7 @@ export async function takeAlerts(db, { now = new Date(), addToInbox = null } = {
   const items = [];
   for (const item of Array.isArray(answer?.items) ? answer.items : []) {
     if (!first && addToInbox && !isGuideApp() && item.kind === 'answer' && item.reply) {
-      try { addToInbox(`Daniel replied to what you told him: “${short(item.text, 300)}” Read it and answer in Help › What you told Daniel.`); } catch { /* the alert still shows */ }
+      try { addToInbox(`Daniel replied to what you told him: “${short(item.text, 300)}” Read it and answer on Help, in your sidebar.`); } catch { /* the alert still shows */ }
     }
     if (!on[item.kind] || (first && item.kind !== 'due')) continue;
     if (item.kind === 'due') {

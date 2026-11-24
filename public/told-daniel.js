@@ -2,49 +2,47 @@
 // with Tell Daniel, newest first, with Daniel's replies under it and a box to answer him. Daniel's reply also comes as an
 // alert ("Daniel replied") and a line in your Inbox. Opening one marks his reply read. Nothing is kept on this computer:
 // it comes from the Sovran cloud with your library key (tell-daniel.js myTells, replyOnTell, seenTell).
-//   /told-daniel              every report
-//   /told-daniel#report-12    that one, in view, its answer box ready (from the alert)
+// It sits at the top of Help, the sidebar line (the owner's pick, 2026-11-24: always there, whatever the Quest is doing),
+// with a red number on Help while one of Daniel's replies is unread (public/shell.js refreshHelpCount):
+//   /help              Tell Daniel and every report, then the help pages (public/help.js)
+//   /help#report-12    that one, in view, its answer box ready (from the alert and the Inbox line)
+//   /told-daniel       the first address; leads to /help
 
-import { el, icon, request, timeAgo } from './ui.js';
-import { app, screen } from './shell.js';
-import { moduleOn } from './modules.js';
+import { el, request, timeAgo } from './ui.js';
+import { navigate, refreshHelpCount } from './shell.js';
 
 const KINDS = { broken: 'Something isn’t working', off: 'Something seems off here', question: 'A question', other: 'Other' };
 const PLACES = { assistant: 'a Sovran Advisor answer', note: 'a note', journal: 'a journal entry', report: 'a report', group: 'Group Circle', app: 'the app' };
 const STATUS = { new: 'Sent', digging: 'Daniel is looking into it', done: 'Dealt with' };
 
-export async function showToldDaniel() {
-  app.className = 'page';
-  const top = el('header', { class: 'top-bar' }, el('a', { class: 'back-link', href: '/help' }, icon('back'), ' Help'));
-  if (!moduleOn('tell')) {
-    screen.replaceChildren(top, el('h1', { class: 'help-page-title' }, 'What you told Daniel'),
-      el('p', { class: 'empty' }, 'Tell Daniel is switched off. Switch it on in Settings › Modules.'));
-    return;
-  }
-  const box = el('div', { class: 'told-daniel' }, el('p', { class: 'empty' }, 'Opening…'));
-  screen.replaceChildren(top, el('h1', { class: 'help-page-title' }, 'What you told Daniel'),
-    el('p', { class: 'told-daniel-intro' }, 'Everything you sent with Tell Daniel, with Daniel’s replies. You can answer him under each one.'), box);
+// Help's Tell Daniel part (public/help.js): draws into its box.
+export async function drawToldDaniel(box) {
+  box.replaceChildren(el('p', { class: 'empty' }, 'Opening…'));
   await draw(box);
 }
 
+export const showToldDaniel = () => navigate(`/help${location.hash}`, { replace: true });
+
 async function draw(box) {
   const again = () => draw(box);
-  let reports;
-  try { ({ reports } = await request('GET', '/api/tell/mine')); } catch (err) {
+  let reports, note;
+  try { ({ reports, note } = await request('GET', '/api/tell/mine')); } catch (err) {
     box.replaceChildren(el('div', { class: 'group-empty' }, el('p', {}, err.message), el('button', { type: 'button', class: 'button', onclick: again }, 'Try again')));
     return;
   }
   if (!reports.length) {
-    box.replaceChildren(el('p', { class: 'empty' }, 'Nothing yet. When you press Tell Daniel somewhere in the app, it shows here, with his reply when it comes.'));
+    box.replaceChildren(el('p', { class: 'empty' }, note || 'Nothing yet. When you press Tell Daniel somewhere in the app, it shows here, with his reply when it comes.'));
     return;
   }
   box.replaceChildren(...reports.map((r) => card(r, again)));
   const wanted = location.hash.match(/^#report-(\d+)$/)?.[1];
   const found = wanted ? box.querySelector(`[data-report="${wanted}"]`) : null;
   if (found) { found.scrollIntoView({ block: 'start' }); found.querySelector('.tell-reply-box')?.focus({ preventScroll: true }); }
+  const seen = [];
   for (const r of reports) {
-    if ((r.messages ?? []).some((m) => m.from_daniel && !m.read_at)) request('POST', `/api/tell/${r.id}/seen`).catch(() => {});
+    if ((r.messages ?? []).some((m) => m.from_daniel && !m.read_at)) seen.push(request('POST', `/api/tell/${r.id}/seen`).catch(() => {}));
   }
+  if (seen.length) Promise.all(seen).then(refreshHelpCount); // the red number on Help goes
 }
 
 function card(r, again) {
