@@ -1,5 +1,5 @@
 // The Inbox (/inbox), built like a list and its page (2026-10-27, after the owner's
-// reference): the captures that wait, oldest first, in a panel on the left (+ Capture is the
+// reference): the captures that wait, newest first, in a panel on the left (+ Capture is the
 // screen's one accent); the one being sorted in a panel on the right: a top bar (its Home,
 // an arrow that opens it, when it was captured; Add file, Edit, Delete), the words large,
 // Sovran Advisor's suggestion as one bar with Accept, and the line "Or make it" under it. On a
@@ -39,7 +39,6 @@ const capturedLong = (iso) => `Captured ${dayName(iso)}, ${clockTime(iso)}`;
 // The decisions, in the order of the buttons (the reference's "Or make it" line): the three
 // things it can become, then Done and Delete at the right end. `later` ones show but
 // can't be chosen yet.
-const INNER_NEWEST_FIRST = false;
 
 // The World tag: a circle for the Inner World, a square for the Outer, and the word where there is room.
 export function worldTag(world, { word = false } = {}) {
@@ -139,13 +138,14 @@ export async function showInbox() {
     await draw();
   }
 
-  // Tasks in depth 7: two piles, Inner World above Outer World. Each pile is oldest first, as the Inbox always was.
-  // (The lesson has the Inner pile newest first, for speed; that changes the order you chose, so it waits for your word:
-  // set INNER_NEWEST_FIRST to true.) With the module off it is one list, oldest first, as before.
+  // Newest at the top (2026-11-24, the owner's wish: "always have the most recent at the top of each of the lists: inner,
+  // outer, and all"). Tasks in depth 7: two piles, Inner World above Outer World, each newest first. With the module off
+  // it is one list, newest first. (The server sends them oldest first; reversed here, so captures of the same second
+  // keep their order.)
   function inTwoPiles(all) {
-    if (!moduleOn('tasks-plus')) return all;
-    const inner = all.filter((c) => c.world === 'inner');
-    return [...(INNER_NEWEST_FIRST ? inner.reverse() : inner), ...all.filter((c) => c.world === 'outer')];
+    const newest = [...all].reverse();
+    if (!moduleOn('tasks-plus')) return newest;
+    return [...newest.filter((c) => c.world === 'inner'), ...newest.filter((c) => c.world === 'outer')];
   }
 
   // The list, with a heading above each pile when both are there (and not narrowed to one world).

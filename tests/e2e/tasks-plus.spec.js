@@ -407,7 +407,7 @@ test('with Tasks in depth off the part and the address go; the captures stay', a
 const makeCapture = (app, body, world) => fetch(`${app.url}/api/captures`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body, world }) }).then((r) => r.json());
 const items = (page) => page.locator('.inbox-list .inbox-item');
 
-test('the Inbox keeps two piles, Inner World above Outer World, each oldest first and each with its tag', async ({ page, app }) => {
+test('the Inbox keeps two piles, Inner World above Outer World, each newest first and each with its tag', async ({ page, app }) => {
   await makeCapture(app, 'inner one', 'inner');
   await makeCapture(app, 'newsletter: pricing ideas', 'outer');
   await makeCapture(app, 'inner two', 'inner');
@@ -415,7 +415,7 @@ test('the Inbox keeps two piles, Inner World above Outer World, each oldest firs
   await makeCapture(app, 'inner three', 'inner');
   await page.goto(`${app.url}/inbox`);
   await expect(page.locator('.inbox-pile')).toHaveText([/Inner World · 3/, /Outer World · 2/]);
-  await expect(items(page).locator('.inbox-item-line')).toHaveText(['inner one', 'inner two', 'inner three', 'newsletter: pricing ideas', 'link from Lena']);
+  await expect(items(page).locator('.inbox-item-line')).toHaveText(['inner three', 'inner two', 'inner one', 'link from Lena', 'newsletter: pricing ideas']);
   await expect(page.locator('.inbox-pile[data-world="inner"] svg')).toHaveCount(1); // the circle
   await expect(page.locator('.inbox-pile[data-world="outer"] svg')).toHaveCount(1); // the square
   await expect(items(page).first().locator('.world-tag')).toHaveAttribute('data-world', 'inner');
@@ -427,20 +427,20 @@ test('w switches the world of a capture, and it moves to the other pile in its p
   await makeCapture(app, 'second', 'inner');
   await makeCapture(app, 'third outer', 'outer');
   await page.goto(`${app.url}/inbox`);
-  await expect(items(page).locator('.inbox-item-line')).toHaveText(['second', 'first outer', 'third outer']);
+  await expect(items(page).locator('.inbox-item-line')).toHaveText(['second', 'third outer', 'first outer']);
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await items(page).filter({ hasText: 'third outer' }).click();
   await page.keyboard.press('w'); // to the Inner World, in its place by time
-  await expect(items(page).locator('.inbox-item-line')).toHaveText(['second', 'third outer', 'first outer']);
+  await expect(items(page).locator('.inbox-item-line')).toHaveText(['third outer', 'second', 'first outer']);
   await expect(page.locator('.inbox-pile')).toHaveText([/Inner World · 2/, /Outer World · 1/]);
   await expect(page.getByRole('group', { name: 'World of this capture' }).getByRole('button', { name: 'Inner' })).toHaveAttribute('aria-pressed', 'true');
-  await page.keyboard.press('w'); // and back: oldest-first in the Outer pile
-  await expect(items(page).locator('.inbox-item-line')).toHaveText(['second', 'first outer', 'third outer']);
+  await page.keyboard.press('w'); // and back: newest first in the Outer pile
+  await expect(items(page).locator('.inbox-item-line')).toHaveText(['second', 'third outer', 'first outer']);
   const worlds = (await fetch(`${app.url}/api/captures`).then((r) => r.json())).map((c) => [c.body, c.world]);
   expect(worlds).toEqual([['first outer', 'outer'], ['second', 'inner'], ['third outer', 'outer']]);
 });
 
-test('with Tasks in depth off the Inbox is one list again, oldest first, and every capture is there', async ({ page, app }) => {
+test('with Tasks in depth off the Inbox is one list again, newest first, and every capture is there', async ({ page, app }) => {
   await makeCapture(app, 'one', 'inner');
   await makeCapture(app, 'two', 'outer');
   await makeCapture(app, 'three', 'inner');
@@ -449,7 +449,7 @@ test('with Tasks in depth off the Inbox is one list again, oldest first, and eve
   await module.getByRole('button', { name: 'Off', exact: true }).click();
   await expect(module.getByRole('button', { name: 'Off', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.goto(`${app.url}/inbox`);
-  await expect(items(page).locator('.inbox-item-line')).toHaveText(['one', 'two', 'three']);
+  await expect(items(page).locator('.inbox-item-line')).toHaveText(['three', 'two', 'one']);
   await expect(page.locator('.inbox-pile')).toHaveCount(0);
 });
 

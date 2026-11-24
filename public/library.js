@@ -65,10 +65,15 @@ const sizes = [
 export function showLibrary() {
   document.title = 'Library';
   app.className = 'page';
-  live.length = 0;
 
-  screen.replaceChildren(
-    el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Library')),
+  screen.replaceChildren(el('header', { class: 'top-bar' }, el('h1', { class: 'top-bar-title' }, 'Library')), ...libraryContent());
+}
+
+// What the Library shows: on its own page (/library), and inside Settings, in its own fold (2026-11-24, the owner's wish:
+// the Library left the sidebar for Settings). Drawn afresh each time.
+export function libraryContent() {
+  live.length = 0;
+  const content = [
     el('p', { class: 'empty' }, 'How everything in the app looks, in one place: public/tokens.css. Change a token there and every screen follows. Switch Light / Dark at the bottom to see both sets.'),
 
     el('h2', { class: 'lib-group' }, 'Tokens'),
@@ -373,12 +378,13 @@ export function showLibrary() {
     part('Citation', 'A page an answer used: its kind’s shape, name and kind. It opens the page.',
       el('div', { class: 'citations' }, el('a', { class: 'citation', href: '/library' }, icon('notes'), el('span', { class: 'citation-title' }, 'Onboarding call with Lena'), el('span', { class: 'citation-kind' }, 'note')))),
     part('Empty state', null, el('p', { class: 'empty' }, 'No notes yet.')),
-  );
+  ];
 
   // Light/Dark changes the values: read them again.
   const watch = new MutationObserver(() => {
-    if (!screen.isConnected || !live.length || !live[0][0].isConnected) { watch.disconnect(); return; }
+    if (!live.length || !live[0][0].isConnected) { watch.disconnect(); return; }
     for (const [node, token] of live) node.textContent = value(token);
   });
   watch.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  return content;
 }

@@ -34,11 +34,14 @@ const HINTS = {
   'Always allowed': 'Steps Sovran Advisor no longer asks about.',
   Activity: 'Everything that was switched or done, newest first.',
   'Sovran Advisor and mail': 'What Sovran Advisor may do with your mail.',
+  Library: 'How everything in the app looks: every colour, font and piece.',
 };
 
 const key = (name) => `settings-section:${name}`;
+// The Library is a long page of examples: it opens only when it was itself opened, never with every part at once.
+const OWN_CLICK_ONLY = new Set(['Library']);
 function remembered(name) {
-  try { return localStorage.getItem('settings-sections') === 'open' || localStorage.getItem(key(name)) === 'open'; } catch { return false; }
+  try { return (!OWN_CLICK_ONLY.has(name) && localStorage.getItem('settings-sections') === 'open') || localStorage.getItem(key(name)) === 'open'; } catch { return false; }
 }
 function remember(name, open) {
   try { if (open) localStorage.setItem(key(name), 'open'); else localStorage.removeItem(key(name)); } catch { /* it opens closed next time */ }

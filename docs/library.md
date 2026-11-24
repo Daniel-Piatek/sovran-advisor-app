@@ -2,7 +2,7 @@
 title: Library
 paths: ^/library$
 ---
-The Library is the app's design library: every colour, font, size and piece the screens are built from, on one page.
+The Library is the app's design library: every colour, font, size and piece the screens are built from, on one page. It is the last part of **Settings**: click **Library** to open it.
 
 ## How you use it
 

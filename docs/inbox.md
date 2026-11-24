@@ -7,6 +7,7 @@ The Inbox holds every thought you captured quickly and have not sorted yet. Empt
 ## How you use it
 
 - **Capture** (top of the sidebar, or **⌘K** / **Ctrl+K** anywhere) keeps a thought in seconds without deciding where it goes. It lands here.
+- The newest capture is always at the top: in the Inner World and Outer World piles, and in each one on its own.
 - Open a capture on the left; sort it on the right. Each choice has a key:
   - **J** makes it a journal entry, **N** a note (or adds it to a note), **T** a task.
   - **D** marks it done when it needed nothing, **Backspace** deletes it.

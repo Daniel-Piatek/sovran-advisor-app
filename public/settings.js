@@ -331,6 +331,25 @@ function working(button, label) {
   return () => { button.classList.remove('is-working'); button.textContent = before; };
 }
 
+// The Library (2026-11-24, the owner's wish: "I don't like having it there on the navigation bar"): out of the sidebar and
+// into Settings, the last part, folded like the others. How everything in the app looks: every colour, font and piece. It
+// is drawn when the part opens and taken away when it closes: it is long, and its examples (the accent among them) are only
+// there when you look. /library still opens it on its own page.
+function designLibrarySection() {
+  const body = el('div', { class: 'settings-library' });
+  const part = el('section', { class: 'settings-part', id: 'library', 'aria-label': 'Library' },
+    el('h2', { class: 'settings-title' }, 'Library'), body);
+  const isOpen = () => Boolean(part.dataset.folded) && !part.classList.contains('is-closed');
+  const draw = async () => {
+    if (isOpen() && !body.childElementCount) {
+      const { libraryContent } = await import('./library.js');
+      if (isOpen() && !body.childElementCount) body.replaceChildren(...libraryContent());
+    } else if (!isOpen() && body.childElementCount) body.replaceChildren();
+  };
+  new MutationObserver(draw).observe(part, { attributes: true, attributeFilter: ['class', 'data-folded'] });
+  return part;
+}
+
 // Restart: after an update, or when something asks for it, without the Terminal. The app stops, starts again
 // by itself (a changed database is moved forward with a whole copy kept first), and this page comes back.
 function restartSection() {
@@ -508,6 +527,7 @@ export async function showSettings() {
       el('h2', { class: 'settings-title' }, 'Activity'),
       el('p', { class: 'empty' }, 'Every switch you changed and every step Sovran Advisor took, asked for or was refused, newest first.'),
       logFold),
+    designLibrarySection(),
   );
   onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)
   // Opened from the Tour's Sovran Library line (/settings#sovran-library): straight to the key box, ready to paste.
