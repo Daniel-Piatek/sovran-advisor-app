@@ -1,6 +1,7 @@
 // The note editor: formatting shows as you type, like Heptabase. The text is kept as
 // Markdown, so what is saved stays plain, readable text.
-//   **bold** or Cmd-B      *italic* or Cmd-I
+//   **bold** or Cmd-B      *italic* or Cmd-I      Cmd-U underline      ~~strikethrough~~ or Cmd-Shift-S
+//   select words: a small bar for how they look, with a link, text colour and highlight (public/format-bar.js)
 //   # , ## , ###  at the start of a line: a heading
 //   - or *  at the start of a line: a bullet list      1.  a numbered list
 //   >  a quote          Backspace right after: takes the formatting back
@@ -12,7 +13,7 @@
 import {
   schema as markdownSchema, defaultMarkdownParser, defaultMarkdownSerializer, MarkdownParser, MarkdownSerializer,
 } from '/vendor/prosemirror-markdown/dist/index.js';
-import { Schema, Fragment } from '/vendor/prosemirror-model/dist/index.js';
+import { Schema, Fragment, Slice, DOMSerializer } from '/vendor/prosemirror-model/dist/index.js';
 import { EditorState, Plugin, PluginKey, TextSelection } from '/vendor/prosemirror-state/dist/index.js';
 import { EditorView, Decoration, DecorationSet } from '/vendor/prosemirror-view/dist/index.js';
 import { keymap } from '/vendor/prosemirror-keymap/dist/index.js';
@@ -29,6 +30,8 @@ import { splitListItem, liftListItem, sinkListItem } from '/vendor/prosemirror-s
 import { findWrapping } from '/vendor/prosemirror-transform/dist/index.js';
 import markdownit from '/vendor/markdown-it/index.mjs';
 import { slashMenu } from './slash-menu.js';
+import { formatBar, openPalette } from './format-bar.js';
+import { COLOURS, markdownSpans } from './markdown-spans.js';
 import { linkMenu } from './link-menu.js';
 import { api, icon } from './ui.js';
 import { parseDue, dueLabel } from './due.js';
@@ -139,15 +142,47 @@ export const schema = new Schema({
         },
       }],
     }),
-  marks: markdownSchema.spec.marks,
+  // How words look (2026-11-24, the owner's wish): underline, strikethrough, a text colour and a highlight, beside
+  // Markdown's bold, italic, link and code. Code stays the innermost, so the signs around it are never read as code.
+  marks: markdownSchema.spec.marks
+    .addBefore('code', 'underline', { parseDOM: [{ tag: 'u' }, { style: 'text-decoration=underline' }], toDOM: () => ['u', 0] })
+    .addBefore('code', 'strike', { parseDOM: [{ tag: 's' }, { tag: 'del' }, { tag: 'strike' }], toDOM: () => ['s', 0] })
+    .addBefore('code', 'colour', {
+      attrs: { name: {} },
+      parseDOM: [{ tag: 'span[data-colour]', getAttrs: (dom) => (COLOURS.includes(dom.dataset.colour) ? { name: dom.dataset.colour } : false) }],
+      toDOM: (mark) => ['span', { class: `fc-${mark.attrs.name}`, 'data-colour': mark.attrs.name }, 0],
+    })
+    .addBefore('code', 'highlight', {
+      attrs: { name: {} },
+      parseDOM: [{ tag: 'mark[data-highlight]', getAttrs: (dom) => (COLOURS.includes(dom.dataset.highlight) ? { name: dom.dataset.highlight } : false) }],
+      toDOM: (mark) => ['mark', { class: `hl-${mark.attrs.name}`, 'data-highlight': mark.attrs.name }, 0],
+    }),
 });
+
+// How words look is kept as [words]{.underline}, [words]{.c-red} and [words]{.hl-red} (public/markdown-spans.js).
+export const markdownReader = () => markdownSpans(markdownit('commonmark', { html: false }).enable('strikethrough'));
 
 // A line break inside a paragraph stays a line break (notes typed before the editor
 // were plain text, one thought per line).
-const parser = new MarkdownParser(schema, markdownit('commonmark', { html: false }), {
+const colourAttrs = (token) => ({ name: token.attrGet('name') });
+const parser = new MarkdownParser(schema, markdownReader(), {
   ...defaultMarkdownParser.tokens,
   softbreak: { node: 'hard_break' },
+  s: { mark: 'strike' },
+  underline: { mark: 'underline' },
+  colour: { mark: 'colour', getAttrs: colourAttrs },
+  highlight: { mark: 'highlight', getAttrs: colourAttrs },
 });
+
+// The signs around words for the new marks: ~~strike~~, and [words]{.class} for the rest.
+const span = (classOf) => ({ open: '[', close: (_state, mark) => `]{.${classOf(mark)}}`, expelEnclosingWhitespace: true });
+const markSigns = {
+  ...defaultMarkdownSerializer.marks,
+  strike: { open: '~~', close: '~~', mixable: true, expelEnclosingWhitespace: true },
+  underline: span(() => 'underline'),
+  colour: span((mark) => `c-${mark.attrs.name}`),
+  highlight: span((mark) => `hl-${mark.attrs.name}`),
+};
 
 const serializer = new MarkdownSerializer({
   ...defaultMarkdownSerializer.nodes,
@@ -178,7 +213,7 @@ const serializer = new MarkdownSerializer({
     state.write(`[${state.esc(node.attrs.title || 'Board')}](/boards/${node.attrs.id})`);
     state.closeBlock(node);
   },
-}, defaultMarkdownSerializer.marks);
+}, markSigns);
 
 // Links read from Markdown become what the editor shows: a line that is nothing but a
 // link to a kept file becomes a file card, and a link to a page of the app becomes a
@@ -350,6 +385,7 @@ const baseRules = [
     markRule(/(?:\*\*|__)([^*_\s](?:[^*_]*[^*_\s])?)(?:\*\*|__)$/, schema.marks.strong),
     markRule(/(?<![*\w])\*([^*\s](?:[^*]*[^*\s])?)\*$/, schema.marks.em),
     markRule(/(?<![_\w])_([^_\s](?:[^_]*[^_\s])?)_$/, schema.marks.em),
+    markRule(/~~([^~\s](?:[^~]*[^~\s])?)~~$/, schema.marks.strike),
 ];
 
 const keys = keymap({
@@ -358,6 +394,8 @@ const keys = keymap({
   'Mod-y': redo,
   'Mod-b': toggleMark(schema.marks.strong),
   'Mod-i': toggleMark(schema.marks.em),
+  'Mod-u': toggleMark(schema.marks.underline),
+  'Mod-Shift-s': toggleMark(schema.marks.strike),
   Backspace: chainCommands(undoInputRule, uncheckAtStart),
   Enter: splitItem,
   Tab: sinkListItem(schema.nodes.list_item),
@@ -804,10 +842,12 @@ function fileCardView(node) {
 // every change. With `onSubmit`, Enter (or Cmd-Enter) hands the text over instead of
 // starting a new line, as in the journal's write box; Shift-Enter still breaks the line.
 // With `tasks: false` (My Life's thinking space, which never asks for action), [] stays
-// plain text and the slash menu has no Todo list. Returns the view.
+// plain text and the slash menu has no Todo list. With `compact: true` (a box in a form, such as a piece of homework):
+// how words look, and lists, but no headings, pictures, files or links to the app's pages. Returns the view.
 export function createEditor(place, markdown, {
-  onChange, onSubmit, onFileProblem, label = 'Text', placeholderText = 'Start writing', className = 'note-body', tasks = true, outline = null, comments = null, boards = null,
+  onChange, onSubmit, onFileProblem, label = 'Text', placeholderText = 'Start writing', className = 'note-body', tasks = true, outline = null, comments = null, boards = null, compact = false,
 } = {}) {
+  if (compact) return compactEditor(place, markdown, { onChange, label, placeholderText, className });
   const rules = inputRules({ rules: [...baseRules, ...(tasks ? [taskRule, dueRule] : [])] });
   const submit = onSubmit && keymap({
     Enter: () => { onSubmit(); return true; },
@@ -818,7 +858,7 @@ export function createEditor(place, markdown, {
     // win over the editor's own.
     state: EditorState.create({
       doc: fromMarkdown(markdown),
-      plugins: [slashMenu(schema, { pickFiles, makeTask: tasks ? makeTask : null, makeBoard: boards ? makeBoardCommand(boards) : null }), ...linkMenu(schema), ...(submit ? [submit] : []), ...(outline ? outlinePlugins(outline) : []), ...(comments ? [commentPlugin(comments)] : []), blockRefPlugin(), rules, keys, keymap(baseKeymap), history(), placeholder, filesPlugin(onFileProblem)],
+      plugins: [slashMenu(schema, { pickFiles, makeTask: tasks ? makeTask : null, makeBoard: boards ? makeBoardCommand(boards) : null, openPalette }), ...linkMenu(schema), ...(submit ? [submit] : []), ...(outline ? outlinePlugins(outline) : []), ...(comments ? [commentPlugin(comments)] : []), blockRefPlugin(), rules, keys, keymap(baseKeymap), history(), placeholder, filesPlugin(onFileProblem), formatBar()],
     }),
     attributes: {
       class: className, role: 'textbox', 'aria-multiline': 'true', 'aria-label': label, 'data-placeholder': placeholderText,
@@ -830,6 +870,69 @@ export function createEditor(place, markdown, {
     },
   });
   return view;
+}
+
+// A box in a form (2026-11-24, the homework and the call's summary in Quest weeks): the bar for how words look, the /
+// menu's lists and colours, ~~ and ** as you type; no headings, quotes, pictures, files or links to the app's pages, which
+// a student could not open. Anything pasted in that it can't hold becomes plain lines.
+const COMPACT_SLASH = ['Text', 'Bullet list', 'Number list', 'Text colour', 'Highlight', 'Date', 'Now'];
+const compactRules = baseRules.filter((rule, i) => i !== 0 && i !== 3); // not # (a heading) nor > (a quote)
+const COMPACT_BLOCKS = ['paragraph', 'bullet_list', 'ordered_list', 'list_item'];
+const COMPACT_INLINE = ['text', 'hard_break'];
+const fits = (fragment) => {
+  let ok = true;
+  fragment.descendants((node) => { if (!COMPACT_BLOCKS.includes(node.type.name) && !COMPACT_INLINE.includes(node.type.name)) ok = false; return ok; });
+  return ok;
+};
+// Pictures go; a link to one of the app's pages keeps its words.
+function plainWords(content) {
+  const out = [];
+  content.forEach((node) => {
+    if (COMPACT_INLINE.includes(node.type.name)) out.push(node);
+    else if (node.type === schema.nodes.page_link && node.attrs.label) out.push(schema.text(node.attrs.label));
+  });
+  return Fragment.fromArray(out);
+}
+function plainBlocks(fragment) {
+  const out = [];
+  fragment.forEach((node) => {
+    if (fits(Fragment.from(node)) && node.type.name !== 'list_item') out.push(node);
+    else if (node.isTextblock) out.push(schema.nodes.paragraph.create(null, plainWords(node.content)));
+    else if (node.isBlock && !node.isLeaf) out.push(...plainBlocks(node.content));
+  });
+  return out;
+}
+function compactEditor(place, markdown, { onChange, label, placeholderText, className }) {
+  const view = new EditorView(place, {
+    state: EditorState.create({
+      doc: schema.nodes.doc.create(null, plainBlocks(fromMarkdown(markdown).content)),
+      plugins: [slashMenu(schema, { only: COMPACT_SLASH, openPalette }), inputRules({ rules: compactRules }), keys, keymap(baseKeymap), history(), placeholder, formatBar()],
+    }),
+    attributes: {
+      class: `${className} is-compact`, role: 'textbox', 'aria-multiline': 'true', 'aria-label': label, 'data-placeholder': placeholderText,
+    },
+    transformPasted: (slice) => (fits(slice.content) ? slice : new Slice(Fragment.fromArray(plainBlocks(slice.content)), 0, 0)),
+    handleDrop: (_view, event) => hasFiles(event),
+    handlePaste: (_view, event) => [...(event.clipboardData?.files ?? [])].length > 0,
+    dispatchTransaction(tr) {
+      view.updateState(view.state.apply(tr));
+      if (tr.docChanged) onChange?.(toMarkdown(view.state.doc), plainText(toMarkdown(view.state.doc)));
+    },
+  });
+  return view;
+}
+
+// Markdown shown, not edited (the Quest page's homework and the call's summary): the same look as in the editor, as
+// plain HTML elements. Links open in a new tab.
+export function renderMarkdown(markdown) {
+  const box = document.createElement('div');
+  box.append(DOMSerializer.fromSchema(schema).serializeFragment(fromMarkdown(markdown ?? '').content));
+  for (const a of box.querySelectorAll('a[href]')) {
+    if (!/^(https?:|mailto:)/i.test(a.getAttribute('href'))) { a.replaceWith(...a.childNodes); continue; }
+    a.target = '_blank';
+    a.rel = 'noopener';
+  }
+  return [...box.childNodes];
 }
 
 // Opened from the Tasks page (?task=N): shows the page's Nth task, marked for a moment.
@@ -859,13 +962,17 @@ export function setMarkdown(view, markdown) {
 }
 
 // The words of a note without the Markdown signs, for cards, rows and counting.
+const SPAN_IN_TEXT = /\[([^[\]]*)\]\{(?:\s*\.[a-z-]+)+\s*\}/g;
 export function plainText(markdown) {
-  return markdown
+  let text = markdown;
+  // [words]{.c-red} and links, innermost first (a link can sit inside coloured words, and coloured words in a link).
+  for (let before = ''; before !== text;) { before = text; text = text.replace(SPAN_IN_TEXT, '$1').replace(/(?<!!)\[([^[\]]*)\]\([^)]*\)/g, '$1'); }
+  return text
     .replace(/\\\n/g, ' ')
     .replace(/^\s{0,3}(#{1,6}\s+|>\s?|[-+*]\s+|\d+[.)]\s+)/gm, '')
     .replace(/^\[( |x|X)\](?: |$)/gm, '')
     .replace(DUE_IN_TEXT, (_, before, day) => `${before}${dueLabel(day)}`)
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/(\*\*|__|\*|_|`)(?=\S)([^*_`]*?\S)\1/g, '$2')
-    .replace(/\\([\\`*_{}[\]()#+\-.!>])/g, '$1');
+    .replace(/(\*\*|__|\*|_|`|~~)(?=\S)([^*_`~]*?\S)\1/g, '$2')
+    .replace(/\\([\\`*_{}[\]()#+\-.!>~])/g, '$1');
 }

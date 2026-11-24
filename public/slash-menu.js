@@ -33,18 +33,23 @@ const today = () => new Date().toLocaleDateString(undefined, { year: 'numeric', 
 const now = () => new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 // In Heptabase's order. `run` is missing for options that come later.
-export function menuItems(schema, { pickFiles, makeTask, makeBoard } = {}) {
+// `only` (a compact box, editor.js) keeps just the options named. `openPalette` (public/format-bar.js) gives Text colour
+// and Highlight: the colour goes on what is typed next (selected words have their own bar).
+export function menuItems(schema, { pickFiles, makeTask, makeBoard, openPalette, only } = {}) {
   const { nodes } = schema;
   // Opens the file picker; what is picked goes where the cursor is.
   const pick = (accept) => (state, dispatch, view) => { pickFiles?.(view, accept); return true; };
-  return [
+  const colours = (kind) => (state, dispatch, view) => { openPalette?.(view, kind); return true; };
+  const all = [
     { label: 'Text', icon: 'Aa', keys: 'paragraph plain normal', run: setBlockType(nodes.paragraph) },
     { label: 'Heading 1', icon: 'H1', keys: 'h1 title big', run: setBlockType(nodes.heading, { level: 1 }) },
     { label: 'Heading 2', icon: 'H2', keys: 'h2 subtitle', run: setBlockType(nodes.heading, { level: 2 }) },
     { label: 'Heading 3', icon: 'H3', keys: 'h3', run: setBlockType(nodes.heading, { level: 3 }) },
     { label: 'Card', icon: '▭', keys: 'link note', later: true },
     makeBoard ? { label: 'Whiteboard', icon: '▦', keys: 'board canvas', run: makeBoard } : { label: 'Whiteboard', icon: '▦', keys: 'board canvas', later: true },
-    { label: 'Highlight', icon: '✎', keys: 'mark colour color', later: true },
+    openPalette ? { label: 'Text colour', icon: 'A', keys: 'colour color font', run: colours('colour') } : null,
+    openPalette ? { label: 'Highlight', icon: '✎', keys: 'mark colour color background', run: colours('highlight') }
+      : { label: 'Highlight', icon: '✎', keys: 'mark colour color', later: true },
     { label: 'Date', icon: '31', keys: 'today day', run: (state, dispatch) => insertText(today())(state, dispatch) },
     { label: 'Now', icon: '◷', keys: 'time clock', run: (state, dispatch) => insertText(now())(state, dispatch) },
     ...(makeTask ? [{ label: 'Todo list', icon: '☐', keys: 'task checkbox to-do', run: makeTask }] : []),
@@ -66,7 +71,8 @@ export function menuItems(schema, { pickFiles, makeTask, makeBoard } = {}) {
     { label: 'Toggle heading 2', icon: '▸H2', keys: 'collapse fold', later: true },
     { label: 'Toggle heading 3', icon: '▸H3', keys: 'collapse fold', later: true },
     { label: 'Template', icon: '⧉', keys: 'snippet', later: true },
-  ];
+  ].filter(Boolean);
+  return only ? all.filter((item) => only.includes(item.label)) : all;
 }
 
 // Each word typed must be the start of a word of the option ("li" finds lists, not

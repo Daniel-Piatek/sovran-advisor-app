@@ -13,12 +13,16 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const shortDay = (day) => { if (!/^\d{4}-\d{2}-\d{2}$/.test(day ?? '')) return ''; const d = new Date(`${day}T12:00:00Z`); return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
 const weekName = (w) => `Week ${w.number}${w.title ? ` · ${w.title}` : ''}`;
+// The homework and the call's summary as the guide formatted them (bold, colours, lists…; public/format-bar.js), read
+// with the editor's own reader so they look the same as where they were written. Loaded with the page.
+let rich = (markdown) => [markdown];
 const outside = (href, ...children) => el('a', { class: 'button quest-button', href, target: '_blank', rel: 'noopener' }, ...children, el('span', { 'aria-hidden': 'true' }, ' ↗'));
 
 export async function showQuest(sub) {
   app.className = 'page page-wide quest-page';
   document.title = 'Sovran Quest';
   if (sub === 'weeks') { const { showQuestWeeks } = await import('./quest-weeks.js'); return showQuestWeeks(); }
+  ({ renderMarkdown: rich } = await import('./editor.js'));
   let page;
   let problem = '';
   try { page = await request('GET', '/api/quest'); } catch (err) { page = null; problem = err.message; }
@@ -62,7 +66,7 @@ function drawWeek(week, page) {
     homeworkCard(week, page),
     el('section', { class: 'quest-card', 'aria-label': 'Weekly group call' },
       el('h3', { class: 'quest-card-title' }, 'Weekly group call'),
-      week.summary ? el('div', { class: 'quest-summary' }, ...week.summary.split(/\n{2,}/).map((p) => el('p', {}, p.replace(/^[-*]\s+/gm, '• ')))) : null,
+      week.summary ? el('div', { class: 'quest-summary quest-rich' }, ...rich(week.summary)) : null,
       el('div', { class: 'quest-row' },
         week.has_transcript ? el('a', { class: 'button quest-button', href: `/quest/week-${week.number}/transcript` }, 'Read the transcript') : el('span', { class: 'quest-faint' }, 'The transcript comes after the call.'),
         el('button', { type: 'button', class: 'button quest-button', onclick: () => openAssistantWith(`About the Week ${week.number} group call: `) }, 'Ask Sovran Advisor about it'),
@@ -96,7 +100,7 @@ function homeworkCard(week, page) {
     return el('div', { class: 'quest-piece' },
       el('span', { class: 'quest-number' }, String(h.piece)),
       el('div', { class: 'quest-piece-main' },
-        el('p', { class: 'quest-piece-text' }, h.text),
+        el('div', { class: 'quest-piece-text quest-rich' }, ...rich(h.text)),
         el('div', { class: 'quest-bar', role: 'group', 'aria-label': `Homework ${h.piece}` }, start,
           el('button', { type: 'button', class: 'quest-seg quest-ask', onclick: () => askDaniel(week, h, page) }, 'Stuck? Ask Daniel'), done)),
       el('div', { class: 'quest-work' }, marker, ...h.work.map((w) => el('a', { class: 'quest-work-link', href: w.href }, w.label))));
@@ -118,7 +122,7 @@ function askDaniel(week, h, page) {
       if (!words.value.trim()) { note.textContent = 'Write your question first.'; return; }
       send.disabled = true;
       try {
-        await request('POST', '/api/tell', { kind: 'question', why: words.value.trim(), place: 'app', context: { quest: label, week: weekName(week), homework: h.text } });
+        await request('POST', '/api/tell', { kind: 'question', why: words.value.trim(), place: 'app', context: { quest: label, week: weekName(week), homework: h.plain ?? h.text } });
         note.textContent = 'Sent. Daniel sees it with the homework it’s about.';
         words.disabled = true;
       } catch (err) { note.textContent = err.message; send.disabled = false; }

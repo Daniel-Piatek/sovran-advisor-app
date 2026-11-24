@@ -13,18 +13,22 @@ const MAX_CONTEXT = 240;
 // A link to one bullet of a note (Writing 2): ((bullet id)).
 const BLOCK_REF = /\(\(([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)\)/g;
 
-const unescape = (text) => text.replace(/\\([\\`*_{}[\]()#+\-.!>])/g, '$1');
+const unescape = (text) => text.replace(/\\([\\`*_{}[\]()#+\-.!>~])/g, '$1');
 
-// Markdown made into plain words, keeping the words of links.
+// Markdown made into plain words, keeping the words of links and of coloured, highlighted or underlined words
+// ([words]{.c-red}, public/format-bar.js), innermost first.
+const SPAN = /\[([^[\]]*)\]\{(?:\s*\.[a-z-]+)+\s*\}/g;
 export function plainWords(markdown) {
-  return markdown
-    .replace(BLOCK_REF, '')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[((?:\\.|[^\]\\])*)\]\([^)]*\)/g, (_, words) => unescape(words))
+  let text = markdown.replace(BLOCK_REF, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '');
+  for (let before = ''; before !== text;) {
+    before = text;
+    text = text.replace(SPAN, '$1').replace(/\[((?:\\.|[^\]\\])*)\]\([^)]*\)/g, (_, words) => unescape(words));
+  }
+  return text
     .replace(/^\s{0,3}(#{1,6}\s+|>\s?|[-+*]\s+|\d+[.)]\s+)/gm, '')
-    .replace(/(\*\*|__|\*|_|`)(?=\S)([^*_`]*?\S)\1/g, '$2')
+    .replace(/(\*\*|__|\*|_|`|~~)(?=\S)([^*_`~]*?\S)\1/g, '$2')
     .replace(/\\\n/g, ' ')
-    .replace(/\\([\\`*_{}[\]()#+\-.!>])/g, '$1');
+    .replace(/\\([\\`*_{}[\]()#+\-.!>~])/g, '$1');
 }
 
 // The sentence around position `at` of a line (both in plain words).
