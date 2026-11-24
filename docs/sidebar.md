@@ -5,13 +5,13 @@ The sidebar is the column on the left with your sections: Notes, Journal, Inbox 
 
 ## How you use it
 
-- Click **Arrange** at the very foot of the sidebar, under Library. Or **right-click** anywhere on the sidebar, or go to **Settings > Sidebar > Arrange the sidebar**. The sidebar switches into Arrange: a red **Done** button sits at the top in place of Capture.
+- Click **Arrange** at the very foot of the sidebar, under Settings. Or **right-click** anywhere on the sidebar, or go to **Settings > Sidebar > Arrange the sidebar**. The sidebar switches into Arrange: a red **Done** button sits at the top in place of Capture.
 - **Drag** any section up or down to where you want it. Quest and Group Circle move too.
 - A small **+** sits between two sections. Click it to add a line there.
 - Each line has a red **×**. Click it to take that line away. You can drag a line to a new place, too.
 - Click **Done** when it looks right. Your sidebar stays that way, even after you restart.
 - **Start over** puts back the order and the one line the app came with.
-- Tour, Settings and Library always stay at the foot of the column, so you can always find them.
+- Tour and Settings always stay at the foot of the column, so you can always find them. The Library is in Settings.
 - On a phone the sidebar is a bar along the bottom, and stays as it is.
 - To see it done, watch [the short video](/tour?film=sidebar) in the Tour.
 

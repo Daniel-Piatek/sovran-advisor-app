@@ -25,7 +25,7 @@ async function openInbox(page, app) {
 }
 const count = (page) => page.getByRole('navigation', { name: 'Sections' }).locator('[data-section="Inbox"] .sidebar-count');
 
-test('three captures wait in the Inbox, oldest first, and the sidebar says 3', async ({ page, app }) => {
+test('three captures wait in the Inbox, newest first, and the sidebar says 3', async ({ page, app }) => {
   await page.goto(app.url);
   for (const thought of ['First thought', 'Second thought', 'Third thought']) {
     await page.keyboard.press('ControlOrMeta+k');
@@ -36,12 +36,12 @@ test('three captures wait in the Inbox, oldest first, and the sidebar says 3', a
   await expect(count(page)).toHaveText('3');
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Inbox/ }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inbox · 3');
-  await expect(waiting(page).locator('.inbox-item-line')).toHaveText(['First thought', 'Second thought', 'Third thought']);
+  await expect(waiting(page).locator('.inbox-item-line')).toHaveText(['Third thought', 'Second thought', 'First thought']);
   // Under each one, the day it was captured, small and muted.
   await expect(waiting(page).first().locator('.inbox-item-when')).toHaveText(/^[A-Z][a-z]{2} \d{1,2} [A-Z][a-z]{2}$/);
   await expect(waiting(page).first()).toHaveAttribute('aria-current', 'true');
   await showFirst(page);
-  await expect(current(page)).toHaveText('First thought');
+  await expect(current(page)).toHaveText('Third thought');
 });
 
 test('two panels: the list with + Capture (the accent) and the capture with its top bar; + Capture opens the capture box', async ({ page, app }) => {
@@ -64,7 +64,7 @@ test('two panels: the list with + Capture (the accent) and the capture with its 
   await page.keyboard.type('Made from the Inbox');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Quick capture' })).toBeHidden();
-  await expect(waiting(page).locator('.inbox-item-line')).toHaveText(['Panel check', 'Made from the Inbox']);
+  await expect(waiting(page).locator('.inbox-item-line')).toHaveText(['Made from the Inbox', 'Panel check']);
 });
 
 test('under the suggestion: "Or make it" with A note, A journal entry and A task, and Done and Delete at the right, each with its key', async ({ page, app }) => {
@@ -169,7 +169,7 @@ test('clicking another capture in the list opens it', async ({ page, app }) => {
   if (onPhone(page)) await page.getByRole('button', { name: 'Back to the list' }).click();
   await waiting(page).nth(1).click();
   await expect(waiting(page).nth(1)).toHaveAttribute('aria-current', 'true');
-  await expect(current(page)).toHaveText('Second one');
+  await expect(current(page)).toHaveText('First one'); // newest at the top: the second one down is the older
   await expect(current(page).locator(':scope > :first-child')).toHaveCSS('font-weight', '400');
   await expect(current(page).locator(':scope > :first-child')).toHaveCSS('font-size', '24px');
   if (onPhone(page)) await page.getByRole('button', { name: 'Back to the list' }).click();
@@ -248,9 +248,9 @@ test('the top bar\'s Home is saved, opens with the arrow, and is used when the c
 });
 
 test('J adds it to today\'s journal, remembering the capture; the next one opens at once', async ({ page, app }) => {
-  const first = await capture(app, 'Walked by the harbour');
-  await pause();
   await capture(app, 'Next one');
+  await pause();
+  const first = await capture(app, 'Walked by the harbour'); // the newest, so at the top
   await openInbox(page, app);
   await expect(current(page)).toHaveText('Walked by the harbour');
   await page.keyboard.press('j');
@@ -290,9 +290,9 @@ test('N with a search adds it to a note you find', async ({ page, app }) => {
 });
 
 test('D marks it done; Backspace lets it go, into Recently deleted', async ({ page, app }) => {
-  await capture(app, 'Already did it');
-  await pause();
   await capture(app, 'Not needed');
+  await pause();
+  await capture(app, 'Already did it'); // the newest, so at the top
   await openInbox(page, app);
   await page.keyboard.press('d');
   await expect(current(page)).toHaveText('Not needed');
@@ -362,7 +362,7 @@ test('the buttons do the same as the keys (for a phone)', async ({ page, app }) 
 const inDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
 test('three captures sorted to empty: one a task on tomorrow, one a note, one gone', async ({ page, app }) => {
-  for (const body of ['Book the train to Hamburg tomorrow', 'Ideas for the studio name', 'Maybe call about the thing']) { await capture(app, body); await pause(); }
+  for (const body of ['Maybe call about the thing', 'Ideas for the studio name', 'Book the train to Hamburg tomorrow']) { await capture(app, body); await pause(); } // newest at the top
   await openInbox(page, app);
   await expect(count(page)).toHaveText('3');
   await page.keyboard.press('t');
@@ -479,7 +479,7 @@ test('a long Inbox: the list and the capture scroll on their own, so one picked 
   const list = page.locator('.inbox-list-panel');
   const shown = page.locator('.inbox-current');
   await waiting(page).nth(29).click();
-  await expect(current(page)).toHaveText('Thought 30');
+  await expect(current(page)).toHaveText('Thought 1'); // newest at the top: the oldest is last
   // The page itself has not moved down the list; the list scrolled inside its own panel.
   expect(await page.evaluate(() => window.scrollY)).toBeLessThan(200);
   expect(await list.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
