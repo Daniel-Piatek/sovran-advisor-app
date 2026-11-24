@@ -3,7 +3,7 @@ import fs from 'node:fs';
 // switch on, in the owner's order, each with its own short film and "Switch it on".
 import { test, expect } from './fixtures.js';
 
-const ORDER = ['Group Circle', 'go Sovran', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life', 'Your Sidebar'];
+const ORDER = ['Sovran Quest', 'Group Circle', 'go Sovran', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life', 'Your Sidebar'];
 
 test('Tour sits just above Settings, and opens the films', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
@@ -46,7 +46,7 @@ test('a film plays inside the app, without its own title, and All Videos and Bac
   await expect(film.locator('.wrap > h1')).toBeHidden();
   await expect(page.getByRole('link', { name: 'All Videos', exact: true })).toBeVisible();
   await film.getByRole('link', { name: '← Back to All Videos' }).click();
-  await expect(page.locator('.tour-card')).toHaveCount(8);
+  await expect(page.locator('.tour-card')).toHaveCount(9);
 });
 
 test('the basics film and its voice are served by the app', async ({ page, app }) => {
@@ -113,7 +113,7 @@ test('the go Sovran card plays the go Sovran film, and its Back to All Videos co
   expect(voice.status()).toBe(200);
   expect(voice.headers()['content-type']).toBe('audio/mpeg');
   await film.getByRole('link', { name: '← Back to All Videos' }).click();
-  await expect(page.locator('.tour-card')).toHaveCount(8);
+  await expect(page.locator('.tour-card')).toHaveCount(9);
 });
 
 test('Your Sidebar has its own film, with the owner’s voice, and its card goes to Settings', async ({ page, app }) => {
@@ -126,4 +126,19 @@ test('Your Sidebar has its own film, with the owner’s voice, and its card goes
   await expect(film.locator('#caph')).toHaveText('Your Sidebar, Your Way');
   const voice = await page.request.get(`${app.url}/tour/voice/sidebar/s02-01b.mp3`);
   expect(voice.status()).toBe(200);
+});
+
+test('Sovran Quest has its own film, with the owner’s voice: on already, it opens Sovran Quest, and the Quest help links to it', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour`);
+  const card = page.locator('.tour-card[data-film="quest"]');
+  await expect(card.getByRole('link', { name: 'Open →' })).toHaveAttribute('href', '/quest');
+  await card.getByRole('link', { name: 'Watch' }).click();
+  await expect(page).toHaveURL(/\/tour\?film=quest$/);
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#caph')).toHaveText('What Sovran Quest Is');
+  await expect(film.locator('.tour-note')).toBeHidden();
+  await expect(film.locator('#scenes .scene')).toHaveCount(9); // six on the computer, three on the phone
+  const voice = await page.request.get(`${app.url}/tour/voice/quest/q01-00.mp3`);
+  expect(voice.status()).toBe(200);
+  expect(fs.readFileSync(new URL('../../docs/quest.md', import.meta.url), 'utf8')).toContain('(/tour?film=quest)');
 });
