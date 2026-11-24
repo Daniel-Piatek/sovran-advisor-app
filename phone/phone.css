@@ -346,7 +346,7 @@ mark.report-mark.has-ask { text-decoration: underline solid var(--rule); text-de
 .q-row { display: flex; gap: 10px; }
 .q-row p { margin: 0; font-size: 0.9375rem; line-height: 1.44; white-space: pre-wrap; }
 .q-row .q-rich { font-size: 0.9375rem; line-height: 1.44; min-width: 0; }
-.q-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--violet); color: var(--white); font-family: var(--ui); font-weight: 700; font-size: 0.75rem; display: grid; place-items: center; margin-top: 1px; }
+.q-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--white); color: var(--violet); font-family: var(--ui); font-weight: 700; font-size: 0.75rem; display: grid; place-items: center; margin-top: 1px; }
 .q-acts { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 34px; }
 .q-start, .q-done { display: inline-flex; align-items: center; min-height: 40px; font-family: var(--ui); font-weight: 700; font-size: 0.8125rem; line-height: 1.36; padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none; }
 .q-start { border: 0; background: var(--crimson); color: var(--white); }

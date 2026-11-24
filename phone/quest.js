@@ -62,6 +62,9 @@ function inline(src) {
   const flush = () => { if (words) out.push(document.createTextNode(words)); words = ''; };
   for (let i = 0; i < src.length;) {
     const c = src[i];
+    // A backslash at the end of a line is the computer's line break (Shift-Enter), not a word.
+    if (c === '\\' && src[i + 1] === '\n') { flush(); out.push(el('br')); i += 2; continue; }
+    if (c === '\\' && i === src.length - 1) { i++; continue; }
     if (c === '\\' && ESCAPED.test(src[i + 1] ?? '')) { words += src[i + 1]; i += 2; continue; }
     if (c === '\n') { flush(); out.push(el('br')); i++; continue; }
     if (c === '[') {
