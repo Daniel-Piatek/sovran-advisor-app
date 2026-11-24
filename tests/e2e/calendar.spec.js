@@ -41,6 +41,8 @@ test('an event moves with the arrow keys, and by dragging', async ({ page, app }
 
   // Drag it down one hour.
   await expect(page.getByRole('button', { name: /Standup, 10:00/ })).toBeVisible();
+  // In the middle of the screen, clear of a phone's bar of sections at the foot, so the drag starts on the event.
+  await page.getByRole('button', { name: /Standup/ }).evaluate((node) => node.scrollIntoView({ block: 'center' }));
   const box = await page.getByRole('button', { name: /Standup/ }).boundingBox();
   const hour = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hour-height')));
   await page.mouse.move(box.x + box.width / 2, box.y + 5);

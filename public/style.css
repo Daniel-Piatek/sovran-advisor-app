@@ -5192,3 +5192,13 @@ mark[data-highlight] { border-radius: 2px; padding: 0 1px; }
 .note-body.is-compact p { margin: 0 0 var(--space-1); }
 .note-body.is-compact > :last-child { margin-bottom: 0; }
 .note-body.is-compact.is-empty::before { top: var(--space-2); left: var(--space-2); }
+
+/* "How <the page> works" (public/page-video.js, 2026-11-24, the owner's wish): the page's film, on a line of its own just
+   under its top bar, at the right, and under the words of Settings › Sidebar and Settings › go Sovran. From it the film offers "Back to <the page>",
+   with All Videos quiet beside it. */
+.page-video-line { display: flex; justify-content: flex-end; margin: calc(-1 * var(--space-4)) 0 var(--space-3); }
+.settings-video { margin: var(--space-2) 0 var(--space-3); }
+.tour-all { font-family: var(--font-ui); font-size: calc(var(--text-xs) * 0.75); color: var(--color-text-muted); }
+/* Back to the page the video was opened from: small, a quiet outlined pill (the owner, 2026-11-24: "much smaller"). */
+.tour-back-to { display: inline-flex; align-items: center; padding: 1px var(--space-1); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: calc(var(--text-xs) * 0.75); font-weight: var(--weight-button); line-height: var(--line-height-short); color: var(--color-text); text-decoration: none; }
+.tour-back-to:hover { background: var(--color-surface); }

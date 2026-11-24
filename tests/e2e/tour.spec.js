@@ -142,3 +142,41 @@ test('Sovran Quest has its own film, with the owner’s voice: on already, it op
   expect(voice.status()).toBe(200);
   expect(fs.readFileSync(new URL('../../docs/quest.md', import.meta.url), 'utf8')).toContain('(/tour?film=quest)');
 });
+
+// "How <the page> works" (public/page-video.js, 2026-11-24, the owner's wish): the page's own film, from the page itself,
+// and both of the film's back buttons go back to that page.
+test('a page with a film offers How … works, and the film goes back to that page', async ({ page, app }) => {
+  await page.goto(`${app.url}/quest`);
+  const link = page.locator('.page-video-line > .page-video');
+  await expect(link).toHaveText('How Sovran Quest works');
+  await link.click();
+  await expect(page).toHaveURL(/\/tour\?film=quest&back=%2Fquest$/);
+  await expect(page.getByRole('heading', { name: 'Sovran Quest', level: 1 })).toBeVisible();
+  await expect(page.locator('.top-bar .tour-back-to')).toHaveText('← Sovran Quest Module');
+  await expect(page.locator('.tour-film-head .tour-state')).toHaveCount(0); // no On / Open →: they came from it
+  await expect(page.locator('.top-bar .tour-all')).toHaveAttribute('href', '/tour');
+  const inside = page.frameLocator('.tour-frame').locator('#back-all');
+  await expect(inside).toHaveText('← Sovran Quest Module');
+  await inside.click();
+  await expect(page).toHaveURL(/\/quest$/);
+  await page.locator('.page-video-line > .page-video').click();
+  await page.locator('.top-bar .tour-back-to').click();
+  await expect(page).toHaveURL(/\/quest$/);
+
+  await page.goto(`${app.url}/group`);
+  await expect(page.locator('.page-video-line > .page-video')).toHaveText('How Group Circle works');
+  await page.goto(`${app.url}/journal`); // no film of its own
+  await expect(page.locator('.page-video')).toHaveCount(0);
+  // From a part of Settings: back to that part, open.
+  await page.goto(`${app.url}/settings`);
+  await page.locator('#sidebar-part .page-video').click();
+  await expect(page.locator('.top-bar .tour-back-to')).toHaveText('← Settings');
+  await page.locator('.top-bar .tour-back-to').click();
+  await expect(page).toHaveURL(/\/settings#sidebar-part$/);
+  await expect(page.locator('#sidebar-part').getByRole('button', { name: 'Arrange the sidebar' })).toBeVisible();
+});
+
+test('a back address that is not one of the app’s own pages is not offered', async ({ page, app }) => {
+  await page.goto(`${app.url}/tour?film=quest&back=${encodeURIComponent('//example.com')}`);
+  await expect(page.locator('.top-bar .tour-back')).toHaveText('All Videos');
+});

@@ -2,6 +2,7 @@
 // copy), the steps to put go Sovran on the home screen with the crown icon, when notes last came in, Check now, and
 // A new link (the old link stops working at once: for a lost phone, or a link shared by mistake).
 
+import { pageVideo } from './page-video.js';
 import { el, request, clockTime, shortDate } from './ui.js';
 
 export function phoneDropSection() {
@@ -67,9 +68,10 @@ export function phoneDropSection() {
     else { draw(state); link(false, body.querySelector('button')); } // made by itself the first time
   }).catch((err) => { status.textContent = err.message; });
 
-  return el('section', { class: 'settings-part', 'aria-label': 'go Sovran' },
+  return el('section', { class: 'settings-part', id: 'go-sovran', 'aria-label': 'go Sovran' },
     el('h2', { class: 'settings-title' }, 'go Sovran'),
     el('p', { class: 'empty' }, 'Sovran Central on your iPhone or Android phone, with the crown icon: ask your AI, write a journal entry for your Journal, or speak or type a thought anywhere, and it lands in your Inbox here.'),
+    el('p', { class: 'settings-video' }, pageVideo('phone', 'go Sovran', '/settings#go-sovran')),
     body, status,
     el('p', { class: 'empty phone-drop-privacy' }, 'Private: your words are scrambled on your phone before they leave it. They wait, unreadable, in the Sovran drop box only until this computer collects them, then they are deleted. The key is only on your phone and this computer; nobody else, Sovran included, can read them.'));
 }

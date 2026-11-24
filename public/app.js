@@ -52,6 +52,7 @@ import { showReports } from './reports.js';
 import { showGroup } from './group.js';
 import { showQuest } from './quest.js';
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
+import './page-video.js'; // "How <the page> works" at the right of a page's top bar: its film in the Tour
 import './quick-add.js'; // q adds a task from anywhere
 import './reminders.js'; // a reminder's notice, when its time comes
 import './alerts.js'; // a Mac or Windows alert when something new happens in Group Circle (Settings › Alerts)
