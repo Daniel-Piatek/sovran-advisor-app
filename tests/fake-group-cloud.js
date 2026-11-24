@@ -4,11 +4,12 @@ import { createHash } from 'node:crypto';
 // It keeps one group in memory and follows the same main rules: only keys it knows, students post to the Circle only,
 // a name before posting, your own posts to change. The real rules are checked against Postgres in cloud/group-feed.test.sql.
 
-export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null, questWeeks = [] } = {}) {
+export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran Quest', posts = [], guides = {}, groups = null, questWeeks = [], questLinks = {} } = {}) {
   // students: { <library key>: { id, name, group? } }; guides: { <guide key>: name }; groups: [{ code, title }] (default: just the one)
   const state = { posts: posts.map((p) => ({ comments: [], likes: [], done: [], flags: [], pictures: [], comments_on: true, group: p.tab === 'news' ? null : group, ...p })),
     pictures: new Map(), nextId: 100, asked: [], tells: [], phones: new Map(), guidePhones: new Map(), pushes: new Map(), groups: (groups ?? [{ code: group, title }]).map((g) => ({ closed: false, ...g })),
-    questWeeks: questWeeks.map((w) => ({ group, ...w })) }; // the Quest shelf (cloud/quest.sql): { group, number, ...week, transcript }
+    questWeeks: questWeeks.map((w) => ({ group, ...w })), // the Quest shelf (cloud/quest.sql): { group, number, ...week, transcript }
+    questLinks: new Map(Object.entries(questLinks)) }; // each student's own practice link, by student id
   for (const s of Object.values(students)) { s.group ??= group; s.paused ??= false; }
   const keyOf = (auth) => String(auth ?? '').replace(/^Bearer /, '');
   const sha = (text) => createHash('sha256').update(text).digest('hex');
@@ -49,7 +50,8 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
       // The Quest shelf (cloud/quest.sql): a student's own group's weeks, newest first, never with the transcript
       case 'quest_weeks': {
         const mine = state.questWeeks.filter((w) => (s.guide ? !msg.group || w.group === msg.group : w.group === (s.group ?? group)));
-        return json(200, { weeks: mine.sort((a, b) => b.number - a.number).map(({ transcript, ...w }) => ({ ...w, has_transcript: Boolean(transcript) })) });
+        return json(200, { weeks: mine.sort((a, b) => b.number - a.number).map(({ transcript, ...w }) => ({ ...w, has_transcript: Boolean(transcript) })),
+          practice_url: s.guide ? null : state.questLinks.get(s.id) ?? null });
       }
       case 'quest_transcript': {
         const g = s.guide ? msg.group : s.group ?? group;

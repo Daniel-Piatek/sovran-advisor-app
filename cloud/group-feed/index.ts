@@ -12,7 +12,7 @@
 //      alerts on the phone (cloud/group-push.sql, push.js): a phone keeps its push address, then fetches what waits
 // POST {action:'picture_put', jpeg: <base64>}   a picture the app already shrank; returns {path}
 // POST {action:'quest_weeks', group?} | {action:'quest_transcript', number, group?} | {action:'quest_publish', group, number, week}
-//      the Sovran Quest shelf (cloud/quest.sql)
+//      | {action:'quest_links', group?} | {action:'quest_link_set', student, url}   the Sovran Quest shelf (cloud/quest.sql)
 // GET  .../group-feed/picture/<group>/<name>.jpg   the picture's bytes, if the key holder may see it
 // Pictures live in the private storage bucket group-feed, reached with the service role key the function is given.
 import postgres from 'npm:postgres@3.4.5';
@@ -170,6 +170,8 @@ async function act(h: string, msg: any): Promise<Response> {
         if (!week || !Number.isInteger(n) || JSON.stringify(week).length > 600000) return json(400, { error: 'That week isn’t right.' });
         return one(sql`SELECT group_feed.quest_publish(${h}, ${text(msg.group, 20)}, ${n}, ${sql.json(week)}) AS r`);
       }
+      case 'quest_links': return one(sql`SELECT group_feed.quest_links(${h}, ${text(msg.group, 20) || null}) AS r`);
+      case 'quest_link_set': return one(sql`SELECT group_feed.quest_link_set(${h}, ${text(msg.student, 40)}, ${text(msg.url, 2001)}) AS r`);
       // Tell Daniel (cloud/tell-daniel.sql): a student sends one; the guide reads the list and marks each one
       case 'tell': {
         const context = msg.context && typeof msg.context === 'object' && !Array.isArray(msg.context) ? msg.context : {};

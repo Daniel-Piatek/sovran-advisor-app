@@ -214,11 +214,12 @@ export const listGroups = (db) => cloud(db, { action: 'groups' });
 
 // The Sovran Quest shelf (cloud/quest.sql, 2026-11-23): the weeks Daniel published, for a student's own group (the cloud
 // finds it from the key), or for the guide one group's. Until the shelf is in the cloud the door answers "Unknown action":
-// then there are simply no weeks yet ({ shelf: false }). → { shelf, weeks: [{ group, number, ...week }] }
+// then there are simply no weeks yet ({ shelf: false }). practice_url: a student's own daily practice link, which Daniel
+// added for them alone (or ''). → { shelf, weeks: [{ group, number, ...week }], practice_url }
 export async function questWeeks(db, group = null) {
   try {
     const answer = await cloud(db, { action: 'quest_weeks', group: checkGroup(group) });
-    return { shelf: true, weeks: Array.isArray(answer.weeks) ? answer.weeks : [] };
+    return { shelf: true, weeks: Array.isArray(answer.weeks) ? answer.weeks : [], practice_url: typeof answer.practice_url === 'string' ? answer.practice_url : '' };
   } catch (err) {
     if (err.status === 400 && /Unknown action/.test(err.message)) return { shelf: false, weeks: [] };
     throw err;
@@ -231,6 +232,29 @@ export async function questTranscript(db, number, group = null) {
 }
 // The guide puts one week on a group's shelf (again: it replaces). → { ok, first }
 export const questPublish = (db, group, number, week) => cloud(db, { action: 'quest_publish', group: checkGroup(group), number, week });
+// The guide: each student's own daily practice link (2026-11-24, the owner's wish: each one has their own magic link on
+// Xperiencify). Until the cloud knows them, the door answers "Unknown action": then { ready: false }.
+// → { ready, students: [{ student_id, name, group, url }] }
+export async function questLinks(db, group = null) {
+  try {
+    const answer = await cloud(db, { action: 'quest_links', group: checkGroup(group) });
+    return { ready: true, students: Array.isArray(answer.students) ? answer.students : [] };
+  } catch (err) {
+    if (err.status === 400 && /Unknown action/.test(err.message)) return { ready: false, students: [] };
+    throw err;
+  }
+}
+// The address as typed: "x.xperiencify.io/…" gets its https://; '' takes the link away. Only https addresses.
+export function practiceAddress(typed) {
+  let text = String(typed ?? '').trim();
+  if (!text) return '';
+  if (!/^[a-z]+:/i.test(text)) text = `https://${text}`;
+  let url;
+  try { url = new URL(text); } catch { throw fail(400, 'That doesn’t look like a web address.'); }
+  if (url.protocol !== 'https:' || text.length > 2000 || /\s/.test(text)) throw fail(400, 'Use the https:// address Xperiencify gives.');
+  return text;
+}
+export const setQuestLink = (db, student, typed) => cloud(db, { action: 'quest_link_set', student: String(student ?? '').slice(0, 40), url: practiceAddress(typed) });
 const MANAGE = ['pause', 'unpause', 'name', 'move', 'leave', 'close', 'open', 'new_group', 'phone_off'];
 export async function manage(db, input) {
   if (!MANAGE.includes(input?.what)) throw fail(400, 'There is no such change.');

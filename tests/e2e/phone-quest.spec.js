@@ -49,11 +49,11 @@ test.beforeAll(async () => {
 });
 test.afterAll(() => server.close());
 
-async function phone(browser, testInfo, { guide = false, weeks = WEEKS } = {}) {
+async function phone(browser, testInfo, { guide = false, weeks = WEEKS, questLinks = {} } = {}) {
   const link = { box: randomB64(16), drop: randomB64(32), key: randomB64(32) };
   const phoneKey = `phone_${randomB64(32)}`;
   const cloud = fakeGroupCloud({ students: { sovran_madeupmadeupmadeupmadeup: { id: 'client-aaaaaaaaaaaa', name: 'Maya', group: 'SQ01' } },
-    guides: { guide_madeupmadeupmadeupmadeupmadeup: 'Daniel' }, questWeeks: weeks });
+    guides: { guide_madeupmadeupmadeupmadeupmadeup: 'Daniel' }, questWeeks: weeks, questLinks });
   if (guide) cloud.state.guidePhones.set(sha(phoneKey), 'Daniel');
   else cloud.state.phones.set(sha(phoneKey), 'client-aaaaaaaaaaaa');
   const context = await browser.newContext({ ...(testInfo.project.name === 'phone' ? ANDROID : IPHONE) });
@@ -219,6 +219,15 @@ test('the homework and the summary show as Daniel formatted them, and the AI get
     await expect(page.locator('.q-sum li u')).toHaveText('Name it');
     await pieces.nth(0).getByRole('button', { name: 'Start in my Journal' }).click();
     await expect(page.locator('#quest-write-quote .fc-violet')).toHaveText('one moment');
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
+test('the student’s own practice link, which Daniel added for them, is what Open today’s practice opens (2026-11-24)', async ({ browser }, testInfo) => {
+  const { page, context, errors } = await phone(browser, testInfo, { questLinks: { 'client-aaaaaaaaaaaa': 'https://x.example/magic/maya' } });
+  try {
+    await page.locator('#quest-tile').click();
+    await expect(page.getByRole('link', { name: /Open today’s practice/ })).toHaveAttribute('href', 'https://x.example/magic/maya');
     expect(errors).toEqual([]);
   } finally { await context.close(); }
 });

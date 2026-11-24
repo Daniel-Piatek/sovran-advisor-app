@@ -201,7 +201,9 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
           let list = answer.weeks.filter((w) => w && Number.isInteger(w.number));
           // The guide sees every group: the newest group's weeks, as one of its students sees them.
           if (guide() && list.length) list = list.filter((w) => w.group === list[0].group);
-          weeks = list.sort((a, b) => b.number - a.number).map(({ transcript: _t, ...w }) => w);
+          // The student's own practice link (Daniel adds one for each student, 2026-11-24) stands in for the week's.
+          const own = typeof answer.practice_url === 'string' && safeUrl(answer.practice_url) ? answer.practice_url : '';
+          weeks = list.sort((a, b) => b.number - a.number).map(({ transcript: _t, ...w }) => (own ? { ...w, practice_url: own } : w));
           store.set(WEEKS, JSON.stringify(weeks));
         }
       } catch { /* no signal: the weeks read last time */ }
