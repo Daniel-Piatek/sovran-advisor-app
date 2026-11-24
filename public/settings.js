@@ -17,6 +17,7 @@ import { captureSection } from './capture-settings.js';
 import { voiceSection, voiceLogSection } from './voice-settings.js';
 import { everywhereSection } from './everywhere-settings.js';
 import { phoneDropSection } from './phone-drop-settings.js';
+import { pageVideo } from './page-video.js';
 import { checkPart } from './ai-check.js';
 import { fold } from './fold.js';
 import { holdKeyLabel } from './dictation.js';
@@ -495,9 +496,10 @@ export async function showSettings() {
         el('p', { class: 'permission-floor-line' }, icon('lock'), el('span', {}, el('b', {}, 'Never, whatever is switched on: '),
           'sudo, wiping a disk, your passwords and the keychain, scripting other apps.')))),
     // Sidebar (2026-11-23, the owner's wish): your own order of sections, and lines between them where you want them.
-    el('section', { class: 'settings-part', 'aria-label': 'Sidebar' },
+    el('section', { class: 'settings-part', id: 'sidebar-part', 'aria-label': 'Sidebar' },
       el('h2', { class: 'settings-title' }, 'Sidebar'),
       el('p', { class: 'empty' }, 'Put the sections in your own order, and add or take away the thin lines between them. A right click on the sidebar does the same.'),
+      el('p', { class: 'settings-video' }, pageVideo('sidebar', 'your Sidebar', '/settings#sidebar-part')),
       el('div', { class: 'settings-row-buttons' },
         el('button', { type: 'button', class: 'button button-primary', onclick: () => arrangeSidebar() }, 'Arrange the sidebar'),
         el('button', { type: 'button', class: 'button button-quiet', onclick: () => resetSidebar() }, 'Start over'))),
@@ -531,6 +533,9 @@ export async function showSettings() {
   );
   onLeave(foldSettings(screen)); // every part folded to its name at first (public/settings-sections.js)
   // Opened from the Tour's Sovran Library line (/settings#sovran-library): straight to the key box, ready to paste.
+  // Back from a part's video (page-video.js, /settings#sidebar-part, /settings#go-sovran): that part, open.
+  const back = /^#[a-z-]+$/.test(location.hash) && location.hash !== '#sovran-library' && screen.querySelector(`${location.hash}.settings-part`);
+  if (back) { back.open?.(); back.scrollIntoView({ block: 'start' }); }
   if (location.hash === '#sovran-library') {
     const part = screen.querySelector('#sovran-library');
     const key = part?.querySelector('input');

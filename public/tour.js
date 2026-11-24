@@ -3,6 +3,7 @@
 // then one short film for each part you can switch on, each card with its own "Switch it on".
 //   /tour               the films, as cards
 //   /tour?film=<id>     one video playing, with "All Videos" above it and "Back to All Videos" beside Start Again
+//   /tour?film=<id>&back=<page>  the same, opened from a page's "How … works" (page-video.js): both buttons say "Back to <the page>"
 // The films themselves are pages in public/tour/ (basics.html, extras.html) with the owner's voice as
 // mp3 files in public/tour/voice/. They are made from the published films by build-app-films.py in the
 // project files (student-guide/tour/); inside the app they hide their own title and follow Light/Dark.
@@ -10,6 +11,7 @@
 import { el, icon } from './ui.js';
 import { app, screen, navigate } from './shell.js';
 import { moduleOn, switchModule } from './modules.js';
+import { PAGE_FILMS } from './page-video.js';
 
 // The owner's order (2026-11-16): Phone capture, Tasks, Planner; then Calendar, Boards, My Life. Group Circle (2026-11-22) comes
 // first: it is on in a new install, and has its own film page (group.html), which Daniel can also share as a web page.
@@ -92,7 +94,16 @@ function showList() {
   );
 }
 
-function showFilm(film) {
+// Where a film opened from a page goes back to (page-video.js): one of this app's own pages, or nothing.
+function backOf(param) {
+  if (!param || !param.startsWith('/') || param.startsWith('//') || param.startsWith('/tour')) return null;
+  const path = param.split(/[?#]/)[0];
+  const page = PAGE_FILMS.find((p) => p.path.test(path));
+  const name = page ? page.name : path.startsWith('/settings') ? 'Settings' : null;
+  return name ? { href: param, label: `Back to ${name}` } : null;
+}
+
+function showFilm(film, back) {
   const frame = el('iframe', { class: 'tour-frame', src: film.src, title: film.title, allow: 'autoplay' });
   // The film's page is ours: the frame grows to fit it, so there is one scroll bar, the app's.
   frame.addEventListener('load', () => {
@@ -101,10 +112,22 @@ function showFilm(film) {
     const fit = () => { frame.style.height = `${page.scrollHeight}px`; };
     fit();
     new ResizeObserver(fit).observe(page);
+    // Opened from a page: the video's own "Back to All Videos" goes back to that page too.
+    const all = back && frame.contentDocument.getElementById('back-all');
+    if (all) {
+      const mine = all.cloneNode(false); // without the film's own click, which goes to /tour
+      mine.textContent = `← ${back.label}`;
+      mine.href = back.href;
+      mine.addEventListener('click', (e) => { e.preventDefault(); navigate(back.href); });
+      all.replaceWith(mine);
+    }
   });
   const extra = EXTRAS.find((x) => x.id === film.id);
   screen.replaceChildren(
-    el('header', { class: 'top-bar' }, el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All Videos')),
+    el('header', { class: 'top-bar' }, back
+      ? el('a', { class: 'button tour-back', href: back.href }, icon('back'), back.label)
+      : el('a', { class: 'button tour-back', href: '/tour' }, icon('back'), 'All Videos'),
+    back ? el('a', { class: 'tour-all', href: '/tour' }, 'All Videos') : null),
     el('div', { class: 'tour-film-head' },
       el('h1', { class: 'top-bar-title' }, film.title),
       extra ? stateOf(extra) : null),
@@ -114,8 +137,9 @@ function showFilm(film) {
 export function showTour() {
   document.title = 'Tour';
   app.className = 'page';
-  const id = new URLSearchParams(location.search).get('film');
+  const query = new URLSearchParams(location.search);
+  const id = query.get('film');
   const film = id && filmOf(id);
   if (id && !film) return navigate('/tour', { replace: true });
-  if (film) showFilm(film); else showList();
+  if (film) showFilm(film, backOf(query.get('back'))); else showList();
 }
