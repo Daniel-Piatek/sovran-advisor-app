@@ -18,7 +18,9 @@ BEGIN
   UPDATE group_feed.posts SET created_at = now() - interval '1 day', due_on = NULL;
   UPDATE group_feed.comments SET created_at = now() - interval '1 day';
   UPDATE group_feed.flags SET created_at = now() - interval '1 day';
-  UPDATE tell_daniel.reports SET created_at = now() - interval '1 day', status_at = now() - interval '1 day';
+  UPDATE tell_daniel.reports SET created_at = now() - interval '1 day', status_at = now() - interval '1 day',
+    answered_at = CASE WHEN answered_at IS NULL THEN NULL ELSE now() - interval '1 day' END;
+  UPDATE tell_daniel.messages SET created_at = now() - interval '1 day';
   DELETE FROM group_feed.done;
   PERFORM group_feed.manage(G, 'move', 'client-cccccccccccc', 'SQ02');
 
@@ -68,5 +70,19 @@ BEGIN
   r := group_feed.alerts(A, t0);
   PERFORM pg_temp.ok(r->'items' @> jsonb_build_array(jsonb_build_object('kind', 'answer', 'report', rep)), 'Maya hears Daniel dealt with it');
   PERFORM pg_temp.ok(r::text NOT LIKE '%private%', 'Daniel''s own note never goes to the student');
+  -- Replies (2026-11-24)
+  PERFORM tell_daniel.reply(G, rep, 'It means the part of you that keeps you safe. Private words: none.');
+  r := group_feed.alerts(A, t0);
+  PERFORM pg_temp.ok(r->'items' @> jsonb_build_array(jsonb_build_object('kind', 'answer', 'reply', true, 'report', rep)), 'Maya hears Daniel replied');
+  PERFORM pg_temp.ok(pg_temp.kinds(group_feed.alerts(B, t0)) NOT LIKE '%answer%', 'nobody else does');
+  PERFORM tell_daniel.reply(A, rep, 'That helps, thank you');
+  r := group_feed.alerts(G, t0);
+  PERFORM pg_temp.ok(r->'items' @> jsonb_build_array(jsonb_build_object('kind', 'report', 'followup', true, 'report', rep, 'author', 'Maya')), 'Daniel hears Maya answered');
+  PERFORM tell_daniel.ask_claude(G, rep, 'Is the Gremlin in her decode?');
+  PERFORM pg_temp.ok(pg_temp.kinds(group_feed.alerts(G, t0)) NOT LIKE '%claude%', 'asking alone says nothing');
+  PERFORM tell_daniel.claude_answers(rep, 'Yes, part 3.', NULL);
+  r := group_feed.alerts(G, t0);
+  PERFORM pg_temp.ok(r->'items' @> jsonb_build_array(jsonb_build_object('kind', 'claude', 'report', rep)), 'Daniel hears Claude answered');
+  PERFORM pg_temp.ok(group_feed.alerts(A, t0)::text NOT LIKE '%part 3%', 'Claude''s answer never goes to the student');
   RAISE NOTICE 'ALL GROUP ALERTS CHECKS PASSED';
 END $$;

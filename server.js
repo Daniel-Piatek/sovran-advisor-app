@@ -106,7 +106,7 @@ import { listReports, readReport, reportFile, useReports, reportsOn } from './re
 import * as group from './group-feed.js';
 import { useQuest, questOn, questPage, startWork, setDone, readTranscript, cloudWeeks } from './quest.js';
 import { takeAlerts, alertSwitches, setAlertSwitch } from './alerts.js';
-import { tellDaniel, listTells, markTell, tellOn, appVersion } from './tell-daniel.js';
+import { tellDaniel, listTells, markTell, tellOn, appVersion, replyOnTell, myTells, seenTell, askClaude } from './tell-daniel.js';
 import { listMarksWithAsks, addMark, changeMark, removeMark, restoreMark, getMark, setMarkConversation, askNote } from './report-marks.js';
 import { getPermissions, setPermission, recentActivity, allowedRules, removeRule } from './permissions.js';
 import { startReader, suggestionOf, acceptSuggestion, READER } from './suggestions.js';
@@ -1671,7 +1671,7 @@ export function startServer({
     // Alerts (alerts.js): what is new since the page last asked, ready to show as a Mac or Windows alert, and their switches.
     //   GET    /api/alerts                       { items: [{ id, kind, title, body, path }] }, each said once
     //   GET    /api/alerts/settings              { kinds: [{ id, label, on }] }; PUT { id, on }
-    if (url.pathname === '/api/alerts' && req.method === 'GET') return sendJson(res, 200, await takeAlerts(db));
+    if (url.pathname === '/api/alerts' && req.method === 'GET') return sendJson(res, 200, await takeAlerts(db, { addToInbox: (text) => createCapture(db, { body: text }) }));
     if (url.pathname === '/api/alerts/settings') {
       try {
         if (req.method === 'GET') return sendJson(res, 200, { kinds: alertSwitches(db) });
@@ -1768,12 +1768,25 @@ export function startServer({
     //   POST  /api/tell           { kind: broken|off|question|other, why, place, context }: sent with your library key → { id }
     //   GET   /api/tell?status=new|digging|done&before=<id>   the guide's list (APP Daniel; the cloud refuses anyone else)
     //   PATCH /api/tell/:id       { status, note? }: the guide marks one
+    //   Replies and Ask Claude (2026-11-24):
+    //   GET   /api/tell/mine           the student's own reports, each with its conversation → { reports }
+    //   POST  /api/tell/:id/reply      { body }: Daniel's reply (APP Daniel), or the student's answer on their own report
+    //   POST  /api/tell/:id/seen       the student opened Daniel's replies on it
+    //   POST  /api/tell/:id/ask        { question }: Daniel asks his Claude about it (APP Daniel)
     if (url.pathname === '/api/tell' || url.pathname.startsWith('/api/tell/')) {
       if (!tellOn(db)) return sendJson(res, 409, { error: 'Tell Daniel is switched off in Settings › Modules.' });
       try {
         if (url.pathname === '/api/tell/version' && req.method === 'GET') return sendJson(res, 200, { version: appVersion() });
         if (url.pathname === '/api/tell' && req.method === 'POST') return sendJson(res, 201, await tellDaniel(db, await readJson(req)));
         if (url.pathname === '/api/tell' && req.method === 'GET') return sendJson(res, 200, await listTells(db, { status: url.searchParams.get('status'), before: url.searchParams.get('before') }));
+        if (url.pathname === '/api/tell/mine' && req.method === 'GET') return sendJson(res, 200, await myTells(db));
+        const sub = url.pathname.match(/^\/api\/tell\/(\d+)\/(reply|seen|ask)$/);
+        if (sub && req.method === 'POST') {
+          const input = sub[2] === 'seen' ? {} : await readJson(req);
+          if (sub[2] === 'reply') return sendJson(res, 201, await replyOnTell(db, sub[1], input));
+          if (sub[2] === 'seen') return sendJson(res, 200, await seenTell(db, sub[1]));
+          return sendJson(res, 200, await askClaude(db, sub[1], input));
+        }
         const one = url.pathname.match(/^\/api\/tell\/(\d+)$/);
         if (one && req.method === 'PATCH') return sendJson(res, 200, await markTell(db, one[1], await readJson(req)));
         return sendJson(res, 404, { error: 'Not found' });

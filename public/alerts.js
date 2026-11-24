@@ -31,12 +31,12 @@ function open(path) {
   if (path) navigate(path);
 }
 
-function inApp({ title, body, path }) {
+function inApp({ title, body, path, action }) {
   const close = () => box.remove();
   const box = el('div', { class: 'undo-bar notice alert-notice', role: 'status' },
     el('span', { class: 'notice-text' }, el('strong', {}, title), body ? el('span', { class: 'alert-notice-body' }, body) : null),
     el('span', { class: 'notice-actions' },
-      path ? el('button', { type: 'button', class: 'button', onclick: () => { close(); open(path); } }, 'Open') : null,
+      path ? el('button', { type: 'button', class: 'button', onclick: () => { close(); open(path); } }, action || 'Open') : null,
       el('button', { type: 'button', class: 'button button-quiet', onclick: close }, 'Close')));
   stack().append(box);
   setTimeout(close, NOTICE_MS);

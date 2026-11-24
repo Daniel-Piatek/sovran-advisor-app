@@ -20,7 +20,9 @@ DECLARE A text := repeat('a', 64); B text := repeat('b', 64); G text := repeat('
 BEGIN
   UPDATE group_feed.posts SET created_at = now() - interval '1 day', due_on = NULL;
   UPDATE group_feed.comments SET created_at = now() - interval '1 day';
-  UPDATE tell_daniel.reports SET created_at = now() - interval '1 day', status_at = now() - interval '1 day';
+  UPDATE tell_daniel.reports SET created_at = now() - interval '1 day', status_at = now() - interval '1 day',
+    answered_at = CASE WHEN answered_at IS NULL THEN NULL ELSE now() - interval '1 day' END;
+  UPDATE tell_daniel.messages SET created_at = now() - interval '1 day';
   INSERT INTO group_feed.push_vapid (public_key, private_jwk) VALUES ('made-up', '{}') ON CONFLICT DO NOTHING;
   PERFORM group_feed.phone_key(A, P);
 

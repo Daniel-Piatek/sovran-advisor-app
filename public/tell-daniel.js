@@ -50,7 +50,7 @@ export async function openTellDaniel({ place, items }) {
     try {
       await request('POST', '/api/tell', { kind, why: why.value, place, context: Object.fromEntries(shown.map((item) => [item.key, item.value])) });
       form.replaceChildren(el('h2', { class: 'event-read-title' }, 'Sent to Daniel'),
-        el('p', { class: 'tell-done' }, 'Thank you. Daniel reads every one of these.'),
+        el('p', { class: 'tell-done' }, 'Thank you. Daniel reads every one of these. His reply comes as an alert, and in Help › What you told Daniel.'),
         el('div', { class: 'capture-foot' }, el('span'), el('button', { type: 'button', class: 'button button-primary', onclick: finish }, 'Done')));
     } catch (err) { status.textContent = err.message; send.disabled = false; }
   } },

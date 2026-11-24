@@ -9,7 +9,7 @@ import { prepareDatabase } from '../../db.js';
 import { moduleOn } from '../../modules.js';
 import { setLibraryKey, libraryKey } from '../../sovran-library.js';
 import { useGroup } from '../../group-feed.js';
-import { tellDaniel, listTells, markTell, appVersion, noteNewTells } from '../../tell-daniel.js';
+import { tellDaniel, listTells, markTell, appVersion, noteNewTells, replyOnTell, myTells, seenTell, askClaude } from '../../tell-daniel.js';
 import { fakeGroupCloud } from '../fake-group-cloud.js';
 
 const KEY = 'sovran_madeupmadeupmadeupmadeup';
@@ -88,4 +88,36 @@ test('the guide’s Inbox gets one line a day while new reports wait', async () 
   assert.equal(inbox.length, 2);
   useGroup({ keyOf: () => '' });
   assert.equal(await noteNewTells(db, add, { today: '2026-11-21' }), null, 'no guide key: nothing, no error');
+});
+
+// Replies and Ask Claude (2026-11-24)
+test('Daniel replies, the student reads it and answers; Daniel asks Claude', async () => {
+  const { db, cloud } = setup();
+  const { id } = await tellDaniel(db, { kind: 'broken', why: 'Tell Daniel didn’t work', place: 'app' });
+  const guide = prepareDatabase(new DatabaseSync(':memory:'));
+  useGroup({ keyOf: () => GUIDE, guideApp: true });
+  try {
+    await assert.rejects(replyOnTell(guide, id, { body: '   ' }), /Write something first/);
+    await replyOnTell(guide, id, { body: 'Please try again now.' });
+    await askClaude(guide, id, { question: '' });
+    assert.equal(cloud.state.tells[0].ask_claude, 'Please look into this report.', 'an empty question still asks');
+    const { reports } = await listTells(guide);
+    assert.equal(reports[0].messages[0].body, 'Please try again now.');
+  } finally { useGroup({ keyOf: libraryKey, guideApp: false }); }
+  let mine = (await myTells(db)).reports;
+  assert.equal(mine[0].messages[0].from_daniel, true);
+  assert.equal(mine[0].ask_claude, undefined, 'the student never gets Daniel’s question to Claude');
+  await seenTell(db, id);
+  assert.ok(cloud.state.tells[0].messages[0].read_at);
+  await markTell(prepareDatabase(new DatabaseSync(':memory:')), id, { status: 'done' }).catch(() => {}); // (a student cannot)
+  await replyOnTell(db, id, { body: 'It works now, thank you!' });
+  mine = (await myTells(db)).reports;
+  assert.deepEqual(mine[0].messages.map((m) => m.from_daniel), [true, false]);
+  await assert.rejects(replyOnTell(db, 'x', { body: 'hi' }), /no such report/);
+});
+
+test('before the cloud has replies, it says so plainly', async () => {
+  const { db } = setup();
+  useGroup({ fetch: async () => new Response(JSON.stringify({ error: 'Unknown action: tell_mine' }), { status: 400 }) });
+  await assert.rejects(myTells(db), (err) => err.code === 'notyet' && /aren’t switched on in the Sovran cloud yet/.test(err.message));
 });

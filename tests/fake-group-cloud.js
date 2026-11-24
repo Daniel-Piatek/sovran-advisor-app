@@ -154,6 +154,8 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
         const items = [];
         if (s.guide) {
           for (const r of state.tells) if (after(r.created_at)) items.push({ kind: 'report', report: r.id, report_kind: r.kind, place: r.place, author: r.student, text: cut(r.why), at: r.created_at });
+          for (const r of state.tells) for (const m of r.messages ?? []) if (!m.from_daniel && after(m.created_at)) items.push({ kind: 'report', followup: true, report: r.id, report_kind: r.kind, place: r.place, author: r.student, text: cut(m.body), at: m.created_at });
+          for (const r of state.tells) if (after(r.answered_at)) items.push({ kind: 'claude', report: r.id, report_kind: r.kind, author: r.student, text: cut(r.claude_answer), at: r.answered_at });
           for (const p of state.posts) if (!p.deleted) {
             for (const f of p.flags) if (!f.resolved && after(f.at)) items.push({ kind: 'flag', post: p.id, comment: f.comment ?? null, tab: p.tab, author: p.student ? nameOf(p.student) : 'Daniel', text: cut(p.body), at: f.at });
             if (!p.student) for (const c of p.comments) if (c.student && !c.deleted && after(c.created_at)) items.push({ kind: 'reply', post: p.id, comment: c.id, tab: p.tab, author: nameOf(c.student), text: cut(c.body), at: c.created_at });
@@ -171,6 +173,7 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
               items.push({ kind: 'due', post: p.id, tab: 'news', post_kind: p.kind, due_on: p.due_on, author: 'Daniel', text: cut(p.body), at: p.created_at });
           }
           for (const r of state.tells) if (r.student_id === s.id && r.status === 'done' && after(r.status_at)) items.push({ kind: 'answer', report: r.id, report_kind: r.kind, place: r.place, text: cut(r.why), at: r.status_at });
+          for (const r of state.tells) if (r.student_id === s.id) for (const m of r.messages ?? []) if (m.from_daniel && after(m.created_at)) items.push({ kind: 'answer', reply: true, report: r.id, report_kind: r.kind, place: r.place, text: cut(m.body), at: m.created_at });
         }
         items.sort((a, b) => String(b.at).localeCompare(String(a.at)));
         return json(200, { now: new Date().toISOString(), items: items.slice(0, 30) });
@@ -180,7 +183,8 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
         if (s.guide) return err('unknown', 401);
         if (!['broken', 'off', 'question', 'other'].includes(msg.kind) || (msg.kind === 'other' && !String(msg.why ?? '').trim())) return err('bad');
         const r = { id: ++state.nextId, student_id: s.id, student: s.name ?? s.id, group: s.group, kind: msg.kind, why: msg.why, place: msg.place, context: msg.context,
-          app_version: msg.version, status: 'new', note: null, created_at: new Date().toISOString(), status_at: null };
+          app_version: msg.version, status: 'new', note: null, created_at: new Date().toISOString(), status_at: null, messages: [],
+          ask_claude: null, asked_at: null, claude_answer: null, claude_draft: null, answered_at: null };
         state.tells.push(r);
         return json(200, { id: r.id });
       }
@@ -195,6 +199,36 @@ export function fakeGroupCloud({ students = {}, group = 'SQ01', title = 'Sovran 
         const r = state.tells.find((x) => x.id === msg.id); if (!r) return err('gone', 404);
         Object.assign(r, { status: msg.status, status_at: new Date().toISOString(), note: msg.note ?? r.note });
         return json(200, { id: r.id, status: r.status });
+      }
+      // Replies and Ask Claude (2026-11-24)
+      case 'tell_reply': {
+        const r = state.tells.find((x) => x.id === msg.id);
+        if (!r || (!s.guide && r.student_id !== s.id)) return err('gone', 404);
+        const body = String(msg.body ?? '').trim();
+        if (!body || body.length > 4000) return err('bad');
+        const now = new Date().toISOString();
+        r.messages ??= [];
+        for (const m of r.messages) if (m.from_daniel !== Boolean(s.guide) && !m.read_at) m.read_at = now;
+        const m = { id: ++state.nextId, from_daniel: Boolean(s.guide), body, created_at: now, read_at: null };
+        r.messages.push(m);
+        if (!s.guide && r.status === 'done') Object.assign(r, { status: 'digging', status_at: now });
+        return json(200, { id: m.id });
+      }
+      case 'tell_mine': {
+        if (s.guide) return err('unknown', 401);
+        return json(200, { reports: state.tells.filter((r) => r.student_id === s.id).sort((a, b) => b.id - a.id)
+          .map(({ id, kind, why, place, context, status, created_at, messages }) => ({ id, kind, why, place, context, status, created_at, messages })) });
+      }
+      case 'tell_seen': {
+        const r = state.tells.find((x) => x.id === msg.id && x.student_id === s.id);
+        for (const m of r?.messages ?? []) if (m.from_daniel && !m.read_at) m.read_at = new Date().toISOString();
+        return json(200, { id: msg.id, seen: true });
+      }
+      case 'tell_ask': {
+        if (!s.guide) return err('guideonly', 403);
+        const r = state.tells.find((x) => x.id === msg.id); if (!r) return err('gone', 404);
+        Object.assign(r, { ask_claude: String(msg.question ?? '').trim(), asked_at: new Date().toISOString() });
+        return json(200, { id: r.id, asked: true });
       }
       case 'manage': {
         const m = Object.values(students).find((x) => x.id === msg.student);

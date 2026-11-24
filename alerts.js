@@ -22,12 +22,13 @@ const STUDENT_KINDS = [
   { id: 'news', label: 'A new announcement from Daniel', on: true },
   { id: 'reply', label: 'Someone replied to your post or comment', on: true },
   { id: 'due', label: 'Homework is due tomorrow (if not ticked done)', on: true },
-  { id: 'answer', label: 'Daniel has dealt with something you told him', on: true },
+  { id: 'answer', label: 'Daniel replied to, or dealt with, something you told him', on: true },
   { id: 'update', label: 'A new version of Sovran Central is ready', on: true },
   { id: 'feed', label: 'Any new post in the Circle', on: false },
 ];
 const GUIDE_KINDS = [
-  { id: 'report', label: 'A student sent you a report', on: true },
+  { id: 'report', label: 'A student sent you a report, or answered your reply', on: true },
+  { id: 'claude', label: 'Claude answered your question about a report', on: true },
   { id: 'flag', label: 'A student flagged a post or comment', on: true },
   { id: 'reply', label: 'A student commented on your post', on: true },
 ];
@@ -91,8 +92,17 @@ export function alertWords(item, { today, tomorrow }) {
       if (item.due_on !== today && item.due_on !== tomorrow) return null;
       return { title: item.due_on === today ? 'Homework due today' : 'Homework due tomorrow', body: short(item.text), path: at };
     }
-    case 'answer': return { title: 'Daniel has dealt with what you told him', body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path: null };
-    case 'report': return { title: `${by} sent you a report`, body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path: '/group/reports' };
+    case 'answer': {
+      const path = item.report ? `/told-daniel#report-${item.report}` : '/told-daniel';
+      if (item.reply) return { title: 'Daniel replied', body: short(item.text), path, action: 'Read and answer' };
+      return { title: 'Daniel has dealt with what you told him', body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path };
+    }
+    case 'report': {
+      const path = item.report ? `/group/reports?status=all#report-${item.report}` : '/group/reports';
+      if (item.followup) return { title: `${by} answered you`, body: short(item.text), path, action: 'Reply', reply: true };
+      return { title: `${by} sent you a report`, body: short(item.text) || REPORT_KINDS[item.report_kind] || '', path, action: 'Reply', reply: true };
+    }
+    case 'claude': return { title: `Claude answered about ${by}’s report`, body: short(item.text), path: item.report ? `/group/reports?status=all#report-${item.report}` : '/group/reports' };
     case 'flag': return { title: `Something ${by} wrote was flagged`, body: short(item.text), path: at };
     default: return null;
   }
@@ -100,7 +110,9 @@ export function alertWords(item, { today, tomorrow }) {
 
 // The alerts not said yet, ready to show: [{ id, kind, title, body, path }]. Asking moves the moment on, so each is
 // said once. Nothing while Group Circle is off or can't be reached (it is asked again next time).
-export async function takeAlerts(db, { now = new Date() } = {}) {
+// addToInbox(text): the app's own (captures.js createCapture). A reply from Daniel also leaves a line in the student's
+// Inbox (2026-11-24), whatever the alert switch says, so it is there after the alert has gone.
+export async function takeAlerts(db, { now = new Date(), addToInbox = null } = {}) {
   if (!groupOn(db)) return { items: [] };
   const since = readSetting(db, SINCE, null);
   let answer;
@@ -113,6 +125,9 @@ export async function takeAlerts(db, { now = new Date() } = {}) {
   const dueSaid = new Set(readSetting(db, DUE_SAID, []).map(String));
   const items = [];
   for (const item of Array.isArray(answer?.items) ? answer.items : []) {
+    if (!first && addToInbox && !isGuideApp() && item.kind === 'answer' && item.reply) {
+      try { addToInbox(`Daniel replied to what you told him: “${short(item.text, 300)}” Read it and answer in Help › What you told Daniel.`); } catch { /* the alert still shows */ }
+    }
     if (!on[item.kind] || (first && item.kind !== 'due')) continue;
     if (item.kind === 'due') {
       const key = `${item.post}:${item.due_on}`;

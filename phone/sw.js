@@ -37,7 +37,9 @@ function words(item) {
       const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
       return { title: item.due_on === dayOf(today) ? 'Homework due today' : item.due_on === dayOf(tomorrow) ? 'Homework due tomorrow' : 'Homework due soon', body: short(item.text), open };
     }
-    case 'answer': return { title: 'Daniel has dealt with what you told him', body: short(item.text), open: './' };
+    case 'answer': return item.reply // Daniel's reply on something you told him (2026-11-24); read and answer it on your computer
+      ? { title: 'Daniel replied', body: short(item.text), open: './' }
+      : { title: 'Daniel has dealt with what you told him', body: short(item.text), open: './' };
     default: return null;
   }
 }

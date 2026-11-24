@@ -117,5 +117,7 @@ export async function showHelp(id) {
 // Tell Daniel (2026-11-19, the owner's wish): for the app itself, at the foot of Help, with the page it was asked from.
 function tellAboutApp(page) {
   const button = tellDanielButton({ place: 'app', label: 'Tell Daniel about a problem or a question', items: () => [{ key: 'page', label: 'Help page', value: page }] });
-  return button ? [el('p', { class: 'help-tell' }, 'Something not working, or something you’d like to ask? ', button)] : [];
+  return button ? [el('p', { class: 'help-tell' }, 'Something not working, or something you’d like to ask? ', button),
+    // What you told Daniel (2026-11-24): every report sent, with Daniel's replies and a box to answer him
+    el('p', { class: 'help-tell help-told' }, el('a', { href: '/told-daniel' }, 'What you told Daniel'), ', with his replies')] : [];
 }

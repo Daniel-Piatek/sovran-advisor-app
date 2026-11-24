@@ -6,6 +6,8 @@
 //
 // POST {action, ...}            JSON in, JSON out (actions below)
 // POST {action:'tell', kind, why, place, context, version}; {action:'tells', status?, before?}; {action:'tell_status', id, status, note?}
+//      {action:'tell_reply', id, body} (Daniel or the report's student); {action:'tell_mine'} | {action:'tell_seen', id}
+//      (the student's own reports and replies); {action:'tell_ask', id, question} (Daniel asks his Claude)
 //      Tell Daniel (cloud/tell-daniel.sql)
 // POST {action:'alerts', since?}  what is new for this key since that moment: {now, items} (cloud/group-alerts.sql)
 // POST {action:'push_key'} | {action:'push_sub', endpoint, kinds, old?} | {action:'push_state'|'push_take', endpoint}
@@ -25,7 +27,7 @@ const cors = { 'access-control-allow-origin': '*', 'access-control-allow-methods
 const json = (code: number, body: unknown) =>
   new Response(JSON.stringify(body), { status: code, headers: { ...cors, 'content-type': 'application/json' } });
 const SUBJECT = 'https://daniel-piatek.github.io/sovran-advisor-app/'; // Sovran Go's own page, named in every wake
-const WRITES = new Set(['post', 'comment', 'tell_status']); // after these, phones are looked at straight away
+const WRITES = new Set(['post', 'comment', 'tell_status', 'tell_reply']); // after these, phones are looked at straight away
 const KEY = /^(sovran|guide|phone)_[A-Za-z0-9_-]{20,200}$/; // phone_: a student's phone (Sovran Go), Group Circle only
 const PATH = /^[A-Z0-9-]{2,20}\/[A-Za-z0-9_-]{22}\.jpg$/;
 const MAX_PICTURE = 450000; // the app sends about 200 KB; this leaves room and refuses anything big
@@ -179,6 +181,11 @@ async function act(h: string, msg: any): Promise<Response> {
       }
       case 'tells': return one(sql`SELECT tell_daniel.list(${h}, ${['new', 'digging', 'done'].includes(msg.status) ? msg.status : null}, ${id(msg.before)}) AS r`);
       case 'tell_status': return one(sql`SELECT tell_daniel.set_status(${h}, ${id(msg.id)}, ${text(msg.status, 10)}, ${text(msg.note, 4001) || null}) AS r`);
+      // replies on a report, both ways, and Daniel's question to his Claude (2026-11-24, cloud/tell-daniel.sql)
+      case 'tell_reply': return one(sql`SELECT tell_daniel.reply(${h}, ${id(msg.id)}, ${text(msg.body, 4001)}) AS r`);
+      case 'tell_mine': return one(sql`SELECT tell_daniel.mine(${h}) AS r`);
+      case 'tell_seen': return one(sql`SELECT tell_daniel.seen(${h}, ${id(msg.id)}) AS r`);
+      case 'tell_ask': return one(sql`SELECT tell_daniel.ask_claude(${h}, ${id(msg.id)}, ${text(msg.question, 4001)}) AS r`);
       case 'manage': return one(sql`SELECT group_feed.manage(${h}, ${text(msg.what, 20)}, ${text(msg.student, 40) || null}, ${text(msg.value, 80) || null}) AS r`);
       // alerts on the phone (cloud/group-push.sql): only a phone's own key keeps a push address
       case 'push_key': return json(200, { key: (await vapid()).public_key });

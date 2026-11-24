@@ -51,6 +51,7 @@ import { showTour } from './tour.js';
 import { showReports } from './reports.js';
 import { showGroup } from './group.js';
 import { showQuest } from './quest.js';
+import { showToldDaniel } from './told-daniel.js'; // What you told Daniel, with his replies (2026-11-24)
 import { showHelp } from './help.js'; // the "?" after every title, while Help pages is on
 import './page-video.js'; // "How <the page> works" at the right of a page's top bar: its film in the Tour
 import './quick-add.js'; // q adds a task from anywhere
@@ -79,6 +80,7 @@ startRouter([
   { path: /^\/reports(?:\/([a-z0-9-]+))?$/, show: showReports },
   { path: /^\/group(?:\/(announcements|circle|flags|people))?$/, show: showGroup }, // flags, people: the guide's (APP Daniel)
   { path: /^\/quest(?:\/(week-\d+(?:\/transcript)?))?$/, show: showQuest },
+  { path: /^\/told-daniel$/, show: showToldDaniel },
   { path: /^\/help(?:\/([a-z0-9-]+))?$/, show: showHelp },
   { path: /^\/welcome$/, show: showWelcome },
   { path: /^\/mail\/import$/, show: showMailImport },
