@@ -137,6 +137,7 @@ const icons = {
   tag: svg('<path d="M8.6 1.8h4.6a1 1 0 0 1 1 1v4.6a1 1 0 0 1-.3.7l-6 6a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 .7-.3z"/><circle cx="11" cy="5" r="1"/>'), // Tags (2026-11-22)
   pin: svg('<path d="M9.5 1.5l5 5-2 .5-2.5 2.5.5 3-1 1-3-3-4.5 4.5"/><path d="M6.5 4.5l-1 .5-2 2 6 6 2-2 .5-1"/>'),
   // A play triangle in a circle: the Tour's films (2026-11-16).
+  help: svg('<circle cx="8" cy="8" r="6.5"/><path d="M6.2 6.2a1.9 1.9 0 0 1 3.7.6c0 1.3-1.9 1.6-1.9 2.8"/><circle cx="8" cy="11.6" r=".5" fill="currentColor"/>'),
   play: svg('<circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.4l4 2.6-4 2.6z"/>'),
   settings: svg('<circle cx="8" cy="8" r="2.25"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/>'),
   moon: svg('<path d="M13.5 10A6 6 0 1 1 6 2.5a4.75 4.75 0 0 0 7.5 7.5z"/>'),

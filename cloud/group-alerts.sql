@@ -8,8 +8,10 @@
 --               reply   a comment on their post, or a reply in a conversation they are part of (not their own)
 --               due     homework due in the next two days that they have not ticked done (whatever `since` is; the app
 --                       decides when to say it, and says it once)
---               answer  Daniel marked something they told him as dealt with (never Daniel's own note)
---   the guide:  report  a new Tell Daniel report
+--               answer  Daniel marked something they told him as dealt with (never Daniel's own note), or replied on
+--                       it (reply: true, with Daniel's words; 2026-11-24)
+--   the guide:  report  a new Tell Daniel report, or a student's answer to Daniel's reply on one (followup: true)
+--               claude  Claude answered Daniel's question about a report (Ask Claude, 2026-11-24)
 --               flag    a student let Daniel know about a post or comment
 --               reply   a student commented on one of Daniel's posts
 -- Words are cut to 160 characters: enough for an alert, the rest is read in the app.
@@ -27,6 +29,17 @@ BEGIN
           'author', coalesce((SELECT name FROM group_feed.members WHERE student_id = r.student_id), 'A student'),
           'text', left(r.why, 160), 'at', r.created_at) x
           FROM tell_daniel.reports r WHERE r.created_at > since
+        UNION ALL -- a student answered Daniel's reply on a report (2026-11-24)
+        SELECT jsonb_build_object('kind', 'report', 'followup', true, 'report', r.id, 'report_kind', r.kind, 'place', r.place,
+          'author', coalesce((SELECT name FROM group_feed.members WHERE student_id = r.student_id), 'A student'),
+          'text', left(m.body, 160), 'at', m.created_at)
+          FROM tell_daniel.messages m JOIN tell_daniel.reports r ON r.id = m.report_id
+          WHERE m.created_at > since AND NOT m.from_daniel
+        UNION ALL -- Claude answered Daniel's question about a report (2026-11-24)
+        SELECT jsonb_build_object('kind', 'claude', 'report', r.id, 'report_kind', r.kind,
+          'author', coalesce((SELECT name FROM group_feed.members WHERE student_id = r.student_id), 'A student'),
+          'text', left(r.claude_answer, 160), 'at', r.answered_at)
+          FROM tell_daniel.reports r WHERE r.answered_at > since
         UNION ALL
         SELECT jsonb_build_object('kind', 'flag', 'post', f.post_id, 'comment', f.comment_id, 'tab', p.tab, 'group', p.group_code,
           'author', CASE WHEN f.comment_id IS NULL THEN group_feed.author_name(p.student_id, p.guide_name)
@@ -77,6 +90,11 @@ BEGIN
       SELECT jsonb_build_object('kind', 'answer', 'report', r.id, 'report_kind', r.kind, 'place', r.place,
         'text', left(r.why, 160), 'at', r.status_at)
         FROM tell_daniel.reports r WHERE r.student_id = me AND r.status = 'done' AND r.status_at > since
+      UNION ALL -- Daniel replied on something they told him (2026-11-24): the same switch as "dealt with"
+      SELECT jsonb_build_object('kind', 'answer', 'reply', true, 'report', r.id, 'report_kind', r.kind, 'place', r.place,
+        'text', left(m.body, 160), 'at', m.created_at)
+        FROM tell_daniel.messages m JOIN tell_daniel.reports r ON r.id = m.report_id
+        WHERE r.student_id = me AND m.from_daniel AND m.created_at > since
     ) a ORDER BY (x->>'at') DESC LIMIT 30) b;
   RETURN jsonb_build_object('now', now(), 'items', items);
 END $$;

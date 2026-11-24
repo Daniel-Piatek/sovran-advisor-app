@@ -862,7 +862,7 @@ function macAlert(title, body) {
   main.append(a); requestAnimationFrame(() => a.classList.add('in')); return a;
 }
 const ALERT_KINDS = [['A new announcement from Daniel', true], ['Someone replied to your post or comment', true], ['Homework is due tomorrow (if not ticked done)', true],
-  ['Daniel has dealt with something you told him', true], ['A new version of Sovran Central is ready', true], ['Any new post in the Circle', false]];
+  ['Daniel replied to, or dealt with, something you told him', true], ['A new version of Sovran Central is ready', true], ['Any new post in the Circle', false]];
 function alertsPage() {
   place('settings'); head('Settings', 'var(--faint)');
   pagein.append(h('div', 'lab gred', 'Alerts'), h('p', 'small', 'A Mac or Windows alert when something new happens, while this app is open. Click one to open it.'));

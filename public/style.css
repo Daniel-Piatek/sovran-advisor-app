@@ -5202,3 +5202,29 @@ mark[data-highlight] { border-radius: 2px; padding: 0 1px; }
 /* Back to the page the video was opened from: small, a quiet outlined pill (the owner, 2026-11-24: "much smaller"). */
 .tour-back-to { display: inline-flex; align-items: center; padding: 1px var(--space-1); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: calc(var(--text-xs) * 0.75); font-weight: var(--weight-button); line-height: var(--line-height-short); color: var(--color-text); text-decoration: none; }
 .tour-back-to:hover { background: var(--color-surface); }
+/* ---- Replies on a Tell Daniel report, and Ask Claude (2026-11-24): the conversation, no new colour ---- */
+.tell-thread { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.tell-message { border-left: 3px solid var(--color-border, var(--color-text-muted)); padding: var(--space-1) var(--space-3); background: var(--color-surface); border-radius: var(--radius-sm); }
+.tell-message-mine { border-left-color: var(--color-accent); }
+.tell-message-head { margin: 0; font-size: var(--text-sm); line-height: var(--line-height-short); }
+.tell-message-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--line-height-short); }
+.tell-reply, .tell-ask { display: flex; flex-direction: column; gap: var(--space-2); }
+.tell-reply-box, .tell-ask-box { width: 100%; resize: vertical; font: inherit; }
+.tell-claude { display: flex; flex-direction: column; gap: var(--space-2); }
+.tell-claude-asked { margin: 0; font-size: var(--text-sm); line-height: var(--line-height-short); }
+.tell-reply .group-actions, .tell-ask .group-actions { flex-wrap: wrap; }
+/* What you told Daniel (public/told-daniel.js) */
+.told-daniel { display: flex; flex-direction: column; gap: var(--space-3); }
+.told-daniel-intro { color: var(--color-text-muted); margin: 0 0 var(--space-3); line-height: var(--line-height-base); }
+.told-daniel-report { display: flex; flex-direction: column; gap: var(--space-2); }
+.student-report-who { margin: 0; line-height: var(--line-height-short); color: var(--color-text-muted); font-size: var(--text-sm); }
+.student-kind-broken { color: var(--color-accent); }
+.student-kind-off { color: var(--kind-people); }
+.student-kind-question { color: var(--kind-time); }
+.student-kind-other { color: var(--color-text); }
+.help-told { margin-top: 0; }
+/* Help (2026-11-24): Tell Daniel and what you told him, then the help pages */
+.help-part { max-width: var(--page-width); margin-bottom: var(--space-8); }
+.help-part-title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.help-told-title { margin: var(--space-5) 0 var(--space-1); font-size: var(--text-base); font-family: var(--font-ui); }
+.help-daniel .told-daniel-intro .tell-daniel { margin-left: var(--space-2); }

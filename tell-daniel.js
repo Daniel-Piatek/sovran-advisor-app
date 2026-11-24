@@ -74,6 +74,58 @@ export async function tellDaniel(db, input) {
   }
 }
 
+// ---- Replies (2026-11-24, the owner's wish) ----
+// Each report is a small conversation: Daniel replies from APP Daniel, the student reads it on their own page of what
+// they told Daniel (and answers back there). Until the Sovran cloud has replies (cloud/tell-daniel.sql of 2026-11-24),
+// asking says so plainly instead of failing.
+const NOT_YET = 'Replies aren’t switched on in the Sovran cloud yet. Daniel is on it.';
+async function ask(db, body) {
+  try { return await askCloud(db, body); } catch (err) {
+    if (err.status === 400 && /unknown action/i.test(err.message)) throw fail(503, NOT_YET, 'notyet');
+    if (err.code === 'nolibrary') throw fail(409, 'This needs your Sovran Library key. Add it in Settings › Sovran Library.', 'nolibrary');
+    throw err;
+  }
+}
+const cleanBody = (body) => {
+  const text = typeof body === 'string' ? body.replace(/\r\n/g, '\n').trim() : '';
+  if (!text) throw fail(400, 'Write something first.');
+  if (text.length > 4000) throw fail(400, 'Say it in at most 4,000 characters.');
+  return text;
+};
+const reportId = (id) => {
+  const n = Number(id);
+  if (!Number.isSafeInteger(n) || n <= 0) throw fail(404, 'There is no such report.');
+  return n;
+};
+// A reply on a report: Daniel's (with the guide key) on any one, the student's on their own.
+export const replyOnTell = async (db, id, input) => ask(db, { action: 'tell_reply', id: reportId(id), body: cleanBody(input?.body) });
+// The student's own reports, newest first, each with its conversation: { reports: [...] }.
+// No key yet, or a cloud without replies yet, is not an error here: the list is empty, with a note saying why.
+export async function myTells(db) {
+  let answer;
+  try { answer = await ask(db, { action: 'tell_mine' }); } catch (err) {
+    if (err.code === 'nolibrary' || err.code === 'notyet') return { reports: [], note: err.message };
+    throw err;
+  }
+  return { reports: Array.isArray(answer.reports) ? answer.reports : [] };
+}
+// How many of Daniel's replies are still unread, for the red number on Help. Never fails: no key, a cloud without replies
+// yet, or no internet all count as none, so the sidebar asks quietly.
+export async function unreadTells(db) {
+  try {
+    const { reports } = await myTells(db);
+    return { unread: reports.reduce((n, r) => n + (Array.isArray(r.messages) ? r.messages : []).filter((m) => m.from_daniel && !m.read_at).length, 0) };
+  } catch { return { unread: 0 }; }
+}
+// The student opened Daniel's replies on one.
+export const seenTell = async (db, id) => ask(db, { action: 'tell_seen', id: reportId(id) });
+// Daniel asks his Claude about a report; the hourly Tell Daniel check answers it into the report.
+export async function askClaude(db, id, input) {
+  const question = typeof input?.question === 'string' ? input.question.trim() : '';
+  if (question.length > 4000) throw fail(400, 'Say it in at most 4,000 characters.');
+  return ask(db, { action: 'tell_ask', id: reportId(id), question: question || 'Please look into this report.' });
+}
+
 // ---- The guide's part (APP Daniel) ----
 export async function listTells(db, { status = null, before = null } = {}) {
   const answer = await askCloud(db, { action: 'tells', status: Object.hasOwn(STATUSES, status) ? status : null, before: Number(before) > 0 ? Number(before) : null });

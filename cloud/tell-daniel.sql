@@ -68,7 +68,9 @@ BEGIN
       'student', coalesce(m.name, st.label, r.student_id), 'group', m.group_code,
       'kind', r.kind, 'why', r.why, 'place', r.place, 'context', r.context, 'app_version', r.app_version,
       'status', r.status, 'note', r.note, 'created_at', r.created_at, 'status_at', r.status_at,
-      'diagnosis', r.diagnosis, 'diagnosis_kind', r.diagnosis_kind, 'diagnosis_pr', r.diagnosis_pr, 'diagnosed_at', r.diagnosed_at) x
+      'diagnosis', r.diagnosis, 'diagnosis_kind', r.diagnosis_kind, 'diagnosis_pr', r.diagnosis_pr, 'diagnosed_at', r.diagnosed_at,
+      'ask_claude', r.ask_claude, 'asked_at', r.asked_at, 'claude_answer', r.claude_answer, 'claude_draft', r.claude_draft,
+      'answered_at', r.answered_at, 'messages', tell_daniel.thread(r.id)) x
     FROM tell_daniel.reports r
     LEFT JOIN group_feed.members m ON m.student_id = r.student_id
     LEFT JOIN library.students st ON st.id = r.student_id
@@ -143,6 +145,122 @@ EXCEPTION WHEN OTHERS THEN
 END $$;
 DROP TRIGGER IF EXISTS wake_claude ON tell_daniel.reports;
 CREATE TRIGGER wake_claude AFTER INSERT ON tell_daniel.reports FOR EACH ROW EXECUTE FUNCTION tell_daniel.wake_claude();
+
+-- Replies and Ask Claude (2026-11-24, the owner's wish: "reply back to a student from the notification", and "just
+-- click a button from App Daniel, and it comes to you"). Each report becomes a small conversation:
+--   * Daniel replies from Group Circle › Reports (or the alert). The reply lands with the student: an alert ("Daniel
+--     replied"), a line in their Inbox, and their own page of what they told Daniel (Help › What you told Daniel), where
+--     they can answer back. Their answer comes to Daniel as an alert and shows under the report.
+--   * Ask Claude: Daniel's own question about a report, for his Claude (the hourly Tell Daniel check, run through the
+--     Supabase connector). Claude writes its answer, and if it fits a draft reply to the student, with
+--     tell_daniel.claude_answers; Daniel reads both on the report and sends the draft, changed or not, or doesn't.
+-- A student sees only their own reports and the conversation on them: never Daniel's note, Claude's diagnosis, Daniel's
+-- question to Claude or Claude's answer.
+CREATE TABLE IF NOT EXISTS tell_daniel.messages (
+  id          bigserial PRIMARY KEY,
+  report_id   bigint NOT NULL REFERENCES tell_daniel.reports (id) ON DELETE CASCADE,
+  from_daniel boolean NOT NULL,
+  body        text NOT NULL CHECK (length(btrim(body)) BETWEEN 1 AND 4000),
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  read_at     timestamptz                                    -- when the other side opened it
+);
+CREATE INDEX IF NOT EXISTS messages_report ON tell_daniel.messages (report_id, id);
+CREATE INDEX IF NOT EXISTS messages_at ON tell_daniel.messages (created_at);
+ALTER TABLE tell_daniel.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS ask_claude text CHECK (ask_claude IS NULL OR length(ask_claude) <= 4000);
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS asked_at timestamptz;
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS claude_answer text CHECK (claude_answer IS NULL OR length(claude_answer) <= 20000);
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS claude_draft text CHECK (claude_draft IS NULL OR length(claude_draft) <= 4000);
+ALTER TABLE tell_daniel.reports ADD COLUMN IF NOT EXISTS answered_at timestamptz;
+
+-- The student a key belongs to: their library key, or their phone's own key. NULL: none (or switched off).
+CREATE OR REPLACE FUNCTION tell_daniel.student_of(p_key_hash text) RETURNS text
+LANGUAGE sql STABLE AS $$
+  SELECT coalesce(
+    (SELECT id FROM library.students WHERE key_hash = p_key_hash AND active),
+    (SELECT st.id FROM group_feed.phone_keys pk JOIN library.students st ON st.id = pk.student_id AND st.active WHERE pk.key_hash = p_key_hash))
+$$;
+
+-- The conversation on one report, oldest first.
+CREATE OR REPLACE FUNCTION tell_daniel.thread(p_report bigint) RETURNS jsonb
+LANGUAGE sql STABLE AS $$
+  SELECT coalesce(jsonb_agg(jsonb_build_object('id', m.id, 'from_daniel', m.from_daniel, 'body', m.body,
+    'created_at', m.created_at, 'read_at', m.read_at) ORDER BY m.id), '[]'::jsonb)
+  FROM tell_daniel.messages m WHERE m.report_id = p_report
+$$;
+
+-- A reply on a report: from Daniel (the guide key) on any report, or from the student on their own. Returns {id} or {error}.
+CREATE OR REPLACE FUNCTION tell_daniel.reply(p_key_hash text, p_report bigint, p_body text) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+DECLARE guide boolean := group_feed.is_guide(p_key_hash); s text; owner text; new_id bigint;
+BEGIN
+  SELECT student_id INTO owner FROM tell_daniel.reports WHERE id = p_report;
+  IF owner IS NULL THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+  IF NOT guide THEN
+    s := tell_daniel.student_of(p_key_hash);
+    IF s IS NULL THEN RETURN jsonb_build_object('error', 'unknown'); END IF;
+    IF s <> owner THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+    IF (SELECT count(*) FROM tell_daniel.messages m JOIN tell_daniel.reports r ON r.id = m.report_id
+        WHERE r.student_id = s AND NOT m.from_daniel AND m.created_at > now() - interval '1 day') >= 30 THEN
+      RETURN jsonb_build_object('error', 'toomany'); END IF;
+  END IF;
+  INSERT INTO tell_daniel.messages (report_id, from_daniel, body) VALUES (p_report, guide, btrim(coalesce(p_body, '')))
+    RETURNING id INTO new_id;
+  -- what the other side wrote before is now read; a student's answer puts a report Daniel dealt with back to Needs digging
+  UPDATE tell_daniel.messages SET read_at = now() WHERE report_id = p_report AND from_daniel <> guide AND read_at IS NULL;
+  IF NOT guide THEN
+    UPDATE tell_daniel.reports SET status = 'digging', status_at = now() WHERE id = p_report AND status = 'done';
+  END IF;
+  RETURN jsonb_build_object('id', new_id);
+EXCEPTION WHEN check_violation OR not_null_violation THEN RETURN jsonb_build_object('error', 'bad');
+END $$;
+
+-- A student's own reports, newest first (50), each with its conversation; never Daniel's note or Claude's words.
+CREATE OR REPLACE FUNCTION tell_daniel.mine(p_key_hash text) RETURNS jsonb
+LANGUAGE plpgsql STABLE AS $$
+DECLARE s text := tell_daniel.student_of(p_key_hash);
+BEGIN
+  IF s IS NULL THEN RETURN jsonb_build_object('error', 'unknown'); END IF;
+  RETURN jsonb_build_object('reports', coalesce((SELECT jsonb_agg(x ORDER BY (x->>'id')::bigint DESC) FROM (
+    SELECT jsonb_build_object('id', r.id, 'kind', r.kind, 'why', r.why, 'place', r.place, 'context', r.context,
+      'status', r.status, 'created_at', r.created_at, 'messages', tell_daniel.thread(r.id)) x
+    FROM tell_daniel.reports r WHERE r.student_id = s ORDER BY r.id DESC LIMIT 50) q), '[]'::jsonb));
+END $$;
+
+-- The student opened Daniel's replies on one report.
+CREATE OR REPLACE FUNCTION tell_daniel.seen(p_key_hash text, p_report bigint) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+DECLARE s text := tell_daniel.student_of(p_key_hash);
+BEGIN
+  IF s IS NULL THEN RETURN jsonb_build_object('error', 'unknown'); END IF;
+  UPDATE tell_daniel.messages m SET read_at = now() FROM tell_daniel.reports r
+    WHERE r.id = m.report_id AND r.id = p_report AND r.student_id = s AND m.from_daniel AND m.read_at IS NULL;
+  RETURN jsonb_build_object('id', p_report, 'seen', true);
+END $$;
+
+-- Daniel asks his Claude about a report (his own words). Asking again replaces the question; the answer stays until a
+-- new one comes.
+CREATE OR REPLACE FUNCTION tell_daniel.ask_claude(p_key_hash text, p_report bigint, p_question text) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NOT group_feed.is_guide(p_key_hash) THEN RETURN jsonb_build_object('error', 'guideonly'); END IF;
+  UPDATE tell_daniel.reports SET ask_claude = btrim(coalesce(p_question, '')), asked_at = now() WHERE id = p_report;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+  RETURN jsonb_build_object('id', p_report, 'asked', true);
+EXCEPTION WHEN check_violation THEN RETURN jsonb_build_object('error', 'bad');
+END $$;
+
+-- Claude answers Daniel's question (run by Daniel's own Claude through the Supabase connector, never by an app), with a
+-- draft reply to the student when one fits (NULL: none).
+CREATE OR REPLACE FUNCTION tell_daniel.claude_answers(p_id bigint, p_answer text, p_draft text DEFAULT NULL) RETURNS jsonb
+LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE tell_daniel.reports SET claude_answer = btrim(p_answer), claude_draft = nullif(btrim(coalesce(p_draft, '')), ''),
+    answered_at = now() WHERE id = p_id;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error', 'gone'); END IF;
+  RETURN jsonb_build_object('id', p_id, 'answered', true);
+EXCEPTION WHEN check_violation OR not_null_violation THEN RETURN jsonb_build_object('error', 'bad');
+END $$;
 
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA tell_daniel FROM PUBLIC;
 DO $$ BEGIN

@@ -5,7 +5,7 @@ import { test, expect } from './fixtures.js';
 
 const ORDER = ['Sovran Quest', 'Group Circle', 'go Sovran', 'Tasks', 'Planner', 'Calendar', 'Boards', 'My Life', 'Your Sidebar'];
 
-test('Tour sits just above Settings, and opens the films', async ({ page, app }) => {
+test('Tour sits just above Help and Settings, and opens the films', async ({ page, app }) => {
   await page.goto(`${app.url}/journal`);
   if (test.info().project.name === 'phone') {
     await page.getByRole('button', { name: 'More' }).click();
@@ -13,7 +13,7 @@ test('Tour sits just above Settings, and opens the films', async ({ page, app })
   } else {
     const tour = page.locator('.sidebar > .sidebar-link[data-section="Tour"]');
     await expect(tour).toBeVisible();
-    await expect(page.locator('.sidebar > .sidebar-link[data-section="Tour"] + .sidebar-link')).toHaveAttribute('data-section', 'Settings');
+    await expect(page.locator('.sidebar > .sidebar-link[data-section="Tour"] + .sidebar-link')).toHaveAttribute('data-section', 'Help');
     await tour.click();
   }
   await expect(page).toHaveURL(/\/tour$/);

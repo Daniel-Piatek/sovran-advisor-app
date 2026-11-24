@@ -48,6 +48,29 @@ BEGIN
   PERFORM pg_temp.ok(NOT EXISTS (SELECT 1 FROM tell_daniel.wakes WHERE report_id = r1), 'with no Fire URL nothing is sent');
   PERFORM tell_daniel.diagnose(r1, 'question', 'A question for Daniel.', NULL);
   PERFORM pg_temp.ok((SELECT status FROM tell_daniel.reports WHERE id = r1) = 'digging', 'a New report becomes Needs digging');
+  -- Replies and Ask Claude (2026-11-24)
+  PERFORM pg_temp.ok(tell_daniel.reply(G, r1, 'Gold is for the crown. Does that help?')->>'id' IS NOT NULL, 'Daniel replies on a report');
+  PERFORM pg_temp.ok(tell_daniel.reply(G, r1, '   ')->>'error' = 'bad', 'a reply needs words');
+  PERFORM pg_temp.ok(tell_daniel.reply(G, 999999, 'x')->>'error' = 'gone', 'only on a report that is there');
+  l := tell_daniel.mine(A);
+  PERFORM pg_temp.ok(l->'reports'->0->>'id' = r1::text AND l->'reports'->0->'messages'->0->>'from_daniel' = 'true', 'the student sees Daniel''s reply on their report');
+  PERFORM pg_temp.ok(l::text NOT LIKE '%A question for Daniel%' AND l::text NOT LIKE '%Check part 2%', 'never Claude''s diagnosis or Daniel''s note');
+  PERFORM pg_temp.ok(tell_daniel.mine(repeat('6', 64))->'reports'->0->>'id' = r1::text, 'their phone sees the same');
+  PERFORM pg_temp.ok(tell_daniel.mine(D)->>'error' = 'unknown', 'a switched-off key sees nothing');
+  PERFORM pg_temp.ok(tell_daniel.reply(E, r1, 'Not mine')->>'error' = 'gone', 'another student cannot answer on it');
+  PERFORM tell_daniel.seen(A, r1);
+  PERFORM pg_temp.ok((SELECT read_at FROM tell_daniel.messages WHERE report_id = r1 AND from_daniel) IS NOT NULL, 'opening it marks Daniel''s reply read');
+  PERFORM tell_daniel.set_status(G, r1, 'done', NULL);
+  PERFORM pg_temp.ok(tell_daniel.reply(A, r1, 'Yes, thank you!')->>'id' IS NOT NULL, 'the student answers back');
+  PERFORM pg_temp.ok((SELECT status FROM tell_daniel.reports WHERE id = r1) = 'digging', 'an answer on a dealt-with report puts it back to Needs digging');
+  l := tell_daniel.list(G, NULL, NULL);
+  PERFORM pg_temp.ok((SELECT x FROM jsonb_array_elements(l->'reports') x WHERE (x->>'id')::bigint = r1)->'messages'->1->>'body' = 'Yes, thank you!', 'Daniel sees the conversation under the report');
+  PERFORM pg_temp.ok(tell_daniel.ask_claude(A, r1, 'Why?')->>'error' = 'guideonly', 'only Daniel asks Claude');
+  PERFORM pg_temp.ok(tell_daniel.ask_claude(G, r1, 'Did the reports page break for him?')->>'asked' = 'true', 'Daniel asks Claude about a report');
+  PERFORM pg_temp.ok(tell_daniel.claude_answers(r1, 'No: his key went in later.', 'Hi, please try again now.')->>'answered' = 'true', 'Claude answers, with a draft reply');
+  l := tell_daniel.list(G, NULL, NULL);
+  PERFORM pg_temp.ok((SELECT x FROM jsonb_array_elements(l->'reports') x WHERE (x->>'id')::bigint = r1)->>'claude_draft' = 'Hi, please try again now.', 'Daniel reads Claude''s answer and draft');
+  PERFORM pg_temp.ok(tell_daniel.mine(A)::text NOT LIKE '%his key went in%' AND tell_daniel.mine(A)::text NOT LIKE '%Did the reports page%', 'the student never sees Daniel''s question to Claude or its answer');
   RAISE NOTICE 'ALL TELL DANIEL CHECKS PASSED';
 END $$;
 

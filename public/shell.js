@@ -37,6 +37,10 @@ const sections = [
   { name: 'Course', module: 'course', external: true, href: '#', icon: 'course', more: true, owns: () => false },
   // The Tour (tour.js): short films of the app, and of the parts you can switch on (2026-11-16, the owner's wish).
   { name: 'Tour', href: '/tour', icon: 'play', more: true, owns: (path) => path === '/tour' },
+  // Help (2026-11-24, the owner's pick): Tell Daniel and what you told him, with his replies and a red number for a new one,
+  // then the help pages (public/help.js). There while Tell Daniel or Help pages is on, so it outlasts the Quest.
+  // Pinned at the foot between Tour and Settings (the owner's wish, 2026-11-25).
+  { name: 'Help', href: '/help', icon: 'help', more: true, module: ['tell', 'help'], owns: (path) => /^\/help(\/|$)/.test(path) || path === '/told-daniel' },
   { name: 'Settings', href: '/settings', icon: 'settings', more: true, owns: (path) => path === '/settings' },
   // The Library (the app's looks) left the sidebar for Settings on 2026-11-24 (the owner's wish); /library still opens it.
 ];
@@ -44,8 +48,10 @@ const sections = [
 const sidebar = document.getElementById('sidebar');
 const inboxCount = el('span', { class: 'sidebar-count', hidden: true });
 const groupCount = el('span', { class: 'sidebar-count', hidden: true });
+const helpCount = el('span', { class: 'sidebar-count', hidden: true });
+const countFor = { Inbox: inboxCount, 'Group Circle': groupCount, Help: helpCount };
 const sectionLinks = sections.map((section) => el('a', { class: section.more ? 'sidebar-link in-more' : 'sidebar-link', href: section.href, 'data-section': section.name },
-  icon(section.icon), el('span', {}, section.name), section.name === 'Inbox' ? inboxCount : section.name === 'Group Circle' ? groupCount : null));
+  icon(section.icon), el('span', {}, section.name), countFor[section.name] ?? null));
 // More (a phone only): a small menu above the bar with the sections that don't fit.
 const moreMenu = el('div', { class: 'more-menu', role: 'menu', 'aria-label': 'More', hidden: true },
   ...sections.filter((s) => s.more).map((section) => el('a', {
@@ -56,7 +62,8 @@ const sectionOf = (name) => sections.find((s) => s.name === name);
 function showModuleSections() {
   for (const link of [...sectionLinks, ...moreMenu.querySelectorAll('.more-link')]) {
     const module = sectionOf(link.dataset.section)?.module;
-    if (module) link.hidden = !moduleOn(module) || (sectionOf(link.dataset.section)?.external && !courseUrl) || (module === 'quest' && !inQuestGroup);
+    // module: one module, or a list of which any one being on is enough
+    if (module) link.hidden = ![module].flat().some(moduleOn) || (sectionOf(link.dataset.section)?.external && !courseUrl) || (module === 'quest' && !inQuestGroup);
   }
   if (layoutReady) tidyLines(); // a line between two hidden sections goes too
 }
@@ -87,8 +94,8 @@ document.addEventListener('pointerdown', (event) => {
 const captureButton = el('button', {
   type: 'button', class: 'sidebar-capture', title: 'Quick capture (⌘K)', onclick: () => openCapture(),
 }, icon('plus'), el('span', {}, 'Capture'), el('kbd', { class: 'sidebar-key' }, '⌘K'));
-// Tour and Settings are pinned to the foot of the column; the others, and the lines between them, are yours to order.
-const PINNED = ['Tour', 'Settings'];
+// Tour, Help and Settings are pinned to the foot of the column; the others, and the lines between them, are yours to order.
+const PINNED = ['Tour', 'Help', 'Settings'];
 const ORDER_KEY = 'sidebar.order'; // the order before lines could be moved (2026-11-09): read once, then the layout takes over
 const linkOf = (name) => sectionLinks[sections.findIndex((s) => s.name === name)];
 const inQuest = (link) => Boolean(sectionOf(link.dataset.section)?.quest);
@@ -364,6 +371,21 @@ export async function refreshGroupCount() {
 setTimeout(refreshGroupCount, 1500);
 setInterval(() => { if (document.visibilityState === 'visible') refreshGroupCount(); }, 120_000);
 onModulesChanged(refreshGroupCount);
+
+// Help: how many of Daniel's replies to what you told him are still unread (2026-11-24). Asked when the app opens, every
+// two minutes while the window is in front, and by the Help page once it has shown them.
+export async function refreshHelpCount() {
+  if (!moduleOn('tell')) { helpCount.hidden = true; return; }
+  try {
+    const { unread } = await request('GET', '/api/tell/unread');
+    helpCount.textContent = unread ? String(unread) : '';
+    helpCount.hidden = unread === 0;
+    helpCount.setAttribute('aria-label', `${unread} new ${unread === 1 ? 'reply' : 'replies'} from Daniel`);
+  } catch { helpCount.hidden = true; }
+}
+setTimeout(refreshHelpCount, 2000);
+setInterval(() => { if (document.visibilityState === 'visible') refreshHelpCount(); }, 120_000);
+onModulesChanged(refreshHelpCount);
 
 // How many captures wait: in the sidebar, and named for screen readers.
 export async function refreshInboxCount() {

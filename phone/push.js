@@ -8,7 +8,7 @@ const KINDS = [
   { id: 'news', label: 'A new announcement from Daniel', on: true },
   { id: 'reply', label: 'Someone replied to your post or comment', on: true },
   { id: 'due', label: 'Homework is due tomorrow (if not ticked done)', on: true },
-  { id: 'answer', label: 'Daniel has dealt with something you told him', on: true },
+  { id: 'answer', label: 'Daniel replied to, or dealt with, something you told him', on: true },
   { id: 'feed', label: 'Any new post in the Circle', on: false },
 ];
 const $ = (id) => document.getElementById(id);

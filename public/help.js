@@ -10,6 +10,7 @@ import { el, icon, request } from './ui.js';
 import { app, screen } from './shell.js';
 import { moduleOn, onModulesChanged } from './modules.js';
 import { tellDanielButton } from './tell-daniel.js';
+import { drawToldDaniel } from './told-daniel.js';
 
 const markdown = markdownit({ html: false, linkify: true });
 const HOW = '## How it works';
@@ -95,16 +96,10 @@ export async function showHelp(id) {
   app.className = 'page';
   closePane();
   await helpReady;
+  if (!id) return showHelpHome();
   if (!docs.length) {
     screen.replaceChildren(el('header', { class: 'top-bar' }, el('h1', {}, 'Help')),
       el('p', { class: 'empty' }, 'Help pages are switched off. Switch them on in Settings › Modules.'));
-    return;
-  }
-  if (!id) {
-    screen.replaceChildren(el('header', { class: 'top-bar' }, el('h1', {}, 'Help')),
-      el('p', { class: 'empty' }, 'A short page for each part of the app. The “?” after a page’s title opens its page beside it.'),
-      el('ul', { class: 'help-list' }, ...docs.map((d) => el('li', {}, el('a', { class: 'help-list-link', href: `/help/${d.id}` }, d.title)))),
-      ...tellAboutApp(null));
     return;
   }
   let doc;
@@ -114,8 +109,32 @@ export async function showHelp(id) {
     ...(doc ? [el('h1', { class: 'help-page-title' }, doc.title), docBody(doc, { open: true }), ...tellAboutApp(doc.title)] : [el('p', { class: 'empty' }, 'There is no such help page.')]));
 }
 
+// /help, the sidebar's Help line (2026-11-24, the owner's pick): Tell Daniel and what you told him first, with his replies
+// and a box to answer each (public/told-daniel.js), then the help pages. Either part shows while its module is on.
+function showHelpHome() {
+  const told = moduleOn('tell') ? el('div', { class: 'told-daniel' }) : null;
+  const button = tellDanielButton({ place: 'app', label: 'Tell Daniel about a problem or a question', items: () => [{ key: 'page', label: 'Help page', value: null }] });
+  const parts = [
+    told ? el('section', { class: 'help-part help-daniel', 'aria-labelledby': 'help-daniel-title' },
+      el('h2', { class: 'settings-title help-part-title', id: 'help-daniel-title' }, 'Tell Daniel'),
+      el('p', { class: 'told-daniel-intro' }, 'Something not working, or something you’d like to ask? ', button),
+      el('h3', { class: 'help-told-title' }, 'What you told Daniel'),
+      el('p', { class: 'told-daniel-intro' }, 'Everything you sent him, newest first, with his replies. You can answer him under each one.'),
+      told) : null,
+    docs.length ? el('section', { class: 'help-part', 'aria-labelledby': 'help-pages-title' },
+      el('h2', { class: 'settings-title help-part-title', id: 'help-pages-title' }, 'Help pages'),
+      el('p', { class: 'told-daniel-intro' }, 'A short page for each part of the app. The “?” after a page’s title opens its page beside it.'),
+      el('ul', { class: 'help-list' }, ...docs.map((d) => el('li', {}, el('a', { class: 'help-list-link', href: `/help/${d.id}` }, d.title))))) : null,
+  ].filter(Boolean);
+  screen.replaceChildren(el('header', { class: 'top-bar' }, el('h1', {}, 'Help')),
+    ...(parts.length ? parts : [el('p', { class: 'empty' }, 'Help pages and Tell Daniel are switched off. Switch them on in Settings › Modules.')]));
+  if (told) drawToldDaniel(told);
+}
+
 // Tell Daniel (2026-11-19, the owner's wish): for the app itself, at the foot of Help, with the page it was asked from.
 function tellAboutApp(page) {
   const button = tellDanielButton({ place: 'app', label: 'Tell Daniel about a problem or a question', items: () => [{ key: 'page', label: 'Help page', value: page }] });
-  return button ? [el('p', { class: 'help-tell' }, 'Something not working, or something you’d like to ask? ', button)] : [];
+  return button ? [el('p', { class: 'help-tell' }, 'Something not working, or something you’d like to ask? ', button),
+    // What you told Daniel (2026-11-24): every report sent, with Daniel's replies and a box to answer him
+    el('p', { class: 'help-tell help-told' }, 'Daniel’s replies to what you told him are on ', el('a', { href: '/help' }, 'Help'), ', in your sidebar.')] : [];
 }
