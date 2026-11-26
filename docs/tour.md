@@ -10,7 +10,7 @@ The Tour is short videos of Sovran Central, narrated. Open it any time from Tour
 - Under it, **More in your app** has a card for Group Circle (on already) and for each part that starts switched off: go Sovran, Tasks, Planner, Calendar, Boards and My Life. Click **Watch** to see its short video. **All Videos** above a video, or **Back to All Videos** beside Start Again, brings you back here.
 - Ready for one? Click **Switch it on** on its card. It is the same switch as in Settings › Modules, and you can switch it off there again. Once it is on, the card offers to open it.
 - **Right where you are.** A page that has its own video (Sovran Quest, Group Circle, Tasks, the Planner, the Calendar, Boards and My Life) shows **How … works** with a red play button, just under the page's top line at the right. Settings › Sidebar and Settings › go Sovran have one too. It opens that page's video here, and the small **← … Module** button above and under the video (for example **← Sovran Quest Module**) takes you straight back to the page.
-- In a video, pause with the round button, a click on the video, or the space bar. **Sound on** plays the voice; **Mute** stops it. The scene buttons under a video jump to its scenes.
+- In a video, pause with the round button, a click on the video, or the space bar. **Sound on** plays the voice; **Mute** stops it. The chapter buttons under a video jump to its chapters, and so does a click on the progress line (or a drag along it): it goes to the chapter at that point.
 
 ## How it works
 

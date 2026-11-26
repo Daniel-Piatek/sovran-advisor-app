@@ -24,6 +24,10 @@ html.in-app #scenes { gap: 4px; }
 html.in-app #scenes::before { content: "Chapters"; font-family: var(--ui); font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 html.in-app #scenes .scene { font-size: .62rem; padding: 2px 7px; }
 html.in-app .back-all { background: var(--crimson); border-color: var(--crimson); color: var(--crimson-ink); margin-left: 0; }
+/* the progress line goes to a chapter (film_player.py) */
+html .bar { position: relative; overflow: visible; cursor: pointer; touch-action: none; }
+html .bar::before { content: ""; position: absolute; inset: -9px 0; }
+html .bar span { border-radius: 4px; }
 </style>
 <script>
 // Inside the app's Tour page: say so to the page's CSS, and follow the app's Light/Dark.
@@ -796,6 +800,20 @@ $('prevch').addEventListener('click', () => hop(-1));
 $('nextch').addEventListener('click', () => hop(1));
 document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); hop(-1); } if (e.key === 'ArrowRight') { e.preventDefault(); hop(1); } });
 $('back-all').addEventListener('click', (e) => { try { window.parent.document.dispatchEvent(new CustomEvent('app-navigate', { detail: '/tour' })); e.preventDefault(); } catch { /* the link goes there itself */ } });
+// film-seek: click or drag on the progress line to go to that chapter (film_player.py; D, 26 Nov 2026)
+(() => {
+  const line = bar.parentElement, fill = bar, mine = () => scenes.map((s, k) => k).filter((k) => !scenes[k].film || scenes[k].film === scenes[cur].film);
+  line.removeAttribute('aria-hidden'); line.title = 'Click to go to a chapter';
+  const at = (e) => { const r = line.getBoundingClientRect(); return Math.min(.9999, Math.max(0, (e.clientX - r.left) / r.width)); };
+  const pick = (e) => { const m = mine(); return m[Math.floor(at(e) * m.length)]; };
+  const show = (e) => { fill.style.transition = 'none'; fill.style.width = (at(e) * 100) + '%'; };
+  let down = false;
+  line.addEventListener('pointerdown', (e) => { down = true; try { line.setPointerCapture(e.pointerId); } catch {} show(e); e.preventDefault(); e.stopPropagation(); });
+  line.addEventListener('pointermove', (e) => { if (down) show(e); else line.title = 'Go to: ' + scenes[pick(e)].t; });
+  line.addEventListener('pointerup', (e) => { if (!down) return; down = false; go(pick(e)); });
+  line.addEventListener('pointercancel', () => { if (down) { down = false; go(cur); } });
+  line.addEventListener('click', (e) => e.stopPropagation());
+})();
 $('again').addEventListener('click', () => go(0));
 const snd = $('snd');
 if (Object.keys(CLIPS).length) $('sound').hidden = false;

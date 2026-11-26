@@ -78,6 +78,9 @@ body { font-family: var(--body); font-size: 16px; line-height: 1.44; color: #302
 .gf-ends { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; }
 .gf-scene[aria-current="true"] { color: var(--ink); border-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .gf * { transition: none !important; animation: none !important; } }
+html .gf-bar { position: relative; overflow: visible; cursor: pointer; touch-action: none; }
+html .gf-bar::before { content: ""; position: absolute; inset: -9px 0; }
+html .gf-bar span { border-radius: 4px; }
 
 .filmbox { margin: 0; box-shadow: none; border: 1px solid #D4D1D1; }
 html.embedded .filmbox { border: 0; padding: 4px 0 8px; background: transparent; }
@@ -277,6 +280,20 @@ function go(i) { setPaused(false); loop(i); }
 pp.addEventListener('click', () => setPaused(!paused));
 $('gf-phone').addEventListener('click', () => setPaused(!paused));
 $('gf-again').addEventListener('click', () => go(0));
+// film-seek: click or drag on the progress line to go to that chapter (film_player.py; D, 26 Nov 2026)
+(() => {
+  const line = $('gf-bar').parentElement, fill = $('gf-bar'), mine = () => scenes.map((s, k) => k);
+  line.removeAttribute('aria-hidden'); line.title = 'Click to go to a chapter';
+  const at = (e) => { const r = line.getBoundingClientRect(); return Math.min(.9999, Math.max(0, (e.clientX - r.left) / r.width)); };
+  const pick = (e) => { const m = mine(); return m[Math.floor(at(e) * m.length)]; };
+  const show = (e) => { fill.style.transition = 'none'; fill.style.width = (at(e) * 100) + '%'; };
+  let down = false;
+  line.addEventListener('pointerdown', (e) => { down = true; try { line.setPointerCapture(e.pointerId); } catch {} show(e); e.preventDefault(); e.stopPropagation(); });
+  line.addEventListener('pointermove', (e) => { if (down) show(e); else line.title = 'Go to: ' + scenes[pick(e)].t; });
+  line.addEventListener('pointerup', (e) => { if (!down) return; down = false; go(pick(e)); });
+  line.addEventListener('pointercancel', () => { if (down) { down = false; go(now); } });
+  line.addEventListener('click', (e) => e.stopPropagation());
+})();
 let now = 0;
 $('gf-prev').addEventListener('click', () => go((now - 1 + scenes.length) % scenes.length));
 $('gf-next').addEventListener('click', () => go((now + 1) % scenes.length));
