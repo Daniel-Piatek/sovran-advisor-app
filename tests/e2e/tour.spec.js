@@ -80,6 +80,38 @@ test('the next and previous chapter buttons and the arrow keys move a chapter, w
   await expect(film.locator('#caph')).toHaveText('Plan Your Day');
 });
 
+test('a click on the progress line goes to that chapter, in every film (D, 26 Nov 2026)', async ({ page, app }) => {
+  // the line is split evenly by chapter: a click near its end is the last chapter, near its start the first
+  await page.goto(`${app.url}/tour?film=planner`);
+  const film = page.frameLocator('.tour-frame');
+  await expect(film.locator('#caph')).toHaveText('Switch On Planner');
+  const line = film.locator('.bar');
+  await expect(line).toHaveCSS('cursor', 'pointer');
+  await line.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  const box = await line.boundingBox();
+  await page.mouse.click(box.x + box.width * 0.97, box.y + box.height / 2);
+  await expect(film.locator('#caph')).toHaveText('A Highlight, and Closing the Day'); // the last chapter of this video, not of the next one
+  await page.mouse.click(box.x + box.width * 0.02, box.y + box.height / 2);
+  await expect(film.locator('#caph')).toHaveText('Switch On Planner');
+  // a drag along the line goes where it lets go
+  await page.mouse.move(box.x + 3, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect(film.locator('#caph')).toHaveText('Plan Your Day');
+  // the phone film has the same line
+  await page.goto(`${app.url}/tour?film=phone`);
+  const phone = page.frameLocator('.tour-frame');
+  await expect(phone.locator('#gf-h')).toHaveText('This Is go Sovran');
+  await page.waitForTimeout(1500); // it starts playing a moment after it is on screen
+  const pline = phone.locator('.gf-bar');
+  await pline.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  const n = await phone.locator('.gf-scene').count();
+  const pb = await pline.boundingBox();
+  await page.mouse.click(pb.x + pb.width * 0.99, pb.y + pb.height / 2);
+  await expect(phone.locator('#gf-n')).toHaveText(`Chapter ${n} of ${n}`);
+});
+
 test('Group Circle has its own film: on already, it opens the group, and the Group Circle help links to it', async ({ page, app }) => {
   await page.goto(`${app.url}/tour`);
   const card = page.locator('.tour-card[data-film="group"]');

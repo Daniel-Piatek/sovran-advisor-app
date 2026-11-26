@@ -33,6 +33,10 @@ html.in-app .back-all { background: var(--crimson); border-color: var(--crimson)
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sbrand i { color: var(--gold); } }
 :root[data-theme="dark"] .sbrand i { color: var(--gold); }
 @media (max-width: 680px) { .sbrand { display: none; } }
+/* the progress line goes to a chapter (film_player.py) */
+html .bar { position: relative; overflow: visible; cursor: pointer; touch-action: none; }
+html .bar::before { content: ""; position: absolute; inset: -9px 0; }
+html .bar span { border-radius: 4px; }
 </style>
 <script>
 // Inside the app's Tour page: say so to the page's CSS, and follow the app's Light/Dark.
@@ -844,6 +848,20 @@ function hop(d) { const mine = mineOf(cur), at = mine.indexOf(cur); go(mine[Math
 $('prevch').addEventListener('click', () => hop(-1));
 $('nextch').addEventListener('click', () => hop(1));
 document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); hop(-1); } if (e.key === 'ArrowRight') { e.preventDefault(); hop(1); } });
+// film-seek: click or drag on the progress line to go to that chapter (film_player.py; D, 26 Nov 2026)
+(() => {
+  const line = bar.parentElement, fill = bar, mine = () => scenes.map((s, k) => k).filter((k) => !scenes[k].film || scenes[k].film === scenes[cur].film);
+  line.removeAttribute('aria-hidden'); line.title = 'Click to go to a chapter';
+  const at = (e) => { const r = line.getBoundingClientRect(); return Math.min(.9999, Math.max(0, (e.clientX - r.left) / r.width)); };
+  const pick = (e) => { const m = mine(); return m[Math.floor(at(e) * m.length)]; };
+  const show = (e) => { fill.style.transition = 'none'; fill.style.width = (at(e) * 100) + '%'; };
+  let down = false;
+  line.addEventListener('pointerdown', (e) => { down = true; try { line.setPointerCapture(e.pointerId); } catch {} show(e); e.preventDefault(); e.stopPropagation(); });
+  line.addEventListener('pointermove', (e) => { if (down) show(e); else line.title = 'Go to: ' + scenes[pick(e)].t; });
+  line.addEventListener('pointerup', (e) => { if (!down) return; down = false; go(pick(e)); });
+  line.addEventListener('pointercancel', () => { if (down) { down = false; go(cur); } });
+  line.addEventListener('click', (e) => e.stopPropagation());
+})();
 $('again').addEventListener('click', () => go(scenes.findIndex((s) => s.film === scenes[cur].film)));
 const snd = $('snd');
 if (Object.keys(CLIPS).length) $('sound').hidden = false;
