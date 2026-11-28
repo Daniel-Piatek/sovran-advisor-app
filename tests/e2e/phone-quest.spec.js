@@ -49,7 +49,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(() => server.close());
 
-async function phone(browser, testInfo, { guide = false, weeks = WEEKS, questLinks = {} } = {}) {
+async function phone(browser, testInfo, { guide = false, weeks = WEEKS, questLinks = {}, query = '' } = {}) {
   const link = { box: randomB64(16), drop: randomB64(32), key: randomB64(32) };
   const phoneKey = `phone_${randomB64(32)}`;
   const cloud = fakeGroupCloud({ students: { sovran_madeupmadeupmadeupmadeup: { id: 'client-aaaaaaaaaaaa', name: 'Maya', group: 'SQ01' } },
@@ -81,7 +81,7 @@ async function phone(browser, testInfo, { guide = false, weeks = WEEKS, questLin
     return route.fulfill({ status: answer.status, headers: { ...CORS, 'content-type': 'application/json' }, body: await answer.text() });
   });
   await context.addInitScript(() => { try { localStorage.setItem('sovran.phone.setup-seen', '1'); } catch { /* not yet */ } });
-  await page.goto(`${origin}/#v1.${link.box}.${link.drop}.${link.key}`);
+  await page.goto(`${origin}/${query}#v1.${link.box}.${link.drop}.${link.key}`);
   return { page, context, cloud, errors, notes };
 }
 
@@ -180,14 +180,93 @@ test('no Quest weeks for the group: no Sovran Quest square; Daniel’s own phone
     await expect(none.page.locator('#quest-tile')).toBeHidden();
     expect(none.errors).toEqual([]);
   } finally { await none.context.close(); }
+  // Daniel's own phone opens the new Quest (quest-new.js); with no films or practices in the weeks yet, sample weeks.
   const { page, context, errors } = await phone(browser, testInfo, { guide: true });
   try {
     await expect(page.locator('#quest-line')).toHaveText('Week 2');
+    await expect(page.locator('#ask-daniel')).toBeHidden(); // Daniel doesn't ask himself
     await page.locator('#quest-tile').click();
-    await expect(page.locator('.q-piece')).toHaveCount(3);
-    await expect(page.locator('.q-done, .q-start, .q-stuck')).toHaveCount(0);
+    await expect(page.locator('.qn-title')).toHaveText('Meeting the Tyrant');
+    await expect(page.locator('.qn-sample')).toBeVisible();
+    await expect(page.locator('.qn-film')).toHaveCount(3);
+    await page.getByRole('button', { name: 'Back to Sovran Quest' }).click();
+    await expect(page.locator('.qn-title')).toHaveText('Sovran Quest');
+    await expect(page.locator('.qn-wl .qn-n')).toHaveText(['WEEK 0', 'WEEK 1', 'WEEK 2 · THIS WEEK']);
+    await page.getByRole('button', { name: 'Back to go Sovran' }).click();
+    await expect(page.locator('#quest-tile')).toBeVisible();
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
+// The new Quest as a student sees it (?quest=new): a week with its films, its daily practice and its homework.
+const dayAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+const CALL = { weekday: 1, day: 'Monday', time: '18:00', tz: 'Europe/Athens', meet_url: 'https://meet.google.com/abc-defg-hij' };
+const NEW_WEEKS = [
+  { ...WEEKS[0], call_on: dayAgo(7), call: CALL,
+    films: [{ id: 'f1', title: 'Welcome to Week 2', duration: 360, chapters: [] },
+      { id: 'f2', title: 'Meeting the Tyrant', duration: 2520, chapters: [{ at: 0, title: 'The War Inside' }, { at: 360, title: 'Where the Tyrant Comes From' }] }],
+    practices: [{ id: 'p1', name: 'STOP Training', how: '', per_day: 3, picture: 'stop', colour: '#C71F42' }] },
+  { ...WEEKS[1], call_on: dayAgo(14), call: CALL, practices: [{ id: 'p1', name: 'STOP Training', how: '', per_day: 3, picture: 'stop', colour: '#C71F42' }] },
+  { number: 3, title: 'Not yet', call_on: dayAgo(-7), opens_at: new Date(Date.now() + 7 * 86_400_000).toISOString(), homework: [] }, // never shown before it opens
+];
+
+test('the new Quest: this week\'s lessons, ticks for the day, Done goes to the computer, Group Calls, Stuck? Ask Daniel on the first screen', async ({ browser }, testInfo) => {
+  const { page, context, cloud, errors, notes } = await phone(browser, testInfo, { weeks: NEW_WEEKS, query: '?quest=new' });
+  try {
+    // Stuck? Ask Daniel sits on go Sovran's first screen.
+    await expect(page.locator('#ask-daniel')).toBeVisible();
+    await page.locator('#ask-daniel').click();
+    await page.getByLabel('Your question for Daniel').fill('Where do I start?');
+    await page.getByRole('button', { name: 'Send to Daniel' }).click();
+    await expect(page.locator('#toast')).toContainText('Sent to Daniel');
+    expect(cloud.state.tells.at(-1)).toMatchObject({ kind: 'question', why: 'Where do I start?', context: { from: 'go Sovran', quest: 'Sovran Quest · Week 2' } });
+
+    // The square opens this week's Lessons; Week 3 is not there yet.
+    await page.locator('#quest-tile').click();
+    await expect(page.locator('.qn-eyebrow')).toHaveText('WEEK 2 MISSIONS');
+    await expect(page.locator('.qn-title')).toHaveText('Meeting the Tyrant');
+    await expect(page.locator('.qn-sample')).toHaveCount(0);
+    await expect(page.locator('.qn-film b')).toHaveText(['Welcome to Week 2', 'Meeting the Tyrant']);
+
+    // Every day: tick the first time on the first day, then take it back.
+    await page.getByRole('tab', { name: /Every day/ }).click();
+    await page.locator('.qn-d').first().click();
+    const first = page.getByRole('button', { name: 'STOP Training: time 1' });
+    await first.click();
+    await expect(page.getByRole('button', { name: 'STOP Training: time 1, done' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('tab', { name: /Every day/ })).toContainText('1/15');
+    await page.getByRole('button', { name: 'STOP Training: time 1, done' }).click();
+    await expect(page.getByRole('tab', { name: /Every day/ })).toContainText('0/15');
+
+    // This week: piece 1 is Done from the computer; Done on piece 2 goes back to the computer.
+    await page.getByRole('tab', { name: /This week/ }).click();
+    const done = page.locator('.qn-tk');
+    await expect(done).toHaveCount(3);
+    await expect(done.nth(0)).toHaveAttribute('aria-pressed', 'true');
+    await done.nth(1).click();
+    await expect(done.nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => notes.find((n) => n.kind === 'quest_done')).toMatchObject({ group: 'SQ01', number: 2, piece: 2, on: true });
+
+    // Group Calls: the list, then one call with its summary and transcript.
+    await page.getByRole('button', { name: 'Group Calls ›' }).click();
+    await expect(page.locator('.qn-title')).toHaveText('Group Calls');
+    await expect(page.locator('.qn-call b')).toHaveText(['Meeting the Tyrant']); // Week 1's call has no summary, replay or transcript
+    await page.locator('.qn-call').click();
+    await expect(page.locator('.qn-summary')).toContainText('met the Tyrant');
+    await expect(page.getByRole('link', { name: 'Watch the replay ↗' })).toHaveAttribute('href', 'https://drive.example.com/replay2');
     await page.getByRole('button', { name: 'Read the transcript ›' }).click();
-    await expect(page.locator('#quest-tr-lines p')).toHaveCount(3);
+    await expect(page.locator('.qn-lines p')).toHaveCount(3);
+    await page.locator('.qn-search').fill('tyrant');
+    await expect(page.locator('.qn-found')).toHaveText('Found in 2 places');
+
+    // Back, all the way: the call, Group Calls, the week, the weeks (no Week 3), go Sovran.
+    await page.goBack(); await page.goBack(); await page.goBack();
+    await expect(page.locator('.qn-eyebrow')).toHaveText('WEEK 2 MISSIONS');
+    await page.getByRole('button', { name: 'Back to Sovran Quest' }).click();
+    await expect(page.locator('.qn-wl b')).toHaveText(['Wholeness', 'Meeting the Tyrant', 'Group Calls']);
+    await page.getByRole('button', { name: 'Back to go Sovran' }).click();
+    await expect(page.locator('#quest-tile')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
   } finally { await context.close(); }
 });

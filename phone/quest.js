@@ -198,7 +198,8 @@ export function setupQuest({ store, show, ask, available, isGuide, openShelf, le
       try {
         const answer = await ask({ action: 'quest_weeks' });
         if (Array.isArray(answer.weeks)) {
-          let list = answer.weeks.filter((w) => w && Number.isInteger(w.number));
+          // Never a week before it opens (APP Daniel sends a week only when it opens; this is the second lock).
+          let list = answer.weeks.filter((w) => w && Number.isInteger(w.number) && (!w.opens_at || Date.parse(w.opens_at) <= Date.now()));
           // The guide sees every group: the newest group's weeks, as one of its students sees them.
           if (guide() && list.length) list = list.filter((w) => w.group === list[0].group);
           // The student's own practice link (Daniel adds one for each student, 2026-11-24) stands in for the week's.
