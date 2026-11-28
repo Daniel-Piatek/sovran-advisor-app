@@ -29,8 +29,8 @@ jobs:
         run: |
           v=${GITHUB_SHA::8}
           sed -i -E "s/(href=\"phone\.css|src=\"phone\.js)\"/\1?v=$v\"/" phone/index.html
-          sed -i -E "s#from '\./([a-z]+)\.js'#from './\1.js?v=$v'#" phone/phone.js phone/reports.js
-          grep -c "?v=$v" phone/index.html phone/phone.js phone/reports.js
+          sed -i -E "s#from '\./([a-z-]+)\.js'#from './\1.js?v=$v'#" phone/phone.js phone/reports.js phone/quest-new.js
+          grep -c "?v=$v" phone/index.html phone/phone.js phone/reports.js phone/quest-new.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: phone
